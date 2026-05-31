@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+.vite
+coverage
+pnpm-lock.yaml
+docs/books_and_references

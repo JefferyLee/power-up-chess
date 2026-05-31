@@ -1,0 +1,55 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+.vite/
+.turbo/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+firebase-export-*/
+functions/lib/
+functions/.runtimeconfig.json
+
+# Logs
+*.log
+
+# Reference materials (large source PDFs/EPUBs — only README is tracked)
+docs/books_and_references/*
+!docs/books_and_references/README.md
+
+# Generated puzzle data (regenerated from sources; not committed)
+data/puzzles/*.json
+
+# Local Stockfish builds if any
+*.wasm.tmp

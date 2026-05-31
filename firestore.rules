@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Power Up Chess Firestore security rules.
+//
+// Authoritative writes happen in Cloud Functions (service account, bypasses these rules).
+// Clients can only READ rooms they participate in, and never write moves directly —
+// every move goes through the `submitMove` Cloud Function so chess.js can validate it.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /rooms/{roomId} {
+      // Two players (white, black) may read their own room.
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.white.playerId
+                      || request.auth.uid == resource.data.black.playerId);
+
+      // No client writes — Cloud Functions only.
+      allow write: if false;
+
+      match /moves/{moveIndex} {
+        // Same read rule as the parent room.
+        allow read: if request.auth != null
+                    && (request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.white.playerId
+                        || request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.black.playerId);
+
+        // No client writes.
+        allow write: if false;
+      }
+    }
+
+    // Commentary cache (host LLM output, keyed by hash). Read-only from the client.
+    match /commentary/{hash} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
