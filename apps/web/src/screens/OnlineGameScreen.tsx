@@ -9,6 +9,8 @@ import { useAuthUid } from '../auth/useAuthUid'
 import { HOSTS } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
@@ -279,6 +281,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
   const [blooms, setBlooms] = useState<TacticBloomData[]>([])
+  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
   const seenRef = useRef<number>(room.moves.length)
 
   useEffect(() => {
@@ -289,6 +292,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     }
     const newSparks: CaptureSparkData[] = []
     const newBlooms: TacticBloomData[] = []
+    const newPowerUps: PowerUpData[] = []
     const cursor = new ChessGame()
     let sawCaptureInNew = false
     let sawNonCaptureMoveInNew = false
@@ -317,6 +321,10 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           capturedColor: applied.color === 'w' ? 'b' : 'w',
           text: picker.pick(room.hostMode, 'capture', { capturedPiece: applied.captured }),
         })
+        newPowerUps.push({
+          id: performance.now() + newPowerUps.length + 0.25,
+          variant: pickPowerUpVariant(),
+        })
         if (PIECE_VALUE[applied.captured] >= 3 && (wasInCheck || givesCheck)) {
           newBlooms.push({
             id: performance.now() + newBlooms.length + 0.5,
@@ -333,16 +341,23 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     if (sawCaptureInNew) sound.play('capture')
     else if (sawNonCaptureMoveInNew) sound.play('move')
     if (sawCheckInNew) sound.play('check')
+    // Power Up ceremony sound per fresh capture (one sound per ceremony).
+    for (const p of newPowerUps) sound.play(`powerup-${p.variant}` as const)
 
     // This is a legitimate sync from an external system (Firestore snapshots)
     // into UI state; the lint rule's general advice doesn't apply here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (newSparks.length) setSparks((prev) => [...prev, ...newSparks])
     if (newBlooms.length) setBlooms((prev) => [...prev, ...newBlooms])
+    if (newPowerUps.length) setPowerUps((prev) => [...prev, ...newPowerUps])
   }, [room.moves, room.hostMode, picker, sound])
 
   const handleSparkDone = useCallback((id: number) => {
     setSparks((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  const handlePowerUpDone = useCallback((id: number) => {
+    setPowerUps((prev) => prev.filter((p) => p.id !== id))
   }, [])
 
   const handleBloomDone = useCallback((id: number) => {
@@ -578,6 +593,9 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
                 orientation={orientation}
                 onDone={handleBloomDone}
               />
+            ))}
+            {powerUps.map((p) => (
+              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
             ))}
           </div>
           <RoomStatusLine

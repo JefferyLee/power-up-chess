@@ -13,6 +13,8 @@ import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
@@ -97,6 +99,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
+  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
   const [blooms, setBlooms] = useState<TacticBloomData[]>([])
   const [localResignation, setLocalResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
@@ -196,6 +199,11 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         }
         setSparks((prev) => [...prev, spark])
 
+        // Power Up ceremony — random variant per capture.
+        const variant = pickPowerUpVariant()
+        sound.play(`powerup-${variant}` as const)
+        setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
+
         // Tactic Bloom: forcing capture of a piece worth ≥3 — either delivers
         // check or was made in response to one.
         const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
@@ -225,6 +233,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     setSnap(snapshot(fresh))
     setSparks([])
     setBlooms([])
+    setPowerUps([])
     setLocalResignation(null)
     setGameId(newLocalGameId())
     setSavedThisGame(false)
@@ -239,6 +248,10 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
   const handleSparkDone = useCallback((id: number) => {
     setSparks((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  const handlePowerUpDone = useCallback((id: number) => {
+    setPowerUps((prev) => prev.filter((p) => p.id !== id))
   }, [])
 
   // Build the game-end recap once the status is terminal. Memoised so the
@@ -427,6 +440,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
             ))}
             {blooms.map((b) => (
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} onDone={handleBloomDone} />
+            ))}
+            {powerUps.map((p) => (
+              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
             ))}
           </div>
           <StatusBanner status={effectiveStatus} activeName={activeName} whiteName={whiteName} blackName={blackName} />

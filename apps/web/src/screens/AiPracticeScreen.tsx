@@ -13,6 +13,8 @@ import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
@@ -83,6 +85,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
   const [blooms, setBlooms] = useState<TacticBloomData[]>([])
+  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
   const [resignation, setResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newAiGameId())
@@ -143,6 +146,10 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
           capturedColor: result.color === 'w' ? 'b' : 'w',
           text,
         }])
+
+        const variant = pickPowerUpVariant()
+        sound.play(`powerup-${variant}` as const)
+        setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
 
         const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
         if (PIECE_VALUE[result.captured] >= 3 && (wasInCheck || givesCheck)) {
@@ -205,6 +212,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     setSnap(snapshot(fresh))
     setSparks([])
     setBlooms([])
+    setPowerUps([])
     setResignation(null)
     setGameId(newAiGameId())
     setSavedThisGame(false)
@@ -218,6 +226,10 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
 
   const handleSparkDone = useCallback((id: number) => {
     setSparks((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  const handlePowerUpDone = useCallback((id: number) => {
+    setPowerUps((prev) => prev.filter((p) => p.id !== id))
   }, [])
 
   const endRecap = useMemo(() => {
@@ -344,6 +356,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
             ))}
             {blooms.map((b) => (
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} orientation={playerColor} onDone={handleBloomDone} />
+            ))}
+            {powerUps.map((p) => (
+              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
             ))}
           </div>
           <StatusBanner

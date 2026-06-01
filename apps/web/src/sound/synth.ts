@@ -4,7 +4,10 @@
 // gain envelopes. Keeps the bundle small and lets us tune Magic Forest's
 // warm, low-key aesthetic without shipping MP3s.
 
-export type SoundName = 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw' | 'knock' | 'wicket-creak'
+export type SoundName =
+  | 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw'
+  | 'knock' | 'wicket-creak'
+  | 'powerup-classic' | 'powerup-lightning' | 'powerup-comet'
 
 let ctx: AudioContext | null = null
 let masterGain: GainNode | null = null
@@ -175,6 +178,82 @@ function wicketCreak(): void {
   })
 }
 
+// ─── Power Up capture ceremony sounds ───────────────────────────────────
+// Each variant pairs with one of the PowerUpCeremony visual styles.
+
+function powerupClassic(): void {
+  // Rising whoosh → bright "tink" → fireworks crackle.
+  tone({ freq: [180, 980], type: 'sawtooth', duration: 0.34, peakGain: 0.18, attack: 0.02, release: 0.18 })
+  tone({ freq: 1568, type: 'sine', duration: 0.16, peakGain: 0.2, release: 0.18, startOffset: 0.34 })
+  tone({ freq: 2093, type: 'sine', duration: 0.12, peakGain: 0.15, release: 0.16, startOffset: 0.42 })
+  // Crackle: three quick high-freq taps simulating tiny pops.
+  for (let i = 0; i < 4; i++) {
+    tone({
+      freq: 2200 + Math.random() * 800,
+      type: 'square',
+      duration: 0.025,
+      peakGain: 0.07,
+      attack: 0.001,
+      release: 0.04,
+      startOffset: 0.5 + i * 0.07,
+    })
+  }
+}
+
+function powerupLightning(): void {
+  // Hard zap with very fast frequency sweep + a low "boom" body.
+  const c = ensureContext()
+  if (!c || !masterGain) return
+  const t0 = c.currentTime
+
+  // Noise zap — narrow band, very brief.
+  const noiseDur = 0.18
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * noiseDur), c.sampleRate)
+  const data = buf.getChannelData(0)
+  for (let i = 0; i < data.length; i++) {
+    const d = 1 - i / data.length
+    data[i] = (Math.random() * 2 - 1) * d
+  }
+  const n = c.createBufferSource()
+  n.buffer = buf
+  const bp = c.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.frequency.setValueAtTime(1200, t0)
+  bp.frequency.exponentialRampToValueAtTime(380, t0 + 0.18)
+  bp.Q.setValueAtTime(4, t0)
+  const ng = c.createGain()
+  ng.gain.setValueAtTime(0.0001, t0)
+  ng.gain.exponentialRampToValueAtTime(0.6, t0 + 0.004)
+  ng.gain.exponentialRampToValueAtTime(0.0001, t0 + noiseDur)
+  n.connect(bp).connect(ng).connect(masterGain)
+  n.start(t0)
+  n.stop(t0 + noiseDur + 0.02)
+
+  // Body — a low sine that drops fast = thunder.
+  tone({ freq: [220, 80], type: 'sine', duration: 0.4, peakGain: 0.32, attack: 0.005, release: 0.3, startOffset: 0.04 })
+  // Spark on top.
+  tone({ freq: 1320, type: 'triangle', duration: 0.1, peakGain: 0.16, release: 0.12, startOffset: 0.02 })
+}
+
+function powerupComet(): void {
+  // Long descending whoosh + sparkle tail.
+  tone({ freq: [1480, 220], type: 'sawtooth', duration: 0.55, peakGain: 0.15, attack: 0.03, release: 0.28 })
+  // Twinkle tail of bright sines.
+  const tones = [2093, 2349, 2637, 2960]
+  tones.forEach((f, i) => {
+    tone({
+      freq: f,
+      type: 'sine',
+      duration: 0.1,
+      peakGain: 0.08,
+      release: 0.18,
+      startOffset: 0.18 + i * 0.07,
+    })
+  })
+  // Final burst at the end.
+  tone({ freq: 988, type: 'triangle', duration: 0.16, peakGain: 0.18, release: 0.2, startOffset: 0.55 })
+}
+
 const RECIPES: Record<SoundName, () => void> = {
   move,
   capture,
@@ -184,6 +263,9 @@ const RECIPES: Record<SoundName, () => void> = {
   draw,
   knock,
   'wicket-creak': wicketCreak,
+  'powerup-classic': powerupClassic,
+  'powerup-lightning': powerupLightning,
+  'powerup-comet': powerupComet,
 }
 
 export function playSound(name: SoundName): void {
