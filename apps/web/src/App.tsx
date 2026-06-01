@@ -7,6 +7,7 @@ import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { PuzzleScreen } from './puzzles/PuzzleScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
+import { AiPracticeRoute } from './screens/AiPracticeRoute'
 
 export function App() {
   useEffect(() => {
@@ -18,6 +19,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<StartScreen />} />
         <Route path="/local" element={<LocalGameRoute />} />
+        <Route path="/ai" element={<AiPracticeRoute />} />
         <Route path="/r/:roomId" element={<OnlineGameScreen />} />
         <Route path="/review" element={<PostGameAnalysisScreen />} />
         <Route path="/history" element={<HistoryScreen />} />

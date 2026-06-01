@@ -130,7 +130,7 @@ function HistoryRow({ game, onReview }: { game: SavedGame; onReview: () => void 
           <div className="puc-history__row-meta">
             <span className="puc-history__date">{formatDate(game.playedAt)}</span>
             <span className="puc-history__dot" aria-hidden="true">·</span>
-            <span className="puc-history__mode">{game.mode === 'online' ? 'Online' : 'Local'}</span>
+            <span className="puc-history__mode">{modeLabel(game)}</span>
             <span className="puc-history__dot" aria-hidden="true">·</span>
             <span className="puc-history__host">Host: {host.name}</span>
             <span className="puc-history__dot" aria-hidden="true">·</span>
@@ -168,6 +168,15 @@ function ResultBadge({
       <span className="puc-history__badge-reason">{prettyReason(reason)}</span>
     </div>
   )
+}
+
+function modeLabel(g: SavedGame): string {
+  if (g.mode === 'online') return 'Online'
+  if (g.mode === 'ai') {
+    const tier = g.aiDifficulty ? ` · ${g.aiDifficulty.charAt(0).toUpperCase()}${g.aiDifficulty.slice(1)}` : ''
+    return `AI${tier}`
+  }
+  return 'Local'
 }
 
 function prettyReason(r: EndReason): string {

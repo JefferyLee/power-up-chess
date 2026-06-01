@@ -8,12 +8,15 @@ export interface Profile {
   hostId: 'lucy' | 'luca'
   /** Time-control preset id. See clock/timeControl.ts for the catalogue. */
   timeControlId: string
+  /** AI difficulty preset id. See ai/difficulty.ts. */
+  aiDifficultyId: string
 }
 
 const DEFAULT: Profile = {
   displayName: 'Ada',
   hostId: 'lucy',
   timeControlId: 'untimed',
+  aiDifficultyId: 'beginner',
 }
 
 export function loadProfile(): Profile {
@@ -28,6 +31,7 @@ export function loadProfile(): Profile {
         : DEFAULT.displayName,
       hostId: parsed.hostId === 'luca' ? 'luca' : 'lucy',
       timeControlId: typeof parsed.timeControlId === 'string' ? parsed.timeControlId : DEFAULT.timeControlId,
+      aiDifficultyId: typeof parsed.aiDifficultyId === 'string' ? parsed.aiDifficultyId : DEFAULT.aiDifficultyId,
     }
   } catch {
     return DEFAULT

@@ -12,7 +12,7 @@ export interface SavedGame {
   /** Stable, idempotent id. online:ROOMID for online games; local:UUID otherwise. */
   id: string
   playedAt: number
-  mode: 'local' | 'online'
+  mode: 'local' | 'online' | 'ai'
   whiteName: string
   blackName: string
   hostId: HostId
@@ -21,6 +21,8 @@ export interface SavedGame {
   pgn: string
   finalFen: string
   moveCount: number
+  /** For mode='ai' only — the difficulty preset id used. */
+  aiDifficulty?: string
 }
 
 export interface PuzzleAttempt {

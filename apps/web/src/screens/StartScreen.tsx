@@ -5,6 +5,7 @@ import { useAuthUid } from '../auth/useAuthUid'
 import { callCreateRoom } from '../firebase/callables'
 import { loadProfile, saveProfile } from '../storage/profile'
 import { presetById, TIME_CONTROL_PRESETS } from '../clock/timeControl'
+import { DIFFICULTY_PRESETS, difficultyById, type DifficultyId } from '../ai/difficulty'
 import './StartScreen.css'
 
 export function StartScreen() {
@@ -13,6 +14,7 @@ export function StartScreen() {
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [hostId, setHostId] = useState<HostId>(initial.hostId)
   const [timeControlId, setTimeControlId] = useState<string>(initial.timeControlId)
+  const [aiDifficultyId, setAiDifficultyId] = useState<DifficultyId>(initial.aiDifficultyId as DifficultyId)
   const [opponentName, setOpponentName] = useState('Friend')
   const [joinCode, setJoinCode] = useState('')
   const [creating, setCreating] = useState(false)
@@ -25,7 +27,18 @@ export function StartScreen() {
   const canCreate = authState.status === 'ready' && displayName.trim().length > 0 && !creating
   const canJoin = /^[A-Za-z0-9]{4,12}$/.test(joinCode.trim())
 
-  const persist = () => saveProfile({ displayName: displayName.trim(), hostId, timeControlId })
+  const persist = () => saveProfile({ displayName: displayName.trim(), hostId, timeControlId, aiDifficultyId })
+
+  const onStartAi = () => {
+    persist()
+    navigate('/ai', {
+      state: {
+        hostId,
+        playerName: displayName.trim(),
+        difficultyId: aiDifficultyId,
+      },
+    })
+  }
 
   const onStartLocal = () => {
     persist()
@@ -154,6 +167,34 @@ export function StartScreen() {
             </div>
             {error && <p className="puc-start__error">{error}</p>}
           </div>
+        </section>
+
+        <section className="puc-start__panel" aria-labelledby="puc-start-ai">
+          <h2 id="puc-start-ai" className="puc-start__panel-title">Practice with AI</h2>
+          <div className="puc-start__clocks puc-start__clocks--three">
+            {DIFFICULTY_PRESETS.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                className={`puc-start__clock ${aiDifficultyId === d.id ? 'puc-start__clock--selected' : ''}`}
+                onClick={() => setAiDifficultyId(d.id)}
+                aria-pressed={aiDifficultyId === d.id}
+                title={d.blurb}
+              >
+                <span className="puc-start__clock-short">{d.short}</span>
+                <span className="puc-start__clock-label">{d.label}</span>
+              </button>
+            ))}
+          </div>
+          <p className="puc-start__hint">{difficultyById(aiDifficultyId).blurb}</p>
+          <button
+            type="button"
+            className="puc-start__cta puc-start__cta--ghost"
+            disabled={displayName.trim().length === 0}
+            onClick={onStartAi}
+          >
+            Start practice game
+          </button>
         </section>
 
         <section className="puc-start__panel" aria-labelledby="puc-start-local">

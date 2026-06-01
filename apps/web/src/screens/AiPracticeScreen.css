@@ -1,0 +1,14 @@
+/* Thinking indicator — three dots that pulse next to the AI's name. */
+.puc-ai__thinking {
+  display: inline-block;
+  margin-left: 10px;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  letter-spacing: 1px;
+  color: var(--puc-text-accent);
+  animation: puc-ai-thinking 1.2s ease-in-out infinite;
+}
+
+@keyframes puc-ai-thinking {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
