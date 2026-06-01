@@ -50,9 +50,9 @@ Three things should improve qualitatively from MVP0:
 ## Locked decisions (resolved 2026-05-31)
 
 1. **Puzzle source strategy**: Phase 8 ships with **10–20 hand-authored
-   puzzles**. Phase 9 (Polgár 5334 pipeline) runs in parallel and feeds
-   the same UI once content lands. **User owns rights review** for
-   anything imported from the book.
+   puzzles**. Phase 9 ingests from the **Lichess puzzle database**
+   (CC0 licensed, ~5M puzzles already FEN+UCI+theme+rating normalised).
+   Both feed the same UI. Polgár 5334 deferred to a later phase.
 2. **Kind AI strength**: Start with **Stockfish skill 0 + depth 4**
    (≈ Elo 600–800). Tune from Ada's reactions. No "fake blunder" mode —
    Ada wins or loses real games.
@@ -68,8 +68,9 @@ Three things should improve qualitatively from MVP0:
      Post-game Review but no separate in-game ceremony.
 4. **Second theme**: **Starry Universe** (night-sky palette + constellation
    line accents). Validates that the theme abstraction holds.
-5. **Polgár 5334 usage**: Approved for MVP1 — user is doing the rights
-   review in parallel.
+5. **Polgár 5334 usage**: Deferred. MVP1 uses Lichess puzzles (CC0)
+   instead. Polgár's structured difficulty curriculum may come back in
+   MVP2 once we know how Ada uses the Garden.
 
 ## Phases
 
@@ -91,21 +92,23 @@ player most: mate-in-1, hanging pieces, simple forks, simple pins.
 | 8.7 | `src/screens/PuzzleGardenScreen.tsx` at `/puzzles` — list of puzzles grouped by motif, "solved" badge per puzzle, "next unsolved" CTA | Manual: enter Garden → unsolved puzzles visible, solved show ✓ |
 | 8.8 | StartScreen entry "Puzzle Garden" alongside Match history | Manual: clear path Start → Garden → Puzzle → solve → back |
 
-### Phase 9 — Puzzle import pipeline (Polgár 5334)
-**Target: ~1 week, can run in parallel with Phase 8 once 8.2 lands**
+### Phase 9 — Puzzle import pipeline (Lichess CC0)
+**Target: 3–4 days, can run in parallel with Phase 8 once 8.2 lands**
 
-Per `docs/PUZZLE_CONTENT_PIPELINE.md` stages. The pipeline runs offline,
-emits normalized JSON into `data/puzzles/polgar/`, and Phase 8's loader
-picks them up alongside the seed set.
+Source: `https://database.lichess.org/lichess_db_puzzle.csv.zst`
+(~5M puzzles, CC0). Columns: `PuzzleId, FEN, Moves, Rating,
+RatingDeviation, Popularity, NbPlays, Themes, GameUrl, OpeningTags`.
+Already validated + tagged with motifs — we just filter, sample,
+re-explain in child voice, and emit.
 
 | # | Task | Acceptance |
 |---|---|---|
-| 9.1 | `tools/puzzle-import/` — local Node script. Reads the Polgár EPUB at `docs/books_and_references/Chess _ 5334 ...epub`, extracts diagrams + solution text | Script reports puzzle counts per chapter; no crashes |
-| 9.2 | OCR/parse → FEN + side-to-move + claimed solution. Track problem number + page for traceability | 50 sample puzzles parse with ≥90% diagram-to-FEN accuracy |
-| 9.3 | Stockfish validation (reuse `apps/web` lite-single via node-wasm) — engine agrees solution is best move and reaches the claimed outcome (mate / decisive material) | Validation rejects garbage with no false negatives on the sample 50 |
-| 9.4 | LLM-rewritten child-friendly explanation per puzzle, using the same Lucy/Luca persona blocks. Cached by puzzle hash | First 50 puzzles each have 1–2 sentence original explanation |
-| 9.5 | Output `data/puzzles/polgar/00001.json … .json` with full metadata + `rightsStatus` field; manifest at `data/puzzles/manifest.json` | Phase 8 UI loads them with zero code changes |
-| 9.6 | Human-review queue: a CLI / static page that walks unreviewed puzzles for the user to approve/reject. Approved puzzles get `rightsStatus: 'approved'` | User approves 50 puzzles end-to-end |
+| 9.1 | `tools/puzzle-import/fetch.ts` — download + zstd-decompress + stream-parse the CSV into Node. Runs once locally; output is committed | Streams through ~5M rows without OOM |
+| 9.2 | `tools/puzzle-import/filter.ts` — keep only Ada-appropriate puzzles: `Rating ∈ [400, 900]`, themes include at least one of `mateIn1`, `mateIn2`, `fork`, `pin`, `skewer`, `hangingPiece`, `backRankMate`, length ≤ 3 moves, popularity ≥ 80 | Output count: 1k–5k puzzles |
+| 9.3 | `tools/puzzle-import/sample.ts` — stratified sample by motif (e.g. 30 per motif, 200 total). Deterministic via seed | Manifest of selected puzzleIds is reproducible |
+| 9.4 | `tools/puzzle-import/explain.ts` — for each puzzle, LLM-generate a 1–2 sentence child-friendly explanation in default-host voice. Cache by puzzleId so re-runs are free | 200 puzzles get explanations; second run hits 100% cache |
+| 9.5 | Emit `data/puzzles/lichess/{puzzleId}.json` + `data/puzzles/manifest.json` listing seed + lichess sources. Each puzzle carries `{id, fen, sideToMove, solution, motifs, difficulty, source: {provider: 'lichess', puzzleId, license: 'CC0'}, explanation}` | Phase 8 loader picks them up with no code changes |
+| 9.6 | LICENSE / attribution note in `data/puzzles/lichess/README.md` crediting Lichess + linking the CC0 dump page | File present and committed |
 
 ### Phase 10 — Kind AI Practice
 **Target: 3–4 days**
@@ -152,7 +155,9 @@ A friendly Stockfish opponent. New mode in StartScreen.
 | 13.4 | **Replay Ribbon**: a "▶" badge next to past notable moves in the move list. Click → triggers the Phase 11 Move Replay Theater for that move | Manual: post-game review, click ▶ on any move → replay overlay |
 | 13.5 | `docs/MVP1_ACCEPTANCE.md` — run the new flow with Ada (or stand-in). Re-deploy + tag `mvp1` | All checks pass; tag pushed |
 
-**Phase total: ~3–4 weeks calendar time.**
+**Phase total: ~2.5–3.5 weeks calendar time** (Phase 9 shortened since
+the Lichess data is pre-validated and pre-tagged — no OCR or rights
+review needed).
 
 ## What we are NOT doing in MVP1 (deferred to MVP2)
 
@@ -174,7 +179,8 @@ A friendly Stockfish opponent. New mode in StartScreen.
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Polgár pipeline blocks Phase 9 (EPUB diagrams as images, OCR quality) | Garden runs on the 50 hand puzzles only | Phase 8 ships independently; pipeline failure doesn't block MVP1 |
+| Lichess CSV format changes (column rename, license shift) | Pipeline breaks at the next refresh | Phase 8 ships the hand-curated 10–20 first; Lichess output is committed JSON so a one-off success persists even if upstream changes |
+| Sampled Lichess puzzles still feel too hard for Ada | Garden frustrating | Tighten 9.2 rating ceiling (e.g. 600 instead of 900); add a "ramp" sort that orders puzzles within a motif by rating ascending |
 | AI Practice feels too hard at skill 0 | Ada gets frustrated | Reactive: add a "Tutor" tier with skill 0 + depth 1 + 50 ms |
 | Tier 2 ceremony too long on losses (we already fire fireworks for losses today) | Loser dwells on the loss | Loss path uses the existing gentler overlay; only winners see Tier 2 |
 | Both-hosts mode produces over-talkative commentary | Distracts from board | Secondary host reaction capped to one comment per notable move, prompt-enforced |
