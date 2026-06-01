@@ -179,79 +179,110 @@ function wicketCreak(): void {
 }
 
 // ─── Power Up capture ceremony sounds ───────────────────────────────────
-// Each variant pairs with one of the PowerUpCeremony visual styles.
+// Each variant is ~1.5s, multi-layered (sub-bass + body + sparkle + tail)
+// so a capture feels like a real win, not a click.
 
-function powerupClassic(): void {
-  // Rising whoosh → bright "tink" → fireworks crackle.
-  tone({ freq: [180, 980], type: 'sawtooth', duration: 0.34, peakGain: 0.18, attack: 0.02, release: 0.18 })
-  tone({ freq: 1568, type: 'sine', duration: 0.16, peakGain: 0.2, release: 0.18, startOffset: 0.34 })
-  tone({ freq: 2093, type: 'sine', duration: 0.12, peakGain: 0.15, release: 0.16, startOffset: 0.42 })
-  // Crackle: three quick high-freq taps simulating tiny pops.
-  for (let i = 0; i < 4; i++) {
-    tone({
-      freq: 2200 + Math.random() * 800,
-      type: 'square',
-      duration: 0.025,
-      peakGain: 0.07,
-      attack: 0.001,
-      release: 0.04,
-      startOffset: 0.5 + i * 0.07,
-    })
-  }
-}
-
-function powerupLightning(): void {
-  // Hard zap with very fast frequency sweep + a low "boom" body.
+/** Filtered-noise burst — used by lightning/classic/comet for rumble and
+ *  texture. Internally creates its own buffer/filter/gain chain. */
+function noiseBurst(opts: {
+  startOffset: number
+  duration: number
+  freq: number
+  q?: number
+  peakGain: number
+  type?: 'lowpass' | 'bandpass' | 'highpass'
+}): void {
   const c = ensureContext()
   if (!c || !masterGain) return
-  const t0 = c.currentTime
-
-  // Noise zap — narrow band, very brief.
-  const noiseDur = 0.18
-  const buf = c.createBuffer(1, Math.floor(c.sampleRate * noiseDur), c.sampleRate)
+  const t0 = c.currentTime + opts.startOffset
+  const samples = Math.max(1, Math.floor(c.sampleRate * opts.duration))
+  const buf = c.createBuffer(1, samples, c.sampleRate)
   const data = buf.getChannelData(0)
   for (let i = 0; i < data.length; i++) {
-    const d = 1 - i / data.length
-    data[i] = (Math.random() * 2 - 1) * d
+    const decay = 1 - i / data.length
+    data[i] = (Math.random() * 2 - 1) * decay
   }
-  const n = c.createBufferSource()
-  n.buffer = buf
-  const bp = c.createBiquadFilter()
-  bp.type = 'bandpass'
-  bp.frequency.setValueAtTime(1200, t0)
-  bp.frequency.exponentialRampToValueAtTime(380, t0 + 0.18)
-  bp.Q.setValueAtTime(4, t0)
-  const ng = c.createGain()
-  ng.gain.setValueAtTime(0.0001, t0)
-  ng.gain.exponentialRampToValueAtTime(0.6, t0 + 0.004)
-  ng.gain.exponentialRampToValueAtTime(0.0001, t0 + noiseDur)
-  n.connect(bp).connect(ng).connect(masterGain)
-  n.start(t0)
-  n.stop(t0 + noiseDur + 0.02)
-
-  // Body — a low sine that drops fast = thunder.
-  tone({ freq: [220, 80], type: 'sine', duration: 0.4, peakGain: 0.32, attack: 0.005, release: 0.3, startOffset: 0.04 })
-  // Spark on top.
-  tone({ freq: 1320, type: 'triangle', duration: 0.1, peakGain: 0.16, release: 0.12, startOffset: 0.02 })
+  const src = c.createBufferSource()
+  src.buffer = buf
+  const filter = c.createBiquadFilter()
+  filter.type = opts.type ?? 'lowpass'
+  filter.frequency.setValueAtTime(opts.freq, t0)
+  filter.Q.setValueAtTime(opts.q ?? 1, t0)
+  const gain = c.createGain()
+  gain.gain.setValueAtTime(0.0001, t0)
+  gain.gain.exponentialRampToValueAtTime(Math.min(0.6, opts.peakGain), t0 + 0.006)
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + opts.duration)
+  src.connect(filter).connect(gain).connect(masterGain)
+  src.start(t0)
+  src.stop(t0 + opts.duration + 0.02)
 }
 
-function powerupComet(): void {
-  // Long descending whoosh + sparkle tail.
-  tone({ freq: [1480, 220], type: 'sawtooth', duration: 0.55, peakGain: 0.15, attack: 0.03, release: 0.28 })
-  // Twinkle tail of bright sines.
-  const tones = [2093, 2349, 2637, 2960]
-  tones.forEach((f, i) => {
+// Classic — Trophy Burst (~1.5s). Big impact → rising swoosh →
+// triumphant major triad → bell sparkle cluster → hi-hat tail.
+function powerupClassic(): void {
+  // 1) Sub-bass kick for instant impact.
+  tone({ freq: [120, 40], type: 'sine', duration: 0.35, peakGain: 0.45, attack: 0.002, release: 0.3 })
+  // 2) Rising whoosh into the triad.
+  tone({ freq: [180, 1480], type: 'sawtooth', duration: 0.5, peakGain: 0.2, attack: 0.04, release: 0.2 })
+  // 3) C-E-G major triad at 0.45s — the "tada".
+  const triadStart = 0.45
+  ;[523.25, 659.25, 783.99].forEach((f, i) => {
     tone({
-      freq: f,
-      type: 'sine',
-      duration: 0.1,
-      peakGain: 0.08,
-      release: 0.18,
-      startOffset: 0.18 + i * 0.07,
+      freq: f, type: 'triangle', duration: 0.5, peakGain: 0.22,
+      attack: 0.01, release: 0.45, startOffset: triadStart + i * 0.02,
     })
   })
-  // Final burst at the end.
-  tone({ freq: 988, type: 'triangle', duration: 0.16, peakGain: 0.18, release: 0.2, startOffset: 0.55 })
+  // 4) Sparkle cluster — quick descending bell tones.
+  const sparkleStart = 0.85
+  ;[2093, 1760, 2349, 1976, 2637, 2093].forEach((f, i) => {
+    tone({
+      freq: f, type: 'sine', duration: 0.08, peakGain: 0.12,
+      release: 0.18, startOffset: sparkleStart + i * 0.06,
+    })
+  })
+  // 5) Highpass-noise hi-hat tail.
+  noiseBurst({ startOffset: 1.15, duration: 0.35, freq: 4000, type: 'highpass', peakGain: 0.18 })
+}
+
+// Lightning — Thunder Strike (~1.6s). Crack + electric zap → boom →
+// long rolling rumble → echo crack → fade tail.
+function powerupLightning(): void {
+  noiseBurst({ startOffset: 0.0, duration: 0.12, freq: 1800, q: 0.6, peakGain: 0.55 })
+  tone({ freq: [3200, 600], type: 'sawtooth', duration: 0.28, peakGain: 0.28, attack: 0.001, release: 0.18 })
+  // Bass thunder body — punchy sub-bass swoop.
+  tone({ freq: [220, 50], type: 'sine', duration: 0.6, peakGain: 0.5, attack: 0.005, release: 0.45, startOffset: 0.08 })
+  // Mid-band rolling rumble.
+  noiseBurst({ startOffset: 0.25, duration: 0.95, freq: 280, q: 0.7, peakGain: 0.32 })
+  // Echo crack for drama.
+  noiseBurst({ startOffset: 0.85, duration: 0.18, freq: 900, q: 0.8, peakGain: 0.22 })
+  tone({ freq: [600, 200], type: 'triangle', duration: 0.4, peakGain: 0.16, release: 0.32, startOffset: 0.95 })
+  // Tail rumble fading out.
+  noiseBurst({ startOffset: 1.15, duration: 0.4, freq: 150, q: 0.6, peakGain: 0.14 })
+}
+
+// Comet — Star Streak (~1.5s). Long whoosh → ground thud →
+// ascending magical arpeggio → sustained bell → final twinkles.
+function powerupComet(): void {
+  tone({ freq: [2200, 220], type: 'sawtooth', duration: 0.7, peakGain: 0.18, attack: 0.04, release: 0.3 })
+  // Sub-bass thud when the comet "lands".
+  tone({ freq: [90, 40], type: 'sine', duration: 0.35, peakGain: 0.4, attack: 0.005, release: 0.3, startOffset: 0.55 })
+  // Ascending C-E-G-B-D-F arpeggio (sparkle reveal).
+  ;[523.25, 659.25, 783.99, 987.77, 1174.66, 1396.91].forEach((f, i) => {
+    tone({
+      freq: f, type: 'sine', duration: 0.18, peakGain: 0.16,
+      attack: 0.005, release: 0.18, startOffset: 0.3 + i * 0.07,
+    })
+  })
+  // Sustained bell ringing into the tail.
+  tone({ freq: 1318.51, type: 'sine', duration: 0.6, peakGain: 0.2, attack: 0.01, release: 0.55, startOffset: 0.75 })
+  tone({ freq: 1975.53, type: 'sine', duration: 0.5, peakGain: 0.12, attack: 0.02, release: 0.45, startOffset: 0.78 })
+  // Final twinkle cluster.
+  ;[2637, 3136, 2349, 3520].forEach((f, i) => {
+    tone({
+      freq: f, type: 'sine', duration: 0.07, peakGain: 0.1,
+      release: 0.15, startOffset: 1.05 + i * 0.08,
+    })
+  })
 }
 
 const RECIPES: Record<SoundName, () => void> = {

@@ -1,23 +1,16 @@
 // Puzzle loader.
 //
-// MVP1 bundles all puzzles at build time — the catalogue is small
-// (~10 seed + ~200 Lichess) so a few hundred KB in the main bundle is
-// acceptable and saves us a network round-trip per puzzle. If the
-// catalogue ever grows past ~1MB we can switch to dynamic imports per
-// puzzle file behind the same API.
+// Bundles the Lichess CC0 sample at build time. The early hand-curated
+// seed set was removed in MVP2.H.1 (had a few authoring errors that
+// would fail validation); Lichess content is already engine-validated.
 
-import seedJson from '@data/puzzles/seed.json'
 import lichessJson from '@data/puzzles/lichess.json'
 import type { Puzzle, PuzzleMotif } from './types'
 
-// Cast through unknown: JSON imports give a structural shape, we narrow them
-// to our typed schema. Integrity is checked by loader.test.ts.
-const SEED: Puzzle[] = seedJson as unknown as Puzzle[]
 const LICHESS: Puzzle[] = lichessJson as unknown as Puzzle[]
 
-/** Every puzzle currently available to the app: hand-curated seed first
- *  (gentlest, hand-written explanations), then the Lichess sample. */
-export const ALL_PUZZLES: ReadonlyArray<Puzzle> = [...SEED, ...LICHESS]
+/** Every puzzle currently available to the app. */
+export const ALL_PUZZLES: ReadonlyArray<Puzzle> = LICHESS
 
 /** Quick map for O(1) lookup by id. */
 const BY_ID = new Map<string, Puzzle>(ALL_PUZZLES.map((p) => [p.id, p]))

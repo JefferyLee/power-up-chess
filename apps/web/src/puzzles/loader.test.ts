@@ -9,10 +9,9 @@ import {
 } from './loader'
 
 describe('puzzle loader', () => {
-  it('loads the catalogue (seed + lichess)', () => {
+  it('loads the catalogue (lichess sample)', () => {
     expect(ALL_PUZZLES.length).toBeGreaterThan(0)
-    // 10 seed + ~200 lichess. Generous floor so a handful of import
-    // drops/adds doesn't churn the test.
+    // ~200 Lichess. Generous floor so import drops/adds don't churn.
     expect(ALL_PUZZLES.length).toBeGreaterThanOrEqual(100)
   })
 
@@ -29,7 +28,8 @@ describe('puzzle loader', () => {
   })
 
   it('getPuzzle returns by id, null otherwise', () => {
-    expect(getPuzzle('seed-001')?.id).toBe('seed-001')
+    const sample = ALL_PUZZLES[0]!
+    expect(getPuzzle(sample.id)?.id).toBe(sample.id)
     expect(getPuzzle('does-not-exist')).toBeNull()
   })
 
@@ -53,7 +53,7 @@ describe('puzzle loader', () => {
       expect(easiest[i]!.difficulty).toBeGreaterThanOrEqual(easiest[i - 1]!.difficulty)
     }
     // Original order preserved (loader returns a Readonly tuple; sortByDifficulty copies).
-    expect(ALL_PUZZLES[0]!.id).toBe('seed-001')
+    expect(ALL_PUZZLES[0]).toBeDefined()
   })
 })
 

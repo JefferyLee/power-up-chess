@@ -14,7 +14,7 @@ export interface PowerUpData {
   variant: PowerUpVariant
 }
 
-const LIFETIME_MS = 1500
+const LIFETIME_MS = 1800
 
 interface Props {
   data: PowerUpData
