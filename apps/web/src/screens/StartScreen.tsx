@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HOST_CHOICES } from '../hosts/hosts'
 import { useAuthUid } from '../auth/useAuthUid'
 import { callCreateRoom } from '../firebase/callables'
-import { loadProfile, resolveHostChoice, saveProfile, type HostChoice } from '../storage/profile'
+import { loadProfile, pickRandomHost, saveProfile } from '../storage/profile'
 import { presetById, TIME_CONTROL_PRESETS } from '../clock/timeControl'
 import { DIFFICULTY_PRESETS, difficultyById, type DifficultyId } from '../ai/difficulty'
 import { applyTheme, THEMES } from '../theme/themes'
@@ -14,7 +13,6 @@ export function StartScreen() {
   const navigate = useNavigate()
   const initial = loadProfile()
   const [displayName, setDisplayName] = useState(initial.displayName)
-  const [hostChoice, setHostChoice] = useState<HostChoice>(initial.hostChoice)
   const [timeControlId, setTimeControlId] = useState<string>(initial.timeControlId)
   const [aiDifficultyId, setAiDifficultyId] = useState<DifficultyId>(initial.aiDifficultyId as DifficultyId)
   const [themeId, setThemeId] = useState<string>(initial.themeId)
@@ -32,7 +30,6 @@ export function StartScreen() {
 
   const persist = () => saveProfile({
     displayName: displayName.trim(),
-    hostChoice,
     timeControlId,
     aiDifficultyId,
     themeId,
@@ -46,11 +43,9 @@ export function StartScreen() {
 
   const onStartAi = () => {
     persist()
-    const { primary, coHost } = resolveHostChoice(hostChoice)
     navigate('/ai', {
       state: {
-        hostId: primary,
-        coHostId: coHost,
+        hostId: pickRandomHost(),
         playerName: displayName.trim(),
         difficultyId: aiDifficultyId,
       },
@@ -59,11 +54,9 @@ export function StartScreen() {
 
   const onStartLocal = () => {
     persist()
-    const { primary, coHost } = resolveHostChoice(hostChoice)
     navigate('/local', {
       state: {
-        hostId: primary,
-        coHostId: coHost,
+        hostId: pickRandomHost(),
         whiteName: displayName.trim(),
         blackName: opponentName.trim(),
         timeControl,
@@ -77,13 +70,10 @@ export function StartScreen() {
     setError(null)
     try {
       persist()
-      // Online rooms are single-host — Both/Surprise resolve to the primary
-      // before the room is minted. Co-host commentary online would need
-      // coordination between two players and is out of scope for MVP1.
-      const { primary } = resolveHostChoice(hostChoice)
+      // Online: the Cloud Function picks the host at random server-side
+      // so both players see the same one and neither can influence it.
       const { roomId } = await callCreateRoom({
         displayName: displayName.trim(),
-        hostMode: primary,
         timeControl,
       })
       navigate(`/r/${roomId}`)
@@ -126,24 +116,6 @@ export function StartScreen() {
             autoComplete="off"
             aria-label="Your display name"
           />
-        </section>
-
-        <section className="puc-start__panel" aria-labelledby="puc-start-host">
-          <h2 id="puc-start-host" className="puc-start__panel-title">Pick a host</h2>
-          <div className="puc-start__hosts puc-start__hosts--four">
-            {HOST_CHOICES.map((h) => (
-              <button
-                key={h.id}
-                type="button"
-                className={`puc-start__host ${hostChoice === h.id ? 'puc-start__host--selected' : ''}`}
-                onClick={() => setHostChoice(h.id)}
-                aria-pressed={hostChoice === h.id}
-              >
-                <span className="puc-start__host-name">{h.name}</span>
-                <span className="puc-start__host-blurb">{h.blurb}</span>
-              </button>
-            ))}
-          </div>
         </section>
 
         <section className="puc-start__panel" aria-labelledby="puc-start-clock">

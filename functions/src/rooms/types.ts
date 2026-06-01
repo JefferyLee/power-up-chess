@@ -53,7 +53,6 @@ export interface Move {
 
 export interface CreateRoomRequest {
   displayName: string
-  hostMode?: 'lucy' | 'luca'
   timeControl?: TimeControl | null
 }
 

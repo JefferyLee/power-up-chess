@@ -39,7 +39,9 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
     if (displayName.length === 0) {
       throw new HttpsError('invalid-argument', 'displayName is required.')
     }
-    const hostMode = req.data.hostMode === 'luca' ? 'luca' : 'lucy'
+    // Host is decided server-side so neither player can pick it and both
+    // players see the same one. Anything sent by the client is ignored.
+    const hostMode: 'lucy' | 'luca' = Math.random() < 0.5 ? 'lucy' : 'luca'
     const timeControl = sanitiseTimeControl(req.data.timeControl ?? null)
 
     const db = getFirestore()
