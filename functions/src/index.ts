@@ -12,3 +12,4 @@ export const healthcheck = onRequest((_req, res) => {
 export { createRoom } from './rooms/createRoom'
 export { joinRoom } from './rooms/joinRoom'
 export { submitMove } from './rooms/submitMove'
+export { resignGame } from './rooms/resignGame'

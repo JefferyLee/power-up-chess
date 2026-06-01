@@ -16,6 +16,7 @@ export type EndReason =
   | 'insufficient_material'
   | 'threefold_repetition'
   | 'fifty_move'
+  | 'resign'
   | 'other'
 
 export interface Move {

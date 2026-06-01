@@ -17,6 +17,7 @@ import type {
 const createRoomFn = httpsCallable<CreateRoomRequest, CreateRoomResponse>(functions, 'createRoom')
 const joinRoomFn = httpsCallable<JoinRoomRequest, JoinRoomResponse>(functions, 'joinRoom')
 const submitMoveFn = httpsCallable<SubmitMoveRequest, SubmitMoveResponse>(functions, 'submitMove')
+const resignGameFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'resignGame')
 
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
@@ -31,4 +32,8 @@ export async function callJoinRoom(req: JoinRoomRequest): Promise<JoinRoomRespon
 export async function callSubmitMove(req: SubmitMoveRequest): Promise<SubmitMoveResponse> {
   const { data } = await submitMoveFn(req)
   return data
+}
+
+export async function callResignGame(roomId: string): Promise<void> {
+  await resignGameFn({ roomId })
 }

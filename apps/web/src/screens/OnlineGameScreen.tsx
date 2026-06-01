@@ -4,13 +4,14 @@ import { Board } from '../board/Board'
 import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { ChessGame } from '../chess/game'
-import type { Color, MoveInput, PieceSymbol, Square } from '../chess/types'
+import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { useAuthUid } from '../auth/useAuthUid'
 import { HOSTS } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
-import { callJoinRoom } from '../firebase/callables'
+import { ResignDialog } from '../powerups/ResignDialog'
+import { callJoinRoom, callResignGame } from '../firebase/callables'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile } from '../storage/profile'
@@ -177,9 +178,21 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   }, [room.moves])
 
   const pieces = useMemo(() => piecesFromFen(room.currentFen), [room.currentFen])
-  const status = localGame.status()
+  const positionStatus = localGame.status()
   const turn = localGame.turn()
-  const inCheck = status.kind === 'in_progress' && status.inCheck
+  const inCheck = positionStatus.kind === 'in_progress' && positionStatus.inCheck
+
+  // Resignation isn't visible in the position; the room doc carries it.
+  // Layer it on top so the UI treats resign as a real terminal state.
+  const effectiveStatus: GameStatus = useMemo(() => {
+    if (room.status === 'completed' && room.endReason === 'resign') {
+      const winner: Color = room.result === 'white' ? 'w' : 'b'
+      return { kind: 'resign', winner, resigner: winner === 'w' ? 'b' : 'w' }
+    }
+    return positionStatus
+  }, [room.status, room.endReason, room.result, positionStatus])
+
+  const gameOver = effectiveStatus.kind !== 'in_progress'
 
   // Last move highlight from authoritative move list.
   const lastMove = room.moves.length
@@ -190,12 +203,29 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     : null
   const checkSquare = inCheck ? findKing(pieces, turn) : null
 
-  const isMyTurn = yourColor === turn && room.status === 'live'
+  const isMyTurn = yourColor === turn && room.status === 'live' && !gameOver
 
   const legalDestinationsFrom = useCallback(
     (from: Square) => (isMyTurn ? localGame.legalDestinationsFrom(from) : []),
     [localGame, isMyTurn],
   )
+
+  // Resign dialog state.
+  const [resignDialogOpen, setResignDialogOpen] = useState(false)
+  const [resignBusy, setResignBusy] = useState(false)
+  const [resignError, setResignError] = useState<string | null>(null)
+  const onConfirmResign = useCallback(async () => {
+    setResignBusy(true)
+    setResignError(null)
+    try {
+      await callResignGame(roomId)
+      setResignDialogOpen(false)
+    } catch (e) {
+      setResignError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setResignBusy(false)
+    }
+  }, [roomId])
 
   // Capture sparks driven by new captures appearing in the move list. seenRef
   // tracks how much of the move list we have already processed, so re-renders
@@ -307,7 +337,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     }
   }
 
-  const statusForBanner: ReturnType<ChessGame['status']> = status
+  const statusForBanner: GameStatus = effectiveStatus
 
   return (
     <div className="puc-local">
@@ -320,6 +350,11 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           <span className="puc-local__host-blurb">is your host today</span>
         </div>
         <div className="puc-local__actions">
+          {yourColor && room.status === 'live' && (
+            <button type="button" onClick={() => setResignDialogOpen(true)}>
+              Resign
+            </button>
+          )}
           <button type="button" onClick={copyLink}>
             {copied ? 'Copied!' : 'Copy link'}
           </button>
@@ -395,6 +430,20 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         onBackToMenu={onBack}
         onReview={onReview}
       />
+
+      {resignDialogOpen && yourColor && (
+        <ResignDialog
+          mode="online"
+          yourName={yourColor === 'w' ? room.white.displayName : room.black?.displayName ?? ''}
+          busy={resignBusy}
+          onResign={onConfirmResign}
+          onCancel={() => {
+            setResignDialogOpen(false)
+            setResignError(null)
+          }}
+        />
+      )}
+      {resignError && <p className="puc-online__error puc-online__error--floating">{resignError}</p>}
     </div>
   )
 }
@@ -469,9 +518,13 @@ function RoomStatusLine({
     return <p className="puc-local__status">Waiting for an opponent to join. Share the link.</p>
   }
   if (room.status === 'completed') {
+    const winnerName = room.result === 'white' ? room.white.displayName : room.black?.displayName ?? ''
+    const loserName = room.result === 'white' ? room.black?.displayName ?? '' : room.white.displayName
     if (room.endReason === 'checkmate') {
-      const winner = room.result === 'white' ? room.white.displayName : room.black?.displayName ?? ''
-      return <p className="puc-local__status puc-local__status--end">Checkmate — {winner} wins.</p>
+      return <p className="puc-local__status puc-local__status--end">Checkmate — {winnerName} wins.</p>
+    }
+    if (room.endReason === 'resign') {
+      return <p className="puc-local__status puc-local__status--end">{loserName} resigned — {winnerName} wins.</p>
     }
     if (room.endReason === 'stalemate') return <p className="puc-local__status puc-local__status--end">Stalemate.</p>
     return <p className="puc-local__status puc-local__status--end">Draw.</p>

@@ -1,0 +1,92 @@
+.puc-resign {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: puc-resign-in 220ms ease-out both;
+}
+
+@keyframes puc-resign-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.puc-resign__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 14, 10, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+.puc-resign__card {
+  position: relative;
+  z-index: 1;
+  width: min(420px, calc(100% - 32px));
+  padding: 24px 28px;
+  background: linear-gradient(180deg, rgba(34, 50, 34, 0.96), rgba(18, 28, 20, 0.96));
+  border: 1px solid rgba(241, 195, 76, 0.42);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+}
+
+.puc-resign__title {
+  margin: 0 0 8px;
+  font-family: var(--puc-font-display);
+  font-size: 20px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+}
+
+.puc-resign__body {
+  margin: 0 0 18px;
+  color: var(--puc-text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.puc-resign__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.puc-resign__btn {
+  padding: 10px 16px;
+  font-family: var(--puc-font-body);
+  font-size: 14px;
+  background: rgba(10, 18, 12, 0.55);
+  color: var(--puc-text);
+  border: 1px solid rgba(241, 195, 76, 0.32);
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.puc-resign__btn:hover:not(:disabled) {
+  border-color: var(--puc-accent);
+  color: var(--puc-accent);
+}
+
+.puc-resign__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.puc-resign__btn--ghost {
+  border-color: rgba(231, 184, 65, 0.18);
+}
+
+.puc-resign__btn--danger {
+  background: linear-gradient(180deg, #c25c5c, #9c4040);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.puc-resign__btn--danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+  color: #fff;
+}

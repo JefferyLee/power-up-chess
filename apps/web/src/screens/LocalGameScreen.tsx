@@ -4,11 +4,12 @@ import { Board } from '../board/Board'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { PIECE_GLYPH } from '../board/pieceGlyphs'
-import type { Color, MoveInput, PieceSymbol, Square } from '../chess/types'
+import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
+import { ResignDialog } from '../powerups/ResignDialog'
 import './LocalGameScreen.css'
 
 interface Props {
@@ -52,13 +53,27 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
+  const [localResignation, setLocalResignation] = useState<{ resigner: Color } | null>(null)
+  const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const host = HOSTS[hostId]
+
+  // Resignation isn't a chess.js concept — overlay it on top of the position-
+  // derived status. Once resigned, the board freezes and the end overlay
+  // appears.
+  const effectiveStatus: GameStatus = localResignation
+    ? {
+        kind: 'resign',
+        resigner: localResignation.resigner,
+        winner: localResignation.resigner === 'w' ? 'b' : 'w',
+      }
+    : snap.status
+  const gameOver = effectiveStatus.kind !== 'in_progress'
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
 
   const legalDestinationsFrom = useCallback(
-    (from: Square) => game.legalDestinationsFrom(from),
-    [game],
+    (from: Square) => (gameOver ? [] : game.legalDestinationsFrom(from)),
+    [game, gameOver],
   )
 
   const handleMove = useCallback(
@@ -96,6 +111,12 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     setGame(fresh)
     setSnap(snapshot(fresh))
     setSparks([])
+    setLocalResignation(null)
+  }, [])
+
+  const handleResign = useCallback((resigner: Color) => {
+    setLocalResignation({ resigner })
+    setResignDialogOpen(false)
   }, [])
 
   const handleSparkDone = useCallback((id: number) => {
@@ -105,20 +126,21 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   // Build the game-end recap once the status is terminal. Memoised so the
   // template only fires once per terminal state (not on every render).
   const endRecap = useMemo(() => {
-    if (snap.status.kind === 'in_progress') return ''
-    if (snap.status.kind === 'checkmate') {
-      const winnerName = snap.status.winner === 'w' ? whiteName : blackName
+    if (effectiveStatus.kind === 'in_progress') return ''
+    if (effectiveStatus.kind === 'checkmate') {
+      const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
       return picker.pick(hostId, 'checkmate-win', { winnerName })
     }
-    if (snap.status.kind === 'stalemate') {
+    if (effectiveStatus.kind === 'resign') {
+      const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
+      return picker.pick(hostId, 'checkmate-win', { winnerName })
+    }
+    if (effectiveStatus.kind === 'stalemate') {
       return picker.pick(hostId, 'stalemate')
     }
     return picker.pick(hostId, 'draw')
-    // We intentionally key the memo on the status' identity so the picker is
-    // invoked once per game-end. snapshot() returns a fresh status object on
-    // every render, but the kind transition is what we care about.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snap.status.kind, hostId])
+  }, [effectiveStatus.kind, hostId])
 
   const lastMove = snap.history.length
     ? { from: snap.history[snap.history.length - 1]!.from, to: snap.history[snap.history.length - 1]!.to }
@@ -149,7 +171,14 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
           <span className="puc-local__host-blurb">is your host today</span>
         </div>
         <div className="puc-local__actions">
-          <button type="button" onClick={handleUndo} disabled={snap.history.length === 0}>
+          <button
+            type="button"
+            onClick={() => setResignDialogOpen(true)}
+            disabled={gameOver}
+          >
+            Resign
+          </button>
+          <button type="button" onClick={handleUndo} disabled={snap.history.length === 0 || gameOver}>
             Undo
           </button>
           <button type="button" onClick={handleRestart}>
@@ -163,7 +192,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
           <PlayerCard
             name={blackName}
             color="b"
-            isTurn={snap.turn === 'b' && snap.status.kind === 'in_progress'}
+            isTurn={snap.turn === 'b' && effectiveStatus.kind === 'in_progress'}
             captured={lostByWhite}
             capturedColor="w"
           />
@@ -184,14 +213,14 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
             ))}
           </div>
-          <StatusBanner status={snap.status} activeName={activeName} whiteName={whiteName} blackName={blackName} />
+          <StatusBanner status={effectiveStatus} activeName={activeName} whiteName={whiteName} blackName={blackName} />
         </div>
 
         <aside className="puc-local__side puc-local__side--bottom">
           <PlayerCard
             name={whiteName}
             color="w"
-            isTurn={snap.turn === 'w' && snap.status.kind === 'in_progress'}
+            isTurn={snap.turn === 'w' && effectiveStatus.kind === 'in_progress'}
             captured={lostByBlack}
             capturedColor="b"
           />
@@ -204,7 +233,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
       </div>
 
       <GameEndOverlay
-        status={snap.status}
+        status={effectiveStatus}
         whiteName={whiteName}
         blackName={blackName}
         hostRecap={endRecap}
@@ -216,6 +245,16 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
           })
         }
       />
+
+      {resignDialogOpen && (
+        <ResignDialog
+          mode="local"
+          whiteName={whiteName}
+          blackName={blackName}
+          onResign={handleResign}
+          onCancel={() => setResignDialogOpen(false)}
+        />
+      )}
     </div>
   )
 }
@@ -288,6 +327,15 @@ function StatusBanner({
   if (status.kind === 'checkmate') {
     const winnerName = status.winner === 'w' ? whiteName : blackName
     return <p className="puc-local__status puc-local__status--end">Checkmate — {winnerName} wins.</p>
+  }
+  if (status.kind === 'resign') {
+    const resignerName = status.resigner === 'w' ? whiteName : blackName
+    const winnerName = status.winner === 'w' ? whiteName : blackName
+    return (
+      <p className="puc-local__status puc-local__status--end">
+        {resignerName} resigned — {winnerName} wins.
+      </p>
+    )
   }
   if (status.kind === 'stalemate') {
     return <p className="puc-local__status puc-local__status--end">Stalemate. A quiet draw.</p>

@@ -43,3 +43,4 @@ export type GameStatus =
   | { kind: 'checkmate'; winner: Color }
   | { kind: 'stalemate' }
   | { kind: 'draw'; reason: 'insufficient_material' | 'threefold_repetition' | 'fifty_move' | 'other' }
+  | { kind: 'resign'; winner: Color; resigner: Color }

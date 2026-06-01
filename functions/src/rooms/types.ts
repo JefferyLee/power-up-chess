@@ -22,7 +22,7 @@ export interface RoomDoc {
   moves: Move[]
   /** Set when status === 'completed'. */
   result?: 'white' | 'black' | 'draw'
-  endReason?: 'checkmate' | 'stalemate' | 'insufficient_material' | 'threefold_repetition' | 'fifty_move' | 'other'
+  endReason?: 'checkmate' | 'stalemate' | 'insufficient_material' | 'threefold_repetition' | 'fifty_move' | 'resign' | 'other'
   createdAt: number // ms since epoch
   updatedAt: number
 }

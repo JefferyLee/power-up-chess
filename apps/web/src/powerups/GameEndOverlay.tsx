@@ -25,12 +25,7 @@ export function GameEndOverlay({
   if (status.kind === 'in_progress') return null
 
   const isMate = status.kind === 'checkmate'
-  const headline =
-    status.kind === 'checkmate'
-      ? `Checkmate — ${status.winner === 'w' ? whiteName : blackName} wins`
-      : status.kind === 'stalemate'
-        ? 'Stalemate'
-        : `Draw — ${status.kind === 'draw' ? status.reason.replace('_', ' ') : ''}`
+  const headline = headlineFor(status, whiteName, blackName)
 
   return (
     <div className="puc-end" role="dialog" aria-modal="true" aria-labelledby="puc-end-headline">
@@ -71,4 +66,22 @@ export function GameEndOverlay({
       </div>
     </div>
   )
+}
+
+function headlineFor(status: GameStatus, whiteName: string, blackName: string): string {
+  switch (status.kind) {
+    case 'checkmate':
+      return `Checkmate — ${status.winner === 'w' ? whiteName : blackName} wins`
+    case 'resign': {
+      const resigner = status.resigner === 'w' ? whiteName : blackName
+      const winner = status.winner === 'w' ? whiteName : blackName
+      return `${resigner} resigned — ${winner} wins`
+    }
+    case 'stalemate':
+      return 'Stalemate'
+    case 'draw':
+      return `Draw — ${status.reason.replace('_', ' ')}`
+    case 'in_progress':
+      return ''
+  }
 }
