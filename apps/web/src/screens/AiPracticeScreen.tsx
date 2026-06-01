@@ -7,7 +7,7 @@ import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
-import { HOSTS, type HostId } from '../hosts/hosts'
+import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
@@ -23,6 +23,9 @@ const SQUARE_SIZE = 72
 
 interface Props {
   hostId: HostId
+  /** Optional second host — when set, Both mode is on: the two hosts
+   *  alternate as the speaker for capture sparks. */
+  coHostId?: HostId
   playerName: string
   difficultyId: DifficultyId
   onExit: () => void
@@ -57,10 +60,9 @@ function snapshot(g: ChessGame): GameSnapshot {
   }
 }
 
-export function AiPracticeScreen({ hostId, playerName, difficultyId, onExit }: Props) {
+export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, onExit }: Props) {
   const navigate = useNavigate()
   const sound = useSound()
-  const host = HOSTS[hostId]
   const preset = difficultyById(difficultyId)
   // For MVP1, player always plays white; AI always plays black. Colour choice
   // lands later if Ada asks for it.
@@ -121,7 +123,9 @@ export function AiPracticeScreen({ hostId, playerName, difficultyId, onExit }: P
         const captureSquare: Square = result.flags.includes('e')
           ? (`${result.to[0]}${result.from[1]}` as Square)
           : result.to
-        const text = picker.pick(hostId, 'capture', { capturedPiece: result.captured })
+        const capturesSoFar = game.history().filter((m) => m.captured).length
+        const speakingHost = coHostId && capturesSoFar % 2 === 1 ? coHostId : hostId
+        const text = picker.pick(speakingHost, 'capture', { capturedPiece: result.captured })
         setSparks((prev) => [...prev, {
           id: performance.now(),
           square: captureSquare,
@@ -132,7 +136,7 @@ export function AiPracticeScreen({ hostId, playerName, difficultyId, onExit }: P
       }
       return true
     },
-    [game, hostId, picker, sound],
+    [game, hostId, coHostId, picker, sound],
   )
 
   const handleUserMove = useCallback(
@@ -265,7 +269,7 @@ export function AiPracticeScreen({ hostId, playerName, difficultyId, onExit }: P
           ←
         </button>
         <div className="puc-local__host">
-          <span className="puc-local__host-name">{host.name}</span>
+          <span className="puc-local__host-name">{hostsLabel(hostId, coHostId)}</span>
           <span className="puc-local__host-blurb">
             practicing vs AI · {preset.label}
           </span>

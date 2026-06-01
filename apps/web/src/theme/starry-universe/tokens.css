@@ -1,0 +1,57 @@
+/* Starry Universe — second visual theme.
+ *
+ * Night-sky palette: deep indigo board, soft star-white pieces, silver-gold
+ * accents. Background has a tinted star-field via repeating radial-gradient
+ * dots so every screen feels like outer space without shipping an image. */
+
+:root[data-theme='starry-universe'] {
+  /* Board */
+  --puc-sq-light: #b6c1e8;          /* moonlit sky */
+  --puc-sq-dark:  #2c2853;          /* deep indigo */
+  --puc-board-bg: #0a0b1f;          /* outer dark */
+
+  /* Pieces */
+  --puc-piece-white-fill:   #f7f4ff;
+  --puc-piece-white-stroke: #1a1432;
+  --puc-piece-black-fill:   #1a1130;
+
+  /* Highlights */
+  --puc-sq-selected:  rgba(176, 196, 255, 0.45);  /* moonbeam */
+  --puc-sq-last:      rgba(176, 196, 255, 0.28);
+  --puc-sq-drag-over: rgba(176, 196, 255, 0.85);
+  --puc-move-hint:    rgba(20, 12, 48, 0.40);
+
+  /* Ambient surfaces */
+  --puc-bg-deep:    #07081a;        /* deep space */
+  --puc-bg-mist:    #131334;
+  --puc-bg-glow: radial-gradient(
+      ellipse 120% 80% at 50% 0%,
+      rgba(176, 196, 255, 0.16),
+      transparent 60%
+    ),
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.6) 0.6px, transparent 1.2px),
+    radial-gradient(circle at 78% 32%, rgba(255, 255, 255, 0.7) 0.7px, transparent 1.3px),
+    radial-gradient(circle at 28% 70%, rgba(255, 255, 255, 0.5) 0.6px, transparent 1.2px),
+    radial-gradient(circle at 64% 84%, rgba(255, 255, 255, 0.8) 0.8px, transparent 1.5px),
+    radial-gradient(circle at 42% 48%, rgba(255, 255, 255, 0.4) 0.5px, transparent 1.0px);
+
+  --puc-surface:    rgba(30, 32, 70, 0.78);
+  --puc-surface-edge: rgba(176, 196, 255, 0.22);
+
+  /* Text */
+  --puc-text:        #ece9ff;
+  --puc-text-muted:  #a9a8cc;
+  --puc-text-accent: #c8b6ff;       /* starlight violet */
+
+  /* Focus / interactive */
+  --puc-accent:        #c8b6ff;
+  --puc-accent-strong: #8d6fd9;
+
+  /* Typography */
+  --puc-font-display: 'Georgia', 'Iowan Old Style', 'Palatino', serif;
+  --puc-font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Radii / shadow */
+  --puc-radius: 10px;
+  --puc-shadow-card: 0 12px 28px rgba(0, 0, 0, 0.55);
+}

@@ -8,10 +8,14 @@ import { HistoryScreen } from './screens/HistoryScreen'
 import { PuzzleScreen } from './puzzles/PuzzleScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 import { AiPracticeRoute } from './screens/AiPracticeRoute'
+import { applyTheme } from './theme/themes'
+import { loadProfile } from './storage/profile'
 
 export function App() {
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'magic-forest')
+    // Apply the persisted theme on boot; falls back to magic-forest if the
+    // profile holds an unknown id.
+    applyTheme(loadProfile().themeId)
   }, [])
 
   return (

@@ -5,6 +5,7 @@ import type { TimeControl } from '../clock/timeControl'
 
 interface LocalState {
   hostId: HostId
+  coHostId?: HostId
   whiteName: string
   blackName: string
   timeControl?: TimeControl | null
@@ -18,6 +19,7 @@ export function LocalGameRoute() {
   return (
     <LocalGameScreen
       hostId={state.hostId}
+      coHostId={state.coHostId}
       whiteName={state.whiteName}
       blackName={state.blackName}
       timeControl={state.timeControl ?? null}

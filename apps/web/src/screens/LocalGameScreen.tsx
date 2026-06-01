@@ -7,7 +7,7 @@ import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
-import { HOSTS, type HostId } from '../hosts/hosts'
+import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
@@ -24,6 +24,9 @@ function newLocalGameId(): string {
 
 interface Props {
   hostId: HostId
+  /** Optional second host — when set, Both mode is on: the two hosts
+   *  alternate as the speaker for capture sparks. */
+  coHostId?: HostId
   whiteName: string
   blackName: string
   timeControl: TimeControl | null
@@ -80,7 +83,7 @@ function snapshot(g: ChessGame): GameSnapshot {
 
 const SQUARE_SIZE = 72
 
-export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onExit }: Props) {
+export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeControl, onExit }: Props) {
   const navigate = useNavigate()
   // The ChessGame is mutable but its identity is stable across renders unless restarted.
   // Pair it with a snapshot in state so React re-renders after each move.
@@ -95,7 +98,6 @@ export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onE
   const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl))
   const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
   const sound = useSound()
-  const host = HOSTS[hostId]
 
   // Resignation isn't a chess.js concept — overlay it on top of the position-
   // derived status. Once resigned, the board freezes and the end overlay
@@ -170,7 +172,11 @@ export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onE
         const captureSquare: Square = result.flags.includes('e')
           ? (`${result.to[0]}${result.from[1]}` as Square)
           : result.to
-        const text = picker.pick(hostId, 'capture', { capturedPiece: result.captured })
+        // In Both mode, alternate which host's voice the capture line uses,
+        // based on how many captures have already happened in this game.
+        const capturesSoFar = game.history().filter((m) => m.captured).length
+        const speakingHost = coHostId && capturesSoFar % 2 === 1 ? coHostId : hostId
+        const text = picker.pick(speakingHost, 'capture', { capturedPiece: result.captured })
         const spark: CaptureSparkData = {
           id: performance.now(),
           square: captureSquare,
@@ -181,7 +187,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onE
         setSparks((prev) => [...prev, spark])
       }
     },
-    [game, hostId, picker, sound, timeControl],
+    [game, hostId, coHostId, picker, sound, timeControl],
   )
 
   const handleUndo = useCallback(() => {
@@ -335,8 +341,10 @@ export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onE
           ←
         </button>
         <div className="puc-local__host">
-          <span className="puc-local__host-name">{host.name}</span>
-          <span className="puc-local__host-blurb">is your host today</span>
+          <span className="puc-local__host-name">{hostsLabel(hostId, coHostId)}</span>
+          <span className="puc-local__host-blurb">
+            {coHostId ? 'are your hosts today' : 'is your host today'}
+          </span>
         </div>
         <div className="puc-local__actions">
           <MuteButton />

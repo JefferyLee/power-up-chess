@@ -1,20 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HOSTS, type HostId } from '../hosts/hosts'
+import { HOST_CHOICES } from '../hosts/hosts'
 import { useAuthUid } from '../auth/useAuthUid'
 import { callCreateRoom } from '../firebase/callables'
-import { loadProfile, saveProfile } from '../storage/profile'
+import { loadProfile, resolveHostChoice, saveProfile, type HostChoice } from '../storage/profile'
 import { presetById, TIME_CONTROL_PRESETS } from '../clock/timeControl'
 import { DIFFICULTY_PRESETS, difficultyById, type DifficultyId } from '../ai/difficulty'
+import { applyTheme, THEMES } from '../theme/themes'
 import './StartScreen.css'
 
 export function StartScreen() {
   const navigate = useNavigate()
   const initial = loadProfile()
   const [displayName, setDisplayName] = useState(initial.displayName)
-  const [hostId, setHostId] = useState<HostId>(initial.hostId)
+  const [hostChoice, setHostChoice] = useState<HostChoice>(initial.hostChoice)
   const [timeControlId, setTimeControlId] = useState<string>(initial.timeControlId)
   const [aiDifficultyId, setAiDifficultyId] = useState<DifficultyId>(initial.aiDifficultyId as DifficultyId)
+  const [themeId, setThemeId] = useState<string>(initial.themeId)
   const [opponentName, setOpponentName] = useState('Friend')
   const [joinCode, setJoinCode] = useState('')
   const [creating, setCreating] = useState(false)
@@ -27,13 +29,26 @@ export function StartScreen() {
   const canCreate = authState.status === 'ready' && displayName.trim().length > 0 && !creating
   const canJoin = /^[A-Za-z0-9]{4,12}$/.test(joinCode.trim())
 
-  const persist = () => saveProfile({ displayName: displayName.trim(), hostId, timeControlId, aiDifficultyId })
+  const persist = () => saveProfile({
+    displayName: displayName.trim(),
+    hostChoice,
+    timeControlId,
+    aiDifficultyId,
+    themeId,
+  })
+
+  const handleThemeChange = (next: string) => {
+    setThemeId(next)
+    applyTheme(next)
+  }
 
   const onStartAi = () => {
     persist()
+    const { primary, coHost } = resolveHostChoice(hostChoice)
     navigate('/ai', {
       state: {
-        hostId,
+        hostId: primary,
+        coHostId: coHost,
         playerName: displayName.trim(),
         difficultyId: aiDifficultyId,
       },
@@ -42,9 +57,11 @@ export function StartScreen() {
 
   const onStartLocal = () => {
     persist()
+    const { primary, coHost } = resolveHostChoice(hostChoice)
     navigate('/local', {
       state: {
-        hostId,
+        hostId: primary,
+        coHostId: coHost,
         whiteName: displayName.trim(),
         blackName: opponentName.trim(),
         timeControl,
@@ -58,9 +75,13 @@ export function StartScreen() {
     setError(null)
     try {
       persist()
+      // Online rooms are single-host — Both/Surprise resolve to the primary
+      // before the room is minted. Co-host commentary online would need
+      // coordination between two players and is out of scope for MVP1.
+      const { primary } = resolveHostChoice(hostChoice)
       const { roomId } = await callCreateRoom({
         displayName: displayName.trim(),
-        hostMode: hostId,
+        hostMode: primary,
         timeControl,
       })
       navigate(`/r/${roomId}`)
@@ -101,14 +122,14 @@ export function StartScreen() {
 
         <section className="puc-start__panel" aria-labelledby="puc-start-host">
           <h2 id="puc-start-host" className="puc-start__panel-title">Pick a host</h2>
-          <div className="puc-start__hosts">
-            {Object.values(HOSTS).map((h) => (
+          <div className="puc-start__hosts puc-start__hosts--four">
+            {HOST_CHOICES.map((h) => (
               <button
                 key={h.id}
                 type="button"
-                className={`puc-start__host ${hostId === h.id ? 'puc-start__host--selected' : ''}`}
-                onClick={() => setHostId(h.id)}
-                aria-pressed={hostId === h.id}
+                className={`puc-start__host ${hostChoice === h.id ? 'puc-start__host--selected' : ''}`}
+                onClick={() => setHostChoice(h.id)}
+                aria-pressed={hostChoice === h.id}
               >
                 <span className="puc-start__host-name">{h.name}</span>
                 <span className="puc-start__host-blurb">{h.blurb}</span>
@@ -217,6 +238,24 @@ export function StartScreen() {
           >
             Start local game
           </button>
+        </section>
+
+        <section className="puc-start__panel" aria-labelledby="puc-start-theme">
+          <h2 id="puc-start-theme" className="puc-start__panel-title">Theme</h2>
+          <div className="puc-start__hosts">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`puc-start__host ${themeId === t.id ? 'puc-start__host--selected' : ''}`}
+                onClick={() => handleThemeChange(t.id)}
+                aria-pressed={themeId === t.id}
+              >
+                <span className="puc-start__host-name">{t.name}</span>
+                <span className="puc-start__host-blurb">{t.blurb}</span>
+              </button>
+            ))}
+          </div>
         </section>
 
         <div className="puc-start__footer">

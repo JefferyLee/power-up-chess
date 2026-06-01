@@ -5,6 +5,7 @@ import type { DifficultyId } from '../ai/difficulty'
 
 interface AiState {
   hostId: HostId
+  coHostId?: HostId
   playerName: string
   difficultyId: DifficultyId
 }
@@ -17,6 +18,7 @@ export function AiPracticeRoute() {
   return (
     <AiPracticeScreen
       hostId={state.hostId}
+      coHostId={state.coHostId}
       playerName={state.playerName}
       difficultyId={state.difficultyId}
       onExit={() => navigate('/')}
