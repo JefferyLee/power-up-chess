@@ -6,11 +6,14 @@ import { isBrilliant } from '../engine/brilliant'
 import type { AnalyzedGame, AnalyzedMove } from '../engine/analyzeGame'
 import { analyzeGame } from '../engine/analyzeGame'
 import { StockfishEngine } from '../engine/stockfish'
+import { callGameRecap, callHostCommentary } from '../firebase/callables'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { TemplatePicker, type TemplateKind } from '../hosts/templates'
 import type { Classification } from '../engine/classify'
 import type { Square } from '../chess/types'
 import './PostGameAnalysisScreen.css'
+
+const COMMENTARY_TIMEOUT_MS = 3000
 
 export interface ReviewState {
   pgn: string
@@ -138,17 +141,127 @@ function ReviewView({
     ? { from: selected.uci.slice(0, 2) as Square, to: selected.uci.slice(2, 4) as Square }
     : null
 
-  // Host comment for the selected move (template-driven in Phase 4; LLM in Phase 5).
-  const hostComment = useMemo(() => {
-    if (!selected) return `${host.name} is ready to review with you.`
-    const isBrill = brilliantIdx.has(selected.index)
-    const kind = templateKindFor(selected.classification, isBrill)
-    if (kind) {
+  // Template fallback for any move's host comment.
+  const templateFor = useMemo(() => {
+    return (m: AnalyzedMove): string => {
+      const isBrill = brilliantIdx.has(m.index)
+      const kind = templateKindFor(m.classification, isBrill)
+      if (!kind) return ''
       return picker.pick(state.hostId, kind)
     }
-    return ''
+  }, [brilliantIdx, picker, state.hostId])
+
+  // LLM commentary cache, keyed by move index. Each entry is the resolved
+  // string (LLM or template fallback) plus the source so we can show subtle
+  // dev-time provenance.
+  const [commentaryByIdx, setCommentaryByIdx] = useState<
+    Map<number, { text: string; source: 'llm' | 'cache' | 'template' }>
+  >(new Map())
+
+  // Fetch LLM commentary for the selected move (notable moves only), with a
+  // 3s timeout. On timeout / error, fall back to a template line so the panel
+  // never sits empty.
+  useEffect(() => {
+    if (!selected) return
+    if (commentaryByIdx.has(selected.index)) return
+    const isBrill = brilliantIdx.has(selected.index)
+    const notable =
+      isBrill ||
+      selected.classification === 'mistake' ||
+      selected.classification === 'blunder'
+    if (!notable) return
+
+    let cancelled = false
+    const fillFallback = () => {
+      if (cancelled) return
+      setCommentaryByIdx((prev) => {
+        if (prev.has(selected.index)) return prev
+        const next = new Map(prev)
+        next.set(selected.index, { text: templateFor(selected), source: 'template' })
+        return next
+      })
+    }
+
+    const timer = setTimeout(fillFallback, COMMENTARY_TIMEOUT_MS)
+
+    callHostCommentary({
+      host: state.hostId,
+      classification: isBrill ? 'brilliant' : selected.classification,
+      fenBefore: selected.fenBefore,
+      fenAfter: selected.fenAfter,
+      moveSan: selected.san,
+      moveUci: selected.uci,
+      evalBeforeCp: selected.evalBeforeCp,
+      evalAfterCp: selected.evalAfterCp,
+      bestMoveSan: selected.bestMoveSan,
+      playerName: selected.color === 'w' ? state.whiteName : state.blackName,
+      isAdaSpecialMode: isAdaName(selected.color === 'w' ? state.whiteName : state.blackName),
+    })
+      .then((res) => {
+        if (cancelled) return
+        clearTimeout(timer)
+        setCommentaryByIdx((prev) => {
+          // If the timeout already filled a template, replace it with the LLM
+          // result — the LLM line is what we wanted in the first place.
+          const next = new Map(prev)
+          next.set(selected.index, { text: res.text, source: res.source })
+          return next
+        })
+      })
+      .catch(() => {
+        clearTimeout(timer)
+        fillFallback()
+      })
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [selected, brilliantIdx, state.hostId, state.whiteName, state.blackName, templateFor, commentaryByIdx])
+
+  // Resolve the displayed comment for the currently-selected move.
+  const hostComment = useMemo(() => {
+    if (!selected) return `${host.name} is ready to review with you.`
+    const cached = commentaryByIdx.get(selected.index)
+    if (cached) return cached.text
+    // Not in cache and not yet fetched/scheduled (i.e. not a notable move):
+    // fall back to the template line synchronously.
+    return templateFor(selected)
+  }, [selected, commentaryByIdx, host.name, templateFor])
+
+  const commentSource = selected ? commentaryByIdx.get(selected.index)?.source : undefined
+
+  // Story Review — fired once when analysis is ready.
+  const [recap, setRecap] = useState<
+    { status: 'loading' } | { status: 'ready'; text: string; source: 'llm' | 'cache' } | { status: 'error' } | null
+  >(null)
+
+  useEffect(() => {
+    if (recap) return
+    if (analysis.moves.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRecap({ status: 'ready', text: `${host.name} has nothing to recap — no moves were played.`, source: 'cache' })
+      return
+    }
+    setRecap({ status: 'loading' })
+
+    const summary = countClassifications(analysis, brilliantIdx)
+    const result: 'white' | 'black' | 'draw' = deriveResult(analysis)
+    const myName = state.whiteName // The local player drives the recap — we use the white name as the audience.
+    callGameRecap({
+      host: state.hostId,
+      pgn: state.pgn,
+      summary,
+      result,
+      whiteName: state.whiteName,
+      blackName: state.blackName,
+      playerName: myName,
+      isAdaSpecialMode: isAdaName(myName),
+    })
+      .then((res) => setRecap({ status: 'ready', text: res.text, source: res.source }))
+      .catch(() => setRecap({ status: 'error' }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.index, brilliantIdx, state.hostId])
+  }, [])
 
   return (
     <div className="puc-review">
@@ -161,6 +274,21 @@ function ReviewView({
           <p className="puc-review__sub">{state.whiteName} vs {state.blackName} — with {host.name}</p>
         </div>
       </header>
+
+      <section className="puc-review__recap" aria-labelledby="puc-recap-heading">
+        <h2 id="puc-recap-heading" className="puc-review__recap-title">{host.name}'s story</h2>
+        {recap?.status === 'loading' && (
+          <p className="puc-review__recap-loading">{host.name} is writing your story…</p>
+        )}
+        {recap?.status === 'ready' && (
+          <p className="puc-review__recap-text">{recap.text}</p>
+        )}
+        {recap?.status === 'error' && (
+          <p className="puc-review__recap-loading">
+            {host.name} couldn't write a recap this time. The move-by-move review is still below.
+          </p>
+        )}
+      </section>
 
       <div className="puc-review__main">
         <div className="puc-review__board-col">
@@ -175,7 +303,10 @@ function ReviewView({
           />
           <EvalBar evalCp={evalCp} />
           <div className="puc-review__host-panel">
-            <p className="puc-review__host-name">{host.name} says</p>
+            <p className="puc-review__host-name">
+              {host.name} says
+              {commentSource === 'template' && <span className="puc-review__source-pill"> · quick</span>}
+            </p>
             <p className="puc-review__host-text">{hostComment}</p>
             {selected && (
               <p className="puc-review__detail">
@@ -280,5 +411,40 @@ function FullPageMessage({
       )}
     </div>
   )
+}
+
+function isAdaName(name: string): boolean {
+  return name.trim().toLowerCase() === 'ada'
+}
+
+function countClassifications(
+  analysis: AnalyzedGame,
+  brilliantIdx: Set<number>,
+): {
+  best?: number
+  excellent?: number
+  good?: number
+  inaccuracy?: number
+  mistake?: number
+  blunder?: number
+  brilliant?: number
+} {
+  const counts: Record<string, number> = {}
+  for (const m of analysis.moves) {
+    if (brilliantIdx.has(m.index)) counts.brilliant = (counts.brilliant ?? 0) + 1
+    counts[m.classification] = (counts[m.classification] ?? 0) + 1
+  }
+  return counts
+}
+
+function deriveResult(analysis: AnalyzedGame): 'white' | 'black' | 'draw' {
+  // Pick the final position's eval as a coarse proxy when the PGN doesn't
+  // include a result header. Mate-end games will have a large magnitude eval;
+  // otherwise call it a draw.
+  const last = analysis.moves[analysis.moves.length - 1]
+  if (!last) return 'draw'
+  if (last.evalAfterCp > 5000) return 'white'
+  if (last.evalAfterCp < -5000) return 'black'
+  return 'draw'
 }
 

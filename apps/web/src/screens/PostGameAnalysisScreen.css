@@ -54,6 +54,48 @@
   font-size: 13px;
 }
 
+.puc-review__recap {
+  margin: 18px auto 0;
+  width: min(920px, calc(100% - 48px));
+  background: linear-gradient(180deg, rgba(45, 64, 42, 0.78), rgba(20, 32, 22, 0.78));
+  border: 1px solid rgba(241, 195, 76, 0.32);
+  border-radius: var(--puc-radius);
+  padding: 18px 22px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+}
+
+.puc-review__recap-title {
+  margin: 0 0 8px;
+  font-family: var(--puc-font-display);
+  font-size: 16px;
+  color: var(--puc-text-accent);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.puc-review__recap-loading {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+
+.puc-review__recap-text {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--puc-text);
+}
+
+.puc-review__source-pill {
+  font-size: 10px;
+  color: var(--puc-text-muted);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
 .puc-review__main {
   flex: 1;
   display: grid;
