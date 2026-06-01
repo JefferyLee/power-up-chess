@@ -1,0 +1,4 @@
+# Intermediate pipeline artefacts. Caches make re-runs cheap but the
+# files themselves are large and easy to regenerate — keep them local.
+work/
+node_modules/
