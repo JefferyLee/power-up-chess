@@ -54,6 +54,24 @@ export function OnlineGameScreen() {
       uid={auth.uid}
       submitMove={submitMove}
       onBack={() => navigate('/')}
+      onReview={() => {
+        const replay = new ChessGame()
+        for (const m of state.room.moves) {
+          replay.move({
+            from: m.uci.slice(0, 2) as Square,
+            to: m.uci.slice(2, 4) as Square,
+            ...(m.uci.length === 5 ? { promotion: m.uci[4] as 'q' | 'r' | 'b' | 'n' } : {}),
+          })
+        }
+        navigate('/review', {
+          state: {
+            pgn: replay.pgn(),
+            hostId: state.room.hostMode,
+            whiteName: state.room.white.displayName,
+            blackName: state.room.black?.displayName ?? '',
+          },
+        })
+      }}
     />
   )
 }
@@ -136,9 +154,10 @@ interface RoomViewProps {
   uid: string
   submitMove: (uci: string) => Promise<void>
   onBack: () => void
+  onReview: () => void
 }
 
-function RoomView({ room, roomId, uid, submitMove, onBack }: RoomViewProps) {
+function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
   const youAreWhite = room.white.playerId === uid
   const youAreBlack = room.black?.playerId === uid
@@ -374,6 +393,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack }: RoomViewProps) {
         hostRecap={endRecap}
         onNewGame={onBack}
         onBackToMenu={onBack}
+        onReview={onReview}
       />
     </div>
   )

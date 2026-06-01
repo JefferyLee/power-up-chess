@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
@@ -44,6 +45,7 @@ function snapshot(g: ChessGame): GameSnapshot {
 const SQUARE_SIZE = 72
 
 export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props) {
+  const navigate = useNavigate()
   // The ChessGame is mutable but its identity is stable across renders unless restarted.
   // Pair it with a snapshot in state so React re-renders after each move.
   const [game, setGame] = useState(() => new ChessGame())
@@ -208,6 +210,11 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
         hostRecap={endRecap}
         onNewGame={handleRestart}
         onBackToMenu={onExit}
+        onReview={() =>
+          navigate('/review', {
+            state: { pgn: game.pgn(), hostId, whiteName, blackName },
+          })
+        }
       />
     </div>
   )

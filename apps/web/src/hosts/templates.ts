@@ -14,6 +14,9 @@ export type TemplateKind =
   | 'ordinary'
   | 'capture'
   | 'check'
+  | 'brilliant'
+  | 'mistake'
+  | 'blunder'
   | 'checkmate-win'
   | 'checkmate-loss'
   | 'stalemate'
@@ -73,6 +76,21 @@ const LUCY: Record<TemplateKind, Template[]> = {
     s('Check. Watch what they have to give up.'),
     s('Check! Look for what opens up next.'),
   ],
+  brilliant: [
+    s('That was a brilliant move — you found a hidden idea on the board.'),
+    s('Brilliant. The whole position just turned in your favor.'),
+    s('A royal move. You trusted your calculation and it worked.'),
+  ],
+  mistake: [
+    s('That move lets your opponent in — let us look at it together later.'),
+    s('A small mistake here. Worth pausing on this turn in review.'),
+    s('That gives back some of your work. We can learn from this one.'),
+  ],
+  blunder: [
+    s('This move drops material. Take a breath — every player makes these.'),
+    s('A blunder this turn. The lesson: scan checks, captures, and threats first.'),
+    s('That one hurts the position. Mark it for review and keep going.'),
+  ],
   'checkmate-win': [
     (ctx) => `Checkmate. Beautifully done, ${ctx.winnerName ?? 'you'}.`,
     (ctx) => `Checkmate! ${ctx.winnerName ?? 'You'} brought the whole game together.`,
@@ -126,6 +144,21 @@ const LUCA: Record<TemplateKind, Template[]> = {
     s('Nice, you put their king to work.'),
     s('Check. Look for what falls off after the king moves.'),
     s('Check! Forcing moves are powerful.'),
+  ],
+  brilliant: [
+    s('That is a serious power move. You saw the trap and trusted it.'),
+    s('Brilliant! Sharp calculation — the line works.'),
+    s('Huge chess thinking. You found the hidden idea.'),
+  ],
+  mistake: [
+    s('Tricky one — that lets the opponent back in. Worth a review pass.'),
+    s('Small slip. Look at this position again after the game.'),
+    s('That gives ground. Next turn: scan threats first.'),
+  ],
+  blunder: [
+    s('Ouch — that one drops material. Mark it for review.'),
+    s('Big blunder. Shake it off and keep going.'),
+    s('This loses material. The fix: checks, captures, threats — every move.'),
   ],
   'checkmate-win': [
     (ctx) => `Checkmate! Huge finish, ${ctx.winnerName ?? 'you'}.`,

@@ -8,6 +8,7 @@ interface Props {
   hostRecap: string
   onNewGame: () => void
   onBackToMenu: () => void
+  onReview?: () => void
 }
 
 const FIREWORK_COUNT = 8
@@ -19,6 +20,7 @@ export function GameEndOverlay({
   hostRecap,
   onNewGame,
   onBackToMenu,
+  onReview,
 }: Props) {
   if (status.kind === 'in_progress') return null
 
@@ -54,7 +56,12 @@ export function GameEndOverlay({
         <h2 id="puc-end-headline" className="puc-end__headline">{headline}</h2>
         <p className="puc-end__recap">{hostRecap}</p>
         <div className="puc-end__actions">
-          <button type="button" className="puc-end__btn puc-end__btn--primary" onClick={onNewGame}>
+          {onReview && (
+            <button type="button" className="puc-end__btn puc-end__btn--primary" onClick={onReview}>
+              Review game
+            </button>
+          )}
+          <button type="button" className={`puc-end__btn ${onReview ? '' : 'puc-end__btn--primary'}`} onClick={onNewGame}>
             New game
           </button>
           <button type="button" className="puc-end__btn" onClick={onBackToMenu}>
