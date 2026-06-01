@@ -12,8 +12,13 @@ Chess learning game for **Ada, an 8–10 year old at ~300–500 rating**. The `d
 
 - **Real chess rules are non-negotiable.** Power-ups are a reward/learning layer — they must never alter legal moves or affect the opponent. chess.js is the rules engine on both client and server.
 - **Praise must be engine-backed and honest.** "Brilliant / Excellent / Mistake / Blunder" labels come from Stockfish analysis, not templates. The hosts (Lucy and Luca) must never fabricate facts or call a move brilliant without engine support. See `docs/HOST_PERSONAS.md` for tone rules.
-- **Child-safety constraints shape architecture.** No accounts in MVP0 (Anonymous Auth only), no open chat, private-room-link online play only, display names only, local storage by default.
-- **Puzzle content has a rights pipeline.** Do not copy book explanations into the app. Original explanations only, validated by engine. See `docs/PUZZLE_CONTENT_PIPELINE.md`. The user owns rights review; engineering must store `rightsStatus` per puzzle but does not gate on it.
+- **Child-safety constraints shape architecture.** Display names only, local storage by default. Online play is private-room-link only (no public matchmaking). MVP0 was Anonymous Auth + no chat; **MVP2** introduces:
+  - A `name + magic word` identity layer on top of Anonymous Auth so progress persists across sessions. This is NOT real authentication — `sha256` hash only, no password recovery, 3-strike + bypass flow.
+  - Open shared chat in the Great Hall (大厅) lobby. Moderated server-side (profanity filter, rate limits, report-flag, auto-hide). **No** in-game chat. **No** DMs.
+- **Content has a rights pipeline.** Do not copy book content into the app. Original wording / retellings only, validated by engine where applicable. Applies to:
+  - **Puzzle explanations** — see `docs/PUZZLE_CONTENT_PIPELINE.md`.
+  - **Host stories** in the Hall — extracted via `tools/story-import/` from `docs/books_and_references/` with an anti-verbatim guardrail. See `docs/MVP2_PLAN.md` §6.5.
+  - In both cases the user owns rights review; engineering stores `rightsStatus` per item but does not gate on it.
 
 When a request is ambiguous, prefer the most specific document:
 - Already-decided things → `docs/DECISIONS.md` (authoritative; don't relitigate)
@@ -22,6 +27,7 @@ When a request is ambiguous, prefer the most specific document:
 - Scope/priority → `docs/MVP_ROADMAP.md`, `docs/PRD.md`
 - Visual/feedback feel → `docs/GAME_DESIGN.md`
 - Host voice → `docs/HOST_PERSONAS.md`
+- MVP2 (Castle + Hall + Magic Word + stories + Forest) → `docs/MVP2_PLAN.md`
 - Still-open things → `docs/OPEN_QUESTIONS.md` (surface to user before deciding)
 
 ## Locked Stack (from DECISIONS.md)

@@ -45,6 +45,16 @@ Last updated: 2026-05-31
 23. **Puzzle source**: puzzles may be extracted from the books in `docs/books_and_references/`. The user owns rights review for each source; engineering should not block on it but must store `rightsStatus` per puzzle.
 24. **Repository hygiene**: `docs/books_and_references/` content (PDFs, EPUBs) is git-ignored. Only its `README.md` (catalog + rights status) is committed.
 
+## MVP2 Decisions (locked 2026-06-01)
+
+25. **The homepage becomes the Power Up Castle.** Visitors land at a public gate that shows the castle name, live guest count, and a top-5 global leaderboard. Knocking (click) or 5 s idle opens a wicket and presents a name + magic word note. See `docs/MVP2_PLAN.md`.
+26. **`name + magic word` identity layer** sits on top of Anonymous Auth. Client-side `sha256(normalizedName + ':' + magicWord)`, stored server-side; no email, no password recovery. Three wrong attempts surface a bypass link → throwaway `Guest-NNNN` with no Firestore persistence and no castle points.
+27. **Open shared chat in the Great Hall.** All guests in the lobby see one chat stream. Profanity filter + per-uid rate limits + report-flag + auto-hide. **No** in-game chat, **no** DMs.
+28. **Castle Points are the unified currency.** Earned in Puzzle Garden (always) and chess rooms (only after unlock). Forest Adventure earns **zero** castle points — only its own in-game score. 200 points unlocks the three chess rooms; decay (5 pts after 1 day absent, 50 pts after 7 days, linear ramp) can re-lock.
+29. **Hosts tell ambient chess stories** every ~3 minutes in the Hall when ≥1 guest present, capped at 6 stories/hour. Story content is extracted offline from `docs/books_and_references/` via `tools/story-import/`. Rights model mirrors puzzles (engineering stores `rightsStatus`; user reviews; anti-verbatim guardrail enforced in the pipeline). Runtime cost: zero LLM calls for ambient stories.
+30. **Forest Adventure** is folded in as the fifth Hall door, ported from `../ada-advanture`. Always playable; its scores live in their own leaderboard separate from castle points.
+31. **Themes are now bound to hosts.** Lucy ↔ Magic Forest, Luca ↔ Starry Universe. The standalone theme picker is removed. Host is rolled once per `sessionStorage` instance.
+
 ## Implications
 
 - MVP0 needs a small real-time backend (Firebase), not only static hosting.

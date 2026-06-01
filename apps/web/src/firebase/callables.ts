@@ -66,6 +66,24 @@ export interface GameRecapResponse {
 const hostCommentaryFn = httpsCallable<HostCommentaryRequest, HostCommentaryResponse>(functions, 'hostCommentary')
 const gameRecapFn = httpsCallable<GameRecapRequest, GameRecapResponse>(functions, 'gameRecap')
 
+// MVP2: Castle auth.
+export interface CastleEnterRequest {
+  name: string
+  hash: string
+}
+export type CastleEnterResponse =
+  | { status: 'new'; displayName: string; castlePoints: 0 }
+  | { status: 'returning'; displayName: string; castlePoints: number }
+  | { status: 'wrong-magic'; attemptsRemaining: number }
+  | { status: 'rate-limited'; retryAfterMs: number }
+  | { status: 'invalid-input'; reason: string }
+export interface CastleBypassResponse {
+  displayName: string
+}
+
+const castleEnterFn = httpsCallable<CastleEnterRequest, CastleEnterResponse>(functions, 'castleEnter')
+const castleBypassFn = httpsCallable<void, CastleBypassResponse>(functions, 'castleBypass')
+
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
   return data
@@ -96,5 +114,15 @@ export async function callHostCommentary(req: HostCommentaryRequest): Promise<Ho
 
 export async function callGameRecap(req: GameRecapRequest): Promise<GameRecapResponse> {
   const { data } = await gameRecapFn(req)
+  return data
+}
+
+export async function callCastleEnter(req: CastleEnterRequest): Promise<CastleEnterResponse> {
+  const { data } = await castleEnterFn(req)
+  return data
+}
+
+export async function callCastleBypass(): Promise<CastleBypassResponse> {
+  const { data } = await castleBypassFn()
   return data
 }

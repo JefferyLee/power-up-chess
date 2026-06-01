@@ -30,6 +30,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // MVP2 Castle public stats — guest count + top-5 leaderboard.
+    // PUBLIC read so the gate page can render before sign-in.
+    // Rebuilt by a scheduled Cloud Function every 30 s.
+    match /castle_public/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Castle guests — function-only. Holds magicWordHash, uids, castlePoints.
+    // Clients never read this directly; castleEnter returns what they need.
+    match /guests/{normalizedName} {
+      allow read, write: if false;
+    }
+
+    // Per-uid enter-attempt counters (rate limiting + 3-strike tracking).
+    match /castle_enter_attempts/{uid} {
+      allow read, write: if false;
+    }
+    match /castle_enter_attempts_daily/{key} {
+      allow read, write: if false;
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

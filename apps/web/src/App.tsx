@@ -1,6 +1,4 @@
-import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { StartScreen } from './screens/StartScreen'
 import { LocalGameRoute } from './screens/LocalGameRoute'
 import { OnlineGameScreen } from './screens/OnlineGameScreen'
 import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
@@ -8,29 +6,25 @@ import { HistoryScreen } from './screens/HistoryScreen'
 import { PuzzleScreen } from './puzzles/PuzzleScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 import { AiPracticeRoute } from './screens/AiPracticeRoute'
-import { applyTheme } from './theme/themes'
-import { loadProfile } from './storage/profile'
+import { CastleIdentityProvider } from './castle/CastleIdentityContext'
+import { CastleEntry } from './castle/CastleEntry'
 
 export function App() {
-  useEffect(() => {
-    // Apply the persisted theme on boot; falls back to magic-forest if the
-    // profile holds an unknown id.
-    applyTheme(loadProfile().themeId)
-  }, [])
-
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<StartScreen />} />
-        <Route path="/local" element={<LocalGameRoute />} />
-        <Route path="/ai" element={<AiPracticeRoute />} />
-        <Route path="/r/:roomId" element={<OnlineGameScreen />} />
-        <Route path="/review" element={<PostGameAnalysisScreen />} />
-        <Route path="/history" element={<HistoryScreen />} />
-        <Route path="/puzzles" element={<PuzzleGardenScreen />} />
-        <Route path="/puzzles/:id" element={<PuzzleScreen />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <CastleIdentityProvider>
+        <Routes>
+          <Route path="/" element={<CastleEntry />} />
+          <Route path="/local" element={<LocalGameRoute />} />
+          <Route path="/ai" element={<AiPracticeRoute />} />
+          <Route path="/r/:roomId" element={<OnlineGameScreen />} />
+          <Route path="/review" element={<PostGameAnalysisScreen />} />
+          <Route path="/history" element={<HistoryScreen />} />
+          <Route path="/puzzles" element={<PuzzleGardenScreen />} />
+          <Route path="/puzzles/:id" element={<PuzzleScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </CastleIdentityProvider>
     </BrowserRouter>
   )
 }

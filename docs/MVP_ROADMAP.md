@@ -81,15 +81,35 @@ Must include:
 9. Player can save favorite moments and replay captures.
 10. Progress updates appear in the player's learning history.
 
-## MVP2: Rich Learning World
+## MVP2: Power Up Castle
 
-Possible later scope:
-- Animated Lucy and Luca avatars.
-- Lucy and Luca voices.
+The homepage becomes the **Power Up Castle**. Visitors land at a public gate,
+knock or wait for the wicket to open, present a name + magic word, and step
+into the Great Hall — a shared lobby with the host (Lucy or Luca), open
+chat across guests, ambient chess stories from the library, and five
+doors out to the games.
+
+Full spec: `docs/MVP2_PLAN.md`.
+
+Target scope:
+- Castle gate (public, no auth) with live guest count + global leaderboard.
+- `name + magic word` identity layer (sha256, no recovery, 3-strike bypass).
+- Great Hall lobby with shared chat, host portrait, online-guest list.
+- Host ambient stories sourced from `docs/books_and_references/` via
+  the offline `tools/story-import/` pipeline.
+- Castle Points unifying puzzle + chess; 200-point gate on the chess rooms;
+  decay re-locks (5 pts/day-1 → 50 pts/day-7).
+- Forest Adventure ported from `../ada-advanture` as the fifth door
+  (always playable, no castle points).
+- Theme bound to host (Lucy ↔ Magic Forest, Luca ↔ Starry Universe).
+
+Phases A–E (~17–21 days end-to-end). See `docs/MVP2_PLAN.md` §11.
+
+Possible later scope (MVP3+):
+- Animated Lucy and Luca avatars + voices.
 - AI opponent with adaptive strength.
 - More puzzle books and curated study paths.
-- Opening mini-lessons.
-- Endgame practice.
+- Opening mini-lessons + endgame practice.
 - Famous Women in Chess collection.
 - Seasonal visual events.
 - Mobile app wrapper.
@@ -127,5 +147,5 @@ Possible later scope:
 | Too much animation slows play | Game feels distracting | Add intensity settings and keep ordinary moves light |
 | Brilliant move overfires | Special moments lose meaning | Keep strict engine-backed criteria |
 | Puzzle book cannot be used publicly | Content pipeline blocked | Confirm rights, use licensed or public-domain sources |
-| Online play creates safety concerns | Public launch risk | Start with private rooms, no open chat, minimal data |
+| Online play creates safety concerns | Public launch risk | Private rooms only for chess play; lobby chat moderated server-side from MVP2; never public matchmaking |
 | Engine analysis is slow | Feedback delays | Use shallow real-time checks and deeper post-game analysis |

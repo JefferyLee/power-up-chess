@@ -4,7 +4,7 @@
 // gain envelopes. Keeps the bundle small and lets us tune Magic Forest's
 // warm, low-key aesthetic without shipping MP3s.
 
-export type SoundName = 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw'
+export type SoundName = 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw' | 'knock' | 'wicket-creak'
 
 let ctx: AudioContext | null = null
 let masterGain: GainNode | null = null
@@ -96,6 +96,56 @@ function draw(): void {
   tone({ freq: 523, type: 'sine', duration: 0.18, peakGain: 0.16, release: 0.2, startOffset: 0.18 })
 }
 
+// Castle gate knock — three rapid raps. Each rap is a short percussive
+// thud (triangle wave swept down) to approximate knuckles on wood.
+function knock(): void {
+  const RAP_SPACING = 0.12
+  for (let i = 0; i < 3; i++) {
+    tone({
+      freq: [180, 80],
+      type: 'triangle',
+      duration: 0.04,
+      peakGain: 0.32,
+      attack: 0.002,
+      release: 0.04,
+      startOffset: i * RAP_SPACING,
+    })
+    // High-frequency click on top of the thud for the wood "snap".
+    tone({
+      freq: [1200, 400],
+      type: 'square',
+      duration: 0.015,
+      peakGain: 0.08,
+      attack: 0.001,
+      release: 0.02,
+      startOffset: i * RAP_SPACING,
+    })
+  }
+}
+
+// Wicket creak — a slow wood-on-wood pitch bend, like a small door
+// swinging open on a stiff hinge. Sawtooth gives the rough overtones.
+function wicketCreak(): void {
+  tone({
+    freq: [240, 170],
+    type: 'sawtooth',
+    duration: 0.42,
+    peakGain: 0.16,
+    attack: 0.04,
+    release: 0.22,
+  })
+  // A subtle "settle" note as it stops moving.
+  tone({
+    freq: [170, 140],
+    type: 'triangle',
+    duration: 0.18,
+    peakGain: 0.08,
+    attack: 0.02,
+    release: 0.18,
+    startOffset: 0.38,
+  })
+}
+
 const RECIPES: Record<SoundName, () => void> = {
   move,
   capture,
@@ -103,6 +153,8 @@ const RECIPES: Record<SoundName, () => void> = {
   'mate-win': mateWin,
   'mate-loss': mateLoss,
   draw,
+  knock,
+  'wicket-creak': wicketCreak,
 }
 
 export function playSound(name: SoundName): void {
