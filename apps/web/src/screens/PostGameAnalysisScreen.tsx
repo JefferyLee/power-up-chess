@@ -8,6 +8,7 @@ import { analyzeGame } from '../engine/analyzeGame'
 import { StockfishEngine } from '../engine/stockfish'
 import { callGameRecap, callHostCommentary } from '../firebase/callables'
 import { HOSTS, type HostId } from '../hosts/hosts'
+import { addCrowns } from '../storage/profile'
 import { TemplatePicker, type TemplateKind } from '../hosts/templates'
 import type { Classification } from '../engine/classify'
 import type { Square } from '../chess/types'
@@ -53,11 +54,16 @@ export function PostGameAnalysisScreen() {
           onProgress: (done, total) => setPhase({ kind: 'analyzing', done, total }),
         })
         const brilliantIdx = new Set<number>()
+        let crowns = 0
         for (const m of analysis.moves) {
           if (m.isBrilliantCandidate && isBrilliant(m).brilliant) {
             brilliantIdx.add(m.index)
           }
+          if (m.classification === 'best' || m.classification === 'excellent') {
+            crowns += 1
+          }
         }
+        if (crowns > 0) addCrowns(crowns)
         setPhase({ kind: 'ready', analysis, brilliantIdx })
         setSelectedIdx(analysis.moves.length > 0 ? analysis.moves.length - 1 : null)
       } catch (e) {

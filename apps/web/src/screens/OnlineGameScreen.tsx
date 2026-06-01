@@ -9,7 +9,10 @@ import { useAuthUid } from '../auth/useAuthUid'
 import { HOSTS } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
+import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
+import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { callClaimTimeWin, callJoinRoom, callResignGame } from '../firebase/callables'
 import { saveGame } from '../history/api'
@@ -18,7 +21,7 @@ import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
-import { loadProfile } from '../storage/profile'
+import { loadProfile, addCrowns } from '../storage/profile'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
 
@@ -272,6 +275,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   // joins mid-game doesn't see a backlog of sparks all at once.
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
+  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
   const seenRef = useRef<number>(room.moves.length)
 
   useEffect(() => {
@@ -281,17 +285,22 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       return
     }
     const newSparks: CaptureSparkData[] = []
+    const newBlooms: TacticBloomData[] = []
     const cursor = new ChessGame()
     let sawCaptureInNew = false
     let sawNonCaptureMoveInNew = false
     let sawCheckInNew = false
     for (let i = 0; i < room.moves.length; i++) {
       const m = room.moves[i]!
+      const preStatus = cursor.status()
+      const wasInCheck = preStatus.kind === 'in_progress' && preStatus.inCheck
       const applied = cursor.move({
         from: m.uci.slice(0, 2) as Square,
         to: m.uci.slice(2, 4) as Square,
         ...(m.uci.length === 5 ? { promotion: m.uci[4] as 'q' | 'r' | 'b' | 'n' } : {}),
       })
+      const postStatus = cursor.status()
+      const givesCheck = postStatus.kind === 'in_progress' && postStatus.inCheck
       if (i < seen) continue
       if (applied?.captured) {
         sawCaptureInNew = true
@@ -305,11 +314,16 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           capturedColor: applied.color === 'w' ? 'b' : 'w',
           text: picker.pick(room.hostMode, 'capture', { capturedPiece: applied.captured }),
         })
+        if (PIECE_VALUE[applied.captured] >= 3 && (wasInCheck || givesCheck)) {
+          newBlooms.push({
+            id: performance.now() + newBlooms.length + 0.5,
+            square: captureSquare,
+          })
+        }
       } else if (applied) {
         sawNonCaptureMoveInNew = true
       }
-      const postStatus = cursor.status()
-      if (postStatus.kind === 'in_progress' && postStatus.inCheck) sawCheckInNew = true
+      if (givesCheck) sawCheckInNew = true
     }
     seenRef.current = room.moves.length
 
@@ -321,10 +335,15 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     // into UI state; the lint rule's general advice doesn't apply here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (newSparks.length) setSparks((prev) => [...prev, ...newSparks])
+    if (newBlooms.length) setBlooms((prev) => [...prev, ...newBlooms])
   }, [room.moves, room.hostMode, picker, sound])
 
   const handleSparkDone = useCallback((id: number) => {
     setSparks((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  const handleBloomDone = useCallback((id: number) => {
+    setBlooms((prev) => prev.filter((b) => b.id !== id))
   }, [])
 
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -397,6 +416,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       const youWon = (room.result === 'white' && yourColor === 'w') ||
                      (room.result === 'black' && yourColor === 'b')
       sound.play(youWon ? 'mate-win' : 'mate-loss')
+      if (youWon) addCrowns(1)
     } else if (!yourColor && room.result && room.result !== 'draw') {
       // Spectator — gentle fanfare regardless of who won.
       sound.play('mate-win')
@@ -490,6 +510,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           {!yourColor && <span className="puc-online__spectator-chip">Spectating</span>}
         </div>
         <div className="puc-local__actions">
+          {yourColor && <CrownBadge variant="inline" watch={room.status} />}
           <MuteButton />
           {yourColor && room.status === 'live' && (
             <button type="button" onClick={() => setResignDialogOpen(true)}>
@@ -539,6 +560,15 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
                 squareSize={SQUARE_SIZE}
                 orientation={orientation}
                 onDone={handleSparkDone}
+              />
+            ))}
+            {blooms.map((b) => (
+              <TacticBloom
+                key={b.id}
+                data={b}
+                squareSize={SQUARE_SIZE}
+                orientation={orientation}
+                onDone={handleBloomDone}
               />
             ))}
           </div>

@@ -7,6 +7,7 @@ import { loadProfile, resolveHostChoice, saveProfile, type HostChoice } from '..
 import { presetById, TIME_CONTROL_PRESETS } from '../clock/timeControl'
 import { DIFFICULTY_PRESETS, difficultyById, type DifficultyId } from '../ai/difficulty'
 import { applyTheme, THEMES } from '../theme/themes'
+import { CrownBadge } from '../powerups/CrownBadge'
 import './StartScreen.css'
 
 export function StartScreen() {
@@ -35,6 +36,7 @@ export function StartScreen() {
     timeControlId,
     aiDifficultyId,
     themeId,
+    crownCount: initial.crownCount, // preserve crowns earned across saves
   })
 
   const handleThemeChange = (next: string) => {
@@ -105,6 +107,12 @@ export function StartScreen() {
         <header className="puc-start__hero">
           <h1 className="puc-start__title">Power Up Chess</h1>
           <p className="puc-start__subtitle">A brave little forest, a real chess board, and a host who is glad you came.</p>
+          {initial.crownCount > 0 && (
+            <p className="puc-start__crowns">
+              <CrownBadge variant="large" />
+              <span className="puc-start__crowns-label">earned across your games</span>
+            </p>
+          )}
         </header>
 
         <section className="puc-start__panel" aria-labelledby="puc-start-name">

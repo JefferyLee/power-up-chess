@@ -38,6 +38,8 @@ export function PuzzleScreen() {
   const [startedAt, setStartedAt] = useState<number | null>(null)
   const [phase, setPhase] = useState<Phase>({ kind: 'playing' })
   const [shake, setShake] = useState(false)
+  const [sparkleActive, setSparkleActive] = useState(false)
+  const [sparkleUsed, setSparkleUsed] = useState(false)
   const interactedRef = useRef(false)
 
   // Reset all state when navigating between puzzles. The dep array tracks
@@ -54,6 +56,8 @@ export function PuzzleScreen() {
     setStartedAt(null)
     setPhase({ kind: 'playing' })
     setShake(false)
+    setSparkleUsed(false)
+    setSparkleActive(false)
     interactedRef.current = false
   }, [puzzleId, puzzleFen])
 
@@ -168,6 +172,25 @@ export function PuzzleScreen() {
     setHintsUsed((n) => n + 1)
   }, [puzzle, phase.kind, hintsUsed])
 
+  // Hint Sparkle — briefly draws the solution arrow on the board without
+  // revealing the full line. Counts as 1 hint against the score, one-shot
+  // per puzzle attempt.
+  useEffect(() => {
+    if (!sparkleActive) return
+    const id = window.setTimeout(() => setSparkleActive(false), 2000)
+    return () => window.clearTimeout(id)
+  }, [sparkleActive])
+  const onSparkle = useCallback(() => {
+    if (!puzzle || phase.kind !== 'playing' || sparkleUsed) return
+    if (!interactedRef.current) {
+      interactedRef.current = true
+      setStartedAt(Date.now())
+    }
+    setSparkleUsed(true)
+    setHintsUsed((n) => n + 1)
+    setSparkleActive(true)
+  }, [puzzle, phase.kind, sparkleUsed])
+
   const onShowSolution = useCallback(() => {
     if (!puzzle) return
     // Reset to the original position and step through the solution with the
@@ -242,6 +265,10 @@ export function PuzzleScreen() {
             onMove={handleMove}
             lastMove={lastMove}
             checkSquare={checkSquare}
+            arrows={sparkleActive ? [{
+              from: puzzle.solution[moveIndex]!.slice(0, 2) as Square,
+              to: puzzle.solution[moveIndex]!.slice(2, 4) as Square,
+            }] : undefined}
             squareSize={SQUARE_SIZE}
           />
         </div>
@@ -274,6 +301,15 @@ export function PuzzleScreen() {
                 : hintsUsed < 3
                   ? `Show hint ${hintsUsed + 1}`
                   : 'All hints used'}
+            </button>
+            <button
+              type="button"
+              className="puc-puzzle__btn puc-puzzle__btn--ghost"
+              onClick={onSparkle}
+              disabled={phase.kind !== 'playing' || sparkleUsed}
+              title="Briefly show the next-move arrow (costs 1 hint)"
+            >
+              {sparkleUsed ? 'Sparkle used' : 'Show arrow'}
             </button>
             <button
               type="button"

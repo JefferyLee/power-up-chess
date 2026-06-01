@@ -17,6 +17,9 @@ export interface Profile {
   aiDifficultyId: string
   /** Theme tokens id. See theme/themes.ts. */
   themeId: string
+  /** Crown Spark counter — accumulates across games. +1 per game win,
+   *  +N per excellent/best move surfaced in post-game review. */
+  crownCount: number
 }
 
 const DEFAULT: Profile = {
@@ -25,6 +28,7 @@ const DEFAULT: Profile = {
   timeControlId: 'untimed',
   aiDifficultyId: 'beginner',
   themeId: 'magic-forest',
+  crownCount: 0,
 }
 
 const VALID_HOST_CHOICES: ReadonlySet<HostChoice> = new Set<HostChoice>([
@@ -50,6 +54,7 @@ export function loadProfile(): Profile {
       timeControlId: typeof parsed.timeControlId === 'string' ? parsed.timeControlId : DEFAULT.timeControlId,
       aiDifficultyId: typeof parsed.aiDifficultyId === 'string' ? parsed.aiDifficultyId : DEFAULT.aiDifficultyId,
       themeId: typeof parsed.themeId === 'string' ? parsed.themeId : DEFAULT.themeId,
+      crownCount: typeof parsed.crownCount === 'number' && parsed.crownCount >= 0 ? parsed.crownCount : DEFAULT.crownCount,
     }
   } catch {
     return DEFAULT
@@ -63,6 +68,16 @@ export function saveProfile(p: Profile): void {
   } catch {
     // Ignore quota / privacy errors.
   }
+}
+
+/** Atomically add to the crown counter and persist. Safe to call from any
+ *  game/review screen — falls back to a no-op on storage failure. */
+export function addCrowns(n: number): number {
+  if (n <= 0) return loadProfile().crownCount
+  const p = loadProfile()
+  const next: Profile = { ...p, crownCount: p.crownCount + n }
+  saveProfile(next)
+  return next.crownCount
 }
 
 /** Resolve a host choice to a concrete primary + optional co-host.

@@ -7,10 +7,14 @@ import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
+import { addCrowns } from '../storage/profile'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
+import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
+import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
@@ -91,6 +95,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
+  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
   const [localResignation, setLocalResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newLocalGameId())
@@ -131,6 +136,8 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
   const handleMove = useCallback(
     (move: MoveInput) => {
+      const preStatus = game.status()
+      const wasInCheck = preStatus.kind === 'in_progress' && preStatus.inCheck
       const result = game.move(move)
       if (!result) return
       setSnap(snapshot(game))
@@ -185,10 +192,25 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           text,
         }
         setSparks((prev) => [...prev, spark])
+
+        // Tactic Bloom: forcing capture of a piece worth ≥3 — either delivers
+        // check or was made in response to one.
+        const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
+        if (PIECE_VALUE[result.captured] >= 3 && (wasInCheck || givesCheck)) {
+          const bloom: TacticBloomData = {
+            id: performance.now() + 0.5,
+            square: captureSquare,
+          }
+          setBlooms((prev) => [...prev, bloom])
+        }
       }
     },
     [game, hostId, coHostId, picker, sound, timeControl],
   )
+
+  const handleBloomDone = useCallback((id: number) => {
+    setBlooms((prev) => prev.filter((b) => b.id !== id))
+  }, [])
 
   const handleUndo = useCallback(() => {
     if (game.undo()) setSnap(snapshot(game))
@@ -199,6 +221,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     setGame(fresh)
     setSnap(snapshot(fresh))
     setSparks([])
+    setBlooms([])
     setLocalResignation(null)
     setGameId(newLocalGameId())
     setSavedThisGame(false)
@@ -268,10 +291,13 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
   // Fanfare on terminal status change. The local resignation path doesn't
   // route through handleMove, so we trigger sounds from here for any end.
+  // We also bump the Crown Spark counter on any win — local 2P shares the
+  // screen, so any victory is "your" victory worth a crown.
   useEffect(() => {
     if (effectiveStatus.kind === 'in_progress') return
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       sound.play('mate-win')
+      addCrowns(1)
     } else {
       sound.play('draw')
     }
@@ -347,6 +373,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           </span>
         </div>
         <div className="puc-local__actions">
+          <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <MuteButton />
           <button
             type="button"
@@ -391,6 +418,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
             />
             {sparks.map((s) => (
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
+            ))}
+            {blooms.map((b) => (
+              <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} onDone={handleBloomDone} />
             ))}
           </div>
           <StatusBanner status={effectiveStatus} activeName={activeName} whiteName={whiteName} blackName={blackName} />

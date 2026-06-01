@@ -7,10 +7,14 @@ import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
+import { addCrowns } from '../storage/profile'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
+import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
+import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
@@ -75,6 +79,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
+  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
   const [resignation, setResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newAiGameId())
@@ -110,6 +115,8 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
 
   const applyMove = useCallback(
     (move: MoveInput): boolean => {
+      const preStatus = game.status()
+      const wasInCheck = preStatus.kind === 'in_progress' && preStatus.inCheck
       const result = game.move(move)
       if (!result) return false
       setSnap(snapshot(game))
@@ -133,11 +140,23 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
           capturedColor: result.color === 'w' ? 'b' : 'w',
           text,
         }])
+
+        const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
+        if (PIECE_VALUE[result.captured] >= 3 && (wasInCheck || givesCheck)) {
+          setBlooms((prev) => [...prev, {
+            id: performance.now() + 0.5,
+            square: captureSquare,
+          }])
+        }
       }
       return true
     },
     [game, hostId, coHostId, picker, sound],
   )
+
+  const handleBloomDone = useCallback((id: number) => {
+    setBlooms((prev) => prev.filter((b) => b.id !== id))
+  }, [])
 
   const handleUserMove = useCallback(
     (move: MoveInput) => {
@@ -182,6 +201,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     setGame(fresh)
     setSnap(snapshot(fresh))
     setSparks([])
+    setBlooms([])
     setResignation(null)
     setGameId(newAiGameId())
     setSavedThisGame(false)
@@ -242,6 +262,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       const youWon = effectiveStatus.winner === playerColor
       sound.play(youWon ? 'mate-win' : 'mate-loss')
+      if (youWon) addCrowns(1)
     } else {
       sound.play('draw')
     }
@@ -275,6 +296,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
           </span>
         </div>
         <div className="puc-local__actions">
+          <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <MuteButton />
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
@@ -311,6 +333,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
             />
             {sparks.map((s) => (
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
+            ))}
+            {blooms.map((b) => (
+              <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} orientation={playerColor} onDone={handleBloomDone} />
             ))}
           </div>
           <StatusBanner
