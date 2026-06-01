@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-a-royal-guard-for-a-chess-book",
+  "bookId": "ruy-lopez-art",
+  "title": "A Royal Guard for a Chess Book",
+  "body": "Back in the sixteenth century, writing a chess book was a very big deal. The King of Spain himself signed a special decree to protect Ruy López's new chess guide. Anyone who dared to copy or disobey this royal order faced a massive fine of twenty thousand coins, which would be worth a fortune today.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-bb6a5026a6",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "King Philip II"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Hundreds of years ago, a thoughtful player named Ruy López wrote a special guide filled with chess secrets. The King of Spain wanted to protect these precious pages, so he signed a royal paper just for this book. This gentle guard of ink made sure that no one could copy the writer's hard work without permission.",
+    "luca": "Imagine having the King of Spain protect your chess strategies! He made a strict royal rule that absolutely nobody could copy Ruy's new book. Anyone who dared to break this law faced a giant penalty of twenty thousand coins. That would be worth a massive fortune today!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

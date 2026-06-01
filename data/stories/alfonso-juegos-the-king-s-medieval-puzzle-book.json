@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-s-medieval-puzzle-book",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Medieval Puzzle Book",
+  "body": "Over seven hundred years ago, a special book was made containing over one hundred chess puzzles. Each puzzle came with a beautiful hand-painted picture showing how to set up the board. The rules were strict, and players had to find the exact checkmate in a set number of moves. If the attacker made even a single mistake, the defender would instantly win the game!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-249a1f196c",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a king ordered a wonderful book filled with over a hundred chess secrets. Artists painted colorful illustrations for every single page to show where the wooden pieces belonged. If you look closely at the drawings, you can see exactly how to set up each challenge.",
+    "luca": "This wasn't just a regular book—it was a battle guide with high-stakes challenges. You had to hunt down the perfect checkmate in a limited number of turns. One tiny slip-up by the attacker, and the defender snatched the victory instantly."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

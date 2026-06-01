@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-how-the-queen-became-the-stronge",
+  "bookId": "ruy-lopez-art",
+  "title": "How the Queen Became the Strongest Piece",
+  "body": "Long ago, the chess queen was actually a very weak piece that could only move one square at a time. But around 1492, Spain was ruled by a fierce warrior queen named Isabella who led armies into battle. Chess players in Spain decided their game needed a queen just as powerful as their real-life ruler, so they changed the rules to let her slide across the entire board.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-852741f500",
+  "era": "1400s",
+  "players": [
+    "Queen Isabella"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Once, the chess queen was very quiet and could only step one tiny square at a time. But in Spain, a real queen named Isabella wore armor and guided her armies with great care. The people wanted their game to mirror her strength, so they gave the wooden queen the power to glide all the way across the board.",
+    "luca": "Imagine a queen who could only crawl one space at a time—so boring! Then came Queen Isabella of Spain, a fierce leader who actually marched right into battle with her soldiers. Chess players saw her bravery and decided the game needed a major upgrade. They unlocked her ultimate move, letting her charge across the entire battlefield in a single swoop!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

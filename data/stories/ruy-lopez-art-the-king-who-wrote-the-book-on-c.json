@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-king-who-wrote-the-book-on-c",
+  "bookId": "ruy-lopez-art",
+  "title": "The King Who Wrote the Book on Chess",
+  "body": "Back in the thirteenth century, King Alfonso of Spain was so fascinated by games that he ordered a special book to be written about them. This massive book featured beautiful hand-painted pictures of people playing chess. Thanks to his efforts, chess became incredibly popular across Europe as a tool for teaching smart thinking.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-8cadf71364",
+  "era": "ancient",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle king named Alfonso decided to capture the joy of games in a giant book. He asked artists to paint lovely, colorful pictures of people sitting quietly and playing chess. This beautiful creation traveled across Europe, helping people learn how to think deeply and plan their next steps.",
+    "luca": "King Alfonso of Spain loved a good challenge, so he gathered his scribes to make the ultimate game guide. It was packed with awesome, hand-drawn scenes of players facing off over the board. This massive project spread everywhere, training people to think like brilliant strategists."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-is-chess-a-city-or-a-battlefield",
+  "bookId": "ruy-lopez-art",
+  "title": "Is Chess a City or a Battlefield?",
+  "body": "Long ago, a monk named Jacobus de Cessolis claimed that a chessboard was actually a miniature model of a bustling city. He imagined the different pieces as citizens working together. Years later, the famous Spanish master Ruy Lopez disagreed, saying the board is actually a fierce battlefield where two royal armies clash.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-17f6b00ffb",
+  "era": "1500s",
+  "players": [
+    "Jacobus de Cessolis",
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A monk named Jacobus looked at the wooden board and saw a quiet, busy town. He imagined the little pieces as neighbors, like bakers and builders, all helping each other live in peace. To him, every square was a tiny street where people worked side by side.",
+    "luca": "But then a Spanish champion named Ruy Lopez charged in with a totally different plan! He declared that those sixty-four squares were actually a wild, daring battlefield. For him, the game was a thrilling clash between two noble forces fighting for victory."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

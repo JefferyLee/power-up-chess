@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-cornering-the-hare",
+  "bookId": "alfonso-juegos",
+  "title": "Cornering the Hare",
+  "body": "Long ago, people played a board game called corner the hare. One player controlled a single piece representing a fast hare, while the other player had twelve pieces trying to surround it. If the hare managed to capture enough attackers to leave them with only nine, the hare won. With only nine pieces left, the hunter could no longer trap the clever animal.",
+  "motif": "game",
+  "sourceChunkId": "alfonso-juegos-7cf89dd954",
+  "era": "1200s",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Hundreds of years ago, families gathered around a wooden board to play a quiet game of chase. One person guided a single, swift hare, while their opponent moved twelve tiny pieces to try and circle the little animal. If the clever hare could slip past and take three of those pieces away, it won its freedom. With only nine pursuers left on the board, there was simply too much open space for the hare to ever be caught.",
+    "luca": "Imagine being one lone player facing an army of twelve hunters closing in from every side! This medieval game was a thrilling race where you had to dodge, weave, and strike back. Your goal as the speedy beast was to knock out enough attackers until only nine remained. Once the enemy force shrunk to nine, their trap crumbled, and you leaped away to victory!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

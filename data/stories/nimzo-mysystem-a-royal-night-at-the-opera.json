@@ -1,0 +1,27 @@
+{
+  "id": "nimzo-mysystem-a-royal-night-at-the-opera",
+  "bookId": "nimzo-mysystem",
+  "title": "A Royal Night at the Opera",
+  "body": "In 1858, the American chess genius Paul Morphy attended an opera in Paris with a Duke and a Count. Rather than focusing on the stage, they played a game of chess in their private box. Morphy ended up winning with a spectacular series of sacrifices, creating what is now the most famous casual game in history.",
+  "motif": "game",
+  "sourceChunkId": "nimzo-mysystem-34c8d1b6e9",
+  "era": "1850s",
+  "players": [
+    "Paul Morphy",
+    "Duke of Brunswick",
+    "Count Isouard"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Over a hundred years ago, a quiet young man named Paul sat in a cozy theater box in Paris. While the opera singers performed on stage, he focused on a tiny wooden board. He played a friendly game of chess against two noblemen, gently placing his pieces under the dim lights.",
+    "luca": "Paul launched a brilliant and fearless attack! He gave up his most valuable pieces on purpose to trap the enemy king. That wild evening turned into the most famous casual chess battle of all time."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

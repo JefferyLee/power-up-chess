@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-king-alfonso-s-book-of-games",
+  "bookId": "alfonso-juegos",
+  "title": "King Alfonso's Book of Games",
+  "body": "Over seven hundred years ago, a Spanish king named Alfonso the Wise decided to write down all his favorite games. He created a massive, colorful book filled with chess puzzles, dice games, and board setups. Thanks to his royal project, we still know how people enjoyed chess during medieval times.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-2babde08fa",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle king named Alfonso wanted to save the games he loved. He gathered artists to paint a giant, beautiful book filled with colorful drawings of chess boards. Because of his quiet care, we can look back through time and see exactly how families played together so many years ago.",
+    "luca": "Imagine a king from the twelve-hundreds who spent his time collecting the ultimate secrets of chess! King Alfonso packed a mega-book with tricky puzzles and wild game setups. It is like a real-life treasure map that shows us exactly how knights battled on the board!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

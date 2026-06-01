@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-when-bishops-were-war-elephants",
+  "bookId": "alfonso-juegos",
+  "title": "When Bishops Were War Elephants",
+  "body": "Long ago, in a famous medieval book of games, chess pieces looked very different than they do today. Instead of church bishops, the pieces next to the knights were carved as giant war elephants! These stone beasts carried tiny wooden castles on their backs, packed with armed soldiers ready for battle.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-625f07d1e5",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "If you could peek inside a very old book of games, you would see how different the chess board used to look. Standing right beside the swift horses were giant elephants carved from smooth stone. On their wide backs, these great creatures carried tiny wooden castles filled with miniature soldiers.",
+    "luca": "Imagine sending giant armored elephants charging across the board instead of quiet bishops! These massive stone beasts stood right next to the leaping horses, ready to crash through the enemy lines. They even carried wooden towers on their backs, packed with tiny soldiers waiting to join the fight!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

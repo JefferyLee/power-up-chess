@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-who-wanted-to-cure-sadn",
+  "bookId": "alfonso-juegos",
+  "title": "The King Who Wanted to Cure Sadness",
+  "body": "Long ago, a wise king named Alfonso decided to write a giant book all about chess and board games. He believed that games were a special gift to bring joy to human hearts and help people forget their daily worries. His beautiful book was filled with colorful drawings and clever puzzles to cheer up his kingdom.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-a1d6352704",
+  "era": "1200s",
+  "players": [
+    "King Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Hundreds of years ago, a gentle king named Alfonso noticed that his people were carrying heavy worries. To help them feel better, he created a massive, beautiful book filled with colorful hand-painted drawings of chess boards. He believed that moving these tiny wooden pieces could help a tired mind find peace and quiet joy.",
+    "luca": "King Alfonso launched a grand plan to defeat sadness using the power of board games! He packed a giant book with the most exciting chess puzzles he could find. It was his secret weapon to get everyone's brain working and turn their gloomy days into a playful adventure."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

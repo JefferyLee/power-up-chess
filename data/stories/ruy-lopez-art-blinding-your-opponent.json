@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-blinding-your-opponent",
+  "bookId": "ruy-lopez-art",
+  "title": "Blinding Your Opponent",
+  "body": "Hundreds of years ago, chess books did not just teach moves; they also taught sneaky tricks to win. One famous guide advised players to set up the board so the bright sun would shine directly into their opponent's eyes. If they played at night, they were told to place a flickering candle on the opponent's right side to distract them with shadows.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-55a986d885",
+  "era": "1500s",
+  "players": [
+    "Ruy Lopez",
+    "Lucena"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Five centuries ago, chess writers shared unusual secrets that had nothing to do with the wooden pieces. They suggested placing the table so the morning sunlight would beam straight into the other player's eyes. If the game took place after dusk, they recommended setting a dancing flame to the right of your challenger to cast confusing shapes across the squares.",
+    "luca": "Back in the fifteen-hundreds, masters used wild tactics that weren't even on the board! One old guidebook told players to angle the seat so the blazing sun would beam right into their rival's face. During evening matches, they would position a wavering candle on the right to mess with the enemy using spooky, shifting shapes."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,26 @@
+{
+  "id": "nimzo-mysystem-conquering-the-giants-of-chess",
+  "bookId": "nimzo-mysystem",
+  "title": "Conquering the Giants of Chess",
+  "body": "In 1929, a grandmaster named Aron Nimzowitsch achieved his greatest tournament victory in the city of Carlsbad. He shocked the chess world by taking first place ahead of legendary players, including the former world champion José Raúl Capablanca. This amazing win proved to everyone that Nimzowitsch's unusual and creative strategies really worked against the very best.",
+  "motif": "tournament",
+  "sourceChunkId": "nimzo-mysystem-3fbdc88c71",
+  "era": "1920s",
+  "players": [
+    "Nimzowitsch",
+    "Capablanca"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "In the year 1929, a thoughtful player named Aron Nimzowitsch traveled to a major contest in Carlsbad. Almost everyone expected the famous former champion, Capablanca, to easily win. But Aron guided his pieces with highly unusual, clever ideas that puzzled his opponents. In the end, his quiet focus earned him the top prize.",
+    "luca": "Aron went head-to-head with the biggest giants of the game, including the famous master Capablanca. Instead of playing safe, he unleashed daring and unexpected plans that shook up the whole room. He charged past the favorites to snatch the gold. That day, he proved his wild style could defeat the toughest opponents on Earth!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

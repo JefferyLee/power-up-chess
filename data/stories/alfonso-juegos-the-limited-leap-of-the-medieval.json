@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-limited-leap-of-the-medieval",
+  "bookId": "alfonso-juegos",
+  "title": "The Limited Leap of the Medieval Bishop",
+  "body": "In the thirteenth century, the chess bishop was far less powerful than the modern version we play with today. According to the historic gaming manual of King Alfonso, this piece could only ever reach six specific squares on the entire board. Because it could only jump exactly two squares diagonally, its range was extremely limited.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-86fd730807",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "More than seven hundred years ago, the bishop was a quiet traveler on the wooden board. King Alfonso wrote in his old book that this little piece could only ever visit six special squares. It moved by taking a gentle, two-step leap along the diagonal lines, never wandering any further.",
+    "luca": "Back in the medieval days, the bishop didn't slide across the whole battlefield like a rocket. It was a trick jumper, leaping exactly two spaces diagonally to land on its target. This meant the brave piece was locked out of almost every fight, with only six spots it could ever reach!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

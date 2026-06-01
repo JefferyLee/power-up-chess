@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-just-right-chessboard",
+  "bookId": "alfonso-juegos",
+  "title": "The Just Right Chessboard",
+  "body": "Hundreds of years ago, King Alfonso of Spain wrote about different kinds of chessboards. Some people tried playing on giant boards with over one hundred squares, but the games took way too long. Others played on tiny boards that ended too quickly. Everyone finally agreed that the eight-by-eight board was absolutely perfect.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-f87d6f4764",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a wise king named Alfonso loved to watch his court play chess on different boards. He saw some people try to play on giant wooden grids with over one hundred squares, but the pieces got lost on those endless journeys. In the end, he helped everyone see that the quiet magic of the game fits best on our familiar grid of sixty-four squares.",
+    "luca": "King Alfonso wanted the ultimate chess battle, but people kept messing up the battlefield size! Some players built giant boards that made games drag on forever like a never-ending march. Others shrunk the board so tiny that the clash was over in a blink. Finally, they locked in the classic eight-by-eight grid for the perfect showdown."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-don-t-stop-to-clean-your-nose",
+  "bookId": "nimzo-mysystem",
+  "title": "Don't Stop to Clean Your Nose!",
+  "body": "Grandmaster Aron Nimzowitsch compared chess development to a running race. He warned that wasting moves in the opening is like stopping to wipe dirt off your nose while sprinting. While having a clean nose is nice, doing it mid-race will only help your opponent win.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-7661cfb4dd",
+  "era": "1920s",
+  "players": [
+    "Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, a wise chess master named Aron Nimzowitsch compared the start of a game to a fast running race. He said that if you waste your early turns, it is just like pausing to wipe a speck of dust off your nose while sprinting. It is lovely to be tidy, but pausing for even a second lets your opponent slip right past you.",
+    "luca": "Imagine you are zooming down the track, sprinting for the finish line! If you stop to clean your face mid-dash, your rival will fly right past you to victory. That is why Nimzowitsch warned players never to waste their very first moves on the board. You have to charge ahead with your pieces right from the start!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

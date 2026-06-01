@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-king-who-preferred-brains-ov",
+  "bookId": "ruy-lopez-art",
+  "title": "The King Who Preferred Brains Over Luck",
+  "body": "Long ago in India, a king named Balhait decided he did not like board games that used dice because they relied too much on luck. Instead, he wanted a game where players had to use their own smarts and free will to win. He promoted chess, using the board to plan out real military battles and even compare the pieces to the stars in the sky.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-4d6d82a522",
+  "era": "ancient",
+  "players": [
+    "King Balhait"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in ancient India, a gentle ruler named King Balhait watched his court toss dice and felt something was missing. He wished for a game where a person's own thoughtful choices decided the path to victory. To show his people a better way, he shared the quiet beauty of chess, comparing the carved figures to the glowing stars in the night sky.",
+    "luca": "King Balhait was totally done with letting random dice rolls decide who won! He wanted a real clash of minds where clever planning and bold moves ruled the day. He used the chessboard to map out daring army strategies, proving that smart thinking always beats lucky guesses."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

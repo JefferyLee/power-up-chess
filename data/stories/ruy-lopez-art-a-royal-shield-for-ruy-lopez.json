@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-a-royal-shield-for-ruy-lopez",
+  "bookId": "ruy-lopez-art",
+  "title": "A Royal Shield for Ruy Lopez",
+  "body": "In the sixteenth century, a Spanish priest named Ruy Lopez wrote an important book about chess. To protect his hard work, King Philip the Second granted him a special ten-year monopoly. Back then, book laws were so strict that anyone who copied a book without permission could face massive fines or even the death penalty!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-1076869cb6",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle priest named Ruy Lopez spent many quiet hours writing down his favorite chess secrets in a special book. To keep this treasure safe, the king himself promised that no one else could print the book for ten whole years. It was like a royal shield made of paper and ink, protecting the priest's hard work.",
+    "luca": "But watch out, because copying that book without permission was an incredibly dangerous move back then! King Philip the Second set up rules so fierce that thieves faced giant fines or even the ultimate punishment. It was a high-stakes adventure just to guard those chess pages from rivals."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

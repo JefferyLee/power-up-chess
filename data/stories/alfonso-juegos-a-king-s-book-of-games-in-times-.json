@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-a-king-s-book-of-games-in-times-",
+  "bookId": "alfonso-juegos",
+  "title": "A King's Book of Games in Times of War",
+  "body": "During a time of family rebellion and war, a Spanish king named Alfonso the Tenth ordered the creation of a beautiful book about board games. Completed in 1283, this famous manuscript detailed the rules of chess, dice, and backgammon. Later, the king even added a special section for a giant version of chess and games based on the stars.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-e0dffc50c3",
+  "era": "ancient",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, King Alfonso lived through a loud and scary war, even fighting with his own family. To find a quiet space of peace, he asked his artists to paint a wonderful book filled with the secrets of chess, backgammon, and dice. Inside its colorful pages, he even drew giant chessboards and games that followed the movement of the silent stars.",
+    "luca": "While battles raged outside his castle walls, King Alfonso decided to launch a totally different kind of mission. In 1283, he finished a master plan of a book packed with rules for chess and dice battles. He even upgraded the adventure by adding giant-sized chess and games played with the actual stars!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

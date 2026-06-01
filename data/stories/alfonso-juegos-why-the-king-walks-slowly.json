@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-why-the-king-walks-slowly",
+  "bookId": "alfonso-juegos",
+  "title": "Why the King Walks Slowly",
+  "body": "Have you ever wondered why the chess king only moves one square at a time? King Alfonso of Spain wrote that a real leader must never rush blindly into battle, but should instead step carefully while watching over his army.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-090bbcb4a8",
+  "era": "medieval",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise Spanish ruler named King Alfonso explained why our chess king takes such tiny, quiet steps. He believed that a true leader never runs in a hurry or panics. Instead, the king walks slowly to look closely at each of his brave soldiers and keep them safe.",
+    "luca": "You might think a king should charge ahead on a fast horse, but an old Spanish ruler named Alfonso had a far better plan. He wrote that a great commander must never sprint into a trap. By moving just one square at a time, the leader can scout the battlefield and guide his whole army to victory."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

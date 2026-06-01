@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-s-sixteen-jump-puzzle",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Sixteen-Jump Puzzle",
+  "body": "In the medieval era, King Alfonso the Wise of Spain compiled a famous book of chess. One of its trickiest puzzles required a white knight to deliver sixteen checks in a row to escape danger. If the player missed a single check, the enemy rook would instantly win the game.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-fc904708d0",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a wise king named Alfonso put together a beautiful book filled with chess secrets. Inside, there was a riddle about a lone white knight surrounded by danger. To save himself, the horse had to leap sixteen times, tapping the enemy king with every single jump.",
+    "luca": "This was the ultimate high-stakes escape mission. If that knight paused for even a single turn, a heavy enemy rook was ready to slide in and end the game. The brave little horse had to launch sixteen perfect attacks in a row without making a single mistake."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

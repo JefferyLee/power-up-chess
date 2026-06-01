@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-laughing-chess-pawns",
+  "bookId": "nimzo-mysystem",
+  "title": "The Laughing Chess Pawns",
+  "body": "Aron Nimzowitsch, a creative grandmaster from the 1920s, loved to treat chess pieces like real people with feelings. He once wrote that if you attack an opponent's pawn poorly, the pawn itself will laugh out loud at you. To stop this mocking pawn, he suggested landing a powerful knight right in the enemy's face as an outpost. This sneaky knight would make the opponent so nervous that the laughing pawn would finally fall silent.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-6f02d1a60e",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A clever chess master named Aron lived a long time ago, and he believed every wooden piece on the board had its own little heart. He warned that if you attack an opponent's pawn without a good plan, that tiny soldier will actually giggle at your mistake. To quiet its soft laughter, you must find a way to gently but firmly block its path.",
+    "luca": "That is when you launch a daring rescue mission with your bravest knight! You gallop right up to the giggling pawn's nose and claim a permanent outpost. Suddenly, your opponent gets super nervous, and that noisy little pawn completely loses its voice."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

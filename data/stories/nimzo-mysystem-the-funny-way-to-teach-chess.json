@@ -1,0 +1,26 @@
+{
+  "id": "nimzo-mysystem-the-funny-way-to-teach-chess",
+  "bookId": "nimzo-mysystem",
+  "title": "The Funny Way to Teach Chess",
+  "body": "Aron Nimzowitsch revolutionized chess instruction by refusing to write in a dry, boring style. He believed that humor and funny comparisons to everyday life were the best ways to explain complicated board struggles. While other masters of his era preferred strict, serious lessons, Nimzowitsch used jokes to reveal deep chess truths.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-d5649be20c",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch",
+    "Wilhelm Steinitz"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, a chess master named Aron decided that learning this game should never feel like dusty homework. He wrote books filled with gentle laughter, comparing the quiet wooden pieces to things we see in our everyday lives. By sharing these cozy stories, he helped people see the deep secrets of the board without getting tired.",
+    "luca": "Other teachers back then wanted everyone to study silent, boring rules, but Aron completely broke the mold with his wild jokes! He turned tough board battles into exciting adventures by using hilarious, everyday comparisons. He showed everyone that the bravest plans actually start with a giant smile."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

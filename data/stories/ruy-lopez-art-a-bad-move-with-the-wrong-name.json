@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-a-bad-move-with-the-wrong-name",
+  "bookId": "ruy-lopez-art",
+  "title": "A Bad Move with the Wrong Name",
+  "body": "There is a notoriously weak chess opening called the Damiano Defense. Strangely, an early chess writer named Damiano actually wrote a book warning people never to play this move because it was so bad. Instead of getting credit for his helpful advice, history played a trick on him by naming the terrible move after him anyway.",
+  "motif": "opening",
+  "sourceChunkId": "ruy-lopez-art-11137dc218",
+  "era": "1500s",
+  "players": [
+    "Damiano"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in the sixteenth century, a thoughtful writer named Damiano crafted a book to protect chess players from making a terrible mistake at the very start of the game. He carefully explained why this particular opening move would leave your pieces weak and unprotected. Yet, in a quiet twist of history, people began calling that exact, clumsy setup by his own name instead.",
+    "luca": "Imagine writing a brilliant guidebook to warn players away from a disastrous opening trap, only for the world to name the trap after you! That is the wild trick history played on a writer named Damiano back in the fifteen-hundreds. He loudly declared that this specific start was a terrible mistake, but today, players still call this awful defense by his name."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

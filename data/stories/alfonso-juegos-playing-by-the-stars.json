@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-playing-by-the-stars",
+  "bookId": "alfonso-juegos",
+  "title": "Playing by the Stars",
+  "body": "In the year 1283, a very unusual board game was written down that was played using astronomy. Instead of normal pieces, players moved seven planets through the twelve signs of the zodiac. To win, you had to calculate whether the planets liked or disliked each other based on how they lined up. It was considered a game only for the smartest scholars of the kingdom.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-7cf89dd954",
+  "era": "1200s",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Imagine a quiet evening over seven hundred years ago, playing a game where the board is the night sky. Instead of wooden pawns, you guide seven shining planets through the twelve signs of the zodiac. To win, you must carefully watch how these stars align to see if they are friendly or fighting.",
+    "luca": "This was the ultimate brain championship for the kingdom's cleverest scholars back in 1283! You got to launch seven cosmic planets across a map of the zodiac. To score a victory, you had to calculate exactly how these space pieces clashed or teamed up based on where they landed."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

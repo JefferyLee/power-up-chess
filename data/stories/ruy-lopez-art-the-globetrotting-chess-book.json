@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-globetrotting-chess-book",
+  "bookId": "ruy-lopez-art",
+  "title": "The Globetrotting Chess Book",
+  "body": "In 1561, a Spanish priest named Ruy López wrote an amazing book filled with chess secrets. It became so famous that players all over Europe wanted to read it. People translated his book into Italian and French so they could learn how to play like him, but it took hundreds of years for the whole book to finally be printed in English!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-939fc7f446",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Over four hundred years ago, a priest from Spain named Ruy López sat down to write a book filled with his quiet chess secrets. Eager players in Italy and France quickly translated the pages so they could try his clever ideas themselves. It took hundreds of years, however, for the entire guide to finally be printed in English.",
+    "luca": "Imagine a guide so packed with brilliant strategies that players across Europe scrambled to get their hands on it! To learn his winning style, rivals rushed to translate the pages into French and Italian. This grand chess adventure lasted for centuries before the complete book was finally printed in English!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

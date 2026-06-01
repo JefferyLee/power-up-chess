@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-chess-vs-dice-a-king-s-choice",
+  "bookId": "alfonso-juegos",
+  "title": "Chess vs. Dice: A King's Choice",
+  "body": "In the medieval court of King Alfonso the Wise, chess was prized above all other board games. The king believed that dice relied too much on pure luck, which could lead to cheating and bad behavior. In contrast, he declared chess to be a far more honorable and peaceful game because it required true intellect and quiet wisdom.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-f85ea52abc",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a thoughtful king named Alfonso watched his court play different games. He disliked dice because they relied only on luck, which often made people cheat and argue. Instead, he favored chess, where players sat quietly and used their minds. He believed this gentle game brought out the very best in people.",
+    "luca": "King Alfonso wanted a real battle of minds, not just lucky rolls. He thought dice games were too wild, leading to sneaky tricks and bad tempers. For him, the ultimate adventure was on the chessboard. That was where a player needed a clever strategy and sharp thinking to win."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

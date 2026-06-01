@@ -1,0 +1,26 @@
+{
+  "id": "nimzo-mysystem-alekhine-s-central-knights",
+  "bookId": "nimzo-mysystem",
+  "title": "Alekhine's Central Knights",
+  "body": "During a famous tournament in 1925, the brilliant Alexander Alekhine placed his knights right in the center of the board. His opponent, Sir George Thomas, felt so crowded by these active pieces that he decided to capture one. However, this trade was exactly what Alekhine wanted, as it opened up a pathway for his other pieces to launch a powerful attack.",
+  "motif": "game",
+  "sourceChunkId": "nimzo-mysystem-49d88f015b",
+  "era": "1920s",
+  "players": [
+    "Alexander Alekhine",
+    "George Thomas"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Nearly a century ago, a clever player named Alexander guided his two quiet knights to the very middle of the board. His opponent, George, felt much too cramped with those pieces so close, so he decided to sweep one away. But as soon as that wooden horse left its square, a secret path opened up for the rest of Alexander's army to glide forward.",
+    "luca": "Back in 1925, Alexander pulled off a daring stunt by marching his knights straight into the heart of the battlefield. George felt completely trapped by these invaders, so he eagerly swiped one of them. But that play was a trap, because losing the piece unlocked a secret gateway for the rest of his army to charge ahead!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

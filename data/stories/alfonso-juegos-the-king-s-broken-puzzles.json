@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-s-broken-puzzles",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Broken Puzzles",
+  "body": "More than seven hundred years ago, King Alfonso the Wise of Spain created a beautiful book filled with chess puzzles. It contained over one hundred brain-teasers for medieval players to enjoy. However, some of the puzzles actually had mistakes in their setups, making them impossible to solve until modern experts did some detective work to fix them.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-ad9e51b986",
+  "era": "1200s",
+  "players": [
+    "King Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a wise king named Alfonso collected over one hundred chess challenges into a beautiful, hand-written book. He wanted to share these quiet mind-games with everyone, but a few of the drawings had tiny mistakes that made them impossible to finish. For hundreds of years, these little errors slept on the pages until modern chess lovers finally solved the mystery.",
+    "luca": "Imagine opening a book of chess battles from many centuries ago, only to find out the games are completely stuck. King Alfonso designed over a hundred of these challenges, but a few had hidden mistakes that made winning totally impossible. It took modern chess detectives to hunt down the errors and finally crack the king's broken codes."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

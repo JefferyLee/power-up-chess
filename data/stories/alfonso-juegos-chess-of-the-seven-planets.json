@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-chess-of-the-seven-planets",
+  "bookId": "alfonso-juegos",
+  "title": "Chess of the Seven Planets",
+  "body": "Long ago in medieval Spain, King Alfonso the Wise wrote a book about his favorite games. One of the strangest was a special kind of chess based on outer space. Players would roll dice to move pieces shaped like the seven known planets, including Mars, Venus, and the Moon!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-8736079c29",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Hundreds of years ago in Spain, a clever king wrote down a beautiful game in his giant book. The board represented the quiet night sky, with delicate pieces carved to look like the moon and glowing planets. Instead of regular chess, players guided these heavenly shapes on a journey through the stars.",
+    "luca": "Imagine tossing dice to launch Mars and Venus into a cosmic battle! A Spanish king designed this high-energy game to bring the solar system right onto his table. You got to command seven legendary celestial bodies and blast your way across the board."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

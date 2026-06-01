@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-the-priest-with-the-golden-rook",
+  "bookId": "ruy-lopez-art",
+  "title": "The Priest with the Golden Rook",
+  "body": "Long ago in Spain, King Philip the Second loved chess so much that he made a priest named Ruy Lopez his royal advisor. Lopez was such an amazing player that the king rewarded him with a beautiful golden chain to wear around his neck. Hanging from this special chain was a tiny, shiny chess rook!",
+  "motif": "anecdote",
+  "sourceChunkId": "ruy-lopez-art-82ca133add",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "King Philip II"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Deep inside a quiet Spanish palace, King Philip spent his days studying the chess board. He found a wonderful partner in a priest named Ruy Lopez, who played with great patience and care. To thank his friend, the king placed a beautiful golden chain around the priest's neck. Hanging from the links was a tiny, polished rook that caught the soft candlelight.",
+    "luca": "King Philip of Spain was absolutely wild about chess, and he wanted the cleverest player in the land to help him run the kingdom. That champion was a priest named Ruy Lopez, who defeated everyone with his brilliant moves. To celebrate these victories, the king gave him an awesome treasure to wear. It was a heavy golden chain featuring a miniature, sparkling rook as the ultimate trophy."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

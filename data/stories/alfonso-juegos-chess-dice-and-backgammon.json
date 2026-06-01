@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-chess-dice-and-backgammon",
+  "bookId": "alfonso-juegos",
+  "title": "Chess, Dice, and Backgammon",
+  "body": "A famous legend tells of an Indian king who asked his wise men to prove what mattered more: brainpower, luck, or a mix of both. Each wise man returned with a game to prove his theory. One brought chess to represent pure intellect, another brought dice to represent luck, and the third brought backgammon to show how skill and luck work together.",
+  "motif": "anecdote",
+  "sourceChunkId": "alfonso-juegos-30d0a41b55",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a thoughtful king wanted to know what helped people succeed the most: deep thinking, simple luck, or a bit of both. His quiet advisors went away to find the perfect answers. They returned with three beautiful games, including a quiet board of carved wooden chess pieces that needed only a clever mind to win.",
+    "luca": "Imagine the challenge! One inventor brought rolling dice to show how wild luck can rule the world. Another brought backgammon, where you need a great plan but still have to watch the roll of the dice. But the last inventor showed off chess, where there are no lucky bounces and only your bravest moves can save the day."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

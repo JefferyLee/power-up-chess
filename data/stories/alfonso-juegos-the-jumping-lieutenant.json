@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-jumping-lieutenant",
+  "bookId": "alfonso-juegos",
+  "title": "The Jumping Lieutenant",
+  "body": "Before the powerful Queen we know today existed, medieval chess players used a piece called the Alferza, or lieutenant. This brave protector stayed close to the king to shield him from danger. On its very first move, it was even allowed to leap over other pieces to rush straight into the action.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-625f07d1e5",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a gentle guardian called the Alferza stood right beside the king to keep him safe. This was before the modern queen ever joined the board. On its very first turn, this loyal helper could make a magical hop right over the other pieces to find its perfect spot.",
+    "luca": "Imagine a medieval bodyguard springing right into battle to defend the king! This lieutenant piece had an incredible secret ability to start the game. It could launch itself into the air, vaulting over other figures to charge straight toward danger."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

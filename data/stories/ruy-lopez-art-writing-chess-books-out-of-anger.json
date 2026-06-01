@@ -1,0 +1,28 @@
+{
+  "id": "ruy-lopez-art-writing-chess-books-out-of-anger",
+  "bookId": "ruy-lopez-art",
+  "title": "Writing Chess Books Out of Anger",
+  "body": "Sometimes, great chess books are written out of pure frustration. In the sixteenth century, Ruy López wrote his masterpiece because he thought an earlier writer named Damiano had no idea how to play. Centuries later, grandmaster Richard Réti did the exact same thing because he was annoyed by another author's bad advice.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-09f1f8f832",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "Damiano",
+    "Richard Réti",
+    "Franz Gutmayer"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a thoughtful chess player named Ruy López noticed that an older book was full of mistakes. He gently picked up his quill to write down the true beauty of the game, guiding players with much better care. Hundreds of years later, another quiet master did the very same thing to protect his students from bad advice.",
+    "luca": "Imagine getting so mad at a terrible chess book that you write your own just to prove them wrong! That is exactly how Ruy López started his legendary battle of the books back in the fifteen-hundreds. Later on, a grandmaster named Richard Réti launched his own literary rescue mission because he couldn't stand seeing awful tips in print!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

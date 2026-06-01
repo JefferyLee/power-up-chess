@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-eat-your-bets",
+  "bookId": "alfonso-juegos",
+  "title": "Eat Your Bets!",
+  "body": "Medieval laws banned people from betting expensive things like gold or silver on games. They even banned betting food and drinks, with one delicious exception. If the players promised to sit down and eat or drink the prize together right after the game, the match was perfectly legal.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-c3b21c4615",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, strict laws stopped people from wagering shiny silver coins on their board games. Even risking a loaf of bread or a sweet drink was forbidden, with one very gentle exception. If the two players promised to sit down and share the tasty prize together as soon as the match ended, the law allowed it.",
+    "luca": "Imagine a time when betting your gold coins on a game could get you into major trouble with the law! To keep the adventure going, players had to find a clever loophole. If you wagered a delicious treat, you and your opponent had to sit down and devour the prize together the second the match ended."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

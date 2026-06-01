@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-medieval-game-of-forced-ches",
+  "bookId": "alfonso-juegos",
+  "title": "The Medieval Game of Forced Chess",
+  "body": "Over seven hundred years ago, players in Spain enjoyed a special chess puzzle game called forced chess. In this version, if your opponent put a piece in your path, you were forced to capture it, even if it meant losing your most valuable pieces. It was a tricky way to play where losing your pieces on purpose was the key to winning.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-6b94494528",
+  "era": "1200s",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in medieval Spain, players loved a quiet puzzle game where the rules were turned upside down. If a wooden piece stepped into your path, you were absolutely required to take it, even if it felt like a trap. It was a gentle lesson in letting go, where giving away your own pieces on purpose was the secret to finding a victory.",
+    "luca": "Imagine a wild battle from seven centuries ago where you are forced to strike every target your enemy throws at you! In this Spanish game, you couldn't run away or ignore an invitation to fight. You had to charge forward and capture, meaning you could sacrifice your mightiest warriors to lure the enemy into a trap. To win this clash, you actually had to lose your army on purpose!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

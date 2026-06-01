@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-writing-a-book-out-of-anger",
+  "bookId": "ruy-lopez-art",
+  "title": "Writing a Book Out of Anger",
+  "body": "In the sixteenth century, a Spanish priest named Ruy López read a popular chess book and thought it was absolutely terrible. He was so annoyed by all the mistakes in it that he decided to write his own book just to prove the other author wrong. This angry project ended up becoming one of the most famous chess guides in history!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-e7678f869c",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "Pedro Damiano"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Five hundred years ago, a gentle priest from Spain named Ruy López sat down to read a new chess scroll. As he turned the pages, he noticed that the advice was filled with quiet errors that would confuse players. He decided to carefully pen his own instructions to show the true, correct paths across the board, creating a work that became one of the most celebrated handbooks ever written.",
+    "luca": "Imagine reading a chess rulebook so bad that it makes you want to shout! That is exactly what happened to Ruy López, who got so fired up by another writer's blunders that he launched a literary rescue mission. He immediately penned his own master plan to defeat those errors, creating a legendary playbook that changed the game forever."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

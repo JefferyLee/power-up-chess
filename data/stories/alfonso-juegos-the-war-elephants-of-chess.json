@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-war-elephants-of-chess",
+  "bookId": "alfonso-juegos",
+  "title": "The War Elephants of Chess",
+  "body": "Long ago, the chess piece we call the bishop was actually a mighty war elephant. A medieval book explains that these giant beasts leaped diagonally across the board because they were too powerful for anyone to face head-on.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-090bbcb4a8",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "If we could look at a very old book, we would discover that the quiet bishop on your board used to be a magnificent war elephant. These grand animals walked along the diagonal paths of the kingdom rather than straight ahead. It was a gentle way to travel because no one could stand against their immense power in a direct fight.",
+    "luca": "Picture a giant war elephant charging right into the action where your bishop now stands! Hundreds of years ago, a writer explained that these beasts were too powerful for anyone to fight face-to-face. That is why they leaped diagonally across the board, launching clever sideways attacks that nobody could block!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

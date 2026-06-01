@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-lasker-s-golden-rule-for-pawns",
+  "bookId": "nimzo-mysystem",
+  "title": "Lasker's Golden Rule for Pawns",
+  "body": "World Champion Emanuel Lasker had a golden rule for starting a chess game. He advised players to move only one or two pawns in the opening. Any extra pawn moves just waste precious time when you should be bringing your knights and bishops into the battle.",
+  "motif": "opening",
+  "sourceChunkId": "nimzo-mysystem-7661cfb4dd",
+  "era": "1900s",
+  "players": [
+    "Lasker"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise world champion named Emanuel Lasker shared a secret for the very start of a chess game. He believed we should gently nudge just one or two of our little pawns forward at first. This opens up cozy pathways so our noble knights and elegant bishops can step onto the board. If we push too many pawns, our other friends get trapped behind them and lose their turn to play.",
+    "luca": "Imagine your knights and bishops are heroes waiting for the signal to charge forward. If you spend all your time marching a whole army of pawns, your best fighters stay stuck at the back. Lasker's top rule is to launch just one or two pawns to clear the gates, then send your heavy cavalry leaping into action. Speed is everything when you want to win the center of the board!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

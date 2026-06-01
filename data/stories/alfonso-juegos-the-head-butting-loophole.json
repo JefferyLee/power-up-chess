@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-head-butting-loophole",
+  "bookId": "alfonso-juegos",
+  "title": "The Head-Butting Loophole",
+  "body": "In medieval Spain, players sometimes got so angry when losing a board game that they would smash the board. The law said if you broke a game board with a knife or a rock, you had to pay a fine. However, if you smashed the board using your own head, you got off completely free!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-c3b21c4615",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in sunny Spain, players would sometimes get very upset when their games did not go well. The law back then made you pay a fine if you broke the wooden board with a stone or a blade. But if you were silly enough to crack the board using nothing but your own forehead, you did not have to pay a single coin.",
+    "luca": "Picture a player getting so wild after losing that they just want to smash the whole game to pieces! Back then, using a rock or a dagger to break the board meant you had to pay a heavy fine. But if you chose to dive headfirst and shatter the wood with your own skull, the law let you off completely free. That is one painful way to save your coins!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

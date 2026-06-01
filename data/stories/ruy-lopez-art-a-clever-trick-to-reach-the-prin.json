@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-a-clever-trick-to-reach-the-prin",
+  "bookId": "ruy-lopez-art",
+  "title": "A Clever Trick to Reach the Prince",
+  "body": "Back in 1561, a Spanish priest named Ruy López wrote a book about chess. He wanted the young prince of Spain, who loved chess, to read it. To make sure the prince saw it, Ruy López cleverly dedicated the book to the prince's personal teacher!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-038918f0b2",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in the year 1561, a Spanish priest named Ruy López wrote down his favorite chess secrets in a special book. He hoped a young prince who adored the game would get to read his quiet pages. To make sure the book found its way into the royal palace, he wrote a lovely dedication to the prince's own teacher.",
+    "luca": "Ruy López had a brilliant plan to get his new chess book to Spain's young prince! He knew the royal kid loved chess, but getting a book into a palace was a tough mission. So, he pulled a clever move and dedicated the book to the prince's personal teacher instead. That way, the teacher would definitely show the book to his royal student!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

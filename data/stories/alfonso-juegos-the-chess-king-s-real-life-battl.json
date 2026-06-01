@@ -1,0 +1,26 @@
+{
+  "id": "alfonso-juegos-the-chess-king-s-real-life-battl",
+  "bookId": "alfonso-juegos",
+  "title": "The Chess King's Real-Life Battle",
+  "body": "King Alfonso the Wise of Spain is famous for creating one of the oldest and most beautiful books about chess. Sadly, his real life was just as complicated as a difficult chess match. His own son, Sancho, secretly teamed up with rival kings and tried to take away his power. Alfonso had to spend his final years fighting to protect his throne, proving that real-life royalty can be full of surprising betrayals.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-40a4917dd8",
+  "era": "medieval",
+  "players": [
+    "Alfonso X",
+    "Sancho"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a wise king named Alfonso created a beautiful, hand-painted book filled with chess secrets. He loved the quiet order of the game, where every piece had its place. Sadly, his own home became much more troubled than any chessboard when his son turned against him to take the crown.",
+    "luca": "Talk about a massive plot twist! Alfonso's son, Sancho, secretly teamed up with enemy rulers to snatch the kingdom away. The wise king had to spend his very last years defending his throne in a giant, real-life battle. It was just like a high-stakes chess match, but with real crowns on the line."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

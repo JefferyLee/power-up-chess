@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-sad-king-s-book-of-games",
+  "bookId": "alfonso-juegos",
+  "title": "The Sad King's Book of Games",
+  "body": "Hundreds of years ago, King Alfonso the Wise of Spain faced a terrible rebellion led by his own family. Even though his kingdom was in chaos and his heart was broken, the king spent his final years creating one of the most beautiful chess books in history. Completed in Seville just before he died, this special book showed that even during wars, chess could bring people peace.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-fb01d0e1d2",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a very sad king named Alfonso sat in his quiet palace while a war raged outside. His own family had turned against him, which made his heart ache with sorrow. To find comfort, he spent his very last days in Seville creating a gorgeous book filled with painted chess games. He wanted to show the world that even when everything is loud and scary, a wooden board can bring quiet peace.",
+    "luca": "Imagine facing a massive rebellion led by your very own relatives. That is exactly what happened to King Alfonso, but instead of giving up, he launched a brilliant final mission. In the city of Seville, he rushed to finish the ultimate guide to chess before his time ran out. It was his way of conquering the chaos, proving that a clever mind on a game board is stronger than any army."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

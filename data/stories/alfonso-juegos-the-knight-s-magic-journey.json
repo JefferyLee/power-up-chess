@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-knight-s-magic-journey",
+  "bookId": "alfonso-juegos",
+  "title": "The Knight's Magic Journey",
+  "body": "King Alfonso's medieval chess book also praised the incredible agility of the knight. He wrote that a truly skilled player could guide a single knight from the corner of the board to visit every single square. This is one of the earliest descriptions of the famous math puzzle known today as the Knight's Tour.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-add90caf49",
+  "era": "medieval",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise king named Alfonso wrote a beautiful book about the secrets of chess. He loved how the clever knight could hop gracefully across the board. He showed how one lone horseman, starting in the very corner, could touch every square on the board during its quiet journey.",
+    "luca": "Imagine a wild mission where your knight has to leap onto every single square on the battlefield without missing one! King Alfonso wrote down this ultimate jumping quest hundreds of years ago. Today, brave players still try to solve this legendary puzzle called the Knight's Tour."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

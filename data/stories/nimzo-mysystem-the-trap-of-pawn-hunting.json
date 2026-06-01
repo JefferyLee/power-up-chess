@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-trap-of-pawn-hunting",
+  "bookId": "nimzo-mysystem",
+  "title": "The Trap of Pawn Hunting",
+  "body": "The great chess master Aron Nimzowitsch noticed that beginner chess players often make a funny mistake early in the game. Instead of bringing their pieces out to fight, they get distracted trying to capture a single, unimportant pawn. He believed young players do this because they have so much energy and want to start capturing things right away, even though it usually ruins their position.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-4aaf13c8b5",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise chess teacher named Aron Nimzowitsch noticed a quiet mistake that many new players made. Instead of helping all their pieces step out onto the board, they would chase after a single, lonely pawn. It is easy to get distracted by one small prize, but it leaves the rest of your army waiting in the shadows.",
+    "luca": "Aron Nimzowitsch saw that beginners love to charge straight into battle with wild energy! They zoom across the board to snatch up one tiny pawn, totally forgetting to set up their main army. This eager rush might feel exciting, but it actually ruins their plans before the real fight even starts."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

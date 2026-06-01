@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-the-sleepy-chess-book",
+  "bookId": "ruy-lopez-art",
+  "title": "The Sleepy Chess Book",
+  "body": "Long ago, a famous Spanish chess master named Ruy Lopez got very sassy with a rival writer named Damiano. Lopez wrote that Damiano's chess book was so full of silly mistakes, it seemed like the author had fallen fast asleep while creating it. Despite this harsh review, Damiano's book became a huge hit and was translated into many languages.",
+  "motif": "anecdote",
+  "sourceChunkId": "ruy-lopez-art-55a986d885",
+  "era": "1500s",
+  "players": [
+    "Ruy Lopez",
+    "Damiano"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Hundreds of years ago, a Spanish player named Ruy Lopez looked closely at a chess book written by a man named Damiano. Ruy thought the pages were so full of errors that the author must have been dreaming instead of thinking. But the little book had its own quiet strength, traveling across borders and being translated into many different languages.",
+    "luca": "Ruy Lopez launched a giant attack with his words, teasing that Damiano fell fast asleep at his desk while writing his chess guide! He claimed the book was packed with silly blunders from cover to cover. But Damiano got the last laugh because his book became an absolute blockbuster worldwide!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

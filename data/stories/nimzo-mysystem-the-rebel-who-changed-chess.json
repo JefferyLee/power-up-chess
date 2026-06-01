@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-rebel-who-changed-chess",
+  "bookId": "nimzo-mysystem",
+  "title": "The Rebel Who Changed Chess",
+  "body": "Aron Nimzowitsch was a creative chess master who loved to break the traditional rules of the game. Many older players thought his ideas were too strange and warned beginners not to copy him. Instead of listening to his critics, he kept winning major tournaments and ended up changing how everyone plays chess today.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-8f779e1ce7",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A hundred years ago, a thoughtful player named Aron looked at the wooden pieces and decided to find a new path. The traditional masters shook their heads, warning children not to copy his unusual style. But Aron patiently kept playing his own way, quietly winning giant tournaments and changing the game forever.",
+    "luca": "Aron didn't care about the dusty old rules! While everyone else played it safe, he launched brave, surprising attacks that left his opponents completely scrambled. He swept through the biggest tournaments of his time, proving that a little rebellion can completely rewrite the game."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-king-alfonso-s-speed-up-dice",
+  "bookId": "alfonso-juegos",
+  "title": "King Alfonso's Speed-Up Dice",
+  "body": "Hundreds of years ago, a Spanish king named Alfonso loved playing a giant version of chess. This massive game featured amazing pieces like unicorns, lions, and giraffes, but it took way too long to finish. To speed things up, the king ordered his craftsmen to build special eight-sided dice. Players would roll these custom dice to quickly decide which magical beast they had to move next!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-0fbb20759c",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle king named Alfonso loved playing a massive board game with giant wooden pieces. He watched over games filled with tall giraffes, proud lions, and even magical unicorns. Because the board was so big, the matches lasted for days. To make things faster, the king had his artists carve special blocks with eight sides to choose the next animal's turn.",
+    "luca": "Imagine a chess battle where you command roaring lions and charging unicorns across a giant board! King Alfonso loved this super-sized game, but the clashes took forever to finish. To speed through the adventure, the king came up with a brilliant plan. He created unique dice with eight sides, forcing players to roll and instantly launch their next beast into the action!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-s-twelve-check-puzzle",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Twelve-Check Puzzle",
+  "body": "During the Middle Ages, chess players loved solving complex puzzles called divided games. One grand challenge recorded for a Spanish king featured twenty-nine pieces crowded onto the board. To win, the black pieces had to deliver twelve consecutive checks in a row using only a single rook.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-9ffa670c8c",
+  "era": "1200s",
+  "players": [
+    "King Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in medieval Spain, a wise king named Alfonso loved to study beautiful chess puzzles. One of these ancient mind-teasers was packed with twenty-nine wooden pieces, filling almost every square on the board. It looked like a quiet, crowded forest waiting for a spark of magic.",
+    "luca": "To solve this ultimate challenge, the black side had to launch a daring, non-stop attack. A single, brave rook had to charge across the board and put the enemy king in danger twelve times in a row without stopping. One wrong move would ruin the whole mission, but a perfect run meant total victory."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

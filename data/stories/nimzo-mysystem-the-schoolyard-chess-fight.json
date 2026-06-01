@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-schoolyard-chess-fight",
+  "bookId": "nimzo-mysystem",
+  "title": "The Schoolyard Chess Fight",
+  "body": "The famous grandmaster Aron Nimzowitsch had a very funny way of explaining chess strategies. When teaching how to win a weak pawn, he compared the battle to a schoolyard playground fight. He explained that instead of just attacking the pawn directly, you should attack its defenders to scare them away or block them out, just like in a classic schoolyard scuffle!",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-cc9d5796da",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, a thoughtful chess master named Aron Nimzowitsch used a clever playground story to teach his students. He explained that to win a weak pawn, you do not have to attack it directly. Instead, you gently steer its defenders away or block their path so they can no longer help.",
+    "luca": "Get ready for a classic schoolyard showdown right on the board! Aron Nimzowitsch loved to show players how to capture a weak pawn by ignoring the pawn itself at first. Your real mission is to charge at the defenders, scaring them off or blocking them completely. Once the guards scatter, that target is totally yours!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

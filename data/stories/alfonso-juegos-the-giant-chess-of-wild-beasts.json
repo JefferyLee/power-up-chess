@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-giant-chess-of-wild-beasts",
+  "bookId": "alfonso-juegos",
+  "title": "The Giant Chess of Wild Beasts",
+  "body": "In ancient India, inventors created a massive version of chess called Great Chess. This game did not just have regular soldiers, but also featured exotic birds and wild beasts. Kings used these strange animal pieces on the board to show off their wealth and scare their rivals.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-cd249be263",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago in India, people created a giant chess board that looked like a magical forest. Instead of only standard soldiers, they carved rare, colorful birds and wild creatures to move through the game. Rulers used these beautiful animal figures to show off their great riches to anyone who visited.",
+    "luca": "Imagine marching a roaring wild predator right across a giant board to terrify your opponent! Ancient rulers used these massive animal pieces to scare their rivals and prove who was boss. It was a wild battle of wits where you could command a whole army of beasts."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

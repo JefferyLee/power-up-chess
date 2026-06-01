@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-king-s-three-wise-men",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Three Wise Men",
+  "body": "Long ago, a king in India asked his three wise men to prove what was more important: clever thinking, pure luck, or a mix of both. To show their answers, the first wise man presented a chessboard to prove that the smartest mind wins. The second brought dice to show how luck rules everything, and the third brought backgammon to show how skill can tame bad luck. The king loved chess the most, calling it the most noble and honorable game.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-2fed21b335",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Once in ancient India, a king asked his advisors to show him whether clever planning or simple luck guides our lives. One advisor brought rolling dice, another brought a game of mixed chance, but the last one quietly presented a beautiful chessboard. The ruler gazed at the carved pieces and decided that this thoughtful game of pure skill was the most wonderful of all.",
+    "luca": "Imagine a royal challenge where three thinkers had to prove what rules the world: brainpower, wild luck, or a bit of each! One competitor brought dice for chaotic chance, and another brought a game where skill fights back against bad luck. But the winner brought a chessboard to prove that a sharp mind wins every single battle. The king absolutely loved chess, declaring it the greatest and most respectable game of all!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

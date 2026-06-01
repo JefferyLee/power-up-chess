@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-a-king-s-book-of-joy",
+  "bookId": "alfonso-juegos",
+  "title": "A King's Book of Joy",
+  "body": "In 1283, King Alfonso of Spain was going through a very difficult time because his own son had rebelled against him. During a brief moment of peace, the king decided to create a beautiful book about games. He hoped that indoor games like chess would bring happiness and comfort to people who were sick, trapped, or lonely at home.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-30d0a41b55",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a sad king named Alfonso faced a rebellion led by his own son. During a quiet moment of peace, he decided to paint and write a magnificent book all about indoor games. He hoped that the magic of chess would bring a little warmth and comfort to those who were feeling lonely or unwell in their homes.",
+    "luca": "Imagine your own family turning against you in a battle for the throne! That is exactly what happened to King Alfonso, but he did not give up. In a quick break from the fighting, he launched a brilliant plan to create a master guidebook of games. He wanted chess to be a secret weapon of joy for anyone trapped inside or fighting a tough illness."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

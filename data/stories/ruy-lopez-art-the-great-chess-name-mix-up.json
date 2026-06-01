@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-the-great-chess-name-mix-up",
+  "bookId": "ruy-lopez-art",
+  "title": "The Great Chess Name Mix-Up",
+  "body": "A Spanish writer named Luis de Lucena wrote one of the very first books about modern chess rules back in 1497. In his book, he showed a clever checkmate where a knight traps the enemy king. Sadly, history got confused, and another player named Philidor got all the credit for this famous trick!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-394d4e47c4",
+  "era": "1400s",
+  "players": [
+    "Luis de Lucena",
+    "Philidor"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Way back in the late fifteenth century, a Spanish author named Luis de Lucena sat down with ink and parchment to record the new rules of chess. Inside his precious book, he drew a quiet trap where a single knight completely surrounds the opposing king. Sadly, as the years drifted by, people forgot his name and gave the honor to a different player named Philidor instead.",
+    "luca": "Imagine pulling off a sneaky knight strike, only for someone else to steal your glory centuries later! That is exactly what happened to Luis, who mapped out this epic battle plan way back in his 1497 handbook. A player named Philidor got his name on the trophy, but Luis was the true mastermind behind the trap."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

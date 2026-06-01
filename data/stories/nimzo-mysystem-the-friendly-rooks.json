@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-friendly-rooks",
+  "bookId": "nimzo-mysystem",
+  "title": "The Friendly Rooks",
+  "body": "Aron Nimzowitsch, a famous grandmaster, loved to think of his chess pieces as real people with feelings. When explaining a tactic where one rook sacrifices itself so the other rook can deliver checkmate, he described it as a beautiful act of friendship. To him, the pieces were brave partners who would gladly give up their lives on the board to help their best friends win.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-aa32fb9b28",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a chess master named Aron Nimzowitsch looked at his wooden pieces and saw a tiny, living world. He believed the rooks on the board were the closest of friends, always watching out for each other. When one rook stepped into danger to let the other win the game, Aron saw it as a quiet, beautiful act of love.",
+    "luca": "Imagine your castle pieces as ultimate teammates on a daring mission! Aron Nimzowitsch loved to plan these wild rescues where one rook would charge straight into the enemy line. By drawing all the fire, this brave hero cleared the path so their best buddy could swoop in for the final checkmate. It was the ultimate sacrifice play!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,762 @@
+{
+  "count": 108,
+  "generatedAt": 1780345640425,
+  "stories": [
+    {
+      "id": "alfonso-juegos-the-sad-king-and-his-book-of-gam",
+      "bookId": "alfonso-juegos",
+      "title": "The Sad King and His Book of Games",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-real-life-battles-of-a-chess",
+      "bookId": "alfonso-juegos",
+      "title": "The Real-Life Battles of a Chess King",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-a-king-s-broken-rules",
+      "bookId": "alfonso-juegos",
+      "title": "A King's Broken Rules",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-chess-king-s-real-life-battl",
+      "bookId": "alfonso-juegos",
+      "title": "The Chess King's Real-Life Battle",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-chess-in-the-midst-of-rebellion",
+      "bookId": "alfonso-juegos",
+      "title": "Chess in the Midst of Rebellion",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-a-real-life-game-of-kings",
+      "bookId": "alfonso-juegos",
+      "title": "A Real-Life Game of Kings",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-sad-king-s-book-of-games",
+      "bookId": "alfonso-juegos",
+      "title": "The Sad King's Book of Games",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-a-king-s-book-of-joy",
+      "bookId": "alfonso-juegos",
+      "title": "A King's Book of Joy",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-chess-dice-and-backgammon",
+      "bookId": "alfonso-juegos",
+      "title": "Chess, Dice, and Backgammon",
+      "motif": "anecdote",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-three-games-for-a-wise-king",
+      "bookId": "alfonso-juegos",
+      "title": "Three Games for a Wise King",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-a-king-s-book-of-games-in-times-",
+      "bookId": "alfonso-juegos",
+      "title": "A King's Book of Games in Times of War",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-a-king-s-cure-for-boredom-and-br",
+      "bookId": "alfonso-juegos",
+      "title": "A King's Cure for Boredom and Brawls",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-when-bishops-were-war-elephants",
+      "bookId": "alfonso-juegos",
+      "title": "When Bishops Were War Elephants",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-the-jumping-lieutenant",
+      "bookId": "alfonso-juegos",
+      "title": "The Jumping Lieutenant",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-medieval-puzzle-book",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Medieval Puzzle Book",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-brains-versus-luck",
+      "bookId": "alfonso-juegos",
+      "title": "Brains Versus Luck",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-chess-vs-dice-a-king-s-choice",
+      "bookId": "alfonso-juegos",
+      "title": "Chess vs. Dice: A King's Choice",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-giant-chess-of-mythical-beas",
+      "bookId": "alfonso-juegos",
+      "title": "The Giant Chess of Mythical Beasts",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-king-alfonso-s-speed-up-dice",
+      "bookId": "alfonso-juegos",
+      "title": "King Alfonso's Speed-Up Dice",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-chess-of-the-four-seasons",
+      "bookId": "alfonso-juegos",
+      "title": "Chess of the Four Seasons",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-cornering-the-hare",
+      "bookId": "alfonso-juegos",
+      "title": "Cornering the Hare",
+      "motif": "game",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-playing-by-the-stars",
+      "bookId": "alfonso-juegos",
+      "title": "Playing by the Stars",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-cosmic-chess-game-of-the-sta",
+      "bookId": "alfonso-juegos",
+      "title": "The Cosmic Chess Game of the Stars",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-king-alfonso-s-rules-for-fair-pl",
+      "bookId": "alfonso-juegos",
+      "title": "King Alfonso's Rules for Fair Play",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-king-alfonso-s-rules-for-wild-ga",
+      "bookId": "alfonso-juegos",
+      "title": "King Alfonso's Rules for Wild Gamers",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-the-head-butting-loophole",
+      "bookId": "alfonso-juegos",
+      "title": "The Head-Butting Loophole",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-christmas-game-day",
+      "bookId": "alfonso-juegos",
+      "title": "Christmas Game Day",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-eat-your-bets",
+      "bookId": "alfonso-juegos",
+      "title": "Eat Your Bets!",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-the-king-who-wanted-to-cure-sadn",
+      "bookId": "alfonso-juegos",
+      "title": "The King Who Wanted to Cure Sadness",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-broken-puzzles",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Broken Puzzles",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-who-loved-games",
+      "bookId": "alfonso-juegos",
+      "title": "The King Who Loved Games",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-a-king-s-book-of-chess-puzzles",
+      "bookId": "alfonso-juegos",
+      "title": "A King's Book of Chess Puzzles",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-king-alfonso-s-medieval-puzzle-b",
+      "bookId": "alfonso-juegos",
+      "title": "King Alfonso's Medieval Puzzle Book",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-king-alfonso-s-book-of-games",
+      "bookId": "alfonso-juegos",
+      "title": "King Alfonso's Book of Games",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-giant-chess-of-wild-beasts",
+      "bookId": "alfonso-juegos",
+      "title": "The Giant Chess of Wild Beasts",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-the-four-seasons-chess-game",
+      "bookId": "alfonso-juegos",
+      "title": "The Four Seasons Chess Game",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-chess-of-the-seven-planets",
+      "bookId": "alfonso-juegos",
+      "title": "Chess of the Seven Planets",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-who-loved-indoor-games",
+      "bookId": "alfonso-juegos",
+      "title": "The King Who Loved Indoor Games",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-three-wise-men",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Three Wise Men",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-the-just-right-chessboard",
+      "bookId": "alfonso-juegos",
+      "title": "The Just Right Chessboard",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-backup-elephants",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Backup Elephants",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-war-elephants-of-chess",
+      "bookId": "alfonso-juegos",
+      "title": "The War Elephants of Chess",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-why-the-king-walks-slowly",
+      "bookId": "alfonso-juegos",
+      "title": "Why the King Walks Slowly",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-medieval-soldiers-on-the-chessbo",
+      "bookId": "alfonso-juegos",
+      "title": "Medieval Soldiers on the Chessboard",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "alfonso-juegos-how-to-embarrass-a-king",
+      "bookId": "alfonso-juegos",
+      "title": "How to Embarrass a King",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-the-knight-s-magic-journey",
+      "bookId": "alfonso-juegos",
+      "title": "The Knight's Magic Journey",
+      "motif": "history",
+      "era": "medieval"
+    },
+    {
+      "id": "alfonso-juegos-speeding-up-chess-with-dice",
+      "bookId": "alfonso-juegos",
+      "title": "Speeding Up Chess with Dice",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-limited-leap-of-the-medieval",
+      "bookId": "alfonso-juegos",
+      "title": "The Limited Leap of the Medieval Bishop",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-medieval-game-of-forced-ches",
+      "bookId": "alfonso-juegos",
+      "title": "The Medieval Game of Forced Chess",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-game-of-maidens",
+      "bookId": "alfonso-juegos",
+      "title": "The Game of Maidens",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-sixteen-jump-puzzle",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Sixteen-Jump Puzzle",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "alfonso-juegos-the-king-s-twelve-check-puzzle",
+      "bookId": "alfonso-juegos",
+      "title": "The King's Twelve-Check Puzzle",
+      "motif": "history",
+      "era": "1200s"
+    },
+    {
+      "id": "nimzo-mysystem-the-rebel-who-changed-chess",
+      "bookId": "nimzo-mysystem",
+      "title": "The Rebel Who Changed Chess",
+      "motif": "history",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-funny-way-to-teach-chess",
+      "bookId": "nimzo-mysystem",
+      "title": "The Funny Way to Teach Chess",
+      "motif": "history",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-boy-who-only-wanted-firework",
+      "bookId": "nimzo-mysystem",
+      "title": "The Boy Who Only Wanted Fireworks",
+      "motif": "history",
+      "era": "1900s"
+    },
+    {
+      "id": "nimzo-mysystem-conquering-the-giants-of-chess",
+      "bookId": "nimzo-mysystem",
+      "title": "Conquering the Giants of Chess",
+      "motif": "tournament",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-a-royal-night-at-the-opera",
+      "bookId": "nimzo-mysystem",
+      "title": "A Royal Night at the Opera",
+      "motif": "game",
+      "era": "1850s"
+    },
+    {
+      "id": "nimzo-mysystem-the-great-chess-revolution",
+      "bookId": "nimzo-mysystem",
+      "title": "The Great Chess Revolution",
+      "motif": "history",
+      "era": "1910s"
+    },
+    {
+      "id": "nimzo-mysystem-nimzowitsch-s-fair-play-for-piec",
+      "bookId": "nimzo-mysystem",
+      "title": "Nimzowitsch's Fair Play for Pieces",
+      "motif": "history",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-missing-rook-trick",
+      "bookId": "nimzo-mysystem",
+      "title": "The Missing Rook Trick",
+      "motif": "game",
+      "era": "early 1900s"
+    },
+    {
+      "id": "nimzo-mysystem-lasker-s-golden-rule-for-pawns",
+      "bookId": "nimzo-mysystem",
+      "title": "Lasker's Golden Rule for Pawns",
+      "motif": "opening",
+      "era": "1900s"
+    },
+    {
+      "id": "nimzo-mysystem-don-t-stop-to-clean-your-nose",
+      "bookId": "nimzo-mysystem",
+      "title": "Don't Stop to Clean Your Nose!",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-center-pawn-as-a-dangerous-c",
+      "bookId": "nimzo-mysystem",
+      "title": "The Center Pawn as a Dangerous Criminal",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-toppling-the-proud-pawn",
+      "bookId": "nimzo-mysystem",
+      "title": "Toppling the Proud Pawn",
+      "motif": "game",
+      "era": "1900s"
+    },
+    {
+      "id": "nimzo-mysystem-the-trap-of-pawn-hunting",
+      "bookId": "nimzo-mysystem",
+      "title": "The Trap of Pawn Hunting",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-nimzowitsch-s-golden-rule",
+      "bookId": "nimzo-mysystem",
+      "title": "Nimzowitsch's Golden Rule",
+      "motif": "history",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-aron-nimzowitsch-s-big-idea",
+      "bookId": "nimzo-mysystem",
+      "title": "Aron Nimzowitsch's Big Idea",
+      "motif": "history",
+      "era": "1910s"
+    },
+    {
+      "id": "nimzo-mysystem-alekhine-s-central-knights",
+      "bookId": "nimzo-mysystem",
+      "title": "Alekhine's Central Knights",
+      "motif": "game",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-schoolyard-chess-fight",
+      "bookId": "nimzo-mysystem",
+      "title": "The Schoolyard Chess Fight",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-friendly-rooks",
+      "bookId": "nimzo-mysystem",
+      "title": "The Friendly Rooks",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-laughing-chess-pawns",
+      "bookId": "nimzo-mysystem",
+      "title": "The Laughing Chess Pawns",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-biting-on-granite",
+      "bookId": "nimzo-mysystem",
+      "title": "Biting on Granite",
+      "motif": "history",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-chess-pieces-with-human-feelings",
+      "bookId": "nimzo-mysystem",
+      "title": "Chess Pieces with Human Feelings",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "nimzo-mysystem-the-danger-of-getting-bored",
+      "bookId": "nimzo-mysystem",
+      "title": "The Danger of Getting Bored",
+      "motif": "anecdote",
+      "era": "1920s"
+    },
+    {
+      "id": "ruy-lopez-art-the-italian-pawn-escape",
+      "bookId": "ruy-lopez-art",
+      "title": "The Italian Pawn Escape",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-origin-of-the-gambit",
+      "bookId": "ruy-lopez-art",
+      "title": "The Origin of the Gambit",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-great-chess-name-mix-up",
+      "bookId": "ruy-lopez-art",
+      "title": "The Great Chess Name Mix-Up",
+      "motif": "history",
+      "era": "1400s"
+    },
+    {
+      "id": "ruy-lopez-art-the-chess-playing-pharmacist",
+      "bookId": "ruy-lopez-art",
+      "title": "The Chess-Playing Pharmacist",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-chess-playing-priest",
+      "bookId": "ruy-lopez-art",
+      "title": "The Chess-Playing Priest",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-a-bad-move-with-the-wrong-name",
+      "bookId": "ruy-lopez-art",
+      "title": "A Bad Move with the Wrong Name",
+      "motif": "opening",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-writing-chess-books-out-of-anger",
+      "bookId": "ruy-lopez-art",
+      "title": "Writing Chess Books Out of Anger",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-sneaky-tricks-from-a-chess-pries",
+      "bookId": "ruy-lopez-art",
+      "title": "Sneaky Tricks from a Chess Priest",
+      "motif": "anecdote",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-birth-of-the-ruy-lopez",
+      "bookId": "ruy-lopez-art",
+      "title": "The Birth of the Ruy Lopez",
+      "motif": "opening",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-how-the-gambit-got-its-name",
+      "bookId": "ruy-lopez-art",
+      "title": "How the Gambit Got Its Name",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-slow-battles-of-ancient-ches",
+      "bookId": "ruy-lopez-art",
+      "title": "The Slow Battles of Ancient Chess",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "ruy-lopez-art-the-king-who-preferred-brains-ov",
+      "bookId": "ruy-lopez-art",
+      "title": "The King Who Preferred Brains Over Luck",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "ruy-lopez-art-the-king-who-wrote-the-book-on-c",
+      "bookId": "ruy-lopez-art",
+      "title": "The King Who Wrote the Book on Chess",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "ruy-lopez-art-a-war-of-thoughts",
+      "bookId": "ruy-lopez-art",
+      "title": "A War of Thoughts",
+      "motif": "history",
+      "era": "ancient"
+    },
+    {
+      "id": "ruy-lopez-art-is-chess-a-city-or-a-battlefield",
+      "bookId": "ruy-lopez-art",
+      "title": "Is Chess a City or a Battlefield?",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-missing-chess-position",
+      "bookId": "ruy-lopez-art",
+      "title": "The Missing Chess Position",
+      "motif": "history",
+      "era": "1400s"
+    },
+    {
+      "id": "ruy-lopez-art-back-in-the-bag",
+      "bookId": "ruy-lopez-art",
+      "title": "Back in the Bag",
+      "motif": "anecdote",
+      "era": "1600s"
+    },
+    {
+      "id": "ruy-lopez-art-the-mystery-chess-book",
+      "bookId": "ruy-lopez-art",
+      "title": "The Mystery Chess Book",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-first-modern-chess-game-was-",
+      "bookId": "ruy-lopez-art",
+      "title": "The First Modern Chess Game was a Love Poem",
+      "motif": "history",
+      "era": "1400s"
+    },
+    {
+      "id": "ruy-lopez-art-how-the-queen-became-the-stronge",
+      "bookId": "ruy-lopez-art",
+      "title": "How the Queen Became the Strongest Piece",
+      "motif": "history",
+      "era": "1400s"
+    },
+    {
+      "id": "ruy-lopez-art-the-priest-with-the-golden-rook",
+      "bookId": "ruy-lopez-art",
+      "title": "The Priest with the Golden Rook",
+      "motif": "anecdote",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-instant-bishop-of-chess",
+      "bookId": "ruy-lopez-art",
+      "title": "The Instant Bishop of Chess",
+      "motif": "anecdote",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-king-s-chess-tournament",
+      "bookId": "ruy-lopez-art",
+      "title": "The King's Chess Tournament",
+      "motif": "tournament",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-writing-a-book-out-of-anger",
+      "bookId": "ruy-lopez-art",
+      "title": "Writing a Book Out of Anger",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-sleepy-chess-book",
+      "bookId": "ruy-lopez-art",
+      "title": "The Sleepy Chess Book",
+      "motif": "anecdote",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-blinding-your-opponent",
+      "bookId": "ruy-lopez-art",
+      "title": "Blinding Your Opponent",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-globetrotting-chess-book",
+      "bookId": "ruy-lopez-art",
+      "title": "The Globetrotting Chess Book",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-a-clever-trick-to-reach-the-prin",
+      "bookId": "ruy-lopez-art",
+      "title": "A Clever Trick to Reach the Prince",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-duke-s-secret-chess-name",
+      "bookId": "ruy-lopez-art",
+      "title": "The Duke's Secret Chess Name",
+      "motif": "anecdote",
+      "era": "1600s"
+    },
+    {
+      "id": "ruy-lopez-art-a-prince-s-passion-for-chess",
+      "bookId": "ruy-lopez-art",
+      "title": "A Prince's Passion for Chess",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-a-royal-shield-for-ruy-lopez",
+      "bookId": "ruy-lopez-art",
+      "title": "A Royal Shield for Ruy Lopez",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-a-royal-guard-for-a-chess-book",
+      "bookId": "ruy-lopez-art",
+      "title": "A Royal Guard for a Chess Book",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-the-priest-who-defended-chess-bo",
+      "bookId": "ruy-lopez-art",
+      "title": "The Priest Who Defended Chess Books",
+      "motif": "history",
+      "era": "1500s"
+    },
+    {
+      "id": "ruy-lopez-art-ruy-lopez-and-the-poisonous-snak",
+      "bookId": "ruy-lopez-art",
+      "title": "Ruy López and the Poisonous Snakes",
+      "motif": "history",
+      "era": "1500s"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-cosmic-chess-game-of-the-sta",
+  "bookId": "alfonso-juegos",
+  "title": "The Cosmic Chess Game of the Stars",
+  "body": "Hundreds of years ago, people played a magical board game based on the night sky. Instead of normal kings and pawns, the pieces represented planets, including a sad Saturn wrapped in a dark blanket. To move, players had to roll a special seven-sided die and watch how the stars aligned.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-e05a5b59a9",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in the Middle Ages, people played a beautiful game modeled after the evening sky. Instead of ordinary chess pieces, they moved tiny planets, including a sorrowful Saturn draped in a dark, cozy shawl. They watched the real stars above to see how to guide their cosmic pieces.",
+    "luca": "To launch their celestial armies, players had to roll a strange die with seven different sides. Every single roll sent a planet charging across the board depending on the patterns in the sky. Imagine controlling the entire cosmos with one lucky toss!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

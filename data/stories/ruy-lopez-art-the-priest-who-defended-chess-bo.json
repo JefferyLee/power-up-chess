@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-priest-who-defended-chess-bo",
+  "bookId": "ruy-lopez-art",
+  "title": "The Priest Who Defended Chess Books",
+  "body": "In the sixteenth century, critics argued that writing a chess guide was pointless because the game had too many possibilities to ever teach. The Spanish priest Ruy López strongly disagreed with this mindset. He argued that just as a fertile field needs cultivation to grow crops, a chess player needs deep study to handle any unexpected moves an opponent might try.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-bf4f1b4d8f",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, people thought it was impossible to write a guide for chess because the game has endless paths. A Spanish priest named Ruy López disagreed, believing that a player's mind is like a quiet, empty field. Just as a farmer cares for the soil to help crops grow, he believed we must study to prepare our minds for any surprise.",
+    "luca": "Imagine being told that chess has too many wild moves to ever write down in a guide! That is what people believed in the 1500s, but a brave priest named Ruy López refused to back down. He argued that you have to prepare your mind like a farmer works the land, getting it ready for action. By studying hard, you can stand strong against any unexpected move your opponent throws at you!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

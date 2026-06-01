@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-how-to-embarrass-a-king",
+  "bookId": "alfonso-juegos",
+  "title": "How to Embarrass a King",
+  "body": "In the thirteenth century, King Alfonso the Wise of Spain wrote a beautiful book explaining the rules of chess. He compared the chess king to a real-life monarch who has supreme power but must never be physically harmed or captured. Instead of being taken off the board, the king is defeated when opponents embarrass him by blocking his path or forcing him to flee his square.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-add90caf49",
+  "era": "medieval",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A very long time ago in Spain, King Alfonso wrote a beautiful book about the secrets of the chessboard. He believed the chess king should be treated with the same deep respect as a real-life ruler. That is why nobody ever removes the king from the board or harms him during a match.",
+    "luca": "Instead, you have to win by pulling off a clever trap! You corner the leader, block all his escape routes, and force him to run for his life. It is the ultimate royal embarrassment when the mightiest piece on the board has to scramble away in defeat."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

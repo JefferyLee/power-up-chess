@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-medieval-soldiers-on-the-chessbo",
+  "bookId": "alfonso-juegos",
+  "title": "Medieval Soldiers on the Chessboard",
+  "body": "In the thirteenth century, King Alfonso the Wise of Spain wrote a book comparing chess pieces to a real medieval army. He explained that pawns move slowly because they represent poor foot soldiers carrying heavy weapons on their backs. Furthermore, pawns capture diagonally because soldiers in battle could not easily strike an opponent directly in front of them who was on guard, but could easily hit an enemy to the side.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-be8e6e779f",
+  "era": "ancient",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise king named Alfonso wrote a beautiful book about the secrets of chess. He believed the little pawns were like the quiet foot soldiers of his kingdom, carrying heavy gear on their backs. Because their packs were so heavy, they could only take one small step at a time.",
+    "luca": "But don't underestimate these soldiers when the battle begins! Alfonso explained that a warrior couldn't easily strike an enemy blocking them face-to-face. Instead, they had to wait for the perfect moment to swing their swords sideways at an opponent on the diagonal."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

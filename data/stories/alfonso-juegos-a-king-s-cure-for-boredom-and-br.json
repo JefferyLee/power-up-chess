@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-a-king-s-cure-for-boredom-and-br",
+  "bookId": "alfonso-juegos",
+  "title": "A King's Cure for Boredom and Brawls",
+  "body": "Back in the 1270s, a Spanish king named Alfonso decided his kingdom needed a better way to relax. He noticed people got into terrible fights over gambling, so he helped write a famous book about chess. The king believed that chess was a beautiful, peaceful game that could bring people joy and comfort whenever they were feeling stressed or sad.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-701131958c",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle king named Alfonso watched his people argue over noisy dice games. He wanted to give them something quiet and beautiful to soothe their minds instead. So, he helped write a special book about the quiet magic of chess, showing how the pieces could bring comfort to anyone who was feeling sad.",
+    "luca": "King Alfonso looked out at his kingdom in the 1270s and saw way too many wild brawls over silly bets. He needed a master plan to stop the chaos, so he created a legendary rulebook for a brand new battle of wits. He proved that you could have an epic adventure right on a wooden board without ever throwing a single punch."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

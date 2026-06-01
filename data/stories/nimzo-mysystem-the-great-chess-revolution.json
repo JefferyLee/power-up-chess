@@ -1,0 +1,26 @@
+{
+  "id": "nimzo-mysystem-the-great-chess-revolution",
+  "bookId": "nimzo-mysystem",
+  "title": "The Great Chess Revolution",
+  "body": "In the early 1910s, a massive argument shook the chess world. Aron Nimzowitsch wrote bold articles challenging the old-school ideas of the famous master Siegbert Tarrasch. This rebel attitude sparked a brand new way of thinking about the center of the board, changing chess strategy forever.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-e144abc01c",
+  "era": "1910s",
+  "players": [
+    "Aron Nimzowitsch",
+    "Siegbert Tarrasch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "More than a hundred years ago, a quiet storm brewed between two great chess thinkers. A young writer named Aron began questioning the traditional rules that players had followed for decades. He showed everyone how to guard the heart of the board with gentle, clever setups from a distance.",
+    "luca": "Aron decided to throw out the old rulebook and challenge the reigning master, Siegbert, to a battle of ideas! Instead of just rushing pawns straight into the middle, he launched a daring strategy that caught everyone by surprise. This bold move completely transformed how we play the game today."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

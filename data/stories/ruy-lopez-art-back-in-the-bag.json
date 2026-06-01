@@ -1,0 +1,22 @@
+{
+  "id": "ruy-lopez-art-back-in-the-bag",
+  "bookId": "ruy-lopez-art",
+  "title": "Back in the Bag",
+  "body": "In the famous old adventure book Don Quixote, a character named Sancho Panza shares a clever thought about chess. He says that during a match, every piece has a different level of power and a special job. But once the game is over, the kings, queens, and pawns are all mixed together and thrown into the same bag.",
+  "motif": "anecdote",
+  "sourceChunkId": "ruy-lopez-art-42373c558e",
+  "era": "1600s",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, in a famous old book, a character named Sancho Panza shared a beautiful secret about chess. He noticed that during a match, every carved figure has its own unique strength and a specific duty to perform. But as soon as the playtime ends, the majestic rulers and the humble helpers are all gently gathered into the very same storage pouch.",
+    "luca": "In a classic adventure tale, Sancho Panza described the ultimate end of a chess battle. While the clash is happening, some pieces hold massive authority while others have small tasks to complete. But the moment the fight finishes, the rules change completely. The grandest queens and the smallest soldiers get jumbled up and tossed right back into the exact same bag!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

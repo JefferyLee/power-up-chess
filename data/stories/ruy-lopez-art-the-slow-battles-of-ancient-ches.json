@@ -1,0 +1,22 @@
+{
+  "id": "ruy-lopez-art-the-slow-battles-of-ancient-ches",
+  "bookId": "ruy-lopez-art",
+  "title": "The Slow Battles of Ancient Chess",
+  "body": "Before modern rules were invented, chess was a much slower game where players did not have to worry about quick attacks. Both sides would spend their first ten moves quietly setting up their armies on their own half of the board. Only after their forces were fully ready would they finally cross the middle line to fight.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-599bd2f63d",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, chess began as a very quiet, patient game. Players spent their first ten turns gently arranging their pieces, making sure every wooden soldier was in its perfect spot. No one rushed across the middle of the board until both sides were completely prepared.",
+    "luca": "Imagine a giant battle where you had to wait ten whole turns before you could even launch an attack! Both armies stayed on their own territory, preparing their secret formations. Only when the preparation was complete did the soldiers finally march across the border for a massive clash!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,28 @@
+{
+  "id": "ruy-lopez-art-the-king-s-chess-tournament",
+  "bookId": "ruy-lopez-art",
+  "title": "The King's Chess Tournament",
+  "body": "Long ago in 1575, the King of Spain hosted one of the very first international chess tournaments. A player named Leonardo won the grand prize, which included a fancy fur cape and bags of gold. Even better, Leonardo asked the king to stop taxing his hometown for twenty years, making him a local hero!",
+  "motif": "tournament",
+  "sourceChunkId": "ruy-lopez-art-e7678f869c",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "Leonardo Cutri",
+    "Paolo Boi",
+    "Alfonso de Cerón"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "In the year 1575, the King of Spain invited the world's finest players to a grand palace tournament. A quiet player named Leonardo won the final games, receiving a beautiful cape made of soft fur and heavy sacks of gold coins. Instead of keeping all the wealth for himself, he made a gentle request to the king. He asked that his entire home village be freed from paying taxes for twenty long years, bringing comfort to his neighbors.",
+    "luca": "Imagine a massive chess showdown in a royal castle, where the ultimate champion would take home a legendary treasure. A bold player named Leonardo defeated everyone to win the grand prize of gold and a fancy royal cloak. But his greatest move happened after the game ended. He used his victory to strike a deal with the king, saving his hometown from taxes for two whole decades!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

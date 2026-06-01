@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-aron-nimzowitsch-s-big-idea",
+  "bookId": "nimzo-mysystem",
+  "title": "Aron Nimzowitsch's Big Idea",
+  "body": "The great master Aron Nimzowitsch loved to boast about his original chess theories. He proudly declared that he discovered the true strategy behind open files, sharing his laws about chess outposts in a Viennese newspaper. For him, these ideas were the crown jewels of his revolutionary system.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-a3645b7625",
+  "era": "1910s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A thoughtful player named Aron wanted everyone to see the board in a gentle, clever way. He carefully wrote down his new rules for a newspaper in Vienna, showing how pieces can find safe homes to rest. To him, these quiet pathways were like hidden jewels that made his strategy shine.",
+    "luca": "Aron loved to brag about his daring new battle plans! He declared that he had cracked the secret code of the open pathways on the board. He published his bold rules for everyone to see, showing off the treasures of his wild new system."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@power-up-chess/story-import",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Offline pipeline: chess books in docs/books_and_references/ → JSON story bank for the Hall host's ambient lines.",
+  "scripts": {
+    "all": "tsx src/cli.ts all",
+    "extract": "tsx src/cli.ts extract",
+    "harvest": "tsx src/cli.ts harvest",
+    "voice": "tsx src/cli.ts voice",
+    "validate": "tsx src/cli.ts validate",
+    "emit": "tsx src/cli.ts emit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@types/pdf-parse": "^1.1.4",
+    "tsx": "^4.20.0",
+    "typescript": "~6.0.2"
+  }
+}

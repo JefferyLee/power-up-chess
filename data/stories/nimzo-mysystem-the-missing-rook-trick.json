@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-missing-rook-trick",
+  "bookId": "nimzo-mysystem",
+  "title": "The Missing Rook Trick",
+  "body": "The great master Aron Nimzowitsch once played a game against an amateur where he started without his Queen's Rook. Despite being down a whole major piece from the very first move, Nimzowitsch used his pawns to take over the middle of the board. His opponent ignored the center, allowing Nimzowitsch's pawns to march forward and trap the amateur's pieces. Even though the amateur grabbed another rook, he had to resign after just thirteen moves because his king was completely helpless.",
+  "motif": "game",
+  "sourceChunkId": "nimzo-mysystem-b28cb4faa7",
+  "era": "early 1900s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a chess master named Aron began a game with one of his corner castles completely missing from the board. Instead of worrying, he guided his little foot soldiers slowly and carefully into the very heart of the battlefield. They stood shoulder to shoulder, creating a safe path while the other player overlooked the middle of the board. It took only thirteen quiet steps for the opponent to realize his own king was entirely lost.",
+    "luca": "Aron started the match with a giant handicap, leaving his left rook completely off the board! But he had a wild plan to charge his pawns straight down the center like a runaway train. The other player grabbed extra pieces but forgot to guard his own middle ground. In just thirteen lightning-fast moves, the enemy king was trapped with absolutely nowhere to run!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

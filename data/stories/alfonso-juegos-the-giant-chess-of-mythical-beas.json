@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-giant-chess-of-mythical-beas",
+  "bookId": "alfonso-juegos",
+  "title": "The Giant Chess of Mythical Beasts",
+  "body": "In the thirteenth century, a Spanish manuscript described a massive chess variant from India played on a twelve-by-twelve board. This version featured twenty-four pieces per side, representing a grand royal army. Instead of standard pieces, players commanded legendary creatures like unicorns, lions, and a giant bird called the Aanca, which was strong enough to fly away with an elephant. The game was designed to show off a king's supreme power and strike fear into his rivals.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-a2e84a9954",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Imagine opening a dusty, hand-painted book from hundreds of years ago to find a board with over one hundred squares. Instead of normal wooden pieces, you would guide gentle unicorns and proud lions across the grid. The most wondrous of all was a giant bird that could lift a whole elephant into the clouds. It was a game meant to show a ruler's quiet majesty.",
+    "luca": "This wasn't just a regular game; it was an absolute beast of a battle with twenty-four fighters on each side! You got to launch wild attacks using roaring lions and a massive bird called the Aanca. Picture swooping down from the sky to snatch up an entire elephant in your claws. Kings played this giant game to prove they were the toughest rulers around and terrify anyone who dared challenge them."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

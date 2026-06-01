@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-real-life-battles-of-a-chess",
+  "bookId": "alfonso-juegos",
+  "title": "The Real-Life Battles of a Chess King",
+  "body": "King Alfonso the Wise is famous for creating one of the oldest and most beautiful books about chess. But in the year 1275, his real life was as dramatic as any board game. While he was traveling abroad, his kingdom was suddenly invaded, forcing his young son to bravely step up and defend the land.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-9c36e75eb0",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a king named Alfonso spent his quiet hours creating a magnificent book filled with chess secrets. But while he was traveling far from home, a real army crossed into his peaceful lands. His young son had to step forward and watch over the kingdom.",
+    "luca": "Picture this: the king is away, and suddenly an enemy army marches right into your territory! In the year 1275, King Alfonso's young son had to face this exact challenge. He had to act fast and protect his family's land all by himself."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

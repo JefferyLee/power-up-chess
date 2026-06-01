@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-nimzowitsch-s-fair-play-for-piec",
+  "bookId": "nimzo-mysystem",
+  "title": "Nimzowitsch's Fair Play for Pieces",
+  "body": "The grandmaster Aron Nimzowitsch had a very funny way of explaining how to start a game. He compared his pieces to soldiers and insisted they must be treated equally. He warned players not to let a single favorite piece wander off on a long journey while the rest of the army sat around with nothing to do.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-ba7869c0d1",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, a wise teacher named Aron Nimzowitsch taught people to treat every single wooden piece on the board with the same gentle care. He believed that each pawn, knight, and rook has its own quiet purpose. If you send just one favorite piece out on a long, lonely journey, the rest of your friends are left behind with nothing to do.",
+    "luca": "Aron Nimzowitsch had an awesome plan for starting a match! He warned players never to send a single hero charging across the board all by themselves. To win the battle, your entire squad has to team up and move together."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-king-alfonso-s-rules-for-wild-ga",
+  "bookId": "alfonso-juegos",
+  "title": "King Alfonso's Rules for Wild Gamers",
+  "body": "Back in medieval Spain, gaming houses were so wild and full of fights that judges did not even know how to handle them. To bring order to the chaos, King Alfonso the Wise wrote forty-four special laws just for board games and gambling. He set strict rules for fair betting and even created terrifying punishments for cheaters, like losing their thumbs if they got caught three times!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-2c9ae74ff7",
+  "era": "medieval",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, the rooms where people played board games were so noisy and full of arguments that even the judges were baffled. To help everyone, King Alfonso sat down and carefully wrote forty-four laws to bring peace to the tables. He wanted to protect players and make sure every single wager was fair and honest. However, if someone chose to cheat three separate times, they faced a very quiet and permanent punishment.",
+    "luca": "Picture a medieval hall packed with shouting players, clashing boards, and total chaos! King Alfonso decided to tame this wild scene by launching forty-four brand-new laws for gamers. He drew up strict boundaries for betting to keep the play honest and intense. And if you dared to cheat three times, the penalty was absolutely brutal—you would lose your thumbs!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

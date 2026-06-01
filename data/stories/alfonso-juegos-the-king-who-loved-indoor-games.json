@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-who-loved-indoor-games",
+  "bookId": "alfonso-juegos",
+  "title": "The King Who Loved Indoor Games",
+  "body": "Long ago in the 1200s, King Alfonso of Spain decided to write a giant book about games like chess. He believed that playing games was a wonderful way for people to find joy and get through tough times. He especially loved chess because anyone could play it sitting down, whether they were sailors on a stormy ship, prisoners in a tower, or just staying warm inside on a rainy day.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-c85817dec6",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "High up in his castle eight hundred years ago, a gentle Spanish king named Alfonso sat down to write a massive, beautiful book all about board games. He knew that when life felt dark or cold, a simple chess board could bring a quiet spark of happiness. He loved how the little wooden pieces could be played anywhere, even by someone keeping dry indoors while the rain tapped on the window pane.",
+    "luca": "Imagine playing chess while your ship tosses and turns on giant, stormy waves! King Alfonso thought that was the ultimate adventure, so he put it all in his giant gaming rulebook. He wanted everyone to have a blast with chess, whether they were locked up in a secret tower or just hiding from a massive storm. All you needed was a board and a clever plan to start your own tabletop quest."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

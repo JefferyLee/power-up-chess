@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-s-backup-elephants",
+  "bookId": "alfonso-juegos",
+  "title": "The King's Backup Elephants",
+  "body": "In medieval Spain, the chess piece we now call the bishop was known as an elephant. King Alfonso wrote that real kings always took at least two of these giant animals into battle. That way, if one elephant got hurt, the king would always have a backup ready to fight.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-f87d6f4764",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, the bishop on the chessboard was carved to look like a quiet, powerful elephant. A wise king named Alfonso wrote that a ruler should never travel to war with just one of these gentle giants. If one became too tired or hurt, there would always be a second companion ready to help protect the kingdom.",
+    "luca": "King Alfonso had a brilliant battle plan: never charge into a fight with only one giant war elephant! He insisted on bringing a pair of these massive beasts to charge across the board. That way, if your first heavy hitter got knocked out, the backup elephant could stampede right in to save the day."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

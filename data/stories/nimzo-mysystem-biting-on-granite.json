@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-biting-on-granite",
+  "bookId": "nimzo-mysystem",
+  "title": "Biting on Granite",
+  "body": "The great chess teacher Aron Nimzowitsch loved to use funny, colorful phrases to explain complicated strategies. He described a situation where pieces attack heavily defended pawns as biting on granite, meaning they are chewing on something impossible to break. To crack these tough setups, he showed how players must patiently maneuver their pieces to trick the opponent into making a weakness.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-57ed23dada",
+  "era": "1920s",
+  "players": [
+    "Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A wise chess teacher from the past named Aron loved to paint pictures with his words. He said that attacking a row of highly protected pawns is like trying to chew on a hard stone. Instead of rushing in, we must guide our pieces on a quiet, patient journey to find a hidden way through.",
+    "luca": "Imagine charging your army straight into a wall of solid rock! A brilliant player named Aron warned that crashing into those super-defended targets will only break your own forces. The real adventure is in sneaking your pieces around, tricking the enemy until their strong defense finally cracks."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-chess-pieces-with-human-feelings",
+  "bookId": "nimzo-mysystem",
+  "title": "Chess Pieces with Human Feelings",
+  "body": "Aron Nimzowitsch, a famous chess master, had a very unusual way of describing his games. Instead of treating his pieces like lifeless blocks of wood, he imagined them as living characters with real emotions. He once explained a strategic move by saying the pieces were showing appreciation and friendliness toward one another for their mutual help.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-67d55d54b6",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A grandmaster named Aron looked closely at his wooden figures and saw a tiny world of feelings. He believed the shapes on the board could feel happy and supportive. When they stood side-by-side to protect a square, he said they were showing sweet appreciation for each other's help.",
+    "luca": "Aron treated his chess games like wild, living adventures. Instead of plain game pieces, his army was full of brave teammates who celebrated every victory. When they teamed up to secure a spot, Aron said they were shouting out loud thanks and showing true friendship on the board."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

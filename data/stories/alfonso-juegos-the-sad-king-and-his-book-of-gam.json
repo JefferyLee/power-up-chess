@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-sad-king-and-his-book-of-gam",
+  "bookId": "alfonso-juegos",
+  "title": "The Sad King and His Book of Games",
+  "body": "King Alfonso the Tenth of Spain had a very sad end to his reign, with his own family rebelling against him and his kingdom falling into war. During these incredibly stressful times, the king found comfort in art and games. He ended up commissioning one of the most famous medieval books about chess, proving that a board game can offer a peaceful escape from real-world chaos.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-ebf0a4850d",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle king named Alfonso faced deep sadness when his own family started a war against him. To find a quiet space in his mind, he turned to the beautiful, carved shapes of chess pieces. He asked his scribes to paint a magnificent book filled with pictures of people playing games together. It was his way of finding a little bit of peace when the world outside was so loud.",
+    "luca": "King Alfonso was in giant trouble when his own relatives turned against him and started a massive fight for the throne! Instead of panicking during the chaos, he made a brilliant, unexpected move. He gathered artists to write one of the greatest game books in history, packed with chess secrets. He showed everyone that even when your kingdom is messy, you can still master the board!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

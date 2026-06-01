@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-the-four-seasons-chess-game",
+  "bookId": "alfonso-juegos",
+  "title": "The Four Seasons Chess Game",
+  "body": "Long ago, wise scholars invented a unique chess game based on the four seasons of the year. The board was divided into four colorful sections to represent spring, summer, autumn, and winter. Players had to manage their pieces according to the changing times of the year.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-cd249be263",
+  "era": "medieval",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, clever teachers created a special board painted with the four times of the year. The squares were divided into bright sections for spring, summer, autumn, and winter. To win, you had to watch the quiet changes of the seasons and guide your pieces carefully through them.",
+    "luca": "Imagine a medieval clash where the battlefield actually changes with the calendar! Thinkers created a board with colorful zones for spring, summer, autumn, and winter. You had to command your pieces to match the shifting times of the year to win."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

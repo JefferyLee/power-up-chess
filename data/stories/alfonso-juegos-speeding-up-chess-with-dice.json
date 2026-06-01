@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-speeding-up-chess-with-dice",
+  "bookId": "alfonso-juegos",
+  "title": "Speeding Up Chess with Dice",
+  "body": "In medieval Spain, chess games could sometimes feel incredibly slow and tedious. To speed up the action and keep players from getting bored, people during the reign of King Alfonso the Wise would roll dice to determine their moves. This added a fast-paced element of chance to the ancient strategy game.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-86fd730807",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, King Alfonso noticed that chess matches could last for a very long time. The players would sit quietly, waiting and waiting for the next turn. To bring a soft touch of surprise to the board, they began rolling dice to decide which piece to move next.",
+    "luca": "Imagine waiting forever just for one single turn. King Alfonso's players solved this boredom by tossing dice right onto the table to make things move much faster. Suddenly, the quiet strategy game became a wild race where a lucky roll decided your next big move."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

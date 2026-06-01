@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-a-war-of-thoughts",
+  "bookId": "ruy-lopez-art",
+  "title": "A War of Thoughts",
+  "body": "Around nine hundred years ago, a Spanish scholar named Abraham ibn Ezrah wrote a famous poem about chess. He described the game as a fierce battle between two camps on a checkered field. However, he pointed out that no real weapons are ever used because chess is a peaceful war fought entirely with thoughts.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-8cadf71364",
+  "era": "ancient",
+  "players": [
+    "Abraham ibn Ezrah"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Nearly nine centuries ago, a wise scholar named Abraham sat down in Spain to write a beautiful poem. He painted a picture of a quiet battlefield made of dark and light squares. On this board, two armies meet, yet there is no clashing of metal or sound of shields. It is a silent, magical dance where only gentle ideas guide the pieces.",
+    "luca": "Imagine a massive clash where nobody gets hurt because the only weapons are inside your own mind! That is exactly what Abraham described in his epic poem nine hundred years ago. He saw the checkered board as a thrilling battleground for two rival armies. Every single move is a secret plan, proving that the ultimate power is just a brilliant strategy."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-king-alfonso-s-medieval-puzzle-b",
+  "bookId": "alfonso-juegos",
+  "title": "King Alfonso's Medieval Puzzle Book",
+  "body": "Back in the thirteenth century, a Spanish king named Alfonso the Wise loved chess so much that he ordered a giant book to be written about games. This book contained dozens of special chess puzzles, each starting with a different number of pieces on the board. Medieval players would spend hours trying to solve these tricky setups, just like we do with chess puzzles today!",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-03cf5f5503",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a king named Alfonso loved the quiet beauty of chess. He ordered a giant book to be created, filled with dozens of unique brain-teasers. Each page showed a different challenge, some with only a few pieces left on the board for players to study.",
+    "luca": "Imagine opening a massive, ancient book of secret tactical battles! King Alfonso created these wild challenges to test the cleverest minds of his time. People back then would spend hours plotting their moves to conquer each difficult board layout. It was the ultimate quest to see who could find the winning path!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

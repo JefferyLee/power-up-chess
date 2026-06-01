@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-chess-playing-pharmacist",
+  "bookId": "ruy-lopez-art",
+  "title": "The Chess-Playing Pharmacist",
+  "body": "Over five hundred years ago, a Portuguese pharmacist named Pedro Damiano wrote a book to teach people how to play chess. It became one of the earliest chess best-sellers in history. His guide was so popular that it was printed in many different editions for eager players to read.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-394d4e47c4",
+  "era": "1500s",
+  "players": [
+    "Pedro Damiano"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Over five hundred years ago in Portugal, a quiet apothecary named Pedro Damiano spent his time writing down the secrets of the board. He wanted to help anyone learn how to guide their pieces gracefully. His wonderful book became so popular that workshops printed it over and over again for families to treasure.",
+    "luca": "Imagine mixing medicine by day and plotting epic chess victories by night! This Portuguese pharmacist wrote a strategy guide that became one of the first smash-hit books in history. Everyone wanted a piece of his clever tactics, so printers had to crank out version after version to keep up with the demand."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

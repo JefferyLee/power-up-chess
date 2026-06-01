@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-three-games-for-a-wise-king",
+  "bookId": "alfonso-juegos",
+  "title": "Three Games for a Wise King",
+  "body": "Long ago, an Indian king wanted to know if success came from smart thinking or just lucky chances. To answer him, one wise man brought him chess to represent pure brainpower, another brought dice for luck, and a third brought backgammon to show how you need both. A Spanish king named Alfonso loved this story so much he wrote it down in a special book.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-278d846cfb",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A curious king in ancient India spent his days wondering if we win by making clever choices or just by being lucky. To help him, three wise thinkers arrived with different treasures. One offered the quiet, thoughtful game of chess to show the power of a clever mind, while the others brought rolling dice and a game that blended both together. Many years later, a Spanish ruler named Alfonso loved this tale so much that he saved it forever in his own special book.",
+    "luca": "This king wanted to solve a major mystery: does victory come from pure, brilliant strategy, or just a lucky roll? The first wise guide stepped up and handed him chess, a battlefield of pure mind power with no luck involved at all. Then came the wild roll of the dice, and finally a game that combined both forces. King Alfonso of Spain thought this clash was so cool that he wrote the whole adventure down in his own book!"
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-sneaky-tricks-from-a-chess-pries",
+  "bookId": "ruy-lopez-art",
+  "title": "Sneaky Tricks from a Chess Priest",
+  "body": "In the sixteenth century, a Spanish priest named Ruy López wrote down some very sneaky tips for winning. He advised players to sit with the sun at their back so the bright light would shine directly into their opponent's eyes. He also suggested playing against people who were tired, or using a strange chess set they had never seen before.",
+  "motif": "anecdote",
+  "sourceChunkId": "ruy-lopez-art-09f1f8f832",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a quiet priest named Ruy López discovered that winning chess games was about more than just moving the wooden pieces. He noticed how easily a player could lose focus if the bright afternoon glare got in their way. He gently suggested placing the board so the daylight became your quiet helper.",
+    "luca": "But that was not his only wild plan for victory! He also told players to challenge opponents who were already exhausted and yawning. To guarantee a win, he even suggested using strange, unfamiliar pieces that would totally confuse the other side."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

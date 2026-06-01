@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-the-king-who-loved-games",
+  "bookId": "alfonso-juegos",
+  "title": "The King Who Loved Games",
+  "body": "Long ago in the 1200s, King Alfonso the Wise of Spain loved chess so much that he ordered a special book to be written about it. This beautiful manuscript was filled with colorful pictures of people playing chess and other board games. He even created official laws to make sure that people played games fairly throughout his kingdom.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-9ac6c5dadf",
+  "era": "1200s",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Eight hundred years ago, a gentle king in Spain named Alfonso wanted everyone to share his love for chess. He asked artists to paint a grand book filled with bright scenes of friends sitting together over the game boards. This precious book even had rules written down so that every player in the land would be treated with kindness and respect.",
+    "luca": "Imagine a medieval king who was so obsessed with board games that he made them the law of the land! King Alfonso ordered his scribes to create a massive, action-packed handbook showing players matching wits. He even set up strict kingdom-wide rules to stop any sneaky cheaters in their tracks."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

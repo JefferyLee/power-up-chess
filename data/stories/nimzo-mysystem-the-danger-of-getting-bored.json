@@ -1,0 +1,22 @@
+{
+  "id": "nimzo-mysystem-the-danger-of-getting-bored",
+  "bookId": "nimzo-mysystem",
+  "title": "The Danger of Getting Bored",
+  "body": "A beginner chess player once found a clever way to save a tough game by checking the enemy king back and forth. But after repeating the same moves, they got bored and decided to switch rooks just to try something different. This small change let the enemy king escape to safety, and the player lost the game. It turns out that trying to be fancy when you already have a safe plan can cost you the victory!",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-2d262ef982",
+  "era": "1920s",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A new player once found a quiet way to rescue a difficult game. By sliding a piece back and forth, they kept the opposing king trapped in an endless loop. But the player grew restless with this soft rhythm and decided to move a different castle instead. That tiny change broke the spell, letting the king slip away and costing them the game.",
+    "luca": "This player had a perfect defensive loop going, keeping a tough opponent locked down with repeated attacks. But then they got tired of the same safe march and decided to swap pieces just to show off. Huge mistake! The rival king saw the gap, bolted for freedom, and snatched the victory right away."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

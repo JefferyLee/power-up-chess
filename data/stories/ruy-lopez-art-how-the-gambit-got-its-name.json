@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-how-the-gambit-got-its-name",
+  "bookId": "ruy-lopez-art",
+  "title": "How the Gambit Got Its Name",
+  "body": "In his early chess writings, Ruy Lopez introduced the word \"gambit\" to describe a sneaky way of playing. He borrowed the term from Italian to explain a strategy based on tricks, traps, and sacrifices. He used these new ideas to defeat older masters who did not yet understand how fast the game had become.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-599bd2f63d",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a writer named Ruy López wrote down a beautiful new word for a clever way to play. He borrowed the term \"gambit\" from the Italian language to describe a quiet trap. By offering a small piece as a gift, a player could lure their opponent into a surprise.",
+    "luca": "This was a daring plan built for speed and surprise! Ruy used these clever sacrifices to challenge the older masters who were used to a much slower game. His lightning-fast tricks caught them completely off guard, changing how the game was played forever."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

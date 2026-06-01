@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-christmas-game-day",
+  "bookId": "alfonso-juegos",
+  "title": "Christmas Game Day",
+  "body": "Hundreds of years ago, playing board games for money was strictly illegal outside of special gaming houses. But there was one exception to the rule. On Christmas Eve and Christmas Day, the law allowed everyone to play games at home so they could share holiday cheer with their families.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-c3b21c4615",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Many years ago, families had to keep their game boards hidden away because playing for prizes was forbidden in ordinary homes. Only special gaming halls were allowed to host these matches. But on the cozy nights of Christmas Eve and Christmas Day, the rules softened so everyone could share the joy of playing by the fire.",
+    "luca": "Back in the old days, playing board games for stakes was totally banned unless you went to a designated gaming hall. But on Christmas Eve and Christmas Day, the law declared a massive truce. Families could finally challenge each other at home and share the excitement of the game."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

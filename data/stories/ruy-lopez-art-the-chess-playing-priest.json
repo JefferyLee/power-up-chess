@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-chess-playing-priest",
+  "bookId": "ruy-lopez-art",
+  "title": "The Chess-Playing Priest",
+  "body": "In the sixteenth century, a Spanish priest named Ruy López traveled to Rome on church business. While visiting, he challenged the best chess players in Italy and easily defeated all of them. Even though the official title did not exist back then, many people consider him the very first world champion.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-11137dc218",
+  "era": "1500s",
+  "players": [
+    "Ruy López"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Five hundred years ago, a quiet priest named Ruy López packed his bags for a long journey to Rome. While visiting on church duties, he sat down at wooden tables to play the local masters. With gentle patience, he won every single game he played. Though the title did not exist yet, we now look back at him as the world's very first champion.",
+    "luca": "A priest named Ruy López marched into Italy five centuries ago and decided to take on the strongest players he could find. He swept through Rome, crushing the local masters with his bold strategies. He made every tough victory look totally effortless. History books now celebrate this brave traveler as the planet's very first chess king."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

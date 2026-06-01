@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-a-prince-s-passion-for-chess",
+  "bookId": "ruy-lopez-art",
+  "title": "A Prince's Passion for Chess",
+  "body": "In the sixteenth century, a Spanish priest named Ruy Lopez noticed that young Prince Charles was absolutely crazy about playing chess. Inspired by the prince's great love for the game, the priest decided to write one of the very first complete chess books in history to help people learn how to play.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-5c13fb04a3",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "Prince Charles"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a gentle priest named Ruy Lopez watched a young prince named Charles play chess with quiet focus. The prince loved the wooden pieces and the clever squares so much that it touched the priest's heart. To share this joy, the priest sat down and wrote one of the very first guidebooks, filled with secrets to help everyone learn the game.",
+    "luca": "Imagine a real-life prince from the old days who was totally obsessed with conquering the chessboard! A priest named Ruy Lopez saw this royal battle-spirit and decided to do something legendary. He grabbed his quill and wrote down a master plan, creating one of the world's first-ever chess rulebooks to help future champions win their own matches."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

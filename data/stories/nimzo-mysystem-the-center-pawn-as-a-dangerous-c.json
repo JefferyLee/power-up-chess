@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-the-center-pawn-as-a-dangerous-c",
+  "bookId": "nimzo-mysystem",
+  "title": "The Center Pawn as a Dangerous Criminal",
+  "body": "Aron Nimzowitsch, a famous chess master, had a colorful way of teaching strategy. He warned players that an opponent's free center pawn should be treated like a dangerous criminal. In his view, players had to direct all their fury toward this pawn, sentencing it either to death by capturing it or to life imprisonment by blocking it.",
+  "motif": "anecdote",
+  "sourceChunkId": "nimzo-mysystem-881e7dc85b",
+  "era": "1920s",
+  "players": [
+    "Aron Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "A long time ago, a thoughtful chess master named Aron Nimzowitsch taught his students to look closely at the very middle of the board. He warned that a free pawn marching down the center was like a sneaky troublemaker on the run. To keep your side safe, you had to work together to quietly stop this traveler in its tracks, or gently remove it from the game.",
+    "luca": "This master, Aron, wanted players to treat that runaway center pawn like an outlaw on the loose! You had to launch a giant mission with your pieces to corner him. Your only choices were to lock him in a deep dungeon so he could never move, or defeat him right on the spot."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

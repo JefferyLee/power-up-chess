@@ -1,0 +1,25 @@
+{
+  "id": "alfonso-juegos-a-king-s-book-of-chess-puzzles",
+  "bookId": "alfonso-juegos",
+  "title": "A King's Book of Chess Puzzles",
+  "body": "Over seven hundred years ago, a Spanish king named Alfonso the Wise ordered his scribes to write a massive book all about games. This special manuscript contained some of the very first chess puzzles ever written down in Europe. It also explained the ancient rules of how pieces moved and what colors they should be painted.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-de975a4e64",
+  "era": "medieval",
+  "players": [
+    "Alfonso X"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "More than seven centuries ago, a gentle Spanish king named Alfonso wanted to share his love of play. He had his helpers create a giant, hand-written book filled with board games. Inside its thick pages, artists drew the earliest chess brain-teasers ever recorded in Europe. It even described how each carved figure should glide across the board and what bright shades they should be painted.",
+    "luca": "Imagine a king from the Middle Ages who wanted to gather all the best games in the world! King Alfonso commanded his writers to make a giant, heavy book. It held the oldest chess strategies ever written down in Europe, showing players how to march their pieces and what colors to paint them for battle."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

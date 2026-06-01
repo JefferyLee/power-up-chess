@@ -1,0 +1,27 @@
+{
+  "id": "ruy-lopez-art-the-first-modern-chess-game-was-",
+  "bookId": "ruy-lopez-art",
+  "title": "The First Modern Chess Game was a Love Poem",
+  "body": "In the late 1400s, three Spanish poets wrote a beautiful poem describing the very first recorded game of modern chess. Instead of just listing moves, they pretended the game was a battle of love between the Roman gods Mars and Venus. Mars opened the game by marching his king's pawn forward two squares, and Venus defended by moving her queen's pawn. A third poet acted as the referee, explaining the new rules of the game as they played.",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-d9dcc9fef2",
+  "era": "1400s",
+  "players": [
+    "Francí de Castellví",
+    "Narcís Vinyoles",
+    "Bernat Fenollar"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Over five hundred years ago in Spain, three poets decided to write a beautiful story about the very first modern chess game. They turned the board into a quiet battlefield of love between two ancient Roman gods. One poet played as Mars, moving his pawn forward, while another played as Venus to defend her side. Their third friend watched over them, gently explaining the brand-new rules of the game.",
+    "luca": "Picture a chess match so exciting that three writers turned it into an epic clash of the gods! Mars charged his king's pawn forward two whole steps to start the attack. Venus immediately blocked his path with a clever counter-move of her own queen's pawn. To keep the peace, a third poet acted as the referee, calling out the brand-new rules of this updated game."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

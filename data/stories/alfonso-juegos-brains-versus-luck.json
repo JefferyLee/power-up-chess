@@ -1,0 +1,22 @@
+{
+  "id": "alfonso-juegos-brains-versus-luck",
+  "bookId": "alfonso-juegos",
+  "title": "Brains Versus Luck",
+  "body": "An old legend from India tells of wise men who argued about what was more important in life: smart thinking or pure luck. To show the difference, they compared the game of chess to rolling dice. Chess represented the power of the human mind and careful planning, while dice represented unpredictable fate. This story helped people understand why chess was such a noble game of skill.",
+  "motif": "history",
+  "sourceChunkId": "alfonso-juegos-249a1f196c",
+  "era": "ancient",
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in India, wise teachers wondered if it was better to be clever or just lucky. They used two games to find the answer. Rolling dice represented the wild winds of chance, but moving chess pieces showed the quiet power of a thoughtful mind.",
+    "luca": "It was a massive debate! The thinkers of ancient India wanted to know if brainpower could beat random luck. So they set up a battle between rolling dice, which is totally wild, and chess, where you need a brilliant strategy to win."
+  },
+  "source": {
+    "book": "Libro de los juegos",
+    "author": "Alfonso X (Castilla), ed. Raúl Orellana Calderón",
+    "year": 1283,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

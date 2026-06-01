@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-the-birth-of-the-ruy-lopez",
+  "bookId": "ruy-lopez-art",
+  "title": "The Birth of the Ruy Lopez",
+  "body": "In the 1500s, a Spanish priest named Ruy Lopez noticed a flaw in how other players started their games. While others recommended moving the bishop to a standard central spot, Lopez realized that putting the bishop on b5 was far more troublesome for the opponent. This simple idea became one of the most famous and lasting chess openings in history.",
+  "motif": "opening",
+  "sourceChunkId": "ruy-lopez-art-599bd2f63d",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "Damiano"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in the sixteenth century, a thoughtful Spanish priest sat quietly by his wooden board. He realized that the usual way of starting a game left a tiny weakness that others missed. By gently sliding his bishop to a new square called b5, he created a clever plan that players still love to use today.",
+    "luca": "This clever priest decided to shake up the chess world with a surprise attack! Instead of playing it safe in the middle, he launched his bishop way forward to create instant trouble for his opponent. This bold move was so successful that it became one of the most legendary battle plans in history."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

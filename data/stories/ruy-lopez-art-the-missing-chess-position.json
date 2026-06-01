@@ -1,0 +1,25 @@
+{
+  "id": "ruy-lopez-art-the-missing-chess-position",
+  "bookId": "ruy-lopez-art",
+  "title": "The Missing Chess Position",
+  "body": "Over five hundred years ago, a Spanish writer named Lucena published one of the earliest books about modern chess. Today, chess players study a famous endgame trick called the Lucena Position, named in his honor. But there is a funny twist: if you search through Lucena's ancient book, that famous position is nowhere to be found!",
+  "motif": "history",
+  "sourceChunkId": "ruy-lopez-art-42373c558e",
+  "era": "1400s",
+  "players": [
+    "Luis Ramírez de Lucena"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago in Spain, a thoughtful writer named Lucena printed one of the very first books about our favorite game. Today, players still practice a clever endgame trick named in his honor. But if you turn the dusty, yellowed pages of his ancient book, you will find that this special setup is completely missing.",
+    "luca": "Imagine a secret code named after a master who never actually wrote it down! We all learn this brilliant winning setup and use his name to describe it. Yet, if you hunt through his original guidebook from five hundred years ago, the secret formula is totally gone."
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

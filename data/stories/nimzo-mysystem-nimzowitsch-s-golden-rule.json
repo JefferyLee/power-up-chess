@@ -1,0 +1,25 @@
+{
+  "id": "nimzo-mysystem-nimzowitsch-s-golden-rule",
+  "bookId": "nimzo-mysystem",
+  "title": "Nimzowitsch's Golden Rule",
+  "body": "In his classic chess teachings, Aron Nimzowitsch warned eager players against the temptation of hunting pawns early in the game. He declared a strict commandment to never play to win a pawn while your development is still unfinished. Players who ignore this and grab harmless pawns often find themselves facing a quick disaster.",
+  "motif": "history",
+  "sourceChunkId": "nimzo-mysystem-949a5ce9a3",
+  "era": "1920s",
+  "players": [
+    "Nimzowitsch"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, a wise chess teacher named Aron Nimzowitsch shared a quiet secret to keeping your pieces safe. He taught that we should never let a single piece go hunting for lonely enemy pawns before the rest of our army has even woken up. If you rush ahead too quickly, your sleepy friends at home won't be ready to help when trouble arrives.",
+    "luca": "Imagine charging straight into enemy territory just to snatch a tiny pawn while your knights and bishops are still sitting on their starting squares! Aron Nimzowitsch warned that this greedy shortcut leads straight to disaster. You have to get your whole team ready for action first, or the opponent will trap you in a flash!"
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

@@ -1,0 +1,26 @@
+{
+  "id": "nimzo-mysystem-toppling-the-proud-pawn",
+  "bookId": "nimzo-mysystem",
+  "title": "Toppling the Proud Pawn",
+  "body": "During a tournament in the resort town of Ostend, Aron Nimzowitsch found a creative way to fight his opponent's central pawn. Instead of slowly defending, he patiently prepared a sudden counter-strike. With a single, well-timed pawn push, he completely destroyed his opponent's center and turned the tables.",
+  "motif": "game",
+  "sourceChunkId": "nimzo-mysystem-b8bad8ff8f",
+  "era": "1900s",
+  "players": [
+    "Aron Nimzowitsch",
+    "Francis Joseph Lee"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Long ago, in a beautiful seaside town, a player named Aron faced a giant, stubborn pawn standing right in the middle of the board. Instead of just building a slow wall to block it, Aron quietly placed his pieces in perfect, waiting spots. With one gentle nudge of his own pawn, he swept the giant away and changed the whole game.",
+    "luca": "Aron wasn't going to sit back and play defense all day. He spent his time setting up a brilliant, secret trap, waiting for the perfect second to strike. Boom! He launched a single pawn forward, smashing the enemy's center to pieces and turning the whole battle around."
+  },
+  "source": {
+    "book": "My System: A Chess Treatise",
+    "author": "Aron Nimzowitsch",
+    "year": 1925,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}

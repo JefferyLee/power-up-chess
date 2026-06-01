@@ -1,0 +1,26 @@
+{
+  "id": "ruy-lopez-art-the-instant-bishop-of-chess",
+  "bookId": "ruy-lopez-art",
+  "title": "The Instant Bishop of Chess",
+  "body": "There is a wild legend about how the Spanish King once promoted Ruy Lopez during a chess match. The King urgently needed a bishop to hear a prisoner's last words, but none could be found nearby. Looking up from his chess board, the King simply pointed at Lopez and declared him a bishop on the spot so the royal orders could be carried out.",
+  "motif": "anecdote",
+  "sourceChunkId": "ruy-lopez-art-82ca133add",
+  "era": "1500s",
+  "players": [
+    "Ruy López",
+    "King Philip II"
+  ],
+  "sourcePage": "p.1",
+  "variants": {
+    "lucy": "Imagine a quiet stone room in Spain where a king sat playing his favorite game. Suddenly, a guard rushed in because a captive in the dungeon needed to share a final secret before it was too late. Since no holy man could be found in the castle, the king looked at his clever opponent. He gently declared that his chess partner was now a real-life priest so the duty could be finished.",
+    "luca": "Talk about a crazy emergency! The king absolutely had to find a church leader to hear a captive's final confession, but the castle was totally empty. He looked down at the board, got a wild idea, and pointed his finger right at his chess opponent. Just like that, with one quick royal command, a regular player was drafted into the priesthood to save the day!"
+  },
+  "source": {
+    "book": "The Art of the Game of Chess",
+    "author": "Ruy López, trans. Andrew Soltis & Michael J. McGrath",
+    "year": 1561,
+    "page": "p.1"
+  },
+  "rightsStatus": "engineering-stored-not-reviewed",
+  "generatedAt": 1780345640425
+}
