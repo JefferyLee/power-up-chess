@@ -41,6 +41,7 @@
 .puc-chat__bubble--host {
   background: rgba(241, 195, 76, 0.10);
   border-left: 3px solid var(--puc-accent, #f1c34c);
+  padding: 12px 16px;
 }
 
 .puc-chat__bubble--system {
@@ -62,6 +63,29 @@
   color: var(--puc-text);
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+/* Host stories get a fancier, larger serif treatment with paragraph
+ * spacing so a 4-sentence tale doesn't read as a wall of text. */
+.puc-chat__text--host {
+  font-family: 'IM Fell English', Georgia, 'Iowan Old Style', serif;
+  font-size: 16.5px;
+  line-height: 1.55;
+  margin: 0 0 10px;
+  color: var(--puc-text);
+  text-indent: 0.6em;
+  letter-spacing: 0.2px;
+}
+
+.puc-chat__text--host:last-child {
+  margin-bottom: 0;
+}
+
+.puc-chat__text--host:first-of-type::first-letter {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.4em;
+  color: var(--puc-accent, #f1c34c);
+  padding-right: 0.06em;
 }
 
 .puc-chat__form {
