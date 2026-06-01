@@ -1,0 +1,75 @@
+.puc-forestlb {
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 200px;
+}
+
+.puc-forestlb__title {
+  margin: 0 0 10px;
+  font-family: var(--puc-font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--puc-text-accent);
+}
+
+.puc-forestlb__list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.puc-forestlb__row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13.5px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.puc-forestlb__row:last-child {
+  border-bottom: none;
+}
+
+.puc-forestlb__row--you {
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
+.puc-forestlb__rank {
+  color: var(--puc-text-muted);
+  font-family: var(--puc-font-display);
+}
+
+.puc-forestlb__name {
+  color: var(--puc-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puc-forestlb__score {
+  color: var(--puc-accent, #f1c34c);
+  font-family: var(--puc-font-display);
+  font-size: 14px;
+}
+
+.puc-forestlb__empty,
+.puc-forestlb__err {
+  margin: 4px 0 10px;
+  color: var(--puc-text-muted);
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+.puc-forestlb__note {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--puc-text-muted);
+  line-height: 1.4;
+}

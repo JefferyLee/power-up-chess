@@ -123,6 +123,20 @@ export interface SetPresenceResponse {
 const postChatFn = httpsCallable<PostChatRequest, PostChatResponse>(functions, 'postChat')
 const setPresenceFn = httpsCallable<SetPresenceRequest, SetPresenceResponse>(functions, 'setPresence')
 
+// MVP2 Phase E: Forest Adventure scores.
+export interface SubmitForestScoreRequest {
+  normalizedName: string
+  runId: string
+  score: number
+}
+export interface SubmitForestScoreResponse {
+  ok: true
+  best: number
+  improved: boolean
+}
+
+const submitForestScoreFn = httpsCallable<SubmitForestScoreRequest, SubmitForestScoreResponse>(functions, 'submitForestScore')
+
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
   return data
@@ -178,5 +192,10 @@ export async function callPostChat(req: PostChatRequest): Promise<PostChatRespon
 
 export async function callSetPresence(req: SetPresenceRequest): Promise<SetPresenceResponse> {
   const { data } = await setPresenceFn(req)
+  return data
+}
+
+export async function callSubmitForestScore(req: SubmitForestScoreRequest): Promise<SubmitForestScoreResponse> {
+  const { data } = await submitForestScoreFn(req)
   return data
 }

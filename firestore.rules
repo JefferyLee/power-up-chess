@@ -85,6 +85,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Forest Adventure leaderboard — READ allowed for any signed-in guest so
+    // the in-game side panel can render top scores. Writes are server-only.
+    match /forest_leaderboard/{normalizedName} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Forest run history per uid — function-only.
+    match /forest_runs/{uid}/runs/{runId} {
+      allow read, write: if false;
+    }
+    match /forest_runs/{uid} {
+      allow read, write: if false;
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

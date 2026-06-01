@@ -42,6 +42,14 @@ export interface PuzzleAttempt {
   stars: 0 | 1 | 2 | 3
 }
 
+export interface ForestRun {
+  /** Stable id. `${ts}-${shortRand}` from the route handler. */
+  runId: string
+  displayName: string
+  score: number
+  finishedAt: number
+}
+
 interface HistoryDB extends DBSchema {
   games: {
     key: string
@@ -53,10 +61,15 @@ interface HistoryDB extends DBSchema {
     value: PuzzleAttempt
     indexes: { 'by-puzzleId': string; 'by-attemptedAt': number }
   }
+  forest_runs: {
+    key: string
+    value: ForestRun
+    indexes: { 'by-finishedAt': number; 'by-score': number }
+  }
 }
 
 const DB_NAME = 'puc-history'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbPromise: Promise<IDBPDatabase<HistoryDB>> | null = null
 
@@ -72,6 +85,11 @@ export function getDb(): Promise<IDBPDatabase<HistoryDB>> {
           const attempts = db.createObjectStore('puzzle_attempts', { keyPath: 'id' })
           attempts.createIndex('by-puzzleId', 'puzzleId')
           attempts.createIndex('by-attemptedAt', 'attemptedAt')
+        }
+        if (oldVersion < 3) {
+          const runs = db.createObjectStore('forest_runs', { keyPath: 'runId' })
+          runs.createIndex('by-finishedAt', 'finishedAt')
+          runs.createIndex('by-score', 'score')
         }
       },
     })

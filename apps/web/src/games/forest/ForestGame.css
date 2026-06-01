@@ -1,0 +1,72 @@
+.puc-forest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.puc-forest__stage {
+  position: relative;
+  width: 800px;
+  max-width: 100%;
+  background: #0a0815;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.puc-forest__canvas {
+  width: 100%;
+  display: block;
+  background: #8fbc8f;
+  image-rendering: pixelated;
+}
+
+.puc-forest__start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 20px;
+  color: #fbbf24;
+}
+
+.puc-forest__hello {
+  margin: 0;
+  font-size: 22px;
+  font-family: var(--puc-font-display, Georgia, serif);
+}
+
+.puc-forest__btn {
+  padding: 12px 32px;
+  font-size: 18px;
+  font-family: var(--puc-font-display, Georgia, serif);
+  background: linear-gradient(180deg, #2a6a2a, #1b4a1b);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.puc-forest__btn:hover {
+  transform: translateY(-1px);
+}
+
+.puc-forest__touchbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 800px;
+  max-width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 8px 8px;
+  gap: 10px;
+}
+
+.puc-forest__touchgroup {
+  display: flex;
+  gap: 10px;
+}

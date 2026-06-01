@@ -92,6 +92,7 @@ export function HallScreen() {
   }
 
   const handlePuzzles = () => navigate('/puzzles')
+  const handleForest = () => navigate('/forest')
 
   if (!identity) return null
 
@@ -166,13 +167,12 @@ export function HallScreen() {
 
           <button
             type="button"
-            className="puc-hall__door puc-hall__door--disabled"
-            disabled
-            title="Coming soon"
+            className="puc-hall__door"
+            onClick={handleForest}
           >
             <span className="puc-hall__door-icon" aria-hidden="true">🌲</span>
             <span className="puc-hall__door-name">Forest Adventure</span>
-            <span className="puc-hall__door-blurb">Coming soon — dodge mushrooms, jump trees.</span>
+            <span className="puc-hall__door-blurb">Dodge red mushrooms, collect gold, jump trees.</span>
           </button>
 
           <button
