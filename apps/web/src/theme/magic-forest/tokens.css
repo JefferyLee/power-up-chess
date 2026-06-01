@@ -1,0 +1,52 @@
+/* Magic Forest — first visual theme.
+ *
+ * Palette: aged-parchment light squares, deep-moss dark squares, soft gold accents,
+ * warm bark frame. Pieces are cream (white) and dark-bark (black) so they read
+ * clearly against the forest board.
+ */
+
+:root[data-theme='magic-forest'] {
+  /* Board */
+  --puc-sq-light: #f1e6c8;          /* aged parchment */
+  --puc-sq-dark:  #5e7a4b;          /* deep moss */
+  --puc-board-bg: #3b2a17;          /* warm bark frame */
+
+  /* Pieces */
+  --puc-piece-white-fill:   #fbfaf3;
+  --puc-piece-white-stroke: #2b1d10;
+  --puc-piece-black-fill:   #1f1408;
+
+  /* Highlights */
+  --puc-sq-selected:  rgba(231, 184, 65, 0.45);  /* warm gold */
+  --puc-sq-last:      rgba(231, 184, 65, 0.28);
+  --puc-sq-drag-over: rgba(231, 184, 65, 0.85);
+  --puc-move-hint:    rgba(35, 25, 12, 0.32);
+
+  /* Ambient surfaces */
+  --puc-bg-deep:    #0f1a10;        /* forest night canopy */
+  --puc-bg-mist:    #1a2a1c;
+  --puc-bg-glow:    radial-gradient(
+    ellipse 120% 80% at 50% 0%,
+    rgba(231, 184, 65, 0.18),
+    transparent 60%
+  );
+  --puc-surface:    rgba(28, 40, 28, 0.78);
+  --puc-surface-edge: rgba(231, 184, 65, 0.22);
+
+  /* Text */
+  --puc-text:        #f0ead6;
+  --puc-text-muted:  #b8b29a;
+  --puc-text-accent: #f1c34c;       /* firefly gold */
+
+  /* Focus / interactive */
+  --puc-accent:        #f1c34c;
+  --puc-accent-strong: #e8a429;
+
+  /* Typography */
+  --puc-font-display: 'Georgia', 'Iowan Old Style', 'Palatino', serif;
+  --puc-font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Radii / shadow */
+  --puc-radius: 10px;
+  --puc-shadow-card: 0 12px 28px rgba(8, 16, 8, 0.42);
+}

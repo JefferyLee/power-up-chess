@@ -1,0 +1,25 @@
+.puc-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, var(--puc-square-size));
+  grid-template-rows: repeat(8, var(--puc-square-size));
+  width: calc(var(--puc-square-size) * 8);
+  height: calc(var(--puc-square-size) * 8);
+  box-shadow: 0 14px 36px rgba(20, 30, 18, 0.32);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--puc-board-bg, #2b1f10);
+  touch-action: none;
+  user-select: none;
+}
+
+.puc-board__drag-piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

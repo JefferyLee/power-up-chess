@@ -1,0 +1,121 @@
+.puc-sq {
+  position: relative;
+  width: var(--puc-square-size);
+  height: var(--puc-square-size);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.puc-sq--light {
+  background: var(--puc-sq-light, #f1e6c8);
+}
+
+.puc-sq--dark {
+  background: var(--puc-sq-dark, #6b8a5a);
+}
+
+.puc-sq__piece-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Coordinate labels — file in bottom-right, rank in top-left of edge squares. */
+.puc-sq__file-label,
+.puc-sq__rank-label {
+  position: absolute;
+  font-size: calc(var(--puc-square-size) * 0.18);
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.55;
+}
+
+.puc-sq__file-label {
+  right: 4px;
+  bottom: 2px;
+}
+
+.puc-sq__rank-label {
+  left: 4px;
+  top: 2px;
+}
+
+/* Label colour is the opposite square colour for legibility. */
+.puc-sq--light .puc-sq__file-label,
+.puc-sq--light .puc-sq__rank-label {
+  color: var(--puc-sq-dark, #6b8a5a);
+}
+
+.puc-sq--dark .puc-sq__file-label,
+.puc-sq--dark .puc-sq__rank-label {
+  color: var(--puc-sq-light, #f1e6c8);
+}
+
+/* Highlights */
+
+.puc-sq--selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--puc-sq-selected, rgba(255, 213, 79, 0.45));
+  pointer-events: none;
+}
+
+.puc-sq--last-from,
+.puc-sq--last-to {
+  background-image: linear-gradient(
+    var(--puc-sq-last, rgba(255, 213, 79, 0.32)),
+    var(--puc-sq-last, rgba(255, 213, 79, 0.32))
+  );
+}
+
+.puc-sq--check::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(220, 70, 70, 0.55), transparent 70%);
+  pointer-events: none;
+  animation: puc-check-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes puc-check-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.puc-sq--drag-over::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 3px solid var(--puc-sq-drag-over, rgba(255, 213, 79, 0.85));
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* Move-hint dot (empty legal destination) */
+.puc-sq__dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28%;
+  height: 28%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--puc-move-hint, rgba(40, 30, 20, 0.28));
+  pointer-events: none;
+}
+
+/* Capture-hint ring (legal destination with enemy piece) */
+.puc-sq__capture-ring {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  border: 4px solid var(--puc-move-hint, rgba(40, 30, 20, 0.32));
+  pointer-events: none;
+}
