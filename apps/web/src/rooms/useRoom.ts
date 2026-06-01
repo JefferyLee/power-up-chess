@@ -5,7 +5,7 @@
 // found, or the caller is not yet a participant per security rules).
 
 import { doc, onSnapshot } from 'firebase/firestore'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { db } from '../firebase/app'
 import { callSubmitMove } from '../firebase/callables'
 import type { RoomDoc } from './types'
@@ -20,15 +20,20 @@ export type RoomState =
 export interface UseRoomResult {
   state: RoomState
   submitMove: (uci: string) => Promise<void>
+  /** Re-subscribe to the room. Used after Join succeeds, since Firestore
+   *  tears down a listener that hits permission-denied. */
+  retry: () => void
 }
 
 export function useRoom(roomId: string | null): UseRoomResult {
   const [state, setState] = useState<RoomState>({ status: 'loading' })
+  const [retryTick, setRetryTick] = useState(0)
 
   useEffect(() => {
     if (!roomId) return
-    // Reset to loading whenever the room id changes; the snapshot listener
-    // will replace this with ready / not_found / forbidden once it fires.
+    // Reset to loading whenever the room id (or retry tick) changes; the
+    // snapshot listener will replace this with ready / not_found / forbidden
+    // once it fires.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ status: 'loading' })
     const unsub = onSnapshot(
@@ -42,8 +47,8 @@ export function useRoom(roomId: string | null): UseRoomResult {
       },
       (err) => {
         // Permission-denied from rules means the caller is not (yet) listed
-        // on the room. The Join flow handles becoming listed; this signal
-        // tells the UI to route the user through Join.
+        // on the room. The Join flow handles becoming listed; once it has,
+        // the caller invokes retry() to re-subscribe.
         const code = (err as { code?: string }).code
         if (code === 'permission-denied') {
           setState({ status: 'forbidden' })
@@ -53,7 +58,9 @@ export function useRoom(roomId: string | null): UseRoomResult {
       },
     )
     return unsub
-  }, [roomId])
+  }, [roomId, retryTick])
+
+  const retry = useCallback(() => setRetryTick((n) => n + 1), [])
 
   const submitMove = useMemo(() => {
     return async (uci: string) => {
@@ -69,5 +76,5 @@ export function useRoom(roomId: string | null): UseRoomResult {
     }
   }, [roomId, state])
 
-  return { state, submitMove }
+  return { state, submitMove, retry }
 }

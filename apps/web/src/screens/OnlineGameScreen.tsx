@@ -23,7 +23,7 @@ export function OnlineGameScreen() {
   const { roomId } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
   const auth = useAuthUid()
-  const { state, submitMove } = useRoom(roomId ?? null)
+  const { state, submitMove, retry } = useRoom(roomId ?? null)
 
   if (auth.status === 'loading') {
     return <FullPageStatus text="Signing you in…" />
@@ -44,7 +44,7 @@ export function OnlineGameScreen() {
     return <FullPageStatus text={`Error: ${state.error.message}`} onBack={() => navigate('/')} />
   }
   if (state.status === 'forbidden') {
-    return <JoinPanel roomId={roomId} onJoined={() => { /* listener will re-fire as ready */ }} onBack={() => navigate('/')} />
+    return <JoinPanel roomId={roomId} onJoined={retry} onBack={() => navigate('/')} />
   }
 
   return (
