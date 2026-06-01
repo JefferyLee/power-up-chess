@@ -42,4 +42,7 @@ export interface Puzzle {
   source: PuzzleSource
   /** 1–2 sentence child-friendly explanation in default-host voice. */
   explanation: string
+  /** Three-rung hint ladder: gentle direction → tactical clue → near-solution.
+   *  Each one consumed costs the player a reward bonus. */
+  hints: [string, string, string]
 }

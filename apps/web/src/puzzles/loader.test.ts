@@ -14,6 +14,13 @@ describe('puzzle loader', () => {
     expect(ALL_PUZZLES.length).toBe(10) // current seed size; update when adding
   })
 
+  it('every puzzle has exactly 3 hints', () => {
+    for (const p of ALL_PUZZLES) {
+      expect(p.hints).toHaveLength(3)
+      for (const h of p.hints) expect(h.length).toBeGreaterThan(0)
+    }
+  })
+
   it('ids are unique', () => {
     const ids = ALL_PUZZLES.map((p) => p.id)
     expect(new Set(ids).size).toBe(ids.length)

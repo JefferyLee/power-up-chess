@@ -182,6 +182,13 @@ export function StartScreen() {
           <button
             type="button"
             className="puc-start__link"
+            onClick={() => navigate('/puzzles')}
+          >
+            Puzzle garden
+          </button>
+          <button
+            type="button"
+            className="puc-start__link"
             onClick={() => navigate('/history')}
           >
             Match history
