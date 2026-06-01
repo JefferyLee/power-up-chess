@@ -6,7 +6,7 @@ import { OnlineGameScreen } from './screens/OnlineGameScreen'
 import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { PuzzleScreen } from './puzzles/PuzzleScreen'
-import { ALL_PUZZLES } from './puzzles/loader'
+import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 
 export function App() {
   useEffect(() => {
@@ -21,12 +21,7 @@ export function App() {
         <Route path="/r/:roomId" element={<OnlineGameScreen />} />
         <Route path="/review" element={<PostGameAnalysisScreen />} />
         <Route path="/history" element={<HistoryScreen />} />
-        {/* Puzzles: temporary index redirects to the easiest puzzle.
-            Real Garden index lands in Phase 8.7. */}
-        <Route
-          path="/puzzles"
-          element={<Navigate to={`/puzzles/${ALL_PUZZLES[0]!.id}`} replace />}
-        />
+        <Route path="/puzzles" element={<PuzzleGardenScreen />} />
         <Route path="/puzzles/:id" element={<PuzzleScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
