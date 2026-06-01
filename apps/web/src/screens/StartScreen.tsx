@@ -1,17 +1,56 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { HOSTS, type HostId } from '../hosts/hosts'
+import { useAuthUid } from '../auth/useAuthUid'
+import { callCreateRoom } from '../firebase/callables'
+import { loadProfile, saveProfile } from '../storage/profile'
 import './StartScreen.css'
 
-interface Props {
-  onStartLocal: (config: { hostId: HostId; whiteName: string; blackName: string }) => void
-}
+export function StartScreen() {
+  const navigate = useNavigate()
+  const initial = loadProfile()
+  const [displayName, setDisplayName] = useState(initial.displayName)
+  const [hostId, setHostId] = useState<HostId>(initial.hostId)
+  const [opponentName, setOpponentName] = useState('Friend')
+  const [joinCode, setJoinCode] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const authState = useAuthUid()
 
-export function StartScreen({ onStartLocal }: Props) {
-  const [hostId, setHostId] = useState<HostId>('lucy')
-  const [whiteName, setWhiteName] = useState('Ada')
-  const [blackName, setBlackName] = useState('Friend')
+  const canStartLocal = displayName.trim().length > 0 && opponentName.trim().length > 0
+  const canCreate = authState.status === 'ready' && displayName.trim().length > 0 && !creating
+  const canJoin = /^[A-Za-z0-9]{4,12}$/.test(joinCode.trim())
 
-  const canStart = whiteName.trim().length > 0 && blackName.trim().length > 0
+  const persist = () => saveProfile({ displayName: displayName.trim(), hostId })
+
+  const onStartLocal = () => {
+    persist()
+    navigate('/local', {
+      state: { hostId, whiteName: displayName.trim(), blackName: opponentName.trim() },
+    })
+  }
+
+  const onCreateRoom = async () => {
+    if (!canCreate) return
+    setCreating(true)
+    setError(null)
+    try {
+      persist()
+      const { roomId } = await callCreateRoom({ displayName: displayName.trim(), hostMode: hostId })
+      navigate(`/r/${roomId}`)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(msg)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const onJoinRoom = () => {
+    if (!canJoin) return
+    persist()
+    navigate(`/r/${joinCode.trim()}`)
+  }
 
   return (
     <div className="puc-start">
@@ -21,10 +60,23 @@ export function StartScreen({ onStartLocal }: Props) {
           <p className="puc-start__subtitle">A brave little forest, a real chess board, and a host who is glad you came.</p>
         </header>
 
+        <section className="puc-start__panel" aria-labelledby="puc-start-name">
+          <h2 id="puc-start-name" className="puc-start__panel-title">Your name</h2>
+          <input
+            className="puc-start__big-input"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            maxLength={24}
+            autoComplete="off"
+            aria-label="Your display name"
+          />
+        </section>
+
         <section className="puc-start__panel" aria-labelledby="puc-start-host">
           <h2 id="puc-start-host" className="puc-start__panel-title">Pick a host</h2>
           <div className="puc-start__hosts">
-            {(Object.values(HOSTS)).map((h) => (
+            {Object.values(HOSTS).map((h) => (
               <button
                 key={h.id}
                 type="button"
@@ -39,42 +91,67 @@ export function StartScreen({ onStartLocal }: Props) {
           </div>
         </section>
 
-        <section className="puc-start__panel" aria-labelledby="puc-start-players">
-          <h2 id="puc-start-players" className="puc-start__panel-title">Who is playing?</h2>
-          <div className="puc-start__players">
-            <label className="puc-start__player">
-              <span className="puc-start__player-label">White</span>
+        <section className="puc-start__panel" aria-labelledby="puc-start-online">
+          <h2 id="puc-start-online" className="puc-start__panel-title">Play online</h2>
+          <div className="puc-start__online">
+            <button
+              type="button"
+              className="puc-start__cta"
+              onClick={onCreateRoom}
+              disabled={!canCreate}
+            >
+              {creating ? 'Creating room…' : 'Create private room'}
+            </button>
+            <div className="puc-start__join">
               <input
+                className="puc-start__code-input"
                 type="text"
-                value={whiteName}
-                onChange={(e) => setWhiteName(e.target.value)}
-                maxLength={24}
-                autoComplete="off"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                placeholder="Or paste a room code"
+                aria-label="Room code"
+                maxLength={12}
               />
-            </label>
-            <label className="puc-start__player">
-              <span className="puc-start__player-label">Black</span>
-              <input
-                type="text"
-                value={blackName}
-                onChange={(e) => setBlackName(e.target.value)}
-                maxLength={24}
-                autoComplete="off"
-              />
-            </label>
+              <button
+                type="button"
+                className="puc-start__cta puc-start__cta--ghost"
+                onClick={onJoinRoom}
+                disabled={!canJoin}
+              >
+                Join
+              </button>
+            </div>
+            {error && <p className="puc-start__error">{error}</p>}
           </div>
         </section>
 
-        <button
-          type="button"
-          className="puc-start__cta"
-          disabled={!canStart}
-          onClick={() => onStartLocal({ hostId, whiteName: whiteName.trim(), blackName: blackName.trim() })}
-        >
-          Start local game
-        </button>
+        <section className="puc-start__panel" aria-labelledby="puc-start-local">
+          <h2 id="puc-start-local" className="puc-start__panel-title">Play local</h2>
+          <label className="puc-start__player">
+            <span className="puc-start__player-label">Opponent name</span>
+            <input
+              type="text"
+              value={opponentName}
+              onChange={(e) => setOpponentName(e.target.value)}
+              maxLength={24}
+              autoComplete="off"
+            />
+          </label>
+          <button
+            type="button"
+            className="puc-start__cta puc-start__cta--ghost"
+            disabled={!canStartLocal}
+            onClick={onStartLocal}
+          >
+            Start local game
+          </button>
+        </section>
 
-        <p className="puc-start__note">Online private rooms arrive in the next milestone.</p>
+        <p className="puc-start__auth" aria-live="polite">
+          {authState.status === 'loading' && 'Signing you in…'}
+          {authState.status === 'ready' && `Signed in · ${authState.uid.slice(0, 8)}`}
+          {authState.status === 'error' && `Auth error: ${authState.error.message}`}
+        </p>
       </div>
     </div>
   )

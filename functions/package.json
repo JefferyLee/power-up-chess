@@ -12,6 +12,7 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
+    "test:rules": "vitest run test/firestore-rules.test.ts",
     "serve": "pnpm build && firebase emulators:start --only functions",
     "shell": "pnpm build && firebase functions:shell",
     "deploy": "firebase deploy --only functions",
@@ -24,8 +25,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@types/node": "^24.12.3",
     "eslint": "^10.3.0",
+    "firebase": "^12.14.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vitest": "^4.1.7"
