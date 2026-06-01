@@ -1,0 +1,74 @@
+.puc-online {
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.puc-online__title {
+  margin: 0 0 8px;
+  font-family: var(--puc-font-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
+.puc-online__empty {
+  margin: 0;
+  color: var(--puc-text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.puc-online__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.puc-online__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 13.5px;
+  color: var(--puc-text);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.puc-online__row:last-child {
+  border-bottom: none;
+}
+
+.puc-online__row--you .puc-online__name {
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
+.puc-online__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puc-online__chip {
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  margin-left: 8px;
+  font-family: var(--puc-font-display);
+}
+
+.puc-online__chip--lucy {
+  background: rgba(94, 122, 75, 0.25);
+  color: #d4e0c1;
+}
+
+.puc-online__chip--luca {
+  background: rgba(141, 111, 217, 0.25);
+  color: #d8c8ff;
+}

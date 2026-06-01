@@ -7,7 +7,7 @@
     "node": "20"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/bundle-stories.mjs",
     "build:watch": "tsc --watch",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",

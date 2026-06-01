@@ -121,6 +121,34 @@
   font-size: 15px;
 }
 
+.puc-hall__chatrow {
+  max-width: 960px;
+  margin: 0 auto 28px;
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.puc-hall__chatcol {
+  min-height: 280px;
+  display: flex;
+}
+
+.puc-hall__chatcol > * {
+  flex: 1;
+}
+
+.puc-hall__onlinecol > * {
+  height: 100%;
+}
+
+@media (max-width: 720px) {
+  .puc-hall__chatrow {
+    grid-template-columns: 1fr;
+  }
+}
+
 .puc-hall__doors {
   max-width: 960px;
   margin: 0 auto;

@@ -1,0 +1,117 @@
+.puc-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 280px;
+  max-height: 420px;
+}
+
+.puc-chat__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.puc-chat__empty {
+  text-align: center;
+  font-style: italic;
+  color: var(--puc-text-muted);
+  margin: auto 0;
+  font-size: 13px;
+}
+
+.puc-chat__bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.puc-chat__bubble--host {
+  background: rgba(241, 195, 76, 0.10);
+  border-left: 3px solid var(--puc-accent, #f1c34c);
+}
+
+.puc-chat__bubble--system {
+  background: rgba(255, 255, 255, 0.02);
+  font-style: italic;
+  text-align: center;
+  color: var(--puc-text-muted);
+}
+
+.puc-chat__name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
+.puc-chat__text {
+  color: var(--puc-text);
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.puc-chat__form {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.puc-chat__input {
+  flex: 1;
+  padding: 9px 12px;
+  font-family: var(--puc-font-body);
+  font-size: 14px;
+  background: rgba(10, 18, 12, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--puc-text);
+}
+
+.puc-chat__input:focus {
+  outline: none;
+  border-color: var(--puc-accent);
+  box-shadow: 0 0 0 2px rgba(241, 195, 76, 0.15);
+}
+
+.puc-chat__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.puc-chat__send {
+  padding: 9px 18px;
+  background: linear-gradient(180deg, var(--puc-accent), var(--puc-accent-strong));
+  color: #1f1408;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--puc-font-display);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.puc-chat__send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.puc-chat__error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #f6a4a4;
+}

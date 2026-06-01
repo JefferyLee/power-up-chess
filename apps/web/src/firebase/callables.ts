@@ -99,6 +99,30 @@ const castleEnterFn = httpsCallable<CastleEnterRequest, CastleEnterResponse>(fun
 const castleBypassFn = httpsCallable<void, CastleBypassResponse>(functions, 'castleBypass')
 const awardCastlePointsFn = httpsCallable<AwardCastlePointsRequest, AwardCastlePointsResponse>(functions, 'awardCastlePoints')
 
+// MVP2 Phase D: Hall chat.
+export interface PostChatRequest {
+  text: string
+}
+export type PostChatResponse =
+  | { status: 'ok'; messageId: string; censored: boolean; hostReplyPending: boolean }
+  | { status: 'rate-limited'; retryAfterMs: number }
+  | { status: 'empty' }
+  | { status: 'too-long' }
+
+export interface SetPresenceRequest {
+  sessionId: string
+  displayName: string
+  normalizedName: string
+  hostId: 'lucy' | 'luca'
+  isBypass: boolean
+}
+export interface SetPresenceResponse {
+  ok: true
+}
+
+const postChatFn = httpsCallable<PostChatRequest, PostChatResponse>(functions, 'postChat')
+const setPresenceFn = httpsCallable<SetPresenceRequest, SetPresenceResponse>(functions, 'setPresence')
+
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
   return data
@@ -144,5 +168,15 @@ export async function callCastleBypass(): Promise<CastleBypassResponse> {
 
 export async function callAwardCastlePoints(req: AwardCastlePointsRequest): Promise<AwardCastlePointsResponse> {
   const { data } = await awardCastlePointsFn(req)
+  return data
+}
+
+export async function callPostChat(req: PostChatRequest): Promise<PostChatResponse> {
+  const { data } = await postChatFn(req)
+  return data
+}
+
+export async function callSetPresence(req: SetPresenceRequest): Promise<SetPresenceResponse> {
+  const { data } = await setPresenceFn(req)
   return data
 }

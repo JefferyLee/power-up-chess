@@ -52,6 +52,39 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Lobby chat — messages stream + presence.
+    // READS allowed for any signed-in user (Hall is shared).
+    // WRITES only via Cloud Functions (postChat + setPresence + scheduled).
+    match /lobby/messages/items/{messageId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /lobby/presence/items/{sessionId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    // Aggregate parent docs (so listCollections / onSnapshot at parent works
+    // cleanly if needed). No data should live here; deny writes.
+    match /lobby/{doc} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Chat identity shadow (uid → displayName mapping). Function-only.
+    match /chat_identity/{uid} {
+      allow read, write: if false;
+    }
+
+    // Chat rate-limit counters. Function-only.
+    match /chat_rate_limits/{doc} {
+      allow read, write: if false;
+    }
+
+    // Ambient story scheduler state. Function-only.
+    match /castle_ambient_state/{doc} {
+      allow read, write: if false;
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

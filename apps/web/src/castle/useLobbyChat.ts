@@ -1,0 +1,89 @@
+// Realtime subscriptions for the Hall: messages + presence.
+
+import { useEffect, useState } from 'react'
+import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { db } from '../firebase/app'
+
+export interface ChatMessage {
+  id: string
+  name: string
+  uid: string
+  normalizedName: string
+  isBypass: boolean
+  kind: 'user' | 'host' | 'system'
+  text: string
+  ts: number
+  hidden?: boolean
+  hostId?: 'lucy' | 'luca'
+}
+
+export interface PresenceRow {
+  sessionId: string
+  displayName: string
+  normalizedName: string
+  uid: string
+  isBypass: boolean
+  hostId: 'lucy' | 'luca'
+  lastSeenAt: number
+}
+
+const MAX_VISIBLE = 80
+
+export function useLobbyMessages(): ChatMessage[] {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  useEffect(() => {
+    const q = query(
+      collection(db, 'lobby/messages/items'),
+      orderBy('ts', 'desc'),
+      limit(MAX_VISIBLE),
+    )
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Omit<ChatMessage, 'id'>) }))
+          .filter((m) => !m.hidden)
+          .reverse()
+        setMessages(rows)
+      },
+      (err) => {
+        console.warn('useLobbyMessages:', err)
+      },
+    )
+    return unsub
+  }, [])
+  return messages
+}
+
+export function useLobbyPresence(): PresenceRow[] {
+  const [rows, setRows] = useState<PresenceRow[]>([])
+  useEffect(() => {
+    const q = query(collection(db, 'lobby/presence/items'), orderBy('lastSeenAt', 'desc'))
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const now = Date.now()
+        const TTL = 60_000
+        const all = snap.docs
+          .map((d) => d.data() as PresenceRow)
+          .filter((p) => now - p.lastSeenAt < TTL)
+        // Dedup by normalizedName (one row per guest, even if multiple devices).
+        // Bypass guests keep their per-session rows since they have no shared name.
+        const seen = new Set<string>()
+        const deduped: PresenceRow[] = []
+        for (const p of all) {
+          const key = p.isBypass ? `b:${p.sessionId}` : `g:${p.normalizedName}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          deduped.push(p)
+        }
+        setRows(deduped)
+      },
+      (err) => {
+        console.warn('useLobbyPresence:', err)
+      },
+    )
+    return unsub
+  }, [])
+  return rows
+}

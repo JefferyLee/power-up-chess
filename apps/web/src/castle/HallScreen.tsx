@@ -1,9 +1,8 @@
 // The Great Hall — what visitors see after they step through the wicket.
 //
-// Phase A: host portrait + 5 doors. No chat (Phase D), no gating (Phase B),
-// no Forest yet (Phase E — shown disabled "coming soon"). Doors navigate
-// to the existing chess flows using the visitor's identity + profile
-// defaults for clock / difficulty.
+// Phase D adds shared chat (ChatPanel) + presence (OnlineList) + ambient
+// host stories (server-side scheduler). The doors are gated on castle
+// points (Phase B). Forest Adventure is still "coming soon" until Phase E.
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,6 +12,10 @@ import { HOSTS } from '../hosts/hosts'
 import { loadProfile, pickRandomHost } from '../storage/profile'
 import { presetById } from '../clock/timeControl'
 import { callCreateRoom } from '../firebase/callables'
+import { ChatPanel } from './ChatPanel'
+import { OnlineList } from './OnlineList'
+import { usePresenceHeartbeat } from './usePresenceHeartbeat'
+import { useAuthUid } from '../auth/useAuthUid'
 import './HallScreen.css'
 
 const DEFAULT_OPPONENT_NAME = 'Friend'
@@ -23,8 +26,10 @@ export function HallScreen() {
   const { identity, hostId, signOut, clearDecayInfo } = useCastle()
   const profile = loadProfile()
   const host = HOSTS[hostId]
+  const auth = useAuthUid()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  usePresenceHeartbeat()
   // Snapshot the decay info on first render so the message stays visible
   // while clearDecayInfo runs immediately below.
   const [decayMessage] = useState(() => {
@@ -134,6 +139,15 @@ export function HallScreen() {
               )}
             </p>
           )}
+        </div>
+      </section>
+
+      <section className="puc-hall__chatrow">
+        <div className="puc-hall__chatcol">
+          <ChatPanel canChat={auth.status === 'ready'} />
+        </div>
+        <div className="puc-hall__onlinecol">
+          <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
         </div>
       </section>
 
