@@ -9,6 +9,7 @@ import { AiPracticeRoute } from './screens/AiPracticeRoute'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
+import { WizardDuelRoute } from './games/wizard/WizardDuelRoute'
 
 export function App() {
   return (
@@ -24,6 +25,7 @@ export function App() {
           <Route path="/puzzles" element={<PuzzleGardenScreen />} />
           <Route path="/puzzles/:id" element={<PuzzleScreen />} />
           <Route path="/forest" element={<ForestRoute />} />
+          <Route path="/wizard" element={<WizardDuelRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>

@@ -1,0 +1,104 @@
+.puc-wizardwarn {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.puc-wizardwarn__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 6, 18, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.puc-wizardwarn__panel {
+  position: relative;
+  width: min(520px, 92vw);
+  background: linear-gradient(180deg, #1c1438, #0c0820);
+  border: 1px solid #4a3a78;
+  border-radius: 16px;
+  padding: 28px 30px 22px;
+  color: #ece9ff;
+  font-family: var(--puc-font-body, -apple-system, sans-serif);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  animation: puc-wizardwarn-in 200ms ease-out;
+}
+
+@keyframes puc-wizardwarn-in {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.puc-wizardwarn__title {
+  margin: 0 0 14px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 22px;
+  color: #f1c34c;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.puc-wizardwarn__body {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #d8d3f0;
+}
+
+.puc-wizardwarn__body strong {
+  color: #f1c34c;
+}
+
+.puc-wizardwarn__body--em {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #4a3a78;
+  text-align: center;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  color: #c8b6ff;
+  font-size: 15.5px;
+}
+
+.puc-wizardwarn__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.puc-wizardwarn__cancel,
+.puc-wizardwarn__confirm {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 200ms ease;
+}
+
+.puc-wizardwarn__cancel {
+  background: transparent;
+  color: #c8b6ff;
+  border: 1px solid #4a3a78;
+}
+
+.puc-wizardwarn__cancel:hover {
+  border-color: #8d6fd9;
+  color: #fff;
+}
+
+.puc-wizardwarn__confirm {
+  background: linear-gradient(180deg, #8d6fd9, #5e3aa0);
+  color: #fff;
+  border: 1px solid #3b2a78;
+}
+
+.puc-wizardwarn__confirm:hover {
+  transform: translateY(-1px);
+}

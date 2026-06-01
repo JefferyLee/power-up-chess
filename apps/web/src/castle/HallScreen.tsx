@@ -17,6 +17,7 @@ import { ChatPanel } from './ChatPanel'
 import { OnlineList } from './OnlineList'
 import { VisitorCard } from './VisitorCard'
 import { RoomDoor } from './RoomDoor'
+import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { usePresenceHeartbeat } from './usePresenceHeartbeat'
 import { useAuthUid } from '../auth/useAuthUid'
 import './HallScreen.css'
@@ -88,6 +89,8 @@ export function HallScreen() {
 
   const handlePuzzles = () => navigate('/puzzles')
   const handleForest = () => navigate('/forest')
+  const [wizardWarnOpen, setWizardWarnOpen] = useState(false)
+  const handleWizard = () => setWizardWarnOpen(true)
 
   if (!identity) return null
 
@@ -181,9 +184,23 @@ export function HallScreen() {
             disabled={!isUnlocked}
             title={!isUnlocked ? lockedTitle : undefined}
           />
+          <RoomDoor
+            icon="✨"
+            label="Wizard's Duel"
+            blurb="Chess with magic spells — for fun, not for chess practice."
+            variant="starry"
+            onClick={handleWizard}
+          />
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
+
+      {wizardWarnOpen && (
+        <WizardWarningDialog
+          onCancel={() => setWizardWarnOpen(false)}
+          onConfirm={() => { setWizardWarnOpen(false); navigate('/wizard') }}
+        />
+      )}
     </div>
   )
 }

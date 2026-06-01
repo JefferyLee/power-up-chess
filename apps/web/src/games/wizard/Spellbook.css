@@ -1,0 +1,98 @@
+.puc-spellbook {
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.puc-spellbook__title {
+  margin: 0 0 10px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--puc-text-accent);
+}
+
+.puc-spellbook__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.puc-spellbook__spell {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: left;
+  font-family: var(--puc-font-body);
+  color: var(--puc-text);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.puc-spellbook__spell:hover:not(:disabled) {
+  border-color: var(--puc-accent, #f1c34c);
+  background: rgba(241, 195, 76, 0.08);
+}
+
+.puc-spellbook__spell--active {
+  border-color: #d8c8ff;
+  background: rgba(141, 111, 217, 0.18);
+}
+
+.puc-spellbook__spell--locked,
+.puc-spellbook__spell:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.puc-spellbook__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.puc-spellbook__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.puc-spellbook__name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+}
+
+.puc-spellbook__tag {
+  font-size: 10.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+
+.puc-spellbook__cost {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 14px;
+  color: var(--puc-accent, #f1c34c);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(241, 195, 76, 0.12);
+  border: 1px solid rgba(241, 195, 76, 0.32);
+}
+
+.puc-spellbook__cost--short {
+  color: #f6a4a4;
+  background: rgba(246, 164, 164, 0.1);
+  border-color: rgba(246, 164, 164, 0.32);
+}

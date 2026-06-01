@@ -70,6 +70,13 @@ export class WizardChess {
     return this.effects.get(square) ?? []
   }
 
+  /** All currently-active effects keyed by square. The returned map is the
+   *  live internal map — callers should NOT mutate it. Used by the board
+   *  renderer to overlay status badges. */
+  allEffects(): ReadonlyMap<Square, readonly Effect[]> {
+    return this.effects
+  }
+
   boardView(): BoardView {
     return {
       pieceAt: (sq) => this.pieceAt(sq),
