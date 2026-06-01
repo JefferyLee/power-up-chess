@@ -38,6 +38,8 @@ interface PendingAnalysis {
   latest: Partial<AnalyzeResult> & { sideToMove?: 'w' | 'b' }
 }
 
+const BOOT_TIMEOUT_MS = 15000
+
 export class StockfishEngine {
   private worker: Worker
   private booted: Promise<void>
@@ -46,14 +48,45 @@ export class StockfishEngine {
   private terminated = false
 
   constructor() {
-    this.worker = new Worker(ENGINE_URL)
-    this.booted = this.boot()
+    try {
+      this.worker = new Worker(ENGINE_URL)
+    } catch (err) {
+      // Synchronous failure (rare — usually 404 or syntax error in the worker
+      // script). Surface as a rejected booted promise so callers see a real
+      // error instead of a hung analyze().
+      this.booted = Promise.reject(
+        err instanceof Error
+          ? new Error(`Failed to load chess engine: ${err.message}`)
+          : new Error('Failed to load chess engine.'),
+      )
+      // Stub worker so terminate() doesn't blow up.
+      this.worker = { postMessage: () => {}, terminate: () => {}, addEventListener: () => {}, removeEventListener: () => {} } as unknown as Worker
+      return
+    }
     this.worker.addEventListener('message', this.onMessage)
+    this.worker.addEventListener('error', this.onWorkerError)
+    this.booted = this.boot()
   }
 
   private async boot(): Promise<void> {
-    await this.send('uci', (line) => line === 'uciok')
-    await this.send('isready', (line) => line === 'readyok')
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Chess engine did not start in time. Check your connection and try again.')), BOOT_TIMEOUT_MS),
+    )
+    await Promise.race([
+      (async () => {
+        await this.send('uci', (line) => line === 'uciok')
+        await this.send('isready', (line) => line === 'readyok')
+      })(),
+      timeout,
+    ])
+  }
+
+  private onWorkerError = (e: ErrorEvent): void => {
+    const msg = e.message || 'Chess engine error.'
+    if (this.currentAnalysis) {
+      this.currentAnalysis.reject(new Error(msg))
+      this.currentAnalysis = null
+    }
   }
 
   /** Wait for the engine to finish booting. */
@@ -158,6 +191,7 @@ export class StockfishEngine {
     if (this.terminated) return
     this.terminated = true
     try {
+      this.worker.removeEventListener('error', this.onWorkerError)
       this.worker.postMessage('quit')
     } catch {
       // Ignore — worker is being torn down anyway.

@@ -13,6 +13,8 @@ import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { callJoinRoom, callResignGame } from '../firebase/callables'
 import { saveGame } from '../history/api'
+import { MuteButton } from '../sound/MuteButton'
+import { useSound } from '../sound/useSound'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile } from '../storage/profile'
@@ -161,6 +163,7 @@ interface RoomViewProps {
 
 function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
+  const sound = useSound()
   const youAreWhite = room.white.playerId === uid
   const youAreBlack = room.black?.playerId === uid
   const yourColor: Color | null = youAreWhite ? 'w' : youAreBlack ? 'b' : null
@@ -244,6 +247,9 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     }
     const newSparks: CaptureSparkData[] = []
     const cursor = new ChessGame()
+    let sawCaptureInNew = false
+    let sawNonCaptureMoveInNew = false
+    let sawCheckInNew = false
     for (let i = 0; i < room.moves.length; i++) {
       const m = room.moves[i]!
       const applied = cursor.move({
@@ -253,6 +259,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       })
       if (i < seen) continue
       if (applied?.captured) {
+        sawCaptureInNew = true
         const captureSquare: Square = applied.flags.includes('e')
           ? (`${applied.to[0]}${applied.from[1]}` as Square)
           : (applied.to as Square)
@@ -263,14 +270,23 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           capturedColor: applied.color === 'w' ? 'b' : 'w',
           text: picker.pick(room.hostMode, 'capture', { capturedPiece: applied.captured }),
         })
+      } else if (applied) {
+        sawNonCaptureMoveInNew = true
       }
+      const postStatus = cursor.status()
+      if (postStatus.kind === 'in_progress' && postStatus.inCheck) sawCheckInNew = true
     }
     seenRef.current = room.moves.length
+
+    if (sawCaptureInNew) sound.play('capture')
+    else if (sawNonCaptureMoveInNew) sound.play('move')
+    if (sawCheckInNew) sound.play('check')
+
     // This is a legitimate sync from an external system (Firestore snapshots)
     // into UI state; the lint rule's general advice doesn't apply here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (newSparks.length) setSparks((prev) => [...prev, ...newSparks])
-  }, [room.moves, room.hostMode, picker])
+  }, [room.moves, room.hostMode, picker, sound])
 
   const handleSparkDone = useCallback((id: number) => {
     setSparks((prev) => prev.filter((s) => s.id !== id))
@@ -302,6 +318,22 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   }, [room.status, room.endReason, room.hostMode, room.result, room.white.displayName, room.black?.displayName, picker])
 
   const orientation: Color = yourColor ?? 'w'
+
+  // Fanfare when the room flips to completed.
+  useEffect(() => {
+    if (room.status !== 'completed') return
+    if (yourColor && room.result && room.result !== 'draw') {
+      const youWon = (room.result === 'white' && yourColor === 'w') ||
+                     (room.result === 'black' && yourColor === 'b')
+      sound.play(youWon ? 'mate-win' : 'mate-loss')
+    } else if (!yourColor && room.result && room.result !== 'draw') {
+      // Spectator — gentle fanfare regardless of who won.
+      sound.play('mate-win')
+    } else {
+      sound.play('draw')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.status, room.result])
 
   // Persist completed online games to local IndexedDB. Idempotent: id is
   // online:ROOMID, and IDB's put() upserts on that key.
@@ -384,6 +416,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           <span className="puc-local__host-blurb">is your host today</span>
         </div>
         <div className="puc-local__actions">
+          <MuteButton />
           {yourColor && room.status === 'live' && (
             <button type="button" onClick={() => setResignDialogOpen(true)}>
               Resign

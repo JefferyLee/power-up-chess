@@ -12,6 +12,8 @@ import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
+import { MuteButton } from '../sound/MuteButton'
+import { useSound } from '../sound/useSound'
 import './LocalGameScreen.css'
 
 function newLocalGameId(): string {
@@ -63,6 +65,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newLocalGameId())
   const [savedThisGame, setSavedThisGame] = useState(false)
+  const sound = useSound()
   const host = HOSTS[hostId]
 
   // Resignation isn't a chess.js concept — overlay it on top of the position-
@@ -94,6 +97,17 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
       if (!result) return
       setSnap(snapshot(game))
 
+      // Sound layering: a check ringing under a capture sounds right.
+      const newStatus = game.status()
+      if (result.captured) {
+        sound.play('capture')
+      } else {
+        sound.play('move')
+      }
+      if (newStatus.kind === 'in_progress' && newStatus.inCheck) {
+        sound.play('check')
+      }
+
       if (result.captured) {
         // En passant: the captured pawn is on the destination file + source rank,
         // not on the move's destination square.
@@ -111,7 +125,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
         setSparks((prev) => [...prev, spark])
       }
     },
-    [game, hostId, picker],
+    [game, hostId, picker, sound],
   )
 
   const handleUndo = useCallback(() => {
@@ -155,6 +169,19 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     return picker.pick(hostId, 'draw')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveStatus.kind, hostId])
+
+  // Fanfare on terminal status change. The local resignation path doesn't
+  // route through handleMove, so we trigger sounds from here for any end.
+  useEffect(() => {
+    if (effectiveStatus.kind === 'in_progress') return
+    if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
+      sound.play('mate-win')
+    } else {
+      sound.play('draw')
+    }
+    // Fire once per terminal transition.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveStatus.kind])
 
   // Persist the game to IndexedDB once it ends. Idempotent per gameId via the
   // savedThisGame flag (and IDB's put() is itself idempotent on the key).
@@ -222,6 +249,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
           <span className="puc-local__host-blurb">is your host today</span>
         </div>
         <div className="puc-local__actions">
+          <MuteButton />
           <button
             type="button"
             onClick={() => setResignDialogOpen(true)}

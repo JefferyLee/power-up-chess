@@ -84,22 +84,22 @@
 .puc-local__main {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(260px, 320px) min-content minmax(260px, 320px);
+  grid-template-columns: min-content minmax(220px, 320px);
   grid-template-rows: auto auto auto;
   grid-template-areas:
-    '. top   moves'
-    '. board moves'
-    '. bot   moves';
-  gap: 18px 28px;
-  padding: 28px;
+    'top   moves'
+    'board moves'
+    'bot   moves';
+  gap: 14px 24px;
+  padding: 24px;
   justify-content: center;
   align-items: start;
 }
 
-.puc-local__side--top { grid-area: top; justify-self: end; }
+.puc-local__side--top { grid-area: top; justify-self: stretch; }
 .puc-local__board-wrap { grid-area: board; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .puc-local__board-stage { position: relative; }
-.puc-local__side--bottom { grid-area: bot; justify-self: end; }
+.puc-local__side--bottom { grid-area: bot; justify-self: stretch; }
 .puc-local__moves { grid-area: moves; align-self: stretch; }
 
 .puc-local__status {
@@ -219,7 +219,8 @@
   color: var(--puc-text-muted);
 }
 
-@media (max-width: 900px) {
+/* Tablet portrait + smaller — fold to single column. */
+@media (max-width: 880px) {
   .puc-local__main {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -227,7 +228,16 @@
       'board'
       'bot'
       'moves';
+    padding: 16px;
   }
   .puc-local__side--top,
   .puc-local__side--bottom { justify-self: stretch; }
+  .puc-local__moves { max-height: 320px; }
+}
+
+/* Phone-ish — shrink the header chip set so things don't wrap. */
+@media (max-width: 540px) {
+  .puc-local__header { gap: 8px; padding: 10px 12px; }
+  .puc-local__host-blurb { display: none; }
+  .puc-local__actions button { padding: 6px 10px; font-size: 13px; }
 }

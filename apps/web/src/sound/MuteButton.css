@@ -1,0 +1,22 @@
+.puc-mute {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--puc-text);
+  border: 1px solid rgba(231, 184, 65, 0.28);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.puc-mute:hover {
+  border-color: var(--puc-accent);
+  color: var(--puc-accent);
+}
+
+.puc-mute[aria-pressed='true'] {
+  color: var(--puc-text-muted);
+  border-color: rgba(231, 184, 65, 0.16);
+}
