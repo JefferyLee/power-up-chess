@@ -28,6 +28,7 @@ export function OnlineGameScreen() {
   const navigate = useNavigate()
   const auth = useAuthUid()
   const { state, submitMove, retry } = useRoom(roomId ?? null)
+  const [watchOnly, setWatchOnly] = useState(false)
 
   if (auth.status === 'loading') {
     return <FullPageStatus text="Signing you in…" />
@@ -48,19 +49,41 @@ export function OnlineGameScreen() {
     return <FullPageStatus text={`Error: ${state.error.message}`} onBack={() => navigate('/')} />
   }
   if (state.status === 'forbidden') {
+    // Legacy path — anonymous-auth failure or similar. Send them to the join
+    // panel for a second chance.
     return <JoinPanel roomId={roomId} onJoined={retry} onBack={() => navigate('/')} />
+  }
+
+  // Ready: decide between Join, Watch, or play.
+  const room = state.room
+  const isPlayer =
+    room.white.playerId === auth.uid ||
+    (room.black?.playerId !== undefined && room.black.playerId === auth.uid)
+
+  // If the room is still waiting and you're not the creator, offer to join as
+  // black. The "Watch instead" button on JoinPanel sets watchOnly so we drop
+  // straight into spectator view (and re-evaluate if/when the room goes live).
+  if (!isPlayer && room.status === 'waiting' && !watchOnly) {
+    return (
+      <JoinPanel
+        roomId={roomId}
+        onJoined={retry}
+        onWatchInstead={() => setWatchOnly(true)}
+        onBack={() => navigate('/')}
+      />
+    )
   }
 
   return (
     <RoomView
-      room={state.room}
+      room={room}
       roomId={roomId}
       uid={auth.uid}
       submitMove={submitMove}
       onBack={() => navigate('/')}
       onReview={() => {
         const replay = new ChessGame()
-        for (const m of state.room.moves) {
+        for (const m of room.moves) {
           replay.move({
             from: m.uci.slice(0, 2) as Square,
             to: m.uci.slice(2, 4) as Square,
@@ -70,9 +93,9 @@ export function OnlineGameScreen() {
         navigate('/review', {
           state: {
             pgn: replay.pgn(),
-            hostId: state.room.hostMode,
-            whiteName: state.room.white.displayName,
-            blackName: state.room.black?.displayName ?? '',
+            hostId: room.hostMode,
+            whiteName: room.white.displayName,
+            blackName: room.black?.displayName ?? '',
           },
         })
       }}
@@ -96,10 +119,12 @@ function FullPageStatus({ text, onBack }: { text: string; onBack?: () => void })
 function JoinPanel({
   roomId,
   onJoined,
+  onWatchInstead,
   onBack,
 }: {
   roomId: string
   onJoined: () => void
+  onWatchInstead?: () => void
   onBack: () => void
 }) {
   const initial = loadProfile()
@@ -146,6 +171,15 @@ function JoinPanel({
             {busy ? 'Joining…' : 'Join room'}
           </button>
         </div>
+        {onWatchInstead && (
+          <button
+            type="button"
+            className="puc-online__watch-link"
+            onClick={onWatchInstead}
+          >
+            Or just watch
+          </button>
+        )}
         {error && <p className="puc-online__error">{error}</p>}
       </div>
     </div>
@@ -335,12 +369,14 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room.status, room.result])
 
-  // Persist completed online games to local IndexedDB. Idempotent: id is
-  // online:ROOMID, and IDB's put() upserts on that key.
+  // Persist completed online games to local IndexedDB — but only for actual
+  // players. Spectators don't fill their own history with random games.
+  // Idempotent: id is online:ROOMID, and IDB's put() upserts on that key.
   const [savedThisGame, setSavedThisGame] = useState(false)
   useEffect(() => {
     if (savedThisGame) return
     if (room.status !== 'completed') return
+    if (!yourColor) return
     const replay = new ChessGame()
     for (const m of room.moves) {
       replay.move({
@@ -366,7 +402,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     })
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSavedThisGame(true)
-  }, [room, roomId, savedThisGame])
+  }, [room, roomId, savedThisGame, yourColor])
 
   const [copied, setCopied] = useState(false)
   const copyLink = async () => {
@@ -414,6 +450,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         <div className="puc-local__host">
           <span className="puc-local__host-name">{host.name}</span>
           <span className="puc-local__host-blurb">is your host today</span>
+          {!yourColor && <span className="puc-online__spectator-chip">Spectating</span>}
         </div>
         <div className="puc-local__actions">
           <MuteButton />
@@ -467,6 +504,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
             isMyTurn={isMyTurn}
             youAreSpectator={!yourColor}
             inCheck={inCheck}
+            turn={turn}
           />
           {submitError && <p className="puc-online__error">{submitError}</p>}
         </div>
@@ -575,13 +613,18 @@ function RoomStatusLine({
   isMyTurn,
   youAreSpectator,
   inCheck,
+  turn,
 }: {
   room: RoomDoc
   isMyTurn: boolean
   youAreSpectator: boolean
   inCheck: boolean
+  turn: Color
 }) {
   if (room.status === 'waiting') {
+    if (youAreSpectator) {
+      return <p className="puc-local__status">Waiting for the game to start…</p>
+    }
     return <p className="puc-local__status">Waiting for an opponent to join. Share the link.</p>
   }
   if (room.status === 'completed') {
@@ -597,7 +640,12 @@ function RoomStatusLine({
     return <p className="puc-local__status puc-local__status--end">Draw.</p>
   }
   if (youAreSpectator) {
-    return <p className="puc-local__status">Spectating.</p>
+    const toMoveName = turn === 'w' ? room.white.displayName : room.black?.displayName ?? ''
+    return (
+      <p className="puc-local__status">
+        Watching · {toMoveName} to move{inCheck ? ' — in check' : ''}.
+      </p>
+    )
   }
   return (
     <p className="puc-local__status">

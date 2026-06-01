@@ -78,14 +78,14 @@ describe('firestore rules: /rooms/{roomId}', () => {
     await assertSucceeds(getDoc(doc(bob.firestore(), 'rooms/R2')))
   })
 
-  it('a third party cannot read a room they are not in', async () => {
+  it('a third authenticated visitor (spectator) can read a room they are not in', async () => {
     await seedRoom('R3', {
       white: { playerId: 'alice', displayName: 'Alice' },
       black: { playerId: 'bob', displayName: 'Bob' },
       status: 'live',
     })
     const eve = env.authenticatedContext('eve')
-    await assertFails(getDoc(doc(eve.firestore(), 'rooms/R3')))
+    await assertSucceeds(getDoc(doc(eve.firestore(), 'rooms/R3')))
   })
 
   it('anonymous (unauthenticated) clients cannot read rooms', async () => {

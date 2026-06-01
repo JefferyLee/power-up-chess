@@ -11,18 +11,15 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     match /rooms/{roomId} {
-      // White is set at room creation, black is filled in by joinRoom.
-      function isParticipant() {
-        return request.auth != null && (
-          request.auth.uid == resource.data.white.playerId ||
-          (resource.data.black != null
-            && request.auth.uid == resource.data.black.playerId)
-        );
-      }
-
-      // Moves live as an array on the room doc itself (validated and appended
-      // by the submitMove Cloud Function), so there is no moves subcollection.
-      allow read: if isParticipant();
+      // Anyone authenticated with the link can READ a room. The security
+      // boundary is the unguessable 6-char room id (~1B combinations), same
+      // model as a Lichess game URL. This is what enables spectators to watch
+      // a game by clicking a shared link.
+      //
+      // WRITES are still server-only — the submitMove / joinRoom / resignGame
+      // Cloud Functions hold the only legitimate path to mutate room state,
+      // and they enforce participant identity themselves.
+      allow read: if request.auth != null;
       allow write: if false;
     }
 
