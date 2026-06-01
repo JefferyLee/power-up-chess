@@ -22,7 +22,12 @@
 
   /* Highlights */
   --puc-sq-selected:  rgba(176, 196, 255, 0.45);  /* moonbeam */
-  --puc-sq-last:      rgba(176, 196, 255, 0.28);
+  /* Last-move highlight — from-square fades soft violet, to-square pops
+   * starlight cyan. Inset rings keep both distinct against the indigo board. */
+  --puc-sq-last-from:      rgba(150, 130, 220, 0.55);
+  --puc-sq-last-from-ring: rgba(180, 160, 240, 0.85);
+  --puc-sq-last-to:        rgba(130, 200, 240, 0.7);
+  --puc-sq-last-to-ring:   rgba(150, 220, 255, 0.95);
   --puc-sq-drag-over: rgba(176, 196, 255, 0.85);
   --puc-move-hint:    rgba(20, 12, 48, 0.40);
 

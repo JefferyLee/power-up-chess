@@ -67,12 +67,20 @@
   pointer-events: none;
 }
 
-.puc-sq--last-from,
+.puc-sq--last-from {
+  background-image: linear-gradient(
+    var(--puc-sq-last-from, rgba(255, 180, 90, 0.55)),
+    var(--puc-sq-last-from, rgba(255, 180, 90, 0.55))
+  );
+  box-shadow: inset 0 0 0 2px var(--puc-sq-last-from-ring, rgba(255, 180, 90, 0.8));
+}
+
 .puc-sq--last-to {
   background-image: linear-gradient(
-    var(--puc-sq-last, rgba(255, 213, 79, 0.32)),
-    var(--puc-sq-last, rgba(255, 213, 79, 0.32))
+    var(--puc-sq-last-to, rgba(255, 230, 100, 0.7)),
+    var(--puc-sq-last-to, rgba(255, 230, 100, 0.7))
   );
+  box-shadow: inset 0 0 0 3px var(--puc-sq-last-to-ring, rgba(255, 200, 60, 0.95));
 }
 
 .puc-sq--check::after {

@@ -18,7 +18,13 @@
 
   /* Highlights */
   --puc-sq-selected:  rgba(231, 184, 65, 0.45);  /* warm gold */
-  --puc-sq-last:      rgba(231, 184, 65, 0.28);
+  /* Last-move highlight — from-square fades amber (where the piece was),
+   * to-square pops bright gold (where it landed). Inset rings reinforce
+   * both so the trail reads at a glance. */
+  --puc-sq-last-from:      rgba(255, 170, 70, 0.55);
+  --puc-sq-last-from-ring: rgba(255, 170, 70, 0.85);
+  --puc-sq-last-to:        rgba(255, 220, 80, 0.7);
+  --puc-sq-last-to-ring:   rgba(255, 200, 50, 0.95);
   --puc-sq-drag-over: rgba(231, 184, 65, 0.85);
   --puc-move-hint:    rgba(35, 25, 12, 0.32);
 
