@@ -167,6 +167,41 @@
 .puc-review__move-n { color: var(--puc-text-muted); }
 .puc-review__move-san { font-weight: 600; }
 
+.puc-review__move {
+  position: relative;
+}
+
+.puc-review__replay-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--puc-text-accent);
+  border: 1px solid rgba(241, 195, 76, 0.42);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  padding-left: 2px;
+  line-height: 1;
+}
+
+.puc-review__replay-btn:hover {
+  background: rgba(241, 195, 76, 0.16);
+  border-color: var(--puc-accent);
+  color: var(--puc-accent);
+}
+
+.puc-review__move-btn {
+  padding-right: 36px;
+}
+
 /* Eval bar */
 .puc-eval-bar {
   position: relative;

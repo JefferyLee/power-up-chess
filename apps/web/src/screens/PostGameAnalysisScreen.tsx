@@ -130,16 +130,49 @@ function ReviewView({
   const host = HOSTS[state.hostId]
   const picker = useMemo(() => new TemplatePicker(), [])
 
+  // Move Replay Theater state. When set, the board temporarily shows the
+  // move's "before" position with an arrow, then auto-advances to "after"
+  // before clearing. selectedIdx underneath is preserved.
+  const [replay, setReplay] = useState<
+    { moveIndex: number; phase: 'before' | 'after' } | null
+  >(null)
+  useEffect(() => {
+    if (!replay) return
+    const next: 'before' | 'after' | null = replay.phase === 'before' ? 'after' : null
+    const delay = replay.phase === 'before' ? 900 : 1100
+    const id = window.setTimeout(() => {
+      setReplay(next === null ? null : { moveIndex: replay.moveIndex, phase: next })
+    }, delay)
+    return () => window.clearTimeout(id)
+  }, [replay])
+
   const selected: AnalyzedMove | null =
     selectedIdx !== null ? analysis.moves[selectedIdx] ?? null : null
-  const fenToShow = selected ? selected.fenAfter : analysis.startingFen
+
+  // What the board renders: usually the selected move's fenAfter, but the
+  // replay phase can override.
+  const replayMove = replay ? analysis.moves[replay.moveIndex] ?? null : null
+  const fenToShow = replayMove
+    ? (replay!.phase === 'before' ? replayMove.fenBefore : replayMove.fenAfter)
+    : selected
+      ? selected.fenAfter
+      : analysis.startingFen
   const pieces = piecesFromFen(fenToShow)
 
   const evalCp = selected ? selected.evalAfterCp : analysis.initialEvalCp
 
-  const lastMove = selected
-    ? { from: selected.uci.slice(0, 2) as Square, to: selected.uci.slice(2, 4) as Square }
-    : null
+  const lastMove = replayMove && replay!.phase === 'after'
+    ? { from: replayMove.uci.slice(0, 2) as Square, to: replayMove.uci.slice(2, 4) as Square }
+    : selected
+      ? { from: selected.uci.slice(0, 2) as Square, to: selected.uci.slice(2, 4) as Square }
+      : null
+
+  const replayArrows = replayMove && replay!.phase === 'before'
+    ? [{
+        from: replayMove.uci.slice(0, 2) as Square,
+        to: replayMove.uci.slice(2, 4) as Square,
+      }]
+    : undefined
 
   // Template fallback for any move's host comment.
   const templateFor = useMemo(() => {
@@ -299,6 +332,7 @@ function ReviewView({
             onMove={() => { /* read-only in review */ }}
             lastMove={lastMove}
             checkSquare={null}
+            arrows={replayArrows}
             squareSize={SQUARE_SIZE}
           />
           <EvalBar evalCp={evalCp} />
@@ -325,6 +359,7 @@ function ReviewView({
           <ol className="puc-review__moves">
             {analysis.moves.map((m) => {
               const isBrill = brilliantIdx.has(m.index)
+              const replayWorthy = isReplayWorthy(m, analysis.moves)
               return (
                 <li
                   key={m.index}
@@ -335,6 +370,21 @@ function ReviewView({
                     <span className="puc-review__move-san">{m.san}</span>
                     <ClassificationBadge classification={m.classification} brilliant={isBrill} />
                   </button>
+                  {replayWorthy && (
+                    <button
+                      type="button"
+                      className="puc-review__replay-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedIdx(m.index)
+                        setReplay({ moveIndex: m.index, phase: 'before' })
+                      }}
+                      aria-label={`Replay move ${m.san}`}
+                      title="Replay this move"
+                    >
+                      ▶
+                    </button>
+                  )}
                 </li>
               )
             })}
@@ -343,6 +393,17 @@ function ReviewView({
       </div>
     </div>
   )
+}
+
+/** Pick the moves the Replay Theater should offer a ▶ button for:
+ *  every capture (san contains 'x'), every check / mate, and the last three
+ *  plies of any game that ended in checkmate. */
+function isReplayWorthy(move: AnalyzedMove, moves: ReadonlyArray<AnalyzedMove>): boolean {
+  if (move.san.includes('x')) return true
+  if (move.san.endsWith('#')) return true
+  const last = moves[moves.length - 1]
+  if (last?.san.endsWith('#') && move.index >= moves.length - 3) return true
+  return false
 }
 
 function templateKindFor(c: Classification, brilliant: boolean): TemplateKind | null {

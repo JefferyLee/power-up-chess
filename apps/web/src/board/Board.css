@@ -23,3 +23,18 @@
   align-items: center;
   justify-content: center;
 }
+
+.puc-board__arrows {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  /* Soft glow so the arrow reads above piece glyphs. */
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  animation: puc-board-arrow-in 240ms ease-out both;
+}
+
+@keyframes puc-board-arrow-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

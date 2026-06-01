@@ -7,6 +7,13 @@ import { Square, type SquareHighlights } from './Square'
 import { FILES, RANKS, squareColor, squaresInVisualOrder, type File, type Rank } from './squares'
 import './Board.css'
 
+export interface BoardArrow {
+  from: SquareName
+  to: SquareName
+  /** Stroke color override; defaults to the theme accent. */
+  color?: string
+}
+
 export interface BoardProps {
   /** Map of occupied squares to pieces. */
   pieces: Partial<Record<SquareName, PieceModel>>
@@ -22,6 +29,9 @@ export interface BoardProps {
   lastMove?: { from: SquareName; to: SquareName } | null
   /** Square of the king currently in check, if any. */
   checkSquare?: SquareName | null
+  /** Optional arrow overlays — used by Move Replay Theater to show
+   *  "here is the move" before the move actually plays. */
+  arrows?: ReadonlyArray<BoardArrow>
   /** Pixel size of one square. Defaults to 64. */
   squareSize?: number
 }
@@ -42,6 +52,7 @@ export function Board({
   onMove,
   lastMove = null,
   checkSquare = null,
+  arrows,
   squareSize = 64,
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
@@ -245,8 +256,101 @@ export function Board({
           <Piece piece={pieceOn(drag.from)!} dragging />
         </div>
       )}
+      {arrows && arrows.length > 0 && (
+        <ArrowOverlay arrows={arrows} squareSize={squareSize} orientation={orientation} />
+      )}
     </div>
   )
+}
+
+function ArrowOverlay({
+  arrows,
+  squareSize,
+  orientation,
+}: {
+  arrows: ReadonlyArray<BoardArrow>
+  squareSize: number
+  orientation: Color
+}) {
+  const dim = squareSize * 8
+  return (
+    <svg
+      className="puc-board__arrows"
+      viewBox={`0 0 ${dim} ${dim}`}
+      width={dim}
+      height={dim}
+      aria-hidden="true"
+    >
+      <defs>
+        <marker
+          id="puc-arrow-head"
+          viewBox="0 0 10 10"
+          refX="6"
+          refY="5"
+          markerWidth="4"
+          markerHeight="4"
+          orient="auto"
+        >
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+        </marker>
+      </defs>
+      {arrows.map((a, i) => {
+        const start = squareCenter(a.from, squareSize, orientation)
+        const end = squareCenter(a.to, squareSize, orientation)
+        // Shorten the visible line a touch so the head sits cleanly on the
+        // destination square instead of overshooting.
+        const shortened = shorten(start, end, squareSize * 0.18)
+        return (
+          <g
+            key={`${a.from}->${a.to}-${i}`}
+            color={a.color ?? 'var(--puc-accent, #f1c34c)'}
+          >
+            <line
+              x1={start.x}
+              y1={start.y}
+              x2={shortened.x}
+              y2={shortened.y}
+              stroke="currentColor"
+              strokeWidth={Math.max(4, squareSize * 0.12)}
+              strokeLinecap="round"
+              opacity="0.85"
+              markerEnd="url(#puc-arrow-head)"
+            />
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function squareCenter(
+  sq: SquareName,
+  squareSize: number,
+  orientation: Color,
+): { x: number; y: number } {
+  const file = sq[0] as File
+  const rank = sq[1] as Rank
+  const fileIdx = FILES.indexOf(file)
+  const rankIdx = RANKS.indexOf(rank)
+  const colFromLeft = orientation === 'w' ? fileIdx : 7 - fileIdx
+  const rowFromTop = orientation === 'w' ? 7 - rankIdx : rankIdx
+  return {
+    x: (colFromLeft + 0.5) * squareSize,
+    y: (rowFromTop + 0.5) * squareSize,
+  }
+}
+
+function shorten(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  by: number,
+): { x: number; y: number } {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const len = Math.hypot(dx, dy)
+  if (len < 0.001) return to
+  const factor = (len - by) / len
+  return { x: from.x + dx * factor, y: from.y + dy * factor }
 }
 
 function isLeftColumn(file: File, orientation: Color): boolean {

@@ -1,4 +1,6 @@
-import type { GameStatus } from '../chess/types'
+import type { Color, GameStatus } from '../chess/types'
+import type { HostId } from '../hosts/hosts'
+import { BrilliantWinCeremony } from './BrilliantWinCeremony'
 import './GameEndOverlay.css'
 
 interface Props {
@@ -6,32 +8,46 @@ interface Props {
   whiteName: string
   blackName: string
   hostRecap: string
+  hostId: HostId
+  /** When set, marks the colour that the LOCAL VIEWER plays as. If the viewer
+   *  wins, they get the full Brilliant ceremony. Local 2-player games leave
+   *  this undefined — both colours are at the same screen, so any win shows
+   *  the ceremony. */
+  viewerColor?: Color
   onNewGame: () => void
   onBackToMenu: () => void
   onReview?: () => void
 }
 
-const FIREWORK_COUNT = 8
+const FIREWORK_COUNT = 12
 
 export function GameEndOverlay({
   status,
   whiteName,
   blackName,
   hostRecap,
+  hostId,
+  viewerColor,
   onNewGame,
   onBackToMenu,
   onReview,
 }: Props) {
   if (status.kind === 'in_progress') return null
 
-  const isMate = status.kind === 'checkmate'
+  const winColor = winnerColor(status)
+  const isWin = winColor !== null
+  // "viewer is the winner" — true in local 2P for any win, or in
+  // AI/online when viewerColor matches the winning side.
+  const viewerWon = isWin && (viewerColor === undefined || viewerColor === winColor)
+
   const headline = headlineFor(status, whiteName, blackName)
+  const winnerName = winColor === 'w' ? whiteName : winColor === 'b' ? blackName : ''
 
   return (
     <div className="puc-end" role="dialog" aria-modal="true" aria-labelledby="puc-end-headline">
       <div className="puc-end__backdrop" />
 
-      {isMate && (
+      {viewerWon && (
         <div className="puc-end__fireworks" aria-hidden="true">
           {Array.from({ length: FIREWORK_COUNT }).map((_, i) => (
             <span
@@ -47,16 +63,33 @@ export function GameEndOverlay({
         </div>
       )}
 
-      <div className={`puc-end__card ${isMate ? 'puc-end__card--win' : 'puc-end__card--draw'}`}>
-        <h2 id="puc-end-headline" className="puc-end__headline">{headline}</h2>
-        <p className="puc-end__recap">{hostRecap}</p>
+      <div
+        className={`puc-end__card ${viewerWon ? 'puc-end__card--win' : 'puc-end__card--draw'}`}
+      >
+        {viewerWon ? (
+          <BrilliantWinCeremony
+            winnerName={winnerName}
+            hostId={hostId}
+            recap={hostRecap}
+          />
+        ) : (
+          <>
+            <h2 id="puc-end-headline" className="puc-end__headline">{headline}</h2>
+            <p className="puc-end__recap">{hostRecap}</p>
+          </>
+        )}
+
         <div className="puc-end__actions">
           {onReview && (
             <button type="button" className="puc-end__btn puc-end__btn--primary" onClick={onReview}>
               Review game
             </button>
           )}
-          <button type="button" className={`puc-end__btn ${onReview ? '' : 'puc-end__btn--primary'}`} onClick={onNewGame}>
+          <button
+            type="button"
+            className={`puc-end__btn ${onReview ? '' : 'puc-end__btn--primary'}`}
+            onClick={onNewGame}
+          >
             New game
           </button>
           <button type="button" className="puc-end__btn" onClick={onBackToMenu}>
@@ -66,6 +99,13 @@ export function GameEndOverlay({
       </div>
     </div>
   )
+}
+
+function winnerColor(status: GameStatus): Color | null {
+  if (status.kind === 'checkmate') return status.winner
+  if (status.kind === 'resign') return status.winner
+  if (status.kind === 'timeout') return status.winner
+  return null
 }
 
 function headlineFor(status: GameStatus, whiteName: string, blackName: string): string {

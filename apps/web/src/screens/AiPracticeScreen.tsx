@@ -342,6 +342,8 @@ export function AiPracticeScreen({ hostId, playerName, difficultyId, onExit }: P
         whiteName={whiteName}
         blackName={blackName}
         hostRecap={endRecap}
+        hostId={hostId}
+        viewerColor={playerColor}
         onNewGame={handleRestart}
         onBackToMenu={onExit}
         onReview={() =>

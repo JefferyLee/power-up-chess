@@ -412,6 +412,8 @@ export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onE
         whiteName={whiteName}
         blackName={blackName}
         hostRecap={endRecap}
+        hostId={hostId}
+        // viewerColor undefined → local 2P; any win triggers the ceremony.
         onNewGame={handleRestart}
         onBackToMenu={onExit}
         onReview={() =>

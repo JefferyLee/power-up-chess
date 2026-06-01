@@ -1,3 +1,9 @@
+/* Tier 1 — "Power Up" capture animation.
+ *
+ * The pop-up card scales by captured piece value. For minor pieces and
+ * above, a particle burst flies out from the capture square. A queen
+ * capture also flashes a gold-tinted radial gradient under the board. */
+
 .puc-spark {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -16,14 +22,28 @@
   white-space: nowrap;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), 0 0 18px rgba(241, 195, 76, 0.32);
   animation: puc-spark-life 1400ms ease-out forwards;
+
+  --puc-spark-scale: 1;
+}
+
+/* Size by captured-piece value. The scale multiplier compounds with the
+   life animation's scale transitions. */
+.puc-spark--sm { --puc-spark-scale: 1.0; font-size: 12px; }
+.puc-spark--md { --puc-spark-scale: 1.15; font-size: 13px; }
+.puc-spark--lg { --puc-spark-scale: 1.3;  font-size: 14px; }
+.puc-spark--xl {
+  --puc-spark-scale: 1.55;
+  font-size: 15px;
+  border-color: var(--puc-accent, #f1c34c);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.46), 0 0 32px rgba(241, 195, 76, 0.55);
 }
 
 @keyframes puc-spark-life {
-  0%   { opacity: 0; transform: translate(-50%, -40%) scale(0.85); }
-  12%  { opacity: 1; transform: translate(-50%, -55%) scale(1.04); }
-  22%  { transform: translate(-50%, -50%) scale(1.00); }
-  72%  { opacity: 1; transform: translate(-50%, -50%) scale(1.00); }
-  100% { opacity: 0; transform: translate(-50%, -62%) scale(0.96); }
+  0%   { opacity: 0; transform: translate(-50%, -40%) scale(calc(var(--puc-spark-scale) * 0.85)); }
+  12%  { opacity: 1; transform: translate(-50%, -55%) scale(calc(var(--puc-spark-scale) * 1.04)); }
+  22%  { transform: translate(-50%, -50%) scale(var(--puc-spark-scale)); }
+  72%  { opacity: 1; transform: translate(-50%, -50%) scale(var(--puc-spark-scale)); }
+  100% { opacity: 0; transform: translate(-50%, -62%) scale(calc(var(--puc-spark-scale) * 0.96)); }
 }
 
 .puc-spark__piece {
@@ -40,11 +60,70 @@
   font-family: var(--puc-font-display, Georgia, serif);
   font-weight: 600;
   color: var(--puc-text-accent, #f1c34c);
-  font-size: 15px;
+  font-size: 1.15em;
   letter-spacing: 0.3px;
 }
 
 .puc-spark__text {
-  font-size: 12.5px;
+  font-size: 0.95em;
   color: var(--puc-text, #f0ead6);
+}
+
+/* Particle burst — small dots flying outward from the capture square. */
+.puc-spark__burst {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 19;
+}
+
+.puc-spark__particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top: -4px;
+  background: radial-gradient(circle, #ffe9a3 0%, var(--puc-accent, #f1c34c) 60%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0;
+  animation: puc-spark-particle 900ms ease-out forwards;
+}
+
+@keyframes puc-spark-particle {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--puc-dx, 0), var(--puc-dy, 0)) scale(0.9); }
+}
+
+.puc-spark__burst--lg .puc-spark__particle { width: 10px; height: 10px; margin-left: -5px; margin-top: -5px; }
+.puc-spark__burst--xl .puc-spark__particle {
+  width: 12px; height: 12px; margin-left: -6px; margin-top: -6px;
+  background: radial-gradient(circle, #fff7d8 0%, var(--puc-accent, #f1c34c) 55%, rgba(232, 164, 41, 0.0) 100%);
+}
+
+/* Queen-capture board flash — a brief gold-tinted glow centered on the square. */
+.puc-spark__board-flash {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 18;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 180, 0.5) 0%,
+    rgba(241, 195, 76, 0.3) 35%,
+    rgba(241, 195, 76, 0) 70%
+  );
+  animation: puc-spark-flash 700ms ease-out forwards;
+  mix-blend-mode: screen;
+}
+
+@keyframes puc-spark-flash {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
 }

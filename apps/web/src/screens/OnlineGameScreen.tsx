@@ -580,6 +580,8 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         whiteName={room.white.displayName}
         blackName={room.black?.displayName ?? ''}
         hostRecap={endRecap}
+        hostId={room.hostMode}
+        viewerColor={yourColor ?? undefined}
         onNewGame={onBack}
         onBackToMenu={onBack}
         onReview={onReview}
