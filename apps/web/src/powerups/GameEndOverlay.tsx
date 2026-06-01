@@ -77,6 +77,11 @@ function headlineFor(status: GameStatus, whiteName: string, blackName: string): 
       const winner = status.winner === 'w' ? whiteName : blackName
       return `${resigner} resigned — ${winner} wins`
     }
+    case 'timeout': {
+      const loser = status.loser === 'w' ? whiteName : blackName
+      const winner = status.winner === 'w' ? whiteName : blackName
+      return `${loser} ran out of time — ${winner} wins`
+    }
     case 'stalemate':
       return 'Stalemate'
     case 'draw':

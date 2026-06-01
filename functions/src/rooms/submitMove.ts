@@ -70,6 +70,49 @@ export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>
       throw new HttpsError('permission-denied', 'It is not your turn.')
     }
 
+    const now = Date.now()
+
+    // Clock enforcement (only if the room has a time control). The mover's
+    // clock has been running since lastTickServerTs. If they ran out, the game
+    // is over by timeout and we reject the move.
+    let newWhiteTimeMs = room.whiteTimeMs
+    let newBlackTimeMs = room.blackTimeMs
+    if (room.timeControl && room.lastTickServerTs !== null) {
+      const elapsed = now - room.lastTickServerTs
+      if (turn === 'w') {
+        const remaining = (room.whiteTimeMs ?? 0) - elapsed
+        if (remaining <= 0) {
+          // White flagged before completing the move.
+          tx.set(ref, {
+            ...room,
+            status: 'completed',
+            result: 'black',
+            endReason: 'timeout',
+            whiteTimeMs: 0,
+            lastTickServerTs: null,
+            updatedAt: now,
+          } satisfies RoomDoc)
+          throw new HttpsError('failed-precondition', 'Your time ran out.')
+        }
+        newWhiteTimeMs = remaining + room.timeControl.incrementMs
+      } else {
+        const remaining = (room.blackTimeMs ?? 0) - elapsed
+        if (remaining <= 0) {
+          tx.set(ref, {
+            ...room,
+            status: 'completed',
+            result: 'white',
+            endReason: 'timeout',
+            blackTimeMs: 0,
+            lastTickServerTs: null,
+            updatedAt: now,
+          } satisfies RoomDoc)
+          throw new HttpsError('failed-precondition', 'Your time ran out.')
+        }
+        newBlackTimeMs = remaining + room.timeControl.incrementMs
+      }
+    }
+
     // Try the move.
     let applied
     try {
@@ -81,8 +124,6 @@ export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>
       throw new HttpsError('invalid-argument', 'Illegal move.')
     }
     const fenAfter = chess.fen()
-
-    const now = Date.now()
     const newMove: Move = {
       san: applied.san,
       uci: `${applied.from}${applied.to}${applied.promotion ?? ''}`,
@@ -127,6 +168,11 @@ export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>
       status,
       ...(result ? { result } : {}),
       ...(endReason ? { endReason } : {}),
+      whiteTimeMs: newWhiteTimeMs,
+      blackTimeMs: newBlackTimeMs,
+      // If the game just ended, freeze the clock. Otherwise, restart it for
+      // the new side to move.
+      lastTickServerTs: room.timeControl && status === 'live' ? now : null,
       updatedAt: now,
     }
     tx.set(ref, updated)

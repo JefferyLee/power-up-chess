@@ -18,6 +18,7 @@ const createRoomFn = httpsCallable<CreateRoomRequest, CreateRoomResponse>(functi
 const joinRoomFn = httpsCallable<JoinRoomRequest, JoinRoomResponse>(functions, 'joinRoom')
 const submitMoveFn = httpsCallable<SubmitMoveRequest, SubmitMoveResponse>(functions, 'submitMove')
 const resignGameFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'resignGame')
+const claimTimeWinFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'claimTimeWin')
 
 // Phase 5: LLM-backed host commentary.
 export interface HostCommentaryRequest {
@@ -82,6 +83,10 @@ export async function callSubmitMove(req: SubmitMoveRequest): Promise<SubmitMove
 
 export async function callResignGame(roomId: string): Promise<void> {
   await resignGameFn({ roomId })
+}
+
+export async function callClaimTimeWin(roomId: string): Promise<void> {
+  await claimTimeWinFn({ roomId })
 }
 
 export async function callHostCommentary(req: HostCommentaryRequest): Promise<HostCommentaryResponse> {

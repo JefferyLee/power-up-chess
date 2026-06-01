@@ -45,11 +45,15 @@ export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async
       throw new HttpsError('failed-precondition', 'Room already has two players.')
     }
 
+    const now = Date.now()
     const updated: RoomDoc = {
       ...room,
       black: { playerId: req.auth!.uid, displayName },
       status: 'live',
-      updatedAt: Date.now(),
+      // White is to move at game start, so white's clock starts ticking now.
+      // For an untimed room, lastTickServerTs stays null.
+      lastTickServerTs: room.timeControl ? now : null,
+      updatedAt: now,
     }
     tx.set(ref, updated)
     return updated

@@ -175,6 +175,7 @@ function prettyReason(r: EndReason): string {
     case 'checkmate': return 'by checkmate'
     case 'stalemate': return 'by stalemate'
     case 'resign': return 'by resignation'
+    case 'timeout': return 'on time'
     case 'insufficient_material': return 'insufficient material'
     case 'threefold_repetition': return 'threefold repetition'
     case 'fifty_move': return '50-move rule'

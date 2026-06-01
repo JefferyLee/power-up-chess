@@ -4,6 +4,7 @@ import { HOSTS, type HostId } from '../hosts/hosts'
 import { useAuthUid } from '../auth/useAuthUid'
 import { callCreateRoom } from '../firebase/callables'
 import { loadProfile, saveProfile } from '../storage/profile'
+import { presetById, TIME_CONTROL_PRESETS } from '../clock/timeControl'
 import './StartScreen.css'
 
 export function StartScreen() {
@@ -11,22 +12,30 @@ export function StartScreen() {
   const initial = loadProfile()
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [hostId, setHostId] = useState<HostId>(initial.hostId)
+  const [timeControlId, setTimeControlId] = useState<string>(initial.timeControlId)
   const [opponentName, setOpponentName] = useState('Friend')
   const [joinCode, setJoinCode] = useState('')
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const authState = useAuthUid()
 
+  const timeControl = presetById(timeControlId).value
+
   const canStartLocal = displayName.trim().length > 0 && opponentName.trim().length > 0
   const canCreate = authState.status === 'ready' && displayName.trim().length > 0 && !creating
   const canJoin = /^[A-Za-z0-9]{4,12}$/.test(joinCode.trim())
 
-  const persist = () => saveProfile({ displayName: displayName.trim(), hostId })
+  const persist = () => saveProfile({ displayName: displayName.trim(), hostId, timeControlId })
 
   const onStartLocal = () => {
     persist()
     navigate('/local', {
-      state: { hostId, whiteName: displayName.trim(), blackName: opponentName.trim() },
+      state: {
+        hostId,
+        whiteName: displayName.trim(),
+        blackName: opponentName.trim(),
+        timeControl,
+      },
     })
   }
 
@@ -36,7 +45,11 @@ export function StartScreen() {
     setError(null)
     try {
       persist()
-      const { roomId } = await callCreateRoom({ displayName: displayName.trim(), hostMode: hostId })
+      const { roomId } = await callCreateRoom({
+        displayName: displayName.trim(),
+        hostMode: hostId,
+        timeControl,
+      })
       navigate(`/r/${roomId}`)
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -86,6 +99,24 @@ export function StartScreen() {
               >
                 <span className="puc-start__host-name">{h.name}</span>
                 <span className="puc-start__host-blurb">{h.blurb}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="puc-start__panel" aria-labelledby="puc-start-clock">
+          <h2 id="puc-start-clock" className="puc-start__panel-title">Game clock</h2>
+          <div className="puc-start__clocks">
+            {TIME_CONTROL_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`puc-start__clock ${timeControlId === p.id ? 'puc-start__clock--selected' : ''}`}
+                onClick={() => setTimeControlId(p.id)}
+                aria-pressed={timeControlId === p.id}
+              >
+                <span className="puc-start__clock-short">{p.short}</span>
+                <span className="puc-start__clock-label">{p.label}</span>
               </button>
             ))}
           </div>

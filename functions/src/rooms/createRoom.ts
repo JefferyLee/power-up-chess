@@ -1,10 +1,27 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from './roomId'
-import type { CreateRoomRequest, CreateRoomResponse, RoomDoc } from './types'
+import type { CreateRoomRequest, CreateRoomResponse, RoomDoc, TimeControl } from './types'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
+
+const MIN_INITIAL_MS = 30 * 1000      // 30 seconds — anything shorter is unplayable
+const MAX_INITIAL_MS = 6 * 60 * 60 * 1000 // 6 hours — generous correspondence ceiling
+const MAX_INCREMENT_MS = 60 * 1000
+
+function sanitiseTimeControl(tc: TimeControl | null): TimeControl | null {
+  if (tc === null) return null
+  const initialMs = Number(tc.initialMs)
+  const incrementMs = Number(tc.incrementMs ?? 0)
+  if (!Number.isFinite(initialMs) || initialMs < MIN_INITIAL_MS || initialMs > MAX_INITIAL_MS) {
+    throw new HttpsError('invalid-argument', 'Invalid timeControl.initialMs.')
+  }
+  if (!Number.isFinite(incrementMs) || incrementMs < 0 || incrementMs > MAX_INCREMENT_MS) {
+    throw new HttpsError('invalid-argument', 'Invalid timeControl.incrementMs.')
+  }
+  return { initialMs, incrementMs }
+}
 
 /**
  * Mints a new private game room with the caller as the white player.
@@ -23,6 +40,7 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
       throw new HttpsError('invalid-argument', 'displayName is required.')
     }
     const hostMode = req.data.hostMode === 'luca' ? 'luca' : 'lucy'
+    const timeControl = sanitiseTimeControl(req.data.timeControl ?? null)
 
     const db = getFirestore()
     const now = Date.now()
@@ -39,6 +57,12 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
         hostMode,
         theme: 'magic-forest',
         moves: [],
+        timeControl,
+        whiteTimeMs: timeControl ? timeControl.initialMs : null,
+        blackTimeMs: timeControl ? timeControl.initialMs : null,
+        // Clocks haven't started ticking yet — joinRoom sets this when the
+        // second player arrives and the game flips to live.
+        lastTickServerTs: null,
         createdAt: now,
         updatedAt: now,
       }

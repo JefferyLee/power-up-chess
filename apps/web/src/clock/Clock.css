@@ -1,0 +1,39 @@
+.puc-clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  padding: 4px 10px;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  background: rgba(10, 18, 12, 0.55);
+  border: 1px solid rgba(231, 184, 65, 0.18);
+  border-radius: 8px;
+  color: var(--puc-text);
+  letter-spacing: 0.6px;
+  transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+}
+
+.puc-clock--running {
+  border-color: var(--puc-accent);
+  background: rgba(231, 184, 65, 0.12);
+  color: var(--puc-text-accent);
+  box-shadow: 0 0 0 2px rgba(241, 195, 76, 0.16);
+}
+
+.puc-clock--low {
+  color: #f3c067;
+}
+
+.puc-clock--very-low {
+  color: #f6a4a4;
+  border-color: rgba(220, 80, 80, 0.5);
+  background: rgba(120, 30, 30, 0.18);
+  animation: puc-clock-flash 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes puc-clock-flash {
+  from { opacity: 1; }
+  to   { opacity: 0.7; }
+}

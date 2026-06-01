@@ -14,6 +14,8 @@ import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
+import { Clock } from '../clock/Clock'
+import type { TimeControl } from '../clock/timeControl'
 import './LocalGameScreen.css'
 
 function newLocalGameId(): string {
@@ -24,7 +26,32 @@ interface Props {
   hostId: HostId
   whiteName: string
   blackName: string
+  timeControl: TimeControl | null
   onExit: () => void
+}
+
+interface ClockState {
+  whiteMs: number
+  blackMs: number
+  /** Date.now() when the running side's clock started ticking. Null when the
+   *  game is over (or untimed). */
+  lastTickAt: number | null
+  /** Which side's clock is currently running. */
+  running: Color | null
+}
+
+function initialClockState(timeControl: TimeControl | null): ClockState {
+  if (!timeControl) {
+    return { whiteMs: 0, blackMs: 0, lastTickAt: null, running: null }
+  }
+  return {
+    whiteMs: timeControl.initialMs,
+    blackMs: timeControl.initialMs,
+    // White's clock starts ticking the moment the game opens — standard
+    // chess-clock convention.
+    lastTickAt: Date.now(),
+    running: 'w',
+  }
 }
 
 interface GameSnapshot {
@@ -53,7 +80,7 @@ function snapshot(g: ChessGame): GameSnapshot {
 
 const SQUARE_SIZE = 72
 
-export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props) {
+export function LocalGameScreen({ hostId, whiteName, blackName, timeControl, onExit }: Props) {
   const navigate = useNavigate()
   // The ChessGame is mutable but its identity is stable across renders unless restarted.
   // Pair it with a snapshot in state so React re-renders after each move.
@@ -65,6 +92,8 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newLocalGameId())
   const [savedThisGame, setSavedThisGame] = useState(false)
+  const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl))
+  const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
   const sound = useSound()
   const host = HOSTS[hostId]
 
@@ -73,6 +102,13 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   // appears. Memoised so the save-effect dep array doesn't re-fire every
   // render.
   const effectiveStatus: GameStatus = useMemo(() => {
+    if (timeoutLoser) {
+      return {
+        kind: 'timeout' as const,
+        loser: timeoutLoser,
+        winner: timeoutLoser === 'w' ? ('b' as const) : ('w' as const),
+      }
+    }
     if (localResignation) {
       return {
         kind: 'resign' as const,
@@ -81,7 +117,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
       }
     }
     return snap.status
-  }, [localResignation, snap.status])
+  }, [timeoutLoser, localResignation, snap.status])
   const gameOver = effectiveStatus.kind !== 'in_progress'
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
@@ -108,6 +144,26 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
         sound.play('check')
       }
 
+      // Advance the clock: the moving side's elapsed comes off their clock,
+      // then we add the increment, and start the opposite side's clock.
+      if (timeControl) {
+        setClocks((c) => {
+          if (!c.running || c.lastTickAt === null) return c
+          const now = Date.now()
+          const elapsed = now - c.lastTickAt
+          const movedColor = result.color
+          const movedBefore = movedColor === 'w' ? c.whiteMs : c.blackMs
+          const movedAfter = Math.max(0, movedBefore - elapsed) + timeControl.incrementMs
+          const nextRunning: Color = movedColor === 'w' ? 'b' : 'w'
+          return {
+            whiteMs: movedColor === 'w' ? movedAfter : c.whiteMs,
+            blackMs: movedColor === 'b' ? movedAfter : c.blackMs,
+            lastTickAt: now,
+            running: nextRunning,
+          }
+        })
+      }
+
       if (result.captured) {
         // En passant: the captured pawn is on the destination file + source rank,
         // not on the move's destination square.
@@ -125,7 +181,7 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
         setSparks((prev) => [...prev, spark])
       }
     },
-    [game, hostId, picker, sound],
+    [game, hostId, picker, sound, timeControl],
   )
 
   const handleUndo = useCallback(() => {
@@ -140,7 +196,9 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     setLocalResignation(null)
     setGameId(newLocalGameId())
     setSavedThisGame(false)
-  }, [])
+    setClocks(initialClockState(timeControl))
+    setTimeoutLoser(null)
+  }, [timeControl])
 
   const handleResign = useCallback((resigner: Color) => {
     setLocalResignation({ resigner })
@@ -169,6 +227,38 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     return picker.pick(hostId, 'draw')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveStatus.kind, hostId])
+
+  // Flag-fall detector: when the running side's displayed time hits zero,
+  // record the timeout. effectiveStatus will then resolve to a 'timeout'
+  // terminal kind, freezing the board and showing the end overlay.
+  useEffect(() => {
+    if (!timeControl || timeoutLoser || gameOver) return
+    if (!clocks.running || clocks.lastTickAt === null) return
+    const running = clocks.running
+    const base = running === 'w' ? clocks.whiteMs : clocks.blackMs
+    const fire = () => {
+      const remaining = base - (Date.now() - clocks.lastTickAt!)
+      if (remaining <= 0) setTimeoutLoser(running)
+    }
+    // Schedule once at the predicted flag-fall, but also a safety interval in
+    // case the tab was backgrounded and timers drifted.
+    const wait = Math.max(50, base - (Date.now() - clocks.lastTickAt))
+    const exactTimer = window.setTimeout(fire, wait)
+    const safetyInterval = window.setInterval(fire, 1000)
+    return () => {
+      window.clearTimeout(exactTimer)
+      window.clearInterval(safetyInterval)
+    }
+  }, [timeControl, timeoutLoser, gameOver, clocks])
+
+  // Freeze the clock when the game ends from any other path (mate / resign /
+  // stalemate / draw). The early-return guard makes this a no-op once the
+  // clock is already paused — no cascading renders.
+  useEffect(() => {
+    if (effectiveStatus.kind === 'in_progress') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setClocks((c) => (c.lastTickAt === null && c.running === null ? c : { ...c, lastTickAt: null, running: null }))
+  }, [effectiveStatus.kind])
 
   // Fanfare on terminal status change. The local resignation path doesn't
   // route through handleMove, so we trigger sounds from here for any end.
@@ -274,6 +364,9 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
             isTurn={snap.turn === 'b' && effectiveStatus.kind === 'in_progress'}
             captured={lostByWhite}
             capturedColor="w"
+            clockMs={timeControl ? clocks.blackMs : null}
+            clockRunning={clocks.running === 'b'}
+            clockTickAt={clocks.lastTickAt}
           />
         </aside>
 
@@ -302,6 +395,9 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
             isTurn={snap.turn === 'w' && effectiveStatus.kind === 'in_progress'}
             captured={lostByBlack}
             capturedColor="b"
+            clockMs={timeControl ? clocks.whiteMs : null}
+            clockRunning={clocks.running === 'w'}
+            clockTickAt={clocks.lastTickAt}
           />
         </aside>
 
@@ -344,17 +440,26 @@ function PlayerCard({
   isTurn,
   captured,
   capturedColor,
+  clockMs,
+  clockRunning,
+  clockTickAt,
 }: {
   name: string
   color: Color
   isTurn: boolean
   captured: PieceSymbol[]
   capturedColor: Color
+  clockMs: number | null
+  clockRunning: boolean
+  clockTickAt: number | null
 }) {
   return (
     <div className={`puc-player ${isTurn ? 'puc-player--active' : ''}`}>
       <span className={`puc-player__dot puc-player__dot--${color}`} aria-hidden="true" />
       <span className="puc-player__name">{name}</span>
+      {clockMs !== null && (
+        <Clock baseMs={clockMs} lastTickAt={clockTickAt} running={clockRunning} />
+      )}
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>
@@ -416,15 +521,27 @@ function StatusBanner({
       </p>
     )
   }
+  if (status.kind === 'timeout') {
+    const loserName = status.loser === 'w' ? whiteName : blackName
+    const winnerName = status.winner === 'w' ? whiteName : blackName
+    return (
+      <p className="puc-local__status puc-local__status--end">
+        {loserName} ran out of time — {winnerName} wins.
+      </p>
+    )
+  }
   if (status.kind === 'stalemate') {
     return <p className="puc-local__status puc-local__status--end">Stalemate. A quiet draw.</p>
   }
   if (status.kind === 'draw') {
     return <p className="puc-local__status puc-local__status--end">Draw ({status.reason.replace('_', ' ')}).</p>
   }
-  return (
-    <p className="puc-local__status">
-      {activeName} to move{status.inCheck ? ' — in check' : ''}.
-    </p>
-  )
+  if (status.kind === 'in_progress') {
+    return (
+      <p className="puc-local__status">
+        {activeName} to move{status.inCheck ? ' — in check' : ''}.
+      </p>
+    )
+  }
+  return null
 }

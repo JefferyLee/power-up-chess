@@ -58,6 +58,55 @@
   gap: 12px;
 }
 
+.puc-start__clocks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.puc-start__clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(10, 18, 12, 0.45);
+  color: var(--puc-text);
+  border: 1px solid rgba(231, 184, 65, 0.18);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--puc-font-body);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.puc-start__clock:hover {
+  border-color: var(--puc-accent);
+  transform: translateY(-1px);
+}
+
+.puc-start__clock--selected {
+  border-color: var(--puc-accent);
+  background: rgba(231, 184, 65, 0.12);
+}
+
+.puc-start__clock-short {
+  font-family: var(--puc-font-display);
+  font-size: 18px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+}
+
+.puc-start__clock-label {
+  font-size: 11px;
+  color: var(--puc-text-muted);
+}
+
+@media (max-width: 480px) {
+  .puc-start__clocks {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .puc-start__host {
   display: flex;
   flex-direction: column;

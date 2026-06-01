@@ -17,7 +17,13 @@ export type EndReason =
   | 'threefold_repetition'
   | 'fifty_move'
   | 'resign'
+  | 'timeout'
   | 'other'
+
+export interface TimeControlWire {
+  initialMs: number
+  incrementMs: number
+}
 
 export interface Move {
   san: string
@@ -39,6 +45,15 @@ export interface RoomDoc {
   moves: Move[]
   result?: RoomResult
   endReason?: EndReason
+  /** Null for an untimed game. */
+  timeControl: TimeControlWire | null
+  /** Remaining time at lastTickServerTs. Null if untimed. */
+  whiteTimeMs: number | null
+  blackTimeMs: number | null
+  /** Server timestamp when the running side's clock last started; the running
+   *  side is implicit from currentFen's side-to-move (set when status flips
+   *  to 'live' on joinRoom). Null while waiting / once completed. */
+  lastTickServerTs: number | null
   createdAt: number
   updatedAt: number
 }
@@ -46,6 +61,7 @@ export interface RoomDoc {
 export interface CreateRoomRequest {
   displayName: string
   hostMode?: 'lucy' | 'luca'
+  timeControl?: TimeControlWire | null
 }
 export interface CreateRoomResponse {
   roomId: string

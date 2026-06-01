@@ -7,6 +7,11 @@ export interface PlayerRef {
 
 export type RoomStatus = 'waiting' | 'live' | 'completed'
 
+export interface TimeControl {
+  initialMs: number
+  incrementMs: number
+}
+
 export interface RoomDoc {
   white: PlayerRef
   black: PlayerRef | null
@@ -22,7 +27,16 @@ export interface RoomDoc {
   moves: Move[]
   /** Set when status === 'completed'. */
   result?: 'white' | 'black' | 'draw'
-  endReason?: 'checkmate' | 'stalemate' | 'insufficient_material' | 'threefold_repetition' | 'fifty_move' | 'resign' | 'other'
+  endReason?: 'checkmate' | 'stalemate' | 'insufficient_material' | 'threefold_repetition' | 'fifty_move' | 'resign' | 'timeout' | 'other'
+  /** Null for an untimed game; clocks are skipped entirely. */
+  timeControl: TimeControl | null
+  /** Stored remaining time at lastTickServerTs. Null when timeControl is null. */
+  whiteTimeMs: number | null
+  blackTimeMs: number | null
+  /** Server ms when the currently-running side's clock started. Set on
+   *  joinRoom (live transition) and on every submitMove. Null while waiting
+   *  or completed. */
+  lastTickServerTs: number | null
   createdAt: number // ms since epoch
   updatedAt: number
 }
@@ -40,6 +54,7 @@ export interface Move {
 export interface CreateRoomRequest {
   displayName: string
   hostMode?: 'lucy' | 'luca'
+  timeControl?: TimeControl | null
 }
 
 export interface CreateRoomResponse {

@@ -26,5 +26,10 @@ export function resultPartsFromStatus(status: GameStatus): ResultParts | null {
       return { result: 'draw', endReason: 'stalemate' }
     case 'draw':
       return { result: 'draw', endReason: status.reason }
+    case 'timeout':
+      return {
+        result: status.winner === 'w' ? 'white' : 'black',
+        endReason: 'timeout',
+      }
   }
 }

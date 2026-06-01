@@ -11,10 +11,11 @@ import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
-import { callJoinRoom, callResignGame } from '../firebase/callables'
+import { callClaimTimeWin, callJoinRoom, callResignGame } from '../firebase/callables'
 import { saveGame } from '../history/api'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
+import { Clock } from '../clock/Clock'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile } from '../storage/profile'
@@ -353,6 +354,42 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
 
   const orientation: Color = yourColor ?? 'w'
 
+  // Auto-claim a time-out win when the opponent's clock should have flagged.
+  // We are conservative: only fire if you're a player AND it's the opponent's
+  // turn AND their clock is mathematically expired. Server validates the
+  // claim; if we fire too early it just throws and the next tick retries.
+  useEffect(() => {
+    if (!yourColor) return
+    if (!room.timeControl || room.lastTickServerTs === null) return
+    if (room.status !== 'live') return
+    const opponentTurn = (turn === 'w' && yourColor === 'b') || (turn === 'b' && yourColor === 'w')
+    if (!opponentTurn) return
+
+    const opponentTime = turn === 'w' ? (room.whiteTimeMs ?? 0) : (room.blackTimeMs ?? 0)
+    const fireAt = room.lastTickServerTs + opponentTime
+    const delay = fireAt - Date.now()
+
+    let cancelled = false
+    const claim = () => {
+      if (cancelled) return
+      callClaimTimeWin(roomId).catch(() => {
+        // Either the server says they haven't flagged yet (clock skew — retry
+        // on next room update) or the game already ended. Either way: ignore.
+      })
+    }
+    if (delay <= 0) {
+      claim()
+      return () => {
+        cancelled = true
+      }
+    }
+    const timerId = window.setTimeout(claim, delay + 100) // +100ms safety margin
+    return () => {
+      cancelled = true
+      window.clearTimeout(timerId)
+    }
+  }, [yourColor, room.timeControl, room.lastTickServerTs, room.status, room.whiteTimeMs, room.blackTimeMs, turn, roomId])
+
   // Fanfare when the room flips to completed.
   useEffect(() => {
     if (room.status !== 'completed') return
@@ -474,6 +511,12 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
             captured={orientation === 'w' ? lostByWhite : lostByBlack}
             capturedColor={orientation === 'w' ? 'w' : 'b'}
             waiting={!room.black && orientation === 'w'}
+            clockMs={room.timeControl ? (orientation === 'w' ? room.blackTimeMs : room.whiteTimeMs) : null}
+            clockRunning={
+              room.status === 'live' &&
+              (orientation === 'w' ? turn === 'b' : turn === 'w')
+            }
+            clockTickAt={room.lastTickServerTs}
           />
         </aside>
 
@@ -516,7 +559,13 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
             isTurn={room.status === 'live' && (orientation === 'w' ? turn === 'w' : turn === 'b')}
             captured={orientation === 'w' ? lostByBlack : lostByWhite}
             capturedColor={orientation === 'w' ? 'b' : 'w'}
-            isYou
+            isYou={!!yourColor}
+            clockMs={room.timeControl ? (orientation === 'w' ? room.whiteTimeMs : room.blackTimeMs) : null}
+            clockRunning={
+              room.status === 'live' &&
+              (orientation === 'w' ? turn === 'w' : turn === 'b')
+            }
+            clockTickAt={room.lastTickServerTs}
           />
         </aside>
 
@@ -561,6 +610,9 @@ function OpponentCard({
   capturedColor,
   waiting,
   isYou,
+  clockMs,
+  clockRunning,
+  clockTickAt,
 }: {
   name: string
   color: Color
@@ -569,11 +621,17 @@ function OpponentCard({
   capturedColor: Color
   waiting?: boolean
   isYou?: boolean
+  clockMs: number | null
+  clockRunning: boolean
+  clockTickAt: number | null
 }) {
   return (
     <div className={`puc-player ${isTurn ? 'puc-player--active' : ''}`}>
       <span className={`puc-player__dot puc-player__dot--${color}`} aria-hidden="true" />
       <span className="puc-player__name">{name}{isYou ? ' (you)' : ''}{waiting ? ' (waiting for opponent…)' : ''}</span>
+      {clockMs !== null && (
+        <Clock baseMs={clockMs} lastTickAt={clockTickAt} running={clockRunning} />
+      )}
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>

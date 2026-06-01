@@ -6,11 +6,14 @@ const KEY = 'puc:profile:v1'
 export interface Profile {
   displayName: string
   hostId: 'lucy' | 'luca'
+  /** Time-control preset id. See clock/timeControl.ts for the catalogue. */
+  timeControlId: string
 }
 
 const DEFAULT: Profile = {
   displayName: 'Ada',
   hostId: 'lucy',
+  timeControlId: 'untimed',
 }
 
 export function loadProfile(): Profile {
@@ -24,6 +27,7 @@ export function loadProfile(): Profile {
         ? parsed.displayName.slice(0, 32)
         : DEFAULT.displayName,
       hostId: parsed.hostId === 'luca' ? 'luca' : 'lucy',
+      timeControlId: typeof parsed.timeControlId === 'string' ? parsed.timeControlId : DEFAULT.timeControlId,
     }
   } catch {
     return DEFAULT
