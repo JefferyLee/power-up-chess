@@ -14,6 +14,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases — must mirror vite.config.ts */
+    "paths": {
+      "@data/*": ["../../data/*"]
+    },
+    "resolveJsonModule": true,
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
