@@ -98,6 +98,7 @@
 
 .puc-local__side--top { grid-area: top; justify-self: end; }
 .puc-local__board-wrap { grid-area: board; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.puc-local__board-stage { position: relative; }
 .puc-local__side--bottom { grid-area: bot; justify-self: end; }
 .puc-local__moves { grid-area: moves; align-self: stretch; }
 

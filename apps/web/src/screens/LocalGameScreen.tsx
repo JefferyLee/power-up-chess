@@ -5,6 +5,9 @@ import { findKing, piecesFromFen } from '../chess/fen'
 import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { HOSTS, type HostId } from '../hosts/hosts'
+import { TemplatePicker } from '../hosts/templates'
+import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
+import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import './LocalGameScreen.css'
 
 interface Props {
@@ -38,11 +41,15 @@ function snapshot(g: ChessGame): GameSnapshot {
   }
 }
 
+const SQUARE_SIZE = 72
+
 export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props) {
   // The ChessGame is mutable but its identity is stable across renders unless restarted.
   // Pair it with a snapshot in state so React re-renders after each move.
   const [game, setGame] = useState(() => new ChessGame())
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
+  const [picker] = useState(() => new TemplatePicker())
+  const [sparks, setSparks] = useState<CaptureSparkData[]>([])
   const host = HOSTS[hostId]
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
@@ -54,9 +61,28 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
 
   const handleMove = useCallback(
     (move: MoveInput) => {
-      if (game.move(move)) setSnap(snapshot(game))
+      const result = game.move(move)
+      if (!result) return
+      setSnap(snapshot(game))
+
+      if (result.captured) {
+        // En passant: the captured pawn is on the destination file + source rank,
+        // not on the move's destination square.
+        const captureSquare: Square = result.flags.includes('e')
+          ? (`${result.to[0]}${result.from[1]}` as Square)
+          : result.to
+        const text = picker.pick(hostId, 'capture', { capturedPiece: result.captured })
+        const spark: CaptureSparkData = {
+          id: performance.now(),
+          square: captureSquare,
+          capturedPiece: result.captured,
+          capturedColor: result.color === 'w' ? 'b' : 'w',
+          text,
+        }
+        setSparks((prev) => [...prev, spark])
+      }
     },
-    [game],
+    [game, hostId, picker],
   )
 
   const handleUndo = useCallback(() => {
@@ -67,7 +93,30 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     const fresh = new ChessGame()
     setGame(fresh)
     setSnap(snapshot(fresh))
+    setSparks([])
   }, [])
+
+  const handleSparkDone = useCallback((id: number) => {
+    setSparks((prev) => prev.filter((s) => s.id !== id))
+  }, [])
+
+  // Build the game-end recap once the status is terminal. Memoised so the
+  // template only fires once per terminal state (not on every render).
+  const endRecap = useMemo(() => {
+    if (snap.status.kind === 'in_progress') return ''
+    if (snap.status.kind === 'checkmate') {
+      const winnerName = snap.status.winner === 'w' ? whiteName : blackName
+      return picker.pick(hostId, 'checkmate-win', { winnerName })
+    }
+    if (snap.status.kind === 'stalemate') {
+      return picker.pick(hostId, 'stalemate')
+    }
+    return picker.pick(hostId, 'draw')
+    // We intentionally key the memo on the status' identity so the picker is
+    // invoked once per game-end. snapshot() returns a fresh status object on
+    // every render, but the kind transition is what we care about.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snap.status.kind, hostId])
 
   const lastMove = snap.history.length
     ? { from: snap.history[snap.history.length - 1]!.from, to: snap.history[snap.history.length - 1]!.to }
@@ -119,15 +168,20 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
         </aside>
 
         <div className="puc-local__board-wrap">
-          <Board
-            pieces={pieces}
-            turn={snap.turn}
-            legalDestinationsFrom={legalDestinationsFrom}
-            onMove={handleMove}
-            lastMove={lastMove}
-            checkSquare={checkSquare}
-            squareSize={72}
-          />
+          <div className="puc-local__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
+            <Board
+              pieces={pieces}
+              turn={snap.turn}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              squareSize={SQUARE_SIZE}
+            />
+            {sparks.map((s) => (
+              <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
+            ))}
+          </div>
           <StatusBanner status={snap.status} activeName={activeName} whiteName={whiteName} blackName={blackName} />
         </div>
 
@@ -146,6 +200,15 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
           <MoveList history={snap.history} />
         </aside>
       </div>
+
+      <GameEndOverlay
+        status={snap.status}
+        whiteName={whiteName}
+        blackName={blackName}
+        hostRecap={endRecap}
+        onNewGame={handleRestart}
+        onBackToMenu={onExit}
+      />
     </div>
   )
 }
