@@ -100,6 +100,17 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Wizard's Duel rooms — same security shape as chess rooms.
+    // READ allowed for any signed-in user (so spectators / joiners can
+    // load the room from a shared link). All WRITES go through the
+    // submitWizardMove / submitWizardSpell / join / create Cloud
+    // Functions, which enforce participant identity + game rules +
+    // castle-points deduction atomically.
+    match /wizard_rooms/{roomId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

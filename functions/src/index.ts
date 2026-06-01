@@ -25,3 +25,9 @@ export { setPresence } from './castle/setPresence'
 export { hostAmbientStory } from './castle/hostAmbientStory'
 export { cleanupPresence } from './castle/cleanupPresence'
 export { submitForestScore } from './forest/submitForestScore'
+export {
+  createWizardRoom,
+  joinWizardRoom,
+  submitWizardMove,
+  submitWizardSpell,
+} from './games/wizard/wizardRoom'

@@ -137,6 +137,28 @@ export interface SubmitForestScoreResponse {
 
 const submitForestScoreFn = httpsCallable<SubmitForestScoreRequest, SubmitForestScoreResponse>(functions, 'submitForestScore')
 
+// MVP2 W.3: Wizard's Duel online.
+export interface WizardPlayerInfo {
+  displayName: string
+  normalizedName: string
+  isBypass: boolean
+}
+export interface CreateWizardRoomResponse { roomId: string }
+export interface JoinWizardRoomRequest extends WizardPlayerInfo { roomId: string }
+export interface JoinWizardRoomResponse { color: 'w' | 'b' }
+export interface SubmitWizardMoveRequest { roomId: string; from: string; to: string }
+export interface SubmitWizardSpellRequest {
+  roomId: string
+  spellId: string
+  targets: string[]
+}
+export interface SubmitWizardSpellResponse { ok: true; castlePoints: number }
+
+const createWizardRoomFn = httpsCallable<WizardPlayerInfo, CreateWizardRoomResponse>(functions, 'createWizardRoom')
+const joinWizardRoomFn = httpsCallable<JoinWizardRoomRequest, JoinWizardRoomResponse>(functions, 'joinWizardRoom')
+const submitWizardMoveFn = httpsCallable<SubmitWizardMoveRequest, { ok: true }>(functions, 'submitWizardMove')
+const submitWizardSpellFn = httpsCallable<SubmitWizardSpellRequest, SubmitWizardSpellResponse>(functions, 'submitWizardSpell')
+
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
   return data
@@ -197,5 +219,21 @@ export async function callSetPresence(req: SetPresenceRequest): Promise<SetPrese
 
 export async function callSubmitForestScore(req: SubmitForestScoreRequest): Promise<SubmitForestScoreResponse> {
   const { data } = await submitForestScoreFn(req)
+  return data
+}
+
+export async function callCreateWizardRoom(req: WizardPlayerInfo): Promise<CreateWizardRoomResponse> {
+  const { data } = await createWizardRoomFn(req)
+  return data
+}
+export async function callJoinWizardRoom(req: JoinWizardRoomRequest): Promise<JoinWizardRoomResponse> {
+  const { data } = await joinWizardRoomFn(req)
+  return data
+}
+export async function callSubmitWizardMove(req: SubmitWizardMoveRequest): Promise<void> {
+  await submitWizardMoveFn(req)
+}
+export async function callSubmitWizardSpell(req: SubmitWizardSpellRequest): Promise<SubmitWizardSpellResponse> {
+  const { data } = await submitWizardSpellFn(req)
   return data
 }
