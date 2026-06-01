@@ -56,6 +56,9 @@ export function WicketDialog() {
             castlePoints: res.castlePoints,
             isBypass: false,
             isFirstVisit: res.status === 'new',
+            ...(res.status === 'returning' && res.decayedBy > 0
+              ? { lastDecay: { decayedBy: res.decayedBy, pointsBefore: res.pointsBeforeDecay } }
+              : {}),
           })
           navigate('/', { replace: true })
         } else if (res.status === 'wrong-magic') {

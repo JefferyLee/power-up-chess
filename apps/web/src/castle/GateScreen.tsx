@@ -11,6 +11,7 @@ import { useSound } from '../sound/useSound'
 import { WicketDialog } from './WicketDialog'
 import { useCastle } from './useCastle'
 import { CastleArt } from './CastleArt'
+import { usePublicStats } from './usePublicStats'
 import './GateScreen.css'
 
 type GatePhase = 'closed' | 'opening' | 'open'
@@ -21,6 +22,7 @@ const KNOCK_TO_OPEN_MS = 600
 export function GateScreen() {
   const sound = useSound()
   const { identity } = useCastle()
+  const publicStats = usePublicStats()
   const [phase, setPhase] = useState<GatePhase>('closed')
   const [knockShake, setKnockShake] = useState(false)
   const idleTimerRef = useRef<number | null>(null)
@@ -82,21 +84,38 @@ export function GateScreen() {
 
       <div className="puc-gate__sides">
         <aside className="puc-gate__panel puc-gate__panel--guests">
-          <h2 className="puc-gate__panel-title">Guests inside</h2>
-          <p className="puc-gate__panel-big">—</p>
-          <p className="puc-gate__panel-note">(counter coming with chat)</p>
+          <h2 className="puc-gate__panel-title">Today&apos;s visitors</h2>
+          <p className="puc-gate__panel-big">
+            {publicStats.status === 'ready' ? publicStats.stats.activeToday : '—'}
+          </p>
+          <p className="puc-gate__panel-note">
+            {publicStats.status === 'ready'
+              ? 'in the castle in the last day'
+              : 'loading…'}
+          </p>
         </aside>
 
         <aside className="puc-gate__panel puc-gate__panel--leaderboard">
           <h2 className="puc-gate__panel-title">Top guests</h2>
           <ol className="puc-gate__leaderboard">
-            <li><span>—</span><span>—</span></li>
-            <li><span>—</span><span>—</span></li>
-            <li><span>—</span><span>—</span></li>
-            <li><span>—</span><span>—</span></li>
-            <li><span>—</span><span>—</span></li>
+            {publicStats.status === 'ready' && publicStats.stats.topGuests.length > 0 ? (
+              publicStats.stats.topGuests.map((g, i) => (
+                <li key={`${g.displayName}-${i}`}>
+                  <span>{g.displayName}</span>
+                  <span>{g.castlePoints}</span>
+                </li>
+              ))
+            ) : (
+              Array.from({ length: 5 }).map((_, i) => (
+                <li key={i}><span>—</span><span>—</span></li>
+              ))
+            )}
           </ol>
-          <p className="puc-gate__panel-note">(leaderboard lights up after points are introduced)</p>
+          <p className="puc-gate__panel-note">
+            {publicStats.status === 'ready' && publicStats.stats.topGuests.length > 0
+              ? 'castle points'
+              : 'be the first to set the bar'}
+          </p>
         </aside>
       </div>
 

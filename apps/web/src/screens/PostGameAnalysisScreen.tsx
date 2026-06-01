@@ -9,6 +9,8 @@ import { StockfishEngine } from '../engine/stockfish'
 import { callGameRecap, callHostCommentary } from '../firebase/callables'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { addCrowns } from '../storage/profile'
+import { useCastle } from '../castle/useCastle'
+import { awardPoints } from '../castle/awardPoints'
 import { TemplatePicker, type TemplateKind } from '../hosts/templates'
 import type { Classification } from '../engine/classify'
 import type { Square } from '../chess/types'
@@ -34,6 +36,7 @@ export function PostGameAnalysisScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as ReviewState | null
+  const { identity, setCastlePoints } = useCastle()
 
   const [phase, setPhase] = useState<Phase>({ kind: 'analyzing', done: 0, total: 1 })
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
@@ -55,15 +58,31 @@ export function PostGameAnalysisScreen() {
         })
         const brilliantIdx = new Set<number>()
         let crowns = 0
+        let bestExcellent = 0
         for (const m of analysis.moves) {
           if (m.isBrilliantCandidate && isBrilliant(m).brilliant) {
             brilliantIdx.add(m.index)
           }
           if (m.classification === 'best' || m.classification === 'excellent') {
             crowns += 1
+            bestExcellent += 1
           }
         }
         if (crowns > 0) addCrowns(crowns)
+        // Castle points for review-discovered move quality. We use a synthetic
+        // game-id from the PGN length + timestamp; future Phase C work can
+        // dedupe via a guests/reviewed-games subcollection.
+        const brilliantCount = brilliantIdx.size
+        if (brilliantCount + bestExcellent > 0) {
+          void awardPoints(identity, {
+            source: 'chess-review',
+            gameId: `review-${Date.now()}`,
+            brilliant: brilliantCount,
+            bestExcellent,
+          }).then((res) => {
+            if (res) setCastlePoints(res.castlePoints)
+          })
+        }
         setPhase({ kind: 'ready', analysis, brilliantIdx })
         setSelectedIdx(analysis.moves.length > 0 ? analysis.moves.length - 1 : null)
       } catch (e) {
@@ -75,6 +94,9 @@ export function PostGameAnalysisScreen() {
       ctrl.abort()
       engine.terminate()
     }
+    // We want the analysis to run once per navigation into this screen,
+    // not when identity changes. setCastlePoints is stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 
   if (!state) {

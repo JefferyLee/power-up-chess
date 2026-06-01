@@ -5,7 +5,7 @@
 // to the existing chess flows using the visitor's identity + profile
 // defaults for clock / difficulty.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
 import { HostPortrait } from './HostPortrait'
@@ -16,19 +16,37 @@ import { callCreateRoom } from '../firebase/callables'
 import './HallScreen.css'
 
 const DEFAULT_OPPONENT_NAME = 'Friend'
+const UNLOCK_THRESHOLD = 200
 
 export function HallScreen() {
   const navigate = useNavigate()
-  const { identity, hostId, signOut } = useCastle()
+  const { identity, hostId, signOut, clearDecayInfo } = useCastle()
   const profile = loadProfile()
   const host = HOSTS[hostId]
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Snapshot the decay info on first render so the message stays visible
+  // while clearDecayInfo runs immediately below.
+  const [decayMessage] = useState(() => {
+    const d = identity?.lastDecay
+    if (!d || d.decayedBy <= 0) return null
+    const reLockedHint = identity && identity.castlePoints < UNLOCK_THRESHOLD && d.pointsBefore >= UNLOCK_THRESHOLD
+      ? ' Solve a few puzzles to earn them back!'
+      : ''
+    return `Things got dusty while you were away — your castle points went from ${d.pointsBefore} to ${identity?.castlePoints ?? 0}.${reLockedHint}`
+  })
+  useEffect(() => {
+    if (identity?.lastDecay) clearDecayInfo()
+    // Run exactly once per Hall mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const timeControl = presetById(profile.timeControlId).value
   // Identity is guaranteed by the CastleEntry route guard; this is a typing-
   // only safeguard so the rest of the component can dereference freely.
   const displayName = identity?.displayName ?? ''
+  const castlePoints = identity?.castlePoints ?? 0
+  const isUnlocked = castlePoints >= UNLOCK_THRESHOLD && !(identity?.isBypass ?? false)
 
   const handleOnline = async () => {
     if (creating || !identity) return
@@ -102,9 +120,18 @@ export function HallScreen() {
               You&apos;re visiting as <strong>{identity.displayName}</strong> — a guest. Your points won&apos;t be saved this time.
             </p>
           )}
+          {decayMessage && (
+            <p className="puc-hall__decay-note">{decayMessage}</p>
+          )}
           {!identity.isBypass && (
             <p className="puc-hall__points">
               Castle points: <strong>{identity.castlePoints}</strong>
+              {!isUnlocked && (
+                <span className="puc-hall__progress">
+                  {' '}
+                  · {UNLOCK_THRESHOLD - identity.castlePoints} more to unlock the chess rooms
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -138,31 +165,42 @@ export function HallScreen() {
             type="button"
             className="puc-hall__door"
             onClick={handleOnline}
-            disabled={creating}
+            disabled={creating || !isUnlocked}
+            title={!isUnlocked ? `Earn ${UNLOCK_THRESHOLD} castle points first` : undefined}
           >
-            <span className="puc-hall__door-icon" aria-hidden="true">🏰</span>
+            <span className="puc-hall__door-icon" aria-hidden="true">{isUnlocked ? '🏰' : '🔒'}</span>
             <span className="puc-hall__door-name">{creating ? 'Opening room…' : 'Online Chess'}</span>
-            <span className="puc-hall__door-blurb">Play a friend with a private link.</span>
+            <span className="puc-hall__door-blurb">
+              {isUnlocked ? 'Play a friend with a private link.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
+            </span>
           </button>
 
           <button
             type="button"
             className="puc-hall__door"
             onClick={handleLocal}
+            disabled={!isUnlocked}
+            title={!isUnlocked ? `Earn ${UNLOCK_THRESHOLD} castle points first` : undefined}
           >
-            <span className="puc-hall__door-icon" aria-hidden="true">👥</span>
+            <span className="puc-hall__door-icon" aria-hidden="true">{isUnlocked ? '👥' : '🔒'}</span>
             <span className="puc-hall__door-name">Local Chess</span>
-            <span className="puc-hall__door-blurb">Pass-and-play at one device.</span>
+            <span className="puc-hall__door-blurb">
+              {isUnlocked ? 'Pass-and-play at one device.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
+            </span>
           </button>
 
           <button
             type="button"
             className="puc-hall__door"
             onClick={handlePractice}
+            disabled={!isUnlocked}
+            title={!isUnlocked ? `Earn ${UNLOCK_THRESHOLD} castle points first` : undefined}
           >
-            <span className="puc-hall__door-icon" aria-hidden="true">♞</span>
+            <span className="puc-hall__door-icon" aria-hidden="true">{isUnlocked ? '♞' : '🔒'}</span>
             <span className="puc-hall__door-name">Practice with {host.name}</span>
-            <span className="puc-hall__door-blurb">Play me — gentle AI sparring.</span>
+            <span className="puc-hall__door-blurb">
+              {isUnlocked ? 'Play me — gentle AI sparring.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
+            </span>
           </button>
         </div>
         {error && <p className="puc-hall__error">{error}</p>}

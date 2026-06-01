@@ -24,6 +24,10 @@ export interface CastleIdentity {
   /** True if this is a new guest (just registered), false if returning.
    *  Drives the welcome line in the Hall. */
   isFirstVisit: boolean
+  /** Populated when the last castleEnter applied decay (§7.4). The Hall
+   *  shows a one-time welcome message and then clears this field via
+   *  the context's `clearDecayInfo` callback. */
+  lastDecay?: { decayedBy: number; pointsBefore: number }
 }
 
 export function normalizeName(name: string): string {
@@ -79,12 +83,16 @@ export function loadIdentity(): CastleIdentity | null {
     const parsed = JSON.parse(raw) as Partial<CastleIdentity>
     if (typeof parsed.displayName !== 'string' || parsed.displayName.length === 0) return null
     if (typeof parsed.normalizedName !== 'string' || parsed.normalizedName.length === 0) return null
+    const lastDecay = parsed.lastDecay
     return {
       displayName: parsed.displayName,
       normalizedName: parsed.normalizedName,
       castlePoints: typeof parsed.castlePoints === 'number' && parsed.castlePoints >= 0 ? parsed.castlePoints : 0,
       isBypass: parsed.isBypass === true,
       isFirstVisit: parsed.isFirstVisit === true,
+      ...(lastDecay && typeof lastDecay.decayedBy === 'number' && typeof lastDecay.pointsBefore === 'number'
+        ? { lastDecay: { decayedBy: lastDecay.decayedBy, pointsBefore: lastDecay.pointsBefore } }
+        : {}),
     }
   } catch {
     return null

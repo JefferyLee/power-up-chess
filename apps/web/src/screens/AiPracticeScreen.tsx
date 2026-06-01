@@ -8,6 +8,8 @@ import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
+import { useCastle } from '../castle/useCastle'
+import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
@@ -66,6 +68,7 @@ function snapshot(g: ChessGame): GameSnapshot {
 
 export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, onExit }: Props) {
   const navigate = useNavigate()
+  const { identity, setCastlePoints } = useCastle()
   const sound = useSound()
   const preset = difficultyById(difficultyId)
   // For MVP1, player always plays white; AI always plays black. Colour choice
@@ -262,7 +265,12 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       const youWon = effectiveStatus.winner === playerColor
       sound.play(youWon ? 'mate-win' : 'mate-loss')
-      if (youWon) addCrowns(1)
+      if (youWon) {
+        addCrowns(1)
+        void awardPoints(identity, { source: 'chess-win', gameId }).then((res) => {
+          if (res) setCastlePoints(res.castlePoints)
+        })
+      }
     } else {
       sound.play('draw')
     }

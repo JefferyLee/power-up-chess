@@ -8,6 +8,8 @@ import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
+import { useCastle } from '../castle/useCastle'
+import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
@@ -103,6 +105,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl))
   const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
   const sound = useSound()
+  const { identity, setCastlePoints } = useCastle()
 
   // Resignation isn't a chess.js concept — overlay it on top of the position-
   // derived status. Once resigned, the board freezes and the end overlay
@@ -298,6 +301,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       sound.play('mate-win')
       addCrowns(1)
+      void awardPoints(identity, { source: 'chess-win', gameId }).then((res) => {
+        if (res) setCastlePoints(res.castlePoints)
+      })
     } else {
       sound.play('draw')
     }

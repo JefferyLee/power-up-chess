@@ -13,11 +13,17 @@ export type CastleEnterResponse =
       status: 'new'
       displayName: string
       castlePoints: 0
+      decayedBy: 0
+      pointsBeforeDecay: 0
     }
   | {
       status: 'returning'
       displayName: string
       castlePoints: number
+      /** Points lost to decay this visit (§7.4). 0 if same day. */
+      decayedBy: number
+      /** Castle points before decay was applied. Equal to `castlePoints + decayedBy`. */
+      pointsBeforeDecay: number
     }
   | {
       status: 'wrong-magic'
@@ -35,6 +41,48 @@ export type CastleEnterResponse =
 export interface CastleBypassResponse {
   /** A generated throwaway display name, format `Guest-NNNN`. */
   displayName: string
+}
+
+// ─── Award castle points ───────────────────────────────────────────────────
+
+export type AwardSource =
+  | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
+  | { source: 'chess-win'; gameId: string }
+  | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
+
+export interface AwardCastlePointsRequest {
+  normalizedName: string
+  award: AwardSource
+}
+
+export interface AwardCastlePointsResponse {
+  castlePoints: number
+  added: number
+  unlockedJustNow: boolean
+}
+
+// Per-source amount caps. Server clamps the client's reported amount
+// so a malicious client can't grant themselves unlimited points.
+export const AWARD_CAPS = {
+  puzzleMin: 10,
+  puzzleMax: 25,
+  puzzleFirstSolveBonus: 5,
+  chessWin: 10,
+  chessBrilliantEach: 5,
+  chessBestExcellentEach: 1,
+  // Per-review absolute ceiling to short-circuit "I had 1000 best moves" claims.
+  chessReviewMax: 60,
+} as const
+
+export const UNLOCK_THRESHOLD = 200
+
+// ─── Public stats ──────────────────────────────────────────────────────────
+
+export interface CastlePublicStats {
+  activeToday: number
+  topGuests: Array<{ displayName: string; castlePoints: number }>
+  /** Server ts when this doc was last rebuilt. */
+  refreshedAt: number
 }
 
 /** Firestore shape for guests/{normalizedName}. */

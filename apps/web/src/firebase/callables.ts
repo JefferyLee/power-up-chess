@@ -66,14 +66,14 @@ export interface GameRecapResponse {
 const hostCommentaryFn = httpsCallable<HostCommentaryRequest, HostCommentaryResponse>(functions, 'hostCommentary')
 const gameRecapFn = httpsCallable<GameRecapRequest, GameRecapResponse>(functions, 'gameRecap')
 
-// MVP2: Castle auth.
+// MVP2: Castle auth + points.
 export interface CastleEnterRequest {
   name: string
   hash: string
 }
 export type CastleEnterResponse =
-  | { status: 'new'; displayName: string; castlePoints: 0 }
-  | { status: 'returning'; displayName: string; castlePoints: number }
+  | { status: 'new'; displayName: string; castlePoints: 0; decayedBy: 0; pointsBeforeDecay: 0 }
+  | { status: 'returning'; displayName: string; castlePoints: number; decayedBy: number; pointsBeforeDecay: number }
   | { status: 'wrong-magic'; attemptsRemaining: number }
   | { status: 'rate-limited'; retryAfterMs: number }
   | { status: 'invalid-input'; reason: string }
@@ -81,8 +81,23 @@ export interface CastleBypassResponse {
   displayName: string
 }
 
+export type AwardSource =
+  | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
+  | { source: 'chess-win'; gameId: string }
+  | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
+export interface AwardCastlePointsRequest {
+  normalizedName: string
+  award: AwardSource
+}
+export interface AwardCastlePointsResponse {
+  castlePoints: number
+  added: number
+  unlockedJustNow: boolean
+}
+
 const castleEnterFn = httpsCallable<CastleEnterRequest, CastleEnterResponse>(functions, 'castleEnter')
 const castleBypassFn = httpsCallable<void, CastleBypassResponse>(functions, 'castleBypass')
+const awardCastlePointsFn = httpsCallable<AwardCastlePointsRequest, AwardCastlePointsResponse>(functions, 'awardCastlePoints')
 
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
@@ -124,5 +139,10 @@ export async function callCastleEnter(req: CastleEnterRequest): Promise<CastleEn
 
 export async function callCastleBypass(): Promise<CastleBypassResponse> {
   const { data } = await castleBypassFn()
+  return data
+}
+
+export async function callAwardCastlePoints(req: AwardCastlePointsRequest): Promise<AwardCastlePointsResponse> {
+  const { data } = await awardCastlePointsFn(req)
   return data
 }

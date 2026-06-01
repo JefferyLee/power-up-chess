@@ -12,6 +12,8 @@ import {
 import { scorePuzzle } from './scoring'
 import { RewardPopup } from './RewardPopup'
 import { bestAttemptForPuzzle, savePuzzleAttempt, totalPuzzlePoints } from '../history/api'
+import { useCastle } from '../castle/useCastle'
+import { awardPoints } from '../castle/awardPoints'
 import type { PuzzleAttempt } from '../history/db'
 import { useSound } from '../sound/useSound'
 import './PuzzleScreen.css'
@@ -28,6 +30,7 @@ export function PuzzleScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const sound = useSound()
+  const { identity, setCastlePoints } = useCastle()
   const puzzle = id ? getPuzzle(id) : null
 
   // Fresh ChessGame seeded from the puzzle FEN. Re-created when the puzzle id changes.
@@ -107,7 +110,21 @@ export function PuzzleScreen() {
       ? Math.max(0, attempt.points - prevBest.points)
       : attempt.points
     setPhase({ kind: 'solved', attempt, totalBefore, added })
-  }, [puzzle, startedAt, wrongMoves, hintsUsed])
+
+    // Award castle points. First-time solve gets the bonus; resolves earn
+    // only the marginal improvement (matches the puzzle-points model).
+    const isFirstSolve = !prevBest
+    const castleAward = isFirstSolve ? attempt.points : added
+    if (castleAward > 0) {
+      const res = await awardPoints(identity, {
+        source: 'puzzle',
+        puzzleId: puzzle.id,
+        scorePoints: castleAward,
+        isFirstSolve,
+      })
+      if (res) setCastlePoints(res.castlePoints)
+    }
+  }, [puzzle, startedAt, wrongMoves, hintsUsed, identity, setCastlePoints])
 
   const handleMove = useCallback(
     (move: MoveInput) => {

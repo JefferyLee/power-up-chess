@@ -92,6 +92,23 @@
   font-style: italic;
 }
 
+.puc-hall__decay-note {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  background: rgba(180, 110, 60, 0.18);
+  border-left: 3px solid var(--puc-accent, #e7b841);
+  border-radius: 0 6px 6px 0;
+  color: var(--puc-text);
+}
+
+.puc-hall__progress {
+  font-size: 12.5px;
+  font-weight: normal;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+
 .puc-hall__points {
   margin: 4px 0 0;
   font-size: 13.5px;

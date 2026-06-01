@@ -49,9 +49,19 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const clearDecayInfo = useCallback(() => {
+    setIdentity((prev) => {
+      if (!prev || !prev.lastDecay) return prev
+      const updated = { ...prev }
+      delete updated.lastDecay
+      saveIdentity(updated)
+      return updated
+    })
+  }, [])
+
   const value = useMemo<CastleContextValue>(
-    () => ({ identity, hostId, signIn, signOut, setCastlePoints }),
-    [identity, hostId, signIn, signOut, setCastlePoints],
+    () => ({ identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo }),
+    [identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo],
   )
 
   return <CastleContext.Provider value={value}>{children}</CastleContext.Provider>

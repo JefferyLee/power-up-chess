@@ -22,6 +22,8 @@ import { Clock } from '../clock/Clock'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile, addCrowns } from '../storage/profile'
+import { useCastle } from '../castle/useCastle'
+import { awardPoints } from '../castle/awardPoints'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
 
@@ -202,6 +204,7 @@ interface RoomViewProps {
 function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
   const sound = useSound()
+  const { identity, setCastlePoints } = useCastle()
   const youAreWhite = room.white.playerId === uid
   const youAreBlack = room.black?.playerId === uid
   const yourColor: Color | null = youAreWhite ? 'w' : youAreBlack ? 'b' : null
@@ -416,7 +419,12 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       const youWon = (room.result === 'white' && yourColor === 'w') ||
                      (room.result === 'black' && yourColor === 'b')
       sound.play(youWon ? 'mate-win' : 'mate-loss')
-      if (youWon) addCrowns(1)
+      if (youWon) {
+        addCrowns(1)
+        void awardPoints(identity, { source: 'chess-win', gameId: roomId }).then((res) => {
+          if (res) setCastlePoints(res.castlePoints)
+        })
+      }
     } else if (!yourColor && room.result && room.result !== 'draw') {
       // Spectator — gentle fanfare regardless of who won.
       sound.play('mate-win')

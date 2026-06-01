@@ -12,6 +12,9 @@ export interface CastleContextValue {
   signOut: () => void
   /** Update castlePoints (after a points-earning event). */
   setCastlePoints: (next: number) => void
+  /** Remove `lastDecay` from the identity after the Hall has shown its
+   *  welcome line. Idempotent — fine to call when no decay is present. */
+  clearDecayInfo: () => void
 }
 
 export const CastleContext = createContext<CastleContextValue | null>(null)
