@@ -77,21 +77,35 @@ export function GateScreen() {
 
   return (
     <div className="puc-gate">
-      <header className="puc-gate__header">
-        <h1 className="puc-gate__title">Power Up Castle</h1>
-        <p className="puc-gate__tagline">Knock on the door, and we&apos;ll let you in.</p>
-      </header>
+      <div
+        className={`puc-gate__door puc-gate__door--${phase}${knockShake ? ' puc-gate__door--knocked' : ''}`}
+        role="button"
+        tabIndex={0}
+        aria-label="Knock on the castle gate"
+        onClick={handleKnock}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleKnock()
+          }
+        }}
+      >
+        <CastleArt phase={phase} />
+      </div>
 
-      <div className="puc-gate__sides">
+      <div className="puc-gate__overlay">
+        <header className="puc-gate__header">
+          <h1 className="puc-gate__title">Power Up Castle</h1>
+          <p className="puc-gate__tagline">Knock on the door, and we&apos;ll let you in.</p>
+        </header>
+
         <aside className="puc-gate__panel puc-gate__panel--guests">
           <h2 className="puc-gate__panel-title">Today&apos;s visitors</h2>
           <p className="puc-gate__panel-big">
             {publicStats.status === 'ready' ? publicStats.stats.activeToday : '—'}
           </p>
           <p className="puc-gate__panel-note">
-            {publicStats.status === 'ready'
-              ? 'in the castle in the last day'
-              : 'loading…'}
+            {publicStats.status === 'ready' ? 'in the castle in the last day' : 'loading…'}
           </p>
         </aside>
 
@@ -117,27 +131,11 @@ export function GateScreen() {
               : 'be the first to set the bar'}
           </p>
         </aside>
-      </div>
 
-      <div
-        className={`puc-gate__door puc-gate__door--${phase}${knockShake ? ' puc-gate__door--knocked' : ''}`}
-        role="button"
-        tabIndex={0}
-        aria-label="Knock on the castle gate"
-        onClick={handleKnock}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleKnock()
-          }
-        }}
-      >
-        <CastleArt phase={phase} />
+        <p className="puc-gate__hint">
+          {phase === 'closed' ? 'Tap the door to knock — or wait a moment.' : 'The wicket is opening…'}
+        </p>
       </div>
-
-      <p className="puc-gate__hint">
-        {phase === 'closed' ? 'Tap the door to knock — or wait a moment.' : 'The wicket is opening…'}
-      </p>
 
       {phase === 'open' && !identity && <WicketDialog />}
     </div>

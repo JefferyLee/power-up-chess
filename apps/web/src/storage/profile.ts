@@ -14,6 +14,9 @@ export interface Profile {
   /** Crown Spark counter — accumulates across games. +1 per game win,
    *  +N per excellent/best move surfaced in post-game review. */
   crownCount: number
+  /** Picked avatar id for the VisitorCard in the Hall. Free-form string
+   *  here so this module stays self-contained; the picker validates. */
+  avatarId: string
 }
 
 const DEFAULT: Profile = {
@@ -22,6 +25,7 @@ const DEFAULT: Profile = {
   aiDifficultyId: 'beginner',
   themeId: 'magic-forest',
   crownCount: 0,
+  avatarId: 'star',
 }
 
 export function loadProfile(): Profile {
@@ -38,10 +42,18 @@ export function loadProfile(): Profile {
       aiDifficultyId: typeof parsed.aiDifficultyId === 'string' ? parsed.aiDifficultyId : DEFAULT.aiDifficultyId,
       themeId: typeof parsed.themeId === 'string' ? parsed.themeId : DEFAULT.themeId,
       crownCount: typeof parsed.crownCount === 'number' && parsed.crownCount >= 0 ? parsed.crownCount : DEFAULT.crownCount,
+      avatarId: typeof parsed.avatarId === 'string' && parsed.avatarId.length > 0 ? parsed.avatarId : DEFAULT.avatarId,
     }
   } catch {
     return DEFAULT
   }
+}
+
+/** Update just the avatar field. Idempotent — safe to call without first
+ *  reading the profile. */
+export function setAvatarId(avatarId: string): void {
+  const p = loadProfile()
+  saveProfile({ ...p, avatarId })
 }
 
 export function saveProfile(p: Profile): void {

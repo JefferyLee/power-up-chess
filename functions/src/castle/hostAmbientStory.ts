@@ -10,8 +10,8 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { loadBundle, pickStory, textForHost } from './storyBank'
-import type { ChatMessageDoc, PresenceDoc } from './chatTypes'
-import type { HostId } from '../shared/hostId'
+import type { ChatMessageDoc } from './chatTypes'
+import { hostOnDuty } from '../shared/hostOnDuty'
 
 const PRESENCE_TTL_MS = 60 * 1000
 const RECENT_MEMORY = 40    // last N posted stories considered "recent"
@@ -40,13 +40,8 @@ export const hostAmbientStory = onSchedule(
       return
     }
 
-    // 2. Decide which host narrates — most-common hostId among presence.
-    const hostCounts: Record<HostId, number> = { lucy: 0, luca: 0 }
-    for (const d of presSnap.docs) {
-      const p = d.data() as PresenceDoc
-      if (p.hostId === 'lucy' || p.hostId === 'luca') hostCounts[p.hostId]++
-    }
-    const hostId: HostId = hostCounts.lucy >= hostCounts.luca ? 'lucy' : 'luca'
+    // 2. Decide which host narrates — wall-clock rotation, same for everyone.
+    const hostId = hostOnDuty(now)
 
     // 3. Load state + check hourly cap.
     const stateRef = db.doc('castle_ambient_state/main')

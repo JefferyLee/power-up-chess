@@ -8,9 +8,6 @@
 //      isBypass) — written after a successful castleEnter or castleBypass.
 //   3. The client-side magic-word hash, so the network never sees plaintext.
 
-import type { HostId } from '../hosts/hosts'
-
-const HOST_KEY = 'puc:session-host:v1'
 const IDENTITY_KEY = 'puc:castle-identity:v1'
 
 export interface CastleIdentity {
@@ -44,35 +41,6 @@ export async function hashMagicWord(name: string, magicWord: string): Promise<st
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('')
-}
-
-/** Pick (or read) the session host. First call this session rolls Lucy/Luca
- *  uniformly; subsequent calls return the same value until sessionStorage is
- *  cleared (new tab, browser restart). */
-export function sessionHost(): HostId {
-  if (typeof window === 'undefined') return 'lucy'
-  try {
-    const stored = window.sessionStorage.getItem(HOST_KEY)
-    if (stored === 'lucy' || stored === 'luca') return stored
-    const rolled: HostId = Math.random() < 0.5 ? 'lucy' : 'luca'
-    window.sessionStorage.setItem(HOST_KEY, rolled)
-    return rolled
-  } catch {
-    return 'lucy'
-  }
-}
-
-/** Force a re-roll of the session host. Used by "switch host" UI later. */
-export function rerollSessionHost(): HostId {
-  if (typeof window === 'undefined') return 'lucy'
-  try {
-    const current = window.sessionStorage.getItem(HOST_KEY)
-    const next: HostId = current === 'lucy' ? 'luca' : 'lucy'
-    window.sessionStorage.setItem(HOST_KEY, next)
-    return next
-  } catch {
-    return 'lucy'
-  }
 }
 
 export function loadIdentity(): CastleIdentity | null {

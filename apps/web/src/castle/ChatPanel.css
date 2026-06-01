@@ -5,9 +5,8 @@
   background: var(--puc-surface);
   border: 1px solid var(--puc-surface-edge);
   border-radius: 14px;
-  padding: 12px;
-  min-height: 280px;
-  max-height: 420px;
+  padding: 16px;
+  min-height: 0;
 }
 
 .puc-chat__scroll {

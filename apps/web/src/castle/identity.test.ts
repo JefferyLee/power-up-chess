@@ -1,11 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  generateBypassName,
-  hashMagicWord,
-  normalizeName,
-  sessionHost,
-  rerollSessionHost,
-} from './identity'
+import { describe, expect, it } from 'vitest'
+import { generateBypassName, hashMagicWord, normalizeName } from './identity'
+import { hostOnDuty, msUntilNextRotation } from '../hosts/hostOnDuty'
 
 describe('normalizeName', () => {
   it('lowercases and trims', () => {
@@ -42,24 +37,25 @@ describe('generateBypassName', () => {
   })
 })
 
-describe('sessionHost', () => {
-  afterEach(() => {
-    window.sessionStorage.clear()
+describe('hostOnDuty', () => {
+  it('returns the same host for the same wall-clock hour', () => {
+    const now = new Date('2026-06-01T10:23:00Z').getTime()
+    const later = new Date('2026-06-01T10:59:59Z').getTime()
+    expect(hostOnDuty(now)).toBe(hostOnDuty(later))
   })
-
-  it('rolls Lucy or Luca once and persists in sessionStorage', () => {
-    const first = sessionHost()
-    expect(first === 'lucy' || first === 'luca').toBe(true)
-    expect(window.sessionStorage.getItem('puc:session-host:v1')).toBe(first)
-    // Re-call returns the same value
-    expect(sessionHost()).toBe(first)
+  it('flips between consecutive hours', () => {
+    const ten = new Date('2026-06-01T10:00:00Z').getTime()
+    const eleven = new Date('2026-06-01T11:00:00Z').getTime()
+    expect(hostOnDuty(ten)).not.toBe(hostOnDuty(eleven))
   })
-
-  it('rerollSessionHost flips to the other host', () => {
-    const mock = vi.spyOn(Math, 'random').mockReturnValue(0.1) // -> lucy
-    expect(sessionHost()).toBe('lucy')
-    mock.mockRestore()
-    expect(rerollSessionHost()).toBe('luca')
-    expect(rerollSessionHost()).toBe('lucy')
+  it('returns either lucy or luca', () => {
+    expect(['lucy', 'luca']).toContain(hostOnDuty(0))
+    expect(['lucy', 'luca']).toContain(hostOnDuty(Date.now()))
+  })
+  it('msUntilNextRotation is within (0, 1h]', () => {
+    const HOUR = 60 * 60 * 1000
+    const ms = msUntilNextRotation()
+    expect(ms).toBeGreaterThan(0)
+    expect(ms).toBeLessThanOrEqual(HOUR)
   })
 })

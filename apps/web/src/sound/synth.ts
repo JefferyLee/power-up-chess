@@ -96,30 +96,59 @@ function draw(): void {
   tone({ freq: 523, type: 'sine', duration: 0.18, peakGain: 0.16, release: 0.2, startOffset: 0.18 })
 }
 
-// Castle gate knock — three rapid raps. Each rap is a short percussive
-// thud (triangle wave swept down) to approximate knuckles on wood.
+// A single "knock on heavy wood" — filtered-noise transient + tonal body.
+// Real knocks are mostly broadband impulses, not pitched tones; the noise
+// burst carries most of the character, with a low resonant tone giving
+// the door's "weight".
+function woodKnock(startOffset: number): void {
+  const c = ensureContext()
+  if (!c || !masterGain) return
+  const t0 = c.currentTime + startOffset
+
+  // 1) Noise transient — short burst of white noise, lowpassed to ~600 Hz
+  //    so it reads as a low wood thud rather than a click.
+  const noiseDur = 0.16
+  const buffer = c.createBuffer(1, Math.floor(c.sampleRate * noiseDur), c.sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < data.length; i++) {
+    // Linear-decaying noise; slight pre-emphasis for the attack.
+    const decay = 1 - i / data.length
+    data[i] = (Math.random() * 2 - 1) * decay * decay
+  }
+  const noise = c.createBufferSource()
+  noise.buffer = buffer
+  const noiseFilter = c.createBiquadFilter()
+  noiseFilter.type = 'lowpass'
+  noiseFilter.frequency.setValueAtTime(600, t0)
+  noiseFilter.Q.setValueAtTime(1.2, t0)
+  const noiseGain = c.createGain()
+  noiseGain.gain.setValueAtTime(0.0001, t0)
+  noiseGain.gain.exponentialRampToValueAtTime(0.55, t0 + 0.005)
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, t0 + noiseDur)
+  noise.connect(noiseFilter).connect(noiseGain).connect(masterGain)
+  noise.start(t0)
+  noise.stop(t0 + noiseDur + 0.02)
+
+  // 2) Body resonance — a damped sine around 90 Hz gives the door's
+  //    thump-after-strike, like wood flexing.
+  const body = c.createOscillator()
+  body.type = 'sine'
+  body.frequency.setValueAtTime(110, t0)
+  body.frequency.exponentialRampToValueAtTime(70, t0 + 0.18)
+  const bodyGain = c.createGain()
+  bodyGain.gain.setValueAtTime(0.0001, t0)
+  bodyGain.gain.exponentialRampToValueAtTime(0.35, t0 + 0.008)
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22)
+  body.connect(bodyGain).connect(masterGain)
+  body.start(t0)
+  body.stop(t0 + 0.25)
+}
+
+// Castle gate knock — three knocks at the user-requested 0.7 s interval.
 function knock(): void {
-  const RAP_SPACING = 0.12
+  const SPACING_S = 0.7
   for (let i = 0; i < 3; i++) {
-    tone({
-      freq: [180, 80],
-      type: 'triangle',
-      duration: 0.04,
-      peakGain: 0.32,
-      attack: 0.002,
-      release: 0.04,
-      startOffset: i * RAP_SPACING,
-    })
-    // High-frequency click on top of the thud for the wood "snap".
-    tone({
-      freq: [1200, 400],
-      type: 'square',
-      duration: 0.015,
-      peakGain: 0.08,
-      attack: 0.001,
-      release: 0.02,
-      startOffset: i * RAP_SPACING,
-    })
+    woodKnock(i * SPACING_S)
   }
 }
 

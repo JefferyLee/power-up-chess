@@ -9,12 +9,11 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
 import type { GuestDoc } from './types'
-import { isHostId, type HostId } from '../shared/hostId'
+import { hostOnDuty } from '../shared/hostOnDuty'
 
 interface FullPresenceRequest extends SetPresenceRequest {
   displayName: string
   normalizedName: string
-  hostId: HostId
   isBypass: boolean
 }
 
@@ -26,12 +25,13 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     const sessionId = String(req.data?.sessionId ?? '').trim()
     const displayName = String(req.data?.displayName ?? '').trim().slice(0, 40)
     const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()
-    const hostId = req.data?.hostId
     const isBypass = req.data?.isBypass === true
 
     if (!sessionId || sessionId.length > 40) throw new HttpsError('invalid-argument', 'Bad sessionId.')
     if (!displayName) throw new HttpsError('invalid-argument', 'displayName required.')
-    if (!hostId || !isHostId(hostId)) throw new HttpsError('invalid-argument', 'hostId must be lucy or luca.')
+
+    // Server decides the host on duty — same for every visitor at this instant.
+    const hostId = hostOnDuty()
 
     const db = getFirestore()
     // Verify non-bypass identity against the guest doc.

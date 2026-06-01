@@ -1,7 +1,12 @@
-// Stylised castle SVG. Neutral palette per MVP2_PLAN §12.8 — the theme
-// reveals only after the visitor enters. Two side towers, a central
-// arched gate, two small wickets on the gate, a banner with the castle
-// initial. The right-side wicket animates open through the `phase` prop.
+// Power Up Castle — large illustrated gate, painted in SVG.
+//
+// Full-bleed scene that fills the page: a deep dusk sky with constellations,
+// distant hills, four towers, banners, lit windows, a wide arched main gate
+// with iron bands, two embedded wickets (the right one animates open), a
+// stone bridge over a moat, and a pair of wall-mounted lanterns.
+//
+// The whole thing is one viewBox so it scales cleanly. Theme tokens aren't
+// applied here — the gate is intentionally neutral until the visitor enters.
 
 interface Props {
   phase: 'closed' | 'opening' | 'open'
@@ -10,115 +15,217 @@ interface Props {
 export function CastleArt({ phase }: Props) {
   return (
     <svg
-      viewBox="0 0 480 360"
+      viewBox="0 0 960 720"
+      preserveAspectRatio="xMidYMid slice"
       className="puc-castle-art"
       role="img"
       aria-label="Power Up Castle gate"
     >
-      {/* Sky gradient backdrop (very soft). */}
       <defs>
-        <linearGradient id="puc-castle-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b3148" />
-          <stop offset="100%" stopColor="#5f5572" />
+        <linearGradient id="puc-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1c1638" />
+          <stop offset="55%" stopColor="#3d2c5c" />
+          <stop offset="100%" stopColor="#6a4a7a" />
         </linearGradient>
-        <linearGradient id="puc-castle-stone" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9a8c7c" />
-          <stop offset="100%" stopColor="#6a5e52" />
+        <radialGradient id="puc-moon" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff9dd" />
+          <stop offset="60%" stopColor="#f6e3a1" />
+          <stop offset="100%" stopColor="rgba(246,227,161,0)" />
+        </radialGradient>
+        <linearGradient id="puc-hills" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2c2540" />
+          <stop offset="100%" stopColor="#1a1226" />
         </linearGradient>
-        <linearGradient id="puc-castle-roof" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7a3e3e" />
-          <stop offset="100%" stopColor="#4d2424" />
+        <linearGradient id="puc-stone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#a89786" />
+          <stop offset="100%" stopColor="#5d4f44" />
         </linearGradient>
-        <linearGradient id="puc-castle-door" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="puc-stone-dark" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7a6a5c" />
+          <stop offset="100%" stopColor="#3d342c" />
+        </linearGradient>
+        <linearGradient id="puc-roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#8a2a2a" />
+          <stop offset="100%" stopColor="#4d1212" />
+        </linearGradient>
+        <linearGradient id="puc-door" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#3a2410" />
-          <stop offset="100%" stopColor="#221408" />
+          <stop offset="100%" stopColor="#180c04" />
         </linearGradient>
+        <radialGradient id="puc-lantern" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(255,222,140,0.95)" />
+          <stop offset="55%" stopColor="rgba(255,180,80,0.45)" />
+          <stop offset="100%" stopColor="rgba(255,160,60,0)" />
+        </radialGradient>
+        <radialGradient id="puc-wicket-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff1c0" />
+          <stop offset="60%" stopColor="rgba(255,210,120,0.6)" />
+          <stop offset="100%" stopColor="rgba(255,180,90,0)" />
+        </radialGradient>
+        <pattern id="puc-stone-tex" width="40" height="20" patternUnits="userSpaceOnUse">
+          <rect width="40" height="20" fill="transparent" />
+          <line x1="0" y1="10" x2="40" y2="10" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
+          <line x1="20" y1="0" x2="20" y2="10" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
+          <line x1="0" y1="20" x2="0" y2="10" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
+          <line x1="40" y1="20" x2="40" y2="10" stroke="rgba(0,0,0,0.18)" strokeWidth="0.8" />
+        </pattern>
       </defs>
 
-      <rect x="0" y="0" width="480" height="360" fill="url(#puc-castle-sky)" />
+      {/* Sky */}
+      <rect x="0" y="0" width="960" height="540" fill="url(#puc-sky)" />
+
+      {/* Stars (a few scattered, pseudo-random) */}
+      <g fill="#fff" opacity="0.85">
+        {STAR_POINTS.map((p, i) => (
+          <circle key={i} cx={p[0]} cy={p[1]} r={p[2]} opacity={0.4 + 0.6 * (p[2] / 1.4)} />
+        ))}
+      </g>
+
+      {/* Moon */}
+      <circle cx="800" cy="120" r="46" fill="url(#puc-moon)" />
+      <circle cx="800" cy="120" r="32" fill="#fdf6da" opacity="0.95" />
+
+      {/* Distant hills */}
+      <path d="M 0 460 Q 200 380 380 440 T 700 420 T 960 460 L 960 540 L 0 540 Z" fill="url(#puc-hills)" />
 
       {/* Ground */}
-      <rect x="0" y="320" width="480" height="40" fill="#2d2a26" />
+      <rect x="0" y="540" width="960" height="180" fill="#1d1820" />
+      <rect x="0" y="540" width="960" height="14" fill="#0d0a14" />
 
-      {/* Castle main body */}
-      <rect x="120" y="120" width="240" height="200" fill="url(#puc-castle-stone)" />
-      {/* Crenellations */}
-      {Array.from({ length: 6 }).map((_, i) => (
-        <rect key={i} x={120 + i * 40} y="110" width="20" height="14" fill="url(#puc-castle-stone)" />
+      {/* Moat */}
+      <rect x="0" y="600" width="960" height="80" fill="#10121f" />
+      <path d="M 0 600 Q 240 612 480 600 T 960 600 L 960 612 L 0 612 Z" fill="rgba(255,255,255,0.08)" />
+      <path d="M 0 640 Q 240 632 480 640 T 960 640 L 960 648 L 0 648 Z" fill="rgba(255,255,255,0.05)" />
+
+      {/* Stone bridge over the moat */}
+      <rect x="380" y="586" width="200" height="34" fill="url(#puc-stone-dark)" />
+      <rect x="380" y="586" width="200" height="34" fill="url(#puc-stone-tex)" />
+      <path d="M 410 620 Q 430 600 470 600 T 530 600 Q 550 600 570 620 Z" fill="#0a0815" />
+
+      {/* Outer wall body */}
+      <rect x="60" y="320" width="840" height="280" fill="url(#puc-stone)" />
+      <rect x="60" y="320" width="840" height="280" fill="url(#puc-stone-tex)" />
+      {/* Crenellations along the wall top */}
+      {Array.from({ length: 21 }).map((_, i) => (
+        <rect key={i} x={60 + i * 40} y="304" width="22" height="20" fill="url(#puc-stone)" />
       ))}
 
       {/* Left tower */}
-      <rect x="70" y="80" width="60" height="240" fill="url(#puc-castle-stone)" />
-      <polygon points="60,80 100,30 140,80" fill="url(#puc-castle-roof)" />
-      <rect x="90" y="160" width="20" height="36" fill="#1b1818" />
+      <rect x="40" y="220" width="100" height="380" fill="url(#puc-stone)" />
+      <rect x="40" y="220" width="100" height="380" fill="url(#puc-stone-tex)" />
+      <polygon points="20,220 90,90 160,220" fill="url(#puc-roof)" />
+      <rect x="80" y="320" width="20" height="34" fill="#0e0c12" />
+      <rect x="80" y="380" width="20" height="34" fill="#0e0c12" />
+      <rect x="80" y="440" width="20" height="34" fill="url(#puc-wicket-glow)" opacity="0.7" />
+      {/* Tower crenellations */}
+      {Array.from({ length: 3 }).map((_, i) => (
+        <rect key={i} x={45 + i * 32} y="208" width="20" height="16" fill="url(#puc-stone)" />
+      ))}
 
       {/* Right tower */}
-      <rect x="350" y="80" width="60" height="240" fill="url(#puc-castle-stone)" />
-      <polygon points="340,80 380,30 420,80" fill="url(#puc-castle-roof)" />
-      <rect x="370" y="160" width="20" height="36" fill="#1b1818" />
+      <rect x="820" y="220" width="100" height="380" fill="url(#puc-stone)" />
+      <rect x="820" y="220" width="100" height="380" fill="url(#puc-stone-tex)" />
+      <polygon points="800,220 870,90 940,220" fill="url(#puc-roof)" />
+      <rect x="860" y="320" width="20" height="34" fill="#0e0c12" />
+      <rect x="860" y="380" width="20" height="34" fill="#0e0c12" />
+      <rect x="860" y="440" width="20" height="34" fill="url(#puc-wicket-glow)" opacity="0.7" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <rect key={i} x={825 + i * 32} y="208" width="20" height="16" fill="url(#puc-stone)" />
+      ))}
 
       {/* Tower flags */}
-      <line x1="100" y1="30" x2="100" y2="10" stroke="#c8b6ff" strokeWidth="1.5" />
-      <polygon points="100,10 116,15 100,20" fill="#e7b841" />
-      <line x1="380" y1="30" x2="380" y2="10" stroke="#c8b6ff" strokeWidth="1.5" />
-      <polygon points="380,10 396,15 380,20" fill="#e7b841" />
+      <line x1="90" y1="90" x2="90" y2="50" stroke="#d0bfff" strokeWidth="2" />
+      <polygon points="90,50 134,62 90,74" fill="#e7b841" />
+      <line x1="870" y1="90" x2="870" y2="50" stroke="#d0bfff" strokeWidth="2" />
+      <polygon points="870,50 914,62 870,74" fill="#e7b841" />
+
+      {/* Inner wall — windows */}
+      {([
+        [220, 380],
+        [280, 380],
+        [680, 380],
+        [740, 380],
+      ] as Array<[number, number]>).map(([x, y], i) => (
+        <g key={i}>
+          <rect x={x} y={y} width="22" height="40" fill="#0e0c12" />
+          <rect x={x + 2} y={y + 2} width="18" height="22" fill="url(#puc-lantern)" opacity="0.85" />
+        </g>
+      ))}
+
+      {/* Wall-mounted lanterns flanking the gate */}
+      <g>
+        <rect x="320" y="430" width="6" height="40" fill="#3a2c20" />
+        <circle cx="323" cy="478" r="14" fill="url(#puc-lantern)" />
+        <circle cx="323" cy="478" r="5" fill="#ffeec6" />
+      </g>
+      <g>
+        <rect x="634" y="430" width="6" height="40" fill="#3a2c20" />
+        <circle cx="637" cy="478" r="14" fill="url(#puc-lantern)" />
+        <circle cx="637" cy="478" r="5" fill="#ffeec6" />
+      </g>
 
       {/* Main arched gate */}
       <path
-        d="M 180 320 L 180 220 Q 180 170 240 170 Q 300 170 300 220 L 300 320 Z"
-        fill="url(#puc-castle-door)"
+        d="M 350 600 L 350 440 Q 350 340 480 340 Q 610 340 610 440 L 610 600 Z"
+        fill="url(#puc-door)"
         stroke="#0c0805"
-        strokeWidth="2"
+        strokeWidth="3"
       />
-      {/* Gate plank lines */}
-      <line x1="240" y1="170" x2="240" y2="320" stroke="#0c0805" strokeWidth="1.5" opacity="0.7" />
-      <line x1="210" y1="190" x2="210" y2="320" stroke="#0c0805" strokeWidth="1" opacity="0.4" />
-      <line x1="270" y1="190" x2="270" y2="320" stroke="#0c0805" strokeWidth="1" opacity="0.4" />
-
+      {/* Iron bands */}
+      <path d="M 350 460 Q 480 444 610 460" stroke="#1a120a" strokeWidth="6" fill="none" />
+      <path d="M 350 520 Q 480 510 610 520" stroke="#1a120a" strokeWidth="6" fill="none" />
+      <path d="M 350 580 Q 480 575 610 580" stroke="#1a120a" strokeWidth="6" fill="none" />
+      {/* Plank lines */}
+      <line x1="480" y1="340" x2="480" y2="600" stroke="#0a0604" strokeWidth="2" opacity="0.7" />
+      <line x1="420" y1="370" x2="420" y2="600" stroke="#0a0604" strokeWidth="1" opacity="0.4" />
+      <line x1="540" y1="370" x2="540" y2="600" stroke="#0a0604" strokeWidth="1" opacity="0.4" />
       {/* Iron studs */}
-      {[200, 230, 260, 290].map((y) =>
-        [200, 280].map((x) => (
-          <circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" fill="#0c0805" />
-        )),
+      {[400, 440, 480, 520, 560].map((y) =>
+        [375, 480, 585].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3" fill="#0a0604" />),
       )}
 
-      {/* Left wicket — purely decorative, always closed in Phase A */}
-      <rect x="195" y="250" width="34" height="60" rx="3" fill="#1a0e05" stroke="#0c0805" strokeWidth="1.5" />
-      <circle cx="222" cy="282" r="1.8" fill="#caa14a" />
-
-      {/* Right wicket — animates open per phase */}
-      <g
-        className={`puc-castle-art__wicket puc-castle-art__wicket--${phase}`}
-        style={{ transformOrigin: '252px 282px' }}
-      >
-        <rect x="252" y="250" width="34" height="60" rx="3" fill="#1a0e05" stroke="#0c0805" strokeWidth="1.5" />
-        <circle cx="259" cy="282" r="1.8" fill="#caa14a" />
+      {/* Left wicket — purely decorative, always closed */}
+      <g>
+        <rect x="380" y="500" width="44" height="92" rx="4" fill="#1c0e05" stroke="#0c0805" strokeWidth="2" />
+        <circle cx="416" cy="546" r="2.5" fill="#caa14a" />
       </g>
 
-      {/* Glow from inside the wicket once it starts opening */}
+      {/* Right wicket — animates open per phase, hinged on its right edge */}
+      <g
+        className={`puc-castle-art__wicket puc-castle-art__wicket--${phase}`}
+        style={{ transformOrigin: '579px 546px' }}
+      >
+        <rect x="535" y="500" width="44" height="92" rx="4" fill="#1c0e05" stroke="#0c0805" strokeWidth="2" />
+        <circle cx="544" cy="546" r="2.5" fill="#caa14a" />
+        {/* Tiny grille */}
+        <line x1="546" y1="520" x2="568" y2="520" stroke="#0a0604" strokeWidth="1" />
+        <line x1="546" y1="528" x2="568" y2="528" stroke="#0a0604" strokeWidth="1" />
+      </g>
+
+      {/* Warm glow leaking from the open wicket */}
       {phase !== 'closed' && (
         <ellipse
-          cx="269"
-          cy="280"
-          rx="14"
-          ry="22"
-          fill="#f7e8b6"
-          opacity={phase === 'open' ? 0.65 : 0.25}
+          cx="560"
+          cy="546"
+          rx="34"
+          ry="60"
+          fill="url(#puc-wicket-glow)"
+          opacity={phase === 'open' ? 0.85 : 0.45}
           className="puc-castle-art__glow"
         />
       )}
 
-      {/* Banner with castle initial */}
-      <g transform="translate(220, 130)">
-        <rect x="0" y="0" width="40" height="44" fill="#7a3e3e" stroke="#3a1818" strokeWidth="1.5" />
-        <polygon points="0,44 20,52 40,44" fill="#7a3e3e" stroke="#3a1818" strokeWidth="1.5" />
+      {/* Banner above the gate with castle initial */}
+      <g transform="translate(456, 332)">
+        <rect x="0" y="0" width="48" height="62" fill="#7a3e3e" stroke="#3a1818" strokeWidth="2" />
+        <polygon points="0,62 24,72 48,62" fill="#7a3e3e" stroke="#3a1818" strokeWidth="2" />
         <text
-          x="20"
-          y="28"
+          x="24"
+          y="40"
           textAnchor="middle"
-          fontFamily="Georgia, serif"
-          fontSize="20"
-          fontWeight="bold"
+          fontFamily="Cinzel, Georgia, serif"
+          fontSize="28"
+          fontWeight="700"
           fill="#f7e8b6"
         >
           P
@@ -127,3 +234,28 @@ export function CastleArt({ phase }: Props) {
     </svg>
   )
 }
+
+// Hand-picked scatter of constellation points — fixed coords so the layout
+// stays stable across renders. Format: [x, y, radius].
+const STAR_POINTS: Array<[number, number, number]> = [
+  [40, 60, 1.0],
+  [110, 30, 1.2],
+  [180, 90, 0.8],
+  [260, 50, 1.0],
+  [310, 110, 0.6],
+  [360, 40, 0.9],
+  [420, 90, 1.1],
+  [490, 25, 1.3],
+  [520, 130, 0.6],
+  [580, 60, 0.8],
+  [640, 100, 1.0],
+  [710, 50, 1.2],
+  [770, 180, 0.7],
+  [870, 200, 1.0],
+  [910, 60, 1.4],
+  [150, 220, 0.6],
+  [240, 250, 0.8],
+  [330, 200, 0.6],
+  [620, 240, 0.6],
+  [720, 230, 0.8],
+]

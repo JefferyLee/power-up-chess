@@ -1,0 +1,208 @@
+.puc-visitor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.puc-visitor__avatar {
+  position: relative;
+  background: transparent;
+  border: 2px solid var(--puc-accent, #f1c34c);
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 160ms ease, box-shadow 200ms ease;
+}
+
+.puc-visitor__avatar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(241, 195, 76, 0.32);
+}
+
+.puc-visitor__avatar svg {
+  border-radius: 50%;
+  display: block;
+}
+
+.puc-visitor__avatar-edit {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--puc-accent, #f1c34c);
+  color: #1c1408;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.puc-visitor__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.puc-visitor__name {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 17px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puc-visitor__points {
+  margin: 0;
+  color: var(--puc-text);
+  font-size: 14px;
+}
+
+.puc-visitor__points strong {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 22px;
+  color: var(--puc-accent, #f1c34c);
+}
+
+.puc-visitor__points-label {
+  font-size: 12.5px;
+  color: var(--puc-text-muted);
+}
+
+.puc-visitor__progress {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+
+.puc-visitor__progress--unlocked {
+  color: var(--puc-accent, #f1c34c);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.puc-visitor__note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+
+/* ── Avatar picker modal ─────────────────────────────────────────────── */
+
+.puc-avatar-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.puc-avatar-picker__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 6, 18, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+.puc-avatar-picker__panel {
+  position: relative;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 16px;
+  padding: 18px 22px 24px;
+  width: min(520px, 92vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--puc-shadow-card);
+}
+
+.puc-avatar-picker__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.puc-avatar-picker__title {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 18px;
+  color: var(--puc-text-accent);
+  letter-spacing: 1px;
+}
+
+.puc-avatar-picker__close {
+  background: transparent;
+  border: none;
+  color: var(--puc-text-muted);
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+.puc-avatar-picker__close:hover {
+  color: var(--puc-text-accent);
+}
+
+.puc-avatar-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px;
+}
+
+.puc-avatar-picker__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 10px 6px 8px;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 200ms ease;
+}
+
+.puc-avatar-picker__cell:hover {
+  transform: translateY(-2px);
+  border-color: var(--puc-surface-edge);
+}
+
+.puc-avatar-picker__cell--current {
+  border-color: var(--puc-accent, #f1c34c);
+  box-shadow: 0 0 0 2px rgba(241, 195, 76, 0.18);
+}
+
+.puc-avatar-picker__cell svg {
+  border-radius: 50%;
+  display: block;
+}
+
+.puc-avatar-picker__label {
+  font-size: 11.5px;
+  color: var(--puc-text-muted);
+  font-family: 'Cinzel', Georgia, serif;
+  letter-spacing: 0.4px;
+}

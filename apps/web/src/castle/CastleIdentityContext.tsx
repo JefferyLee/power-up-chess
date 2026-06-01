@@ -8,12 +8,12 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { applyTheme } from '../theme/themes'
 import type { HostId } from '../hosts/hosts'
+import { hostOnDuty, msUntilNextRotation } from '../hosts/hostOnDuty'
 import { CastleContext, type CastleContextValue } from './castleContext'
 import {
   clearIdentity,
   loadIdentity,
   saveIdentity,
-  sessionHost,
   type CastleIdentity,
 } from './identity'
 
@@ -22,8 +22,26 @@ function themeForHost(hostId: HostId): string {
 }
 
 export function CastleIdentityProvider({ children }: { children: ReactNode }) {
-  const [hostId] = useState<HostId>(() => sessionHost())
+  // Host on duty is wall-clock driven: same host for every visitor at the
+  // same instant. Re-checked on a timer so a tab open across the rotation
+  // sees the swap without a manual refresh.
+  const [hostId, setHostId] = useState<HostId>(() => hostOnDuty())
   const [identity, setIdentity] = useState<CastleIdentity | null>(() => loadIdentity())
+
+  useEffect(() => {
+    let timer: number | null = null
+    const schedule = () => {
+      const ms = msUntilNextRotation()
+      timer = window.setTimeout(() => {
+        setHostId(hostOnDuty())
+        schedule()
+      }, ms + 50)
+    }
+    schedule()
+    return () => {
+      if (timer !== null) window.clearTimeout(timer)
+    }
+  }, [])
 
   // Apply the host-bound theme on mount + whenever the host changes.
   useEffect(() => {
