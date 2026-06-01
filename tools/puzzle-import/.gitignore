@@ -1,0 +1,6 @@
+# Raw Lichess dump — too big to commit (~400 MB compressed). Re-download
+# with `pnpm fetch` whenever you re-run the pipeline.
+work/
+*.csv
+*.zst
+node_modules/

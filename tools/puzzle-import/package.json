@@ -1,0 +1,24 @@
+{
+  "name": "@power-up-chess/puzzle-import",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Offline pipeline that turns the Lichess CC0 puzzle DB into Ada-appropriate puzzle JSON for the Garden.",
+  "scripts": {
+    "all": "tsx src/cli.ts all",
+    "dl": "tsx src/cli.ts fetch",
+    "filter": "tsx src/cli.ts filter",
+    "sample": "tsx src/cli.ts sample",
+    "explain": "tsx src/cli.ts explain",
+    "emit": "tsx src/cli.ts emit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "chess.js": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "tsx": "^4.20.0",
+    "typescript": "~6.0.2"
+  }
+}

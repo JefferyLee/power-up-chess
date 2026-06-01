@@ -9,9 +9,11 @@ import {
 } from './loader'
 
 describe('puzzle loader', () => {
-  it('loads the seed catalogue', () => {
+  it('loads the catalogue (seed + lichess)', () => {
     expect(ALL_PUZZLES.length).toBeGreaterThan(0)
-    expect(ALL_PUZZLES.length).toBe(10) // current seed size; update when adding
+    // 10 seed + ~200 lichess. Generous floor so a handful of import
+    // drops/adds doesn't churn the test.
+    expect(ALL_PUZZLES.length).toBeGreaterThanOrEqual(100)
   })
 
   it('every puzzle has exactly 3 hints', () => {
