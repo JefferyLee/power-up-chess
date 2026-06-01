@@ -1,16 +1,22 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
+import { saveGame } from '../history/api'
+import { resultPartsFromStatus } from '../history/fromStatus'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
 import './LocalGameScreen.css'
+
+function newLocalGameId(): string {
+  return `local:${crypto.randomUUID()}`
+}
 
 interface Props {
   hostId: HostId
@@ -55,18 +61,24 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
   const [localResignation, setLocalResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
+  const [gameId, setGameId] = useState(() => newLocalGameId())
+  const [savedThisGame, setSavedThisGame] = useState(false)
   const host = HOSTS[hostId]
 
   // Resignation isn't a chess.js concept — overlay it on top of the position-
   // derived status. Once resigned, the board freezes and the end overlay
-  // appears.
-  const effectiveStatus: GameStatus = localResignation
-    ? {
-        kind: 'resign',
+  // appears. Memoised so the save-effect dep array doesn't re-fire every
+  // render.
+  const effectiveStatus: GameStatus = useMemo(() => {
+    if (localResignation) {
+      return {
+        kind: 'resign' as const,
         resigner: localResignation.resigner,
-        winner: localResignation.resigner === 'w' ? 'b' : 'w',
+        winner: localResignation.resigner === 'w' ? ('b' as const) : ('w' as const),
       }
-    : snap.status
+    }
+    return snap.status
+  }, [localResignation, snap.status])
   const gameOver = effectiveStatus.kind !== 'in_progress'
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
@@ -112,6 +124,8 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     setSnap(snapshot(fresh))
     setSparks([])
     setLocalResignation(null)
+    setGameId(newLocalGameId())
+    setSavedThisGame(false)
   }, [])
 
   const handleResign = useCallback((resigner: Color) => {
@@ -141,6 +155,43 @@ export function LocalGameScreen({ hostId, whiteName, blackName, onExit }: Props)
     return picker.pick(hostId, 'draw')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveStatus.kind, hostId])
+
+  // Persist the game to IndexedDB once it ends. Idempotent per gameId via the
+  // savedThisGame flag (and IDB's put() is itself idempotent on the key).
+  useEffect(() => {
+    if (savedThisGame) return
+    const parts = resultPartsFromStatus(effectiveStatus)
+    if (!parts) return
+    saveGame({
+      id: gameId,
+      playedAt: Date.now(),
+      mode: 'local',
+      whiteName,
+      blackName,
+      hostId,
+      result: parts.result,
+      endReason: parts.endReason,
+      pgn: game.pgn(),
+      finalFen: snap.fen,
+      moveCount: snap.history.length,
+    }).catch((err) => {
+      console.warn('[history] failed to save local game', err)
+    })
+    // savedThisGame is a one-shot guard; setting it here just blocks re-fires
+    // of this same effect, not a render cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSavedThisGame(true)
+  }, [
+    effectiveStatus,
+    savedThisGame,
+    gameId,
+    whiteName,
+    blackName,
+    hostId,
+    game,
+    snap.fen,
+    snap.history.length,
+  ])
 
   const lastMove = snap.history.length
     ? { from: snap.history[snap.history.length - 1]!.from, to: snap.history[snap.history.length - 1]!.to }

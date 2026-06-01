@@ -12,6 +12,7 @@ import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { callJoinRoom, callResignGame } from '../firebase/callables'
+import { saveGame } from '../history/api'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile } from '../storage/profile'
@@ -301,6 +302,39 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   }, [room.status, room.endReason, room.hostMode, room.result, room.white.displayName, room.black?.displayName, picker])
 
   const orientation: Color = yourColor ?? 'w'
+
+  // Persist completed online games to local IndexedDB. Idempotent: id is
+  // online:ROOMID, and IDB's put() upserts on that key.
+  const [savedThisGame, setSavedThisGame] = useState(false)
+  useEffect(() => {
+    if (savedThisGame) return
+    if (room.status !== 'completed') return
+    const replay = new ChessGame()
+    for (const m of room.moves) {
+      replay.move({
+        from: m.uci.slice(0, 2) as Square,
+        to: m.uci.slice(2, 4) as Square,
+        ...(m.uci.length === 5 ? { promotion: m.uci[4] as 'q' | 'r' | 'b' | 'n' } : {}),
+      })
+    }
+    saveGame({
+      id: `online:${roomId}`,
+      playedAt: room.updatedAt,
+      mode: 'online',
+      whiteName: room.white.displayName,
+      blackName: room.black?.displayName ?? '',
+      hostId: room.hostMode,
+      result: room.result ?? 'draw',
+      endReason: room.endReason ?? 'other',
+      pgn: replay.pgn(),
+      finalFen: room.currentFen,
+      moveCount: room.moves.length,
+    }).catch((err) => {
+      console.warn('[history] failed to save online game', err)
+    })
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSavedThisGame(true)
+  }, [room, roomId, savedThisGame])
 
   const [copied, setCopied] = useState(false)
   const copyLink = async () => {

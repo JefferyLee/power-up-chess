@@ -147,6 +147,16 @@ export function StartScreen() {
           </button>
         </section>
 
+        <div className="puc-start__footer">
+          <button
+            type="button"
+            className="puc-start__link"
+            onClick={() => navigate('/history')}
+          >
+            Match history
+          </button>
+        </div>
+
         <p className="puc-start__auth" aria-live="polite">
           {authState.status === 'loading' && 'Signing you in…'}
           {authState.status === 'ready' && `Signed in · ${authState.uid.slice(0, 8)}`}

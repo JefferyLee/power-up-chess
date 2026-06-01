@@ -220,6 +220,31 @@
   color: var(--puc-text-muted);
 }
 
+.puc-start__footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.puc-start__link {
+  background: transparent;
+  border: none;
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-body);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  padding: 6px 10px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(241, 195, 76, 0.32);
+}
+
+.puc-start__link:hover {
+  color: var(--puc-accent);
+  text-decoration-color: var(--puc-accent);
+}
+
 .puc-start__auth {
   margin: 6px 0 0;
   text-align: center;
