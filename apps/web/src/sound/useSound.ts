@@ -1,6 +1,6 @@
 // Mute-aware play hook + persisted mute state.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { playSound, unlockAudio, type SoundName } from './synth'
 
 const MUTE_KEY = 'puc:muted:v1'
@@ -65,5 +65,8 @@ export function useSound(): SoundApi {
     playSound(name)
   }, [])
 
-  return { muted, toggleMute, play }
+  // Return a stable object so consumers that put `sound` into useCallback /
+  // useEffect dep arrays do not re-fire on every render. Only the `muted`
+  // flag actually changes meaningfully.
+  return useMemo(() => ({ muted, toggleMute, play }), [muted, toggleMute, play])
 }

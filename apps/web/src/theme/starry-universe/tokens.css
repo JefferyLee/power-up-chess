@@ -10,10 +10,15 @@
   --puc-sq-dark:  #2c2853;          /* deep indigo */
   --puc-board-bg: #0a0b1f;          /* outer dark */
 
-  /* Pieces */
-  --puc-piece-white-fill:   #f7f4ff;
-  --puc-piece-white-stroke: #1a1432;
-  --puc-piece-black-fill:   #1a1130;
+  /* Pieces.
+   * White pieces use a warm cream fill + soft violet stroke so they read as
+   * "white" against the cool indigo board and don't dim to black when the
+   * 1.4px text-stroke fills in glyph details (knight mane, bishop miter).
+   * Black pieces use a deep ink that still has just enough purple to read
+   * against the deep-indigo dark squares. */
+  --puc-piece-white-fill:   #fff7e1;
+  --puc-piece-white-stroke: #6a55a8;
+  --puc-piece-black-fill:   #0a0418;
 
   /* Highlights */
   --puc-sq-selected:  rgba(176, 196, 255, 0.45);  /* moonbeam */
