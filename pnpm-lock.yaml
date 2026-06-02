@@ -144,6 +144,9 @@ importers:
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
+      firebase-admin:
+        specifier: ^13.0.0
+        version: 13.10.0
     devDependencies:
       '@types/node':
         specifier: ^24.12.3

@@ -3,18 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Offline pipeline that turns the Lichess CC0 puzzle DB into Ada-appropriate puzzle JSON for the Garden.",
+  "description": "Offline pipeline that turns the Lichess CC0 puzzle DB into Puzzle-Garden JSON + uploads to Firestore.",
   "scripts": {
     "all": "tsx src/cli.ts all",
     "dl": "tsx src/cli.ts fetch",
     "filter": "tsx src/cli.ts filter",
     "sample": "tsx src/cli.ts sample",
     "explain": "tsx src/cli.ts explain",
-    "emit": "tsx src/cli.ts emit"
+    "emit": "tsx src/cli.ts emit",
+    "upload": "tsx src/cli.ts upload"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "chess.js": "^1.4.0"
+    "chess.js": "^1.4.0",
+    "firebase-admin": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.3",
