@@ -87,6 +87,7 @@ export type CastleEnterResponse =
       decayedBy: 0
       pointsBeforeDecay: 0
       bonus?: EnterBonus
+      sessionId: string
     }
   | {
       status: 'returning'
@@ -95,6 +96,7 @@ export type CastleEnterResponse =
       decayedBy: number
       pointsBeforeDecay: number
       bonus?: EnterBonus
+      sessionId: string
     }
   | { status: 'wrong-magic'; attemptsRemaining: number }
   | { status: 'rate-limited'; retryAfterMs: number }
@@ -152,10 +154,12 @@ export interface SetPresenceRequest {
   isBypass: boolean
   /** Omit for the Hall — the server defaults to hall when absent. */
   location?: LocationTag
+  /** H.7 auth session token from castleEnter. */
+  authSessionId?: string
 }
-export interface SetPresenceResponse {
-  ok: true
-}
+export type SetPresenceResponse =
+  | { ok: true }
+  | { ok: false; evicted: true }
 
 const postChatFn = httpsCallable<PostChatRequest, PostChatResponse>(functions, 'postChat')
 const setPresenceFn = httpsCallable<SetPresenceRequest, SetPresenceResponse>(functions, 'setPresence')

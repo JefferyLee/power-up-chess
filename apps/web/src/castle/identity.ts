@@ -21,6 +21,10 @@ export interface CastleIdentity {
   /** True if this is a new guest (just registered), false if returning.
    *  Drives the welcome line in the Hall. */
   isFirstVisit: boolean
+  /** H.7 — auth session token minted by castleEnter. Stamped on every
+   *  server call so an older device for this account gets evicted when
+   *  a new sign-in happens elsewhere. Undefined for bypass guests. */
+  sessionId?: string
   /** Populated when the last castleEnter applied decay (§7.4). The Hall
    *  shows a one-time welcome message and then clears this field via
    *  the context's `clearDecayInfo` callback. */
@@ -73,6 +77,9 @@ export function loadIdentity(): CastleIdentity | null {
         : {}),
       ...(lastBonus && typeof lastBonus.total === 'number' && lastBonus.total > 0
         ? { lastBonus: { ...lastBonus, total: lastBonus.total } }
+        : {}),
+      ...(typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0
+        ? { sessionId: parsed.sessionId }
         : {}),
     }
   } catch {

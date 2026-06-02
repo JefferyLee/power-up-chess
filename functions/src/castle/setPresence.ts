@@ -45,6 +45,19 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       if (!guest || !guest.uids.includes(uid)) {
         throw new HttpsError('permission-denied', 'You can only set presence as yourself.')
       }
+      // H.7 — single-active-session check. If the client's stamped
+      // sessionId no longer matches what castleEnter most recently
+      // minted, this device's session has been superseded by another
+      // device signing in as the same account. Return early so the
+      // client can sign out and inform the user.
+      const incomingAuthSession = String(req.data?.authSessionId ?? '')
+      if (
+        guest.activeSessionId &&         // backfill: guests pre-H.7 lack this
+        incomingAuthSession &&           // client started pre-H.7 doesn't send
+        guest.activeSessionId !== incomingAuthSession
+      ) {
+        return { ok: false, evicted: true }
+      }
       const now = Date.now()
       const halo = guest.cosmetics?.duelWinnerExpiresAt
       hasHalo = typeof halo === 'number' && halo > now

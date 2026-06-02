@@ -107,10 +107,16 @@ export interface SetPresenceRequest {
   sessionId: string
   /** Where this presence row should appear — omit / hall for the Hall. */
   location?: LocationTag
+  /** H.7 — the auth session token the client received from castleEnter.
+   *  Server compares to guest.activeSessionId; mismatch ⇒ this client
+   *  has been signed in elsewhere and must sign itself out. */
+  authSessionId?: string
 }
-export interface SetPresenceResponse {
-  ok: true
-}
+export type SetPresenceResponse =
+  | { ok: true }
+  /** Stamped sessionId no longer matches the guest's active one — the
+   *  account has been signed in on another device. Client signs out. */
+  | { ok: false; evicted: true }
 
 // ─── Rate limits ───────────────────────────────────────────────────────────
 

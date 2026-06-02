@@ -17,6 +17,10 @@ export type CastleEnterResponse =
       pointsBeforeDecay: 0
       /** Phase C: the starter pack + (optional) future bonuses on first visit. */
       bonus?: EnterBonus
+      /** H.7 — freshly-minted session token. Client stores + stamps on
+       *  every subsequent server call; older devices for this same
+       *  account get evicted because their stored sessionId is now stale. */
+      sessionId: string
     }
   | {
       status: 'returning'
@@ -28,6 +32,7 @@ export type CastleEnterResponse =
       pointsBeforeDecay: number
       /** Phase C: bundled check-in + streak bonus, if any fired this visit. */
       bonus?: EnterBonus
+      sessionId: string
     }
   | {
       status: 'wrong-magic'
@@ -199,6 +204,10 @@ export interface GuestDoc {
    *  ladder (Apprentice / Adept / Sorcerer / Archmage). Missing = treated
    *  as max(0, current castlePoints) on first read (lazy migration). */
   lifetimeEarned?: number
+  /** H.7 — single-active-session token. Re-minted on every castleEnter.
+   *  setPresence / postChat refuse calls whose stamped sessionId no
+   *  longer matches this; the stale client is told to sign out. */
+  activeSessionId?: string
 }
 
 export interface GuestDailyEarn {

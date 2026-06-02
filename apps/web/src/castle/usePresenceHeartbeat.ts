@@ -13,7 +13,7 @@ import { useCastle } from './useCastle'
 const HEARTBEAT_MS = 20_000
 
 export function usePresenceHeartbeat(location?: LocationTag) {
-  const { identity, hostId } = useCastle()
+  const { identity, hostId, signOut } = useCastle()
   const sessionIdRef = useRef<string>(makeSessionId())
   // Keep latest location in a ref so the interval doesn't reset every
   // time the parent rerenders with the same logical location.
@@ -38,14 +38,22 @@ export function usePresenceHeartbeat(location?: LocationTag) {
     const beat = async () => {
       if (cancelled || !identity) return
       try {
-        await callSetPresence({
+        const res = await callSetPresence({
           sessionId,
           displayName: identity.displayName,
           normalizedName: identity.normalizedName,
           hostId,
           isBypass: identity.isBypass,
           location: locationRef.current,
+          authSessionId: identity.sessionId,
         })
+        // H.7 — server-side eviction signal: this account just signed in
+        // on another device, our session token is stale.
+        if (res && 'evicted' in res && res.evicted) {
+          if (cancelled) return
+          alert('Your account just signed in on another device. Signing this one out.')
+          signOut()
+        }
       } catch (err) {
         // Don't block the Hall on a failed beat — next interval will retry.
         console.warn('presence heartbeat failed:', err)
@@ -58,7 +66,7 @@ export function usePresenceHeartbeat(location?: LocationTag) {
       cancelled = true
       window.clearInterval(id)
     }
-  }, [identity, hostId])
+  }, [identity, hostId, signOut])
 }
 
 function makeSessionId(): string {

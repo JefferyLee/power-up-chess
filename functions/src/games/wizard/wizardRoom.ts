@@ -172,6 +172,16 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
       if (room.black?.uid === uid) return { color: 'b' as const }
       if (room.black) throw new HttpsError('failed-precondition', 'Room is full.')
 
+      // H.7 — refuse self-vs-self even from a second device of the same
+      // castle account. The session-evict mechanism will sign the older
+      // device out within ~20 s, but this catches the immediate race.
+      if (!slot.isBypass && slot.normalizedName && room.white.normalizedName === slot.normalizedName) {
+        throw new HttpsError(
+          'failed-precondition',
+          'You can\'t play yourself — this duel was opened from your own account.',
+        )
+      }
+
       const now = Date.now()
       // White's clock starts ticking now — that's the side-to-move when
       // the room flips to live.

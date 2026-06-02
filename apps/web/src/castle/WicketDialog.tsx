@@ -56,6 +56,7 @@ export function WicketDialog() {
             castlePoints: res.castlePoints,
             isBypass: false,
             isFirstVisit: res.status === 'new',
+            sessionId: res.sessionId,
             ...(res.status === 'returning' && res.decayedBy > 0
               ? { lastDecay: { decayedBy: res.decayedBy, pointsBefore: res.pointsBeforeDecay } }
               : {}),
