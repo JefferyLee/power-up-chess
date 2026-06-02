@@ -8,6 +8,23 @@ export type ChatMessageKind = 'user' | 'host' | 'system'
 export type ChatMessageAction =
   | { kind: 'join-room'; roomKind: 'chess' | 'wizard'; roomId: string; openerName: string }
 
+/** Visible-only state for the story-comprehension quiz attached to a
+ *  host's ambient story. The secret answer key lives in a separate
+ *  function-only collection (story_quiz_keys) and never reaches clients. */
+export interface QuizState {
+  question: string
+  state: 'open' | 'won' | 'closed'
+  /** Set once someone wins. */
+  winnerName?: string
+  winnerUid?: string
+  /** True if the winner was a non-bypass guest and the point was actually awarded. */
+  earnedPoint?: boolean
+  /** Revealed once state ≠ 'open'. */
+  explanation?: string
+  /** Timestamp the quiz was won or auto-closed. */
+  resolvedAt?: number
+}
+
 export interface ChatMessageDoc {
   /** Display name as the message author should appear. */
   name: string
@@ -29,7 +46,17 @@ export interface ChatMessageDoc {
   /** Optional CTA button rendered with the message. Used today for
    *  "someone just opened a room — click to join". */
   action?: ChatMessageAction
+  /** Optional quiz attached to a 'host' ambient story. Visible state
+   *  only; the answer key is in story_quiz_keys/{messageId}. */
+  quiz?: QuizState
 }
+
+/** Where the user currently is in the app. `hall` is the default; any
+ *  room kind carries the roomId so spectators can follow into it. */
+export type LocationTag =
+  | { kind: 'hall' }
+  | { kind: 'chess'; roomId: string }
+  | { kind: 'wizard'; roomId: string }
 
 export interface PresenceDoc {
   sessionId: string
@@ -43,6 +70,8 @@ export interface PresenceDoc {
   hostId: HostId
   /** Server ts of the last heartbeat (ms). */
   lastSeenAt: number
+  /** Where the user currently is — defaults to hall when omitted. */
+  location?: LocationTag
 }
 
 // ─── Callables ─────────────────────────────────────────────────────────────
@@ -58,6 +87,8 @@ export type PostChatResponse =
 
 export interface SetPresenceRequest {
   sessionId: string
+  /** Where this presence row should appear — omit / hall for the Hall. */
+  location?: LocationTag
 }
 export interface SetPresenceResponse {
   ok: true

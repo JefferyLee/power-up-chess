@@ -1,15 +1,34 @@
 // usePresenceHeartbeat — call setPresence on mount + every 20s.
 // Cleared on unmount or when identity disappears.
+//
+// The optional `location` arg tells the server where this presence row
+// should appear. Default = Hall. Pass `{ kind: 'wizard', roomId }` from
+// the duel screen and `{ kind: 'chess', roomId }` from the chess room
+// screen so the Hall sidebar can show "who's playing where".
 
 import { useEffect, useRef } from 'react'
-import { callSetPresence } from '../firebase/callables'
+import { callSetPresence, type LocationTag } from '../firebase/callables'
 import { useCastle } from './useCastle'
 
 const HEARTBEAT_MS = 20_000
 
-export function usePresenceHeartbeat() {
+export function usePresenceHeartbeat(location?: LocationTag) {
   const { identity, hostId } = useCastle()
   const sessionIdRef = useRef<string>(makeSessionId())
+  // Keep latest location in a ref so the interval doesn't reset every
+  // time the parent rerenders with the same logical location.
+  const locationRef = useRef<LocationTag | undefined>(location)
+  const locationKey =
+    location?.kind === 'hall' || location === undefined
+      ? location?.kind ?? 'none'
+      : `${location.kind}:${location.roomId}`
+  useEffect(() => {
+    locationRef.current = location
+    // locationKey is included so this effect runs when the logical
+    // location changes; `location` itself is excluded because new
+    // object identity each render would re-fire pointlessly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey])
 
   useEffect(() => {
     if (!identity) return
@@ -25,6 +44,7 @@ export function usePresenceHeartbeat() {
           normalizedName: identity.normalizedName,
           hostId,
           isBypass: identity.isBypass,
+          location: locationRef.current,
         })
       } catch (err) {
         // Don't block the Hall on a failed beat — next interval will retry.

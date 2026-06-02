@@ -3,8 +3,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { callPostChat } from '../firebase/callables'
-import { useLobbyMessages, type ChatMessage, type ChatMessageAction } from './useLobbyChat'
+import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
+import { useCastle } from './useCastle'
+import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
@@ -119,6 +120,94 @@ function Bubble({ message }: { message: ChatMessage }) {
         <span className="puc-chat__text">{message.text}</span>
       )}
       {message.action && <ActionButton action={message.action} />}
+      {message.quiz && <QuizBlock messageId={message.id} quiz={message.quiz} />}
+    </div>
+  )
+}
+
+function QuizBlock({ messageId, quiz }: { messageId: string; quiz: QuizState }) {
+  const { identity, setCastlePoints } = useCastle()
+  const [answer, setAnswer] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null)
+  const [locked, setLocked] = useState(false)
+
+  const isWon = quiz.state === 'won'
+  const isClosed = quiz.state === 'closed'
+  const winnerLine = isWon
+    ? `🏅 ${quiz.winnerName ?? 'someone'} got it!${quiz.earnedPoint ? ' +1 castle point.' : ''}`
+    : null
+  const canAnswer = !isWon && !isClosed && !locked && !!identity
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!canAnswer || submitting) return
+    const trimmed = answer.trim()
+    if (!trimmed) return
+    setSubmitting(true)
+    setFeedback(null)
+    try {
+      const res = await callHostStoryAnswer({ messageId, answer: trimmed })
+      if (res.status === 'correct') {
+        setFeedback(res.earnedPoint ? `Correct! +1 castle point.` : 'Correct!')
+        if (res.earnedPoint) setCastlePoints(res.castlePoints)
+        setAnswer('')
+      } else if (res.status === 'wrong') {
+        setFeedback(`Not quite — ${res.attemptsRemaining} attempt${res.attemptsRemaining === 1 ? '' : 's'} left.`)
+        setAttemptsLeft(res.attemptsRemaining)
+        if (res.attemptsRemaining <= 0) setLocked(true)
+      } else if (res.status === 'already-won') {
+        setFeedback(`Too late — ${res.winnerName} already got it.`)
+        setLocked(true)
+      } else if (res.status === 'closed') {
+        setFeedback('Question is closed.')
+        setLocked(true)
+      } else if (res.status === 'no-attempts-left') {
+        setFeedback('No attempts left for you.')
+        setLocked(true)
+      }
+    } catch (err) {
+      setFeedback(err instanceof Error ? err.message.replace(/^FirebaseError: /, '') : String(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className={`puc-chat__quiz puc-chat__quiz--${quiz.state}`}>
+      <p className="puc-chat__quiz-q">
+        <span className="puc-chat__quiz-tag">Question</span> {quiz.question}
+      </p>
+      {canAnswer && (
+        <form className="puc-chat__quiz-form" onSubmit={handleSubmit}>
+          <input
+            className="puc-chat__quiz-input"
+            type="text"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            maxLength={60}
+            autoComplete="off"
+            placeholder="Your answer…"
+            disabled={submitting}
+          />
+          <button
+            type="submit"
+            className="puc-chat__quiz-send"
+            disabled={submitting || answer.trim().length === 0}
+          >
+            Answer
+          </button>
+        </form>
+      )}
+      {feedback && <p className="puc-chat__quiz-feedback">{feedback}</p>}
+      {winnerLine && <p className="puc-chat__quiz-winner">{winnerLine}</p>}
+      {(isWon || isClosed) && quiz.explanation && (
+        <p className="puc-chat__quiz-explain">📜 {quiz.explanation}</p>
+      )}
+      {!canAnswer && !isWon && !isClosed && attemptsLeft !== null && attemptsLeft <= 0 && (
+        <p className="puc-chat__quiz-feedback">Waiting for someone else to get it…</p>
+      )}
     </div>
   )
 }

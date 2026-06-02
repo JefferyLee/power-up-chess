@@ -72,3 +72,58 @@
   background: rgba(141, 111, 217, 0.25);
   color: #d8c8ff;
 }
+
+.puc-online__room {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.puc-online__room-title {
+  margin: 0 0 6px;
+  font-family: var(--puc-font-display);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--puc-text-muted);
+  font-weight: 600;
+}
+
+.puc-online__room--wizard .puc-online__room-title {
+  color: #d8c8ff;
+}
+
+.puc-online__room--chess .puc-online__room-title {
+  color: #f0d8a0;
+}
+
+.puc-online__follow {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-display);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: 8px;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.puc-online__follow:hover {
+  border-color: var(--puc-text-accent);
+  color: #fff;
+}
+
+.puc-online__room--wizard .puc-online__follow {
+  border-color: rgba(141, 111, 217, 0.5);
+  color: #d8c8ff;
+}
+
+.puc-online__room--wizard .puc-online__follow:hover {
+  border-color: #b9a3ff;
+  color: #fff;
+}

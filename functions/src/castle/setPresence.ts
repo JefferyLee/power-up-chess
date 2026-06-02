@@ -7,7 +7,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
+import type { LocationTag, SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
 import type { GuestDoc } from './types'
 import { hostOnDuty } from '../shared/hostOnDuty'
 
@@ -45,6 +45,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     }
 
     const now = Date.now()
+    const location = sanitiseLocation(req.data?.location)
     const presence: PresenceDoc = {
       sessionId,
       displayName,
@@ -53,6 +54,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       isBypass,
       hostId,
       lastSeenAt: now,
+      ...(location ? { location } : {}),
     }
     await db.doc(`lobby/presence/items/${sessionId}`).set(presence)
 
@@ -65,3 +67,15 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     return { ok: true }
   },
 )
+
+function sanitiseLocation(input: unknown): LocationTag | null {
+  if (!input || typeof input !== 'object') return null
+  const obj = input as { kind?: unknown; roomId?: unknown }
+  if (obj.kind === 'hall') return { kind: 'hall' }
+  if (obj.kind === 'chess' || obj.kind === 'wizard') {
+    const roomId = String(obj.roomId ?? '').trim().slice(0, 32)
+    if (!roomId) return null
+    return { kind: obj.kind, roomId }
+  }
+  return null
+}

@@ -8,10 +8,12 @@ import { piecesFromFen } from '../../chess/fen'
 import type { Color, Piece, Square } from '../../chess/types'
 import { useSound } from '../../sound/useSound'
 import { useCastle } from '../../castle/useCastle'
+import { usePresenceHeartbeat } from '../../castle/usePresenceHeartbeat'
 import { useAuthUid } from '../../auth/useAuthUid'
 import { callSubmitWizardMove, callSubmitWizardSpell } from '../../firebase/callables'
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
 import { WizardBoard, type WizardBoardMode } from './WizardBoard'
+import { WizardChat } from './WizardChat'
 import { Spellbook } from './Spellbook'
 import { WizardChess } from './WizardChess'
 import { SPELLS, spellById, TARGET_SPECS } from './spells'
@@ -37,6 +39,9 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const auth = useAuthUid()
   const { identity, setCastlePoints } = useCastle()
   const navigate = useNavigate()
+  // Broadcast presence as "in this wizard duel" so the Hall sidebar can
+  // show who's here + offer a Watch button to spectators.
+  usePresenceHeartbeat({ kind: 'wizard', roomId })
   const [cast, setCast] = useState<CastFlow>({ stage: 'idle' })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -277,6 +282,14 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
             activeSpell={cast.stage === 'idle' ? null : cast.spellId}
             castable={castable}
             onPick={handlePickSpell}
+          />
+          <WizardChat
+            roomId={roomId}
+            canPost={yourColor !== null}
+            isBypass={!!identity?.isBypass}
+            callerPoints={callerPoints}
+            yourColor={yourColor}
+            onPosted={setCastlePoints}
           />
         </aside>
       </main>

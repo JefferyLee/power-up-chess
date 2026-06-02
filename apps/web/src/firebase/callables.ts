@@ -109,12 +109,19 @@ export type PostChatResponse =
   | { status: 'empty' }
   | { status: 'too-long' }
 
+export type LocationTag =
+  | { kind: 'hall' }
+  | { kind: 'chess'; roomId: string }
+  | { kind: 'wizard'; roomId: string }
+
 export interface SetPresenceRequest {
   sessionId: string
   displayName: string
   normalizedName: string
   hostId: 'lucy' | 'luca'
   isBypass: boolean
+  /** Omit for the Hall — the server defaults to hall when absent. */
+  location?: LocationTag
 }
 export interface SetPresenceResponse {
   ok: true
@@ -158,6 +165,34 @@ const createWizardRoomFn = httpsCallable<WizardPlayerInfo, CreateWizardRoomRespo
 const joinWizardRoomFn = httpsCallable<JoinWizardRoomRequest, JoinWizardRoomResponse>(functions, 'joinWizardRoom')
 const submitWizardMoveFn = httpsCallable<SubmitWizardMoveRequest, { ok: true }>(functions, 'submitWizardMove')
 const submitWizardSpellFn = httpsCallable<SubmitWizardSpellRequest, SubmitWizardSpellResponse>(functions, 'submitWizardSpell')
+
+export interface PostWizardMessageRequest {
+  roomId: string
+  text: string
+}
+export interface PostWizardMessageResponse {
+  status: 'ok'
+  messageId: string
+  censored: boolean
+  /** Caller's castle points AFTER the 1-point deduction. */
+  castlePoints: number
+}
+const postWizardMessageFn = httpsCallable<PostWizardMessageRequest, PostWizardMessageResponse>(functions, 'postWizardMessage')
+
+// MVP2 M.5: Story Q&A — judge a guess at the comprehension question
+// attached to a host's ambient story. The first correct answer per
+// quiz earns +1 castle point (non-bypass guests only).
+export interface HostStoryAnswerRequest {
+  messageId: string
+  answer: string
+}
+export type HostStoryAnswerResponse =
+  | { status: 'correct'; attemptsUsed: number; explanation: string; earnedPoint: boolean; castlePoints: number }
+  | { status: 'wrong'; attemptsUsed: number; attemptsRemaining: number }
+  | { status: 'already-won'; winnerName: string; explanation?: string }
+  | { status: 'closed'; explanation?: string }
+  | { status: 'no-attempts-left'; explanation?: string }
+const hostStoryAnswerFn = httpsCallable<HostStoryAnswerRequest, HostStoryAnswerResponse>(functions, 'hostStoryAnswer')
 
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
@@ -235,5 +270,13 @@ export async function callSubmitWizardMove(req: SubmitWizardMoveRequest): Promis
 }
 export async function callSubmitWizardSpell(req: SubmitWizardSpellRequest): Promise<SubmitWizardSpellResponse> {
   const { data } = await submitWizardSpellFn(req)
+  return data
+}
+export async function callPostWizardMessage(req: PostWizardMessageRequest): Promise<PostWizardMessageResponse> {
+  const { data } = await postWizardMessageFn(req)
+  return data
+}
+export async function callHostStoryAnswer(req: HostStoryAnswerRequest): Promise<HostStoryAnswerResponse> {
+  const { data } = await hostStoryAnswerFn(req)
   return data
 }
