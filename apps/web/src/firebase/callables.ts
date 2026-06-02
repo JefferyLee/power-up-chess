@@ -141,10 +141,22 @@ export type PostChatResponse =
   | { status: 'empty' }
   | { status: 'too-long' }
 
+// When adding a kind here, also update setPresence's sanitiseLocation
+// (functions/src/castle/setPresence.ts) and the UI mappers in
+// useLobbyChat.ts + OnlineList.tsx.
 export type LocationTag =
   | { kind: 'hall' }
   | { kind: 'chess'; roomId: string }
   | { kind: 'wizard'; roomId: string }
+  | { kind: 'puzzle-garden' }
+  | { kind: 'puzzle-plot'; plot: string }
+  | { kind: 'puzzle-daily' }
+  | { kind: 'puzzle-legends' }
+  | { kind: 'puzzle-calibration' }
+  | { kind: 'puzzle-leaderboard' }
+  | { kind: 'practice' }
+  | { kind: 'local' }
+  | { kind: 'forest' }
 
 export interface SetPresenceRequest {
   sessionId: string

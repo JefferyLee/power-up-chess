@@ -18,10 +18,7 @@ export function usePresenceHeartbeat(location?: LocationTag) {
   // Keep latest location in a ref so the interval doesn't reset every
   // time the parent rerenders with the same logical location.
   const locationRef = useRef<LocationTag | undefined>(location)
-  const locationKey =
-    location?.kind === 'hall' || location === undefined
-      ? location?.kind ?? 'none'
-      : `${location.kind}:${location.roomId}`
+  const locationKey = locationToKey(location)
   useEffect(() => {
     locationRef.current = location
     // locationKey is included so this effect runs when the logical
@@ -77,4 +74,19 @@ function makeSessionId(): string {
     out += chars[Math.floor(Math.random() * chars.length)]
   }
   return out
+}
+
+/** Stable string key per logical location so the effect dep array
+ *  doesn't re-fire on every parent rerender. */
+function locationToKey(loc: LocationTag | undefined): string {
+  if (!loc) return 'none'
+  switch (loc.kind) {
+    case 'chess':
+    case 'wizard':
+      return `${loc.kind}:${loc.roomId}`
+    case 'puzzle-plot':
+      return `${loc.kind}:${loc.plot}`
+    default:
+      return loc.kind
+  }
 }

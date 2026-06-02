@@ -29,19 +29,16 @@
 }
 
 .puc-online__row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  padding: 4px 0;
+  gap: 6px;
+  padding: 5px 0;
   font-size: 13.5px;
   color: var(--puc-text);
   border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
 }
-
-.puc-online__row:last-child {
-  border-bottom: none;
-}
-
+.puc-online__row:last-child { border-bottom: none; }
 .puc-online__row--you .puc-online__name {
   color: var(--puc-text-accent);
   font-weight: 600;
@@ -51,96 +48,81 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
-.puc-online__chip {
-  font-size: 10.5px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-  margin-left: 8px;
-  font-family: var(--puc-font-display);
-}
-
-.puc-online__chip--lucy {
-  background: rgba(94, 122, 75, 0.25);
-  color: #d4e0c1;
-}
-
-.puc-online__chip--luca {
-  background: rgba(141, 111, 217, 0.25);
-  color: #d8c8ff;
-}
-
-.puc-online__room {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.puc-online__room-title {
-  margin: 0 0 6px;
-  font-family: var(--puc-font-display);
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--puc-text-muted);
-  font-weight: 600;
-}
-
-.puc-online__room--wizard .puc-online__room-title {
-  color: #d8c8ff;
-}
-
-.puc-online__room--chess .puc-online__room-title {
-  color: #f0d8a0;
-}
-
-/* Duel-winner halo overlay for the OnlineList row + sparkle prefix.
- * Mirrors the chat-bubble halo so the same guest visually pops in both. */
-.puc-online__row--halo .puc-online__name {
-  color: #ffd86b;
-}
-
-.puc-online__halo {
-  display: inline-block;
-  margin-right: 3px;
-  color: #ffd86b;
-  filter: drop-shadow(0 0 3px rgba(255, 216, 107, 0.7));
-  animation: puc-online-halo-twinkle 2.4s ease-in-out infinite;
-}
-
-@keyframes puc-online-halo-twinkle {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50%      { opacity: 1;    transform: scale(1.2); }
-}
-
-/* Streak-crown overlay — supersedes halo when present. */
-.puc-online__row--crown .puc-online__name {
-  color: #ffb060;
-}
-
-.puc-online__crown {
-  display: inline-block;
-  margin-right: 3px;
-  filter: drop-shadow(0 0 4px rgba(255, 140, 70, 0.85));
-  animation: puc-online-crown-flicker 1.8s ease-in-out infinite;
-}
-
-@keyframes puc-online-crown-flicker {
-  0%, 100% { transform: scale(1)    rotate(-2deg); }
-  50%      { transform: scale(1.15) rotate( 2deg); }
-}
-
-/* Lifetime-earn title chip in the OnlineList row. */
-.puc-online__title {
+/* Lifetime-earn title chip after the display name. */
+.puc-online__rank {
   font-size: 10.5px;
   font-style: italic;
   letter-spacing: 0.3px;
   color: rgba(231, 184, 65, 0.85);
 }
 
+/* Location chip — variant per kind. */
+.puc-online__loc {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  font-family: var(--puc-font-display);
+  border: 1px solid transparent;
+}
+.puc-online__loc--hall {
+  background: rgba(231, 184, 65, 0.10);
+  color: rgba(231, 184, 65, 0.85);
+  border-color: rgba(231, 184, 65, 0.25);
+}
+.puc-online__loc--chess {
+  background: rgba(240, 216, 160, 0.15);
+  color: #f0d8a0;
+  border-color: rgba(240, 216, 160, 0.35);
+}
+.puc-online__loc--wizard {
+  background: rgba(141, 111, 217, 0.18);
+  color: #d8c8ff;
+  border-color: rgba(141, 111, 217, 0.45);
+}
+.puc-online__loc--puzzle {
+  background: rgba(110, 200, 130, 0.14);
+  color: #c0e8c8;
+  border-color: rgba(110, 200, 130, 0.45);
+}
+.puc-online__loc--practice {
+  background: rgba(120, 170, 240, 0.14);
+  color: #c8d8f4;
+  border-color: rgba(120, 170, 240, 0.45);
+}
+.puc-online__loc--local {
+  background: rgba(220, 170, 110, 0.14);
+  color: #f0c898;
+  border-color: rgba(220, 170, 110, 0.45);
+}
+.puc-online__loc--forest {
+  background: rgba(94, 160, 100, 0.16);
+  color: #c8e8c2;
+  border-color: rgba(94, 160, 100, 0.45);
+}
+
+/* Cosmetic prefix (crown overrides halo). */
+.puc-online__cosmetic {
+  display: inline-block;
+  margin-right: 3px;
+  filter: drop-shadow(0 0 4px rgba(255, 216, 107, 0.7));
+  animation: puc-online-cosmetic-twinkle 2.4s ease-in-out infinite;
+}
+@keyframes puc-online-cosmetic-twinkle {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.18); }
+}
+.puc-online__row--halo .puc-online__name { color: #ffd86b; }
+.puc-online__row--crown .puc-online__name { color: #ffb060; }
+.puc-online__row--crown .puc-online__cosmetic {
+  filter: drop-shadow(0 0 5px rgba(255, 140, 70, 0.85));
+}
+
+/* Watch / Join action pill. */
 .puc-online__follow {
   appearance: none;
   background: transparent;
@@ -153,21 +135,10 @@
   border-radius: 999px;
   cursor: pointer;
   white-space: nowrap;
-  margin-left: 8px;
-  transition: border-color 120ms ease, color 120ms ease;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
 }
-
 .puc-online__follow:hover {
   border-color: var(--puc-text-accent);
   color: #fff;
-}
-
-.puc-online__room--wizard .puc-online__follow {
-  border-color: rgba(141, 111, 217, 0.5);
-  color: #d8c8ff;
-}
-
-.puc-online__room--wizard .puc-online__follow:hover {
-  border-color: #b9a3ff;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
 }

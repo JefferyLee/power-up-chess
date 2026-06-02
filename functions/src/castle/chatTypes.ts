@@ -68,6 +68,15 @@ export type LocationTag =
   | { kind: 'hall' }
   | { kind: 'chess'; roomId: string }
   | { kind: 'wizard'; roomId: string }
+  | { kind: 'puzzle-garden' }
+  | { kind: 'puzzle-plot'; plot: string }
+  | { kind: 'puzzle-daily' }
+  | { kind: 'puzzle-legends' }
+  | { kind: 'puzzle-calibration' }
+  | { kind: 'puzzle-leaderboard' }
+  | { kind: 'practice' }
+  | { kind: 'local' }
+  | { kind: 'forest' }
 
 export interface PresenceDoc {
   sessionId: string

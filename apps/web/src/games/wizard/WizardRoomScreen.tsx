@@ -8,7 +8,6 @@ import { piecesFromFen } from '../../chess/fen'
 import type { Color, Piece, Square } from '../../chess/types'
 import { useSound } from '../../sound/useSound'
 import { useCastle } from '../../castle/useCastle'
-import { usePresenceHeartbeat } from '../../castle/usePresenceHeartbeat'
 import { useAuthUid } from '../../auth/useAuthUid'
 import { Clock } from '../../clock/Clock'
 import { useResponsiveSquareSize } from '../../board/useResponsiveSquareSize'
@@ -50,9 +49,8 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const { identity, setCastlePoints } = useCastle()
   const navigate = useNavigate()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
-  // Broadcast presence as "in this wizard duel" so the Hall sidebar can
-  // show who's here + offer a Watch button to spectators.
-  usePresenceHeartbeat({ kind: 'wizard', roomId })
+  // Presence ("in this wizard duel") is published by the App-level
+  // GlobalPresenceHeartbeat, which derives the location from the URL.
   const [cast, setCast] = useState<CastFlow>({ stage: 'idle' })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)

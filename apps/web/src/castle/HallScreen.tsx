@@ -19,7 +19,6 @@ import { OnlineList } from './OnlineList'
 import { VisitorCard } from './VisitorCard'
 import { RoomDoor } from './RoomDoor'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
-import { usePresenceHeartbeat } from './usePresenceHeartbeat'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
 import './HallScreen.css'
@@ -35,7 +34,6 @@ export function HallScreen() {
   const auth = useAuthUid()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  usePresenceHeartbeat()
   const [decayMessage] = useState(() => {
     const d = identity?.lastDecay
     if (!d || d.decayedBy <= 0) return null

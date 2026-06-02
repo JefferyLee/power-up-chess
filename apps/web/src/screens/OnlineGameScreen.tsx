@@ -26,7 +26,6 @@ import type { RoomDoc } from '../rooms/types'
 import { loadProfile, addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
-import { usePresenceHeartbeat } from '../castle/usePresenceHeartbeat'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
@@ -210,9 +209,8 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const { identity, setCastlePoints } = useCastle()
-  // Broadcast presence as "in this chess room" so the Hall sidebar can
-  // show occupants + offer a Watch button to spectators.
-  usePresenceHeartbeat({ kind: 'chess', roomId })
+  // Presence ("in this chess room") is published by the App-level
+  // GlobalPresenceHeartbeat, which derives the location from the URL.
   const youAreWhite = room.white.playerId === uid
   const youAreBlack = room.black?.playerId === uid
   const yourColor: Color | null = youAreWhite ? 'w' : youAreBlack ? 'b' : null

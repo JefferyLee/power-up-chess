@@ -94,14 +94,34 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
   },
 )
 
+const SOLO_KINDS: ReadonlySet<string> = new Set([
+  'hall',
+  'puzzle-garden',
+  'puzzle-daily',
+  'puzzle-legends',
+  'puzzle-calibration',
+  'puzzle-leaderboard',
+  'practice',
+  'local',
+  'forest',
+])
+
 function sanitiseLocation(input: unknown): LocationTag | null {
   if (!input || typeof input !== 'object') return null
-  const obj = input as { kind?: unknown; roomId?: unknown }
-  if (obj.kind === 'hall') return { kind: 'hall' }
-  if (obj.kind === 'chess' || obj.kind === 'wizard') {
+  const obj = input as { kind?: unknown; roomId?: unknown; plot?: unknown }
+  const kind = String(obj.kind ?? '')
+  if (SOLO_KINDS.has(kind)) {
+    return { kind } as LocationTag
+  }
+  if (kind === 'chess' || kind === 'wizard') {
     const roomId = String(obj.roomId ?? '').trim().slice(0, 32)
     if (!roomId) return null
-    return { kind: obj.kind, roomId }
+    return { kind, roomId }
+  }
+  if (kind === 'puzzle-plot') {
+    const plot = String(obj.plot ?? '').trim().slice(0, 24)
+    if (!plot) return null
+    return { kind, plot }
   }
   return null
 }

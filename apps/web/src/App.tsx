@@ -15,11 +15,23 @@ import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
+import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
+import { useRouteLocation } from './castle/useRouteLocation'
+
+/** Single source of truth for presence — runs at the App root so every
+ *  authenticated route auto-publishes a location to lobby/presence
+ *  without each screen wiring its own heartbeat. */
+function GlobalPresenceHeartbeat() {
+  const location = useRouteLocation()
+  usePresenceHeartbeat(location)
+  return null
+}
 
 export function App() {
   return (
     <BrowserRouter>
       <CastleIdentityProvider>
+        <GlobalPresenceHeartbeat />
         <Routes>
           <Route path="/" element={<CastleEntry />} />
           <Route path="/local" element={<LocalGameRoute />} />
