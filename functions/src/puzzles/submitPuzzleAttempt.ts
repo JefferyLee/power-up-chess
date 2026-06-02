@@ -14,6 +14,7 @@ import type { GuestDoc } from '../castle/types'
 import {
   DEFAULT_RATING,
   ELO_K,
+  MASTER_RATING_FLOOR,
   PUZZLE_POINTS,
   RATING_MAX,
   RATING_MIN,
@@ -80,15 +81,17 @@ export const submitPuzzleAttempt = onCall<
       ? seenAfter.slice(seenAfter.length - SEEN_CAP)
       : seenAfter
 
-    // Points only on a successful solve.
+    // Points only on a successful solve. Three difficulty-based tiers
+    // (Ada's spec): legends > master > normal. The puzzle's own rating
+    // decides, not the player-vs-puzzle gap.
     let pointsAdded = 0
     if (success) {
       if (puzzle.legends) {
         pointsAdded = PUZZLE_POINTS.legends
-      } else if (puzzle.difficulty - prior >= 100) {
-        pointsAdded = PUZZLE_POINTS.stretch
+      } else if (puzzle.difficulty >= MASTER_RATING_FLOOR) {
+        pointsAdded = PUZZLE_POINTS.master
       } else {
-        pointsAdded = PUZZLE_POINTS.atLevel
+        pointsAdded = PUZZLE_POINTS.normal
       }
     }
 

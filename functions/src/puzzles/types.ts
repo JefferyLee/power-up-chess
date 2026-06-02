@@ -62,11 +62,16 @@ export const SERVE_WINDOW = 100
 export const SEEN_CAP = 200
 
 /** Castle-point awards per solve. */
+// Three-tier puzzle rewards (Ada's spec): normal / master / legend.
+// Difficulty-based, NOT player-relative — solving a tough puzzle pays
+// the same whether you barely cleared it or breezed through.
 export const PUZZLE_POINTS = {
-  atLevel: 2,            // |puzzle - player| ≤ 100
-  stretch: 5,            // puzzle - player ≥ 100
-  legends: 50,           // any Legends Hall solve
+  normal: 5,             // any regular plot puzzle (rating < 2500)
+  master: 25,            // Master's Atrium (2500-2999)
+  legends: 50,           // Legends Hall (3000+, legends === true)
 }
+/** Rating floor that separates a master-tier puzzle from a normal one. */
+export const MASTER_RATING_FLOOR = 2500
 
 // ─── nextPuzzle ──────────────────────────────────────────────────────────
 
