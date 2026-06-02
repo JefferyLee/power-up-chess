@@ -208,6 +208,20 @@ export interface GuestDoc {
    *  setPresence / postChat refuse calls whose stamped sessionId no
    *  longer matches this; the stale client is told to sign out. */
   activeSessionId?: string
+  /** Puzzles — per-plot ELO. Missing plot = treat as DEFAULT_RATING.
+   *  See functions/src/puzzles/types.ts. */
+  puzzleRatings?: Partial<Record<
+    'mate' | 'fork' | 'pinSkewer' | 'sacrifice' | 'endgame' | 'defense',
+    number
+  >>
+  /** True once the kid has completed (or skipped) calibration. */
+  puzzleCalibrated?: boolean
+  /** Rolling list of recently-served puzzle ids, newest last. Trimmed
+   *  to SEEN_CAP to keep the doc small. Used to avoid serving the same
+   *  puzzle twice in a short window. */
+  puzzleSeen?: string[]
+  /** Aggregate counters across all plots. */
+  puzzleStats?: { solved: number; attempted: number }
 }
 
 export interface GuestDailyEarn {

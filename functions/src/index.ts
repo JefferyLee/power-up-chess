@@ -37,6 +37,9 @@ export {
   resignWizardGame,
 } from './games/wizard/wizardRoom'
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
+export { getNextPuzzle } from './puzzles/getNextPuzzle'
+export { submitPuzzleAttempt } from './puzzles/submitPuzzleAttempt'
+export { getCalibrationSet, submitCalibration } from './puzzles/calibration'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'
 export { cleanupOldLobbyMessages } from './cleanup/cleanupOldLobbyMessages'
 export { cleanupDormantGuests } from './cleanup/cleanupDormantGuests'

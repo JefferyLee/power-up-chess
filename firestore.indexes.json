@@ -1,4 +1,22 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "puzzles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "plot", "order": "ASCENDING" },
+        { "fieldPath": "legends", "order": "ASCENDING" },
+        { "fieldPath": "difficulty", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "puzzles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "legends", "order": "ASCENDING" },
+        { "fieldPath": "difficulty", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
