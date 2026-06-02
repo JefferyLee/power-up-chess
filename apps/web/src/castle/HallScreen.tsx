@@ -155,25 +155,25 @@ export function HallScreen() {
         </div>
       </header>
 
-      {/* Doors first — the page's primary CTA, hero-sized right under
-       *  the header so a new visitor sees what they can DO before the
-       *  social / informational layer. */}
-      <section className="puc-hall__doors">
-        <h2 className="puc-hall__doors-title">Choose a room</h2>
-        <div className="puc-hall__doors-grid">
+      {/* Learning + serious chess — above the chat. Hero CTA so a new
+       *  visitor sees the path to learning + playing before the social
+       *  layer pulls focus. */}
+      <section className="puc-hall__doors puc-hall__doors--learn">
+        <h2 className="puc-hall__doors-title">Learn and play chess</h2>
+        <div className="puc-hall__doors-grid puc-hall__doors-grid--five">
+          <RoomDoor
+            icon="📖"
+            label="Learn chess"
+            blurb="Five short lessons. Start here if you're new."
+            variant="mossy"
+            onClick={() => navigate('/learn')}
+          />
           <RoomDoor
             icon="🌱"
             label="Puzzle Garden"
             blurb="Tactical puzzles, your own pace."
             variant="mossy"
             onClick={handlePuzzles}
-          />
-          <RoomDoor
-            icon="🌲"
-            label="Forest Adventure"
-            blurb="Dodge red, collect gold, jump trees."
-            variant="forest"
-            onClick={handleForest}
           />
           <RoomDoor
             icon="🏰"
@@ -205,24 +205,6 @@ export function HallScreen() {
             onClick={handlePractice}
             disabled={!isUnlocked}
             title={!isUnlocked ? lockedTitle : undefined}
-          />
-          <RoomDoor
-            icon="✨"
-            label="Wizard's Duel"
-            blurb={
-              isWizardUnlocked
-                ? 'Chess with magic spells — for fun, not for chess practice.'
-                : `Locked — needs ${wizardGate} castle points.`
-            }
-            variant="starry"
-            locked={!isWizardUnlocked}
-            onClick={handleWizard}
-            disabled={!isWizardUnlocked}
-            title={
-              isWizardUnlocked
-                ? undefined
-                : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
-            }
           />
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
@@ -257,6 +239,40 @@ export function HallScreen() {
         <div className="puc-hall__sidecol">
           <VisitorCard />
           <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
+        </div>
+      </section>
+
+      {/* Leisure / fun rooms — below the chat. Side games, the future
+       *  shop, and any new casual modes land here so the serious chess
+       *  doors above stay the page's primary CTA. */}
+      <section className="puc-hall__doors puc-hall__doors--fun">
+        <h2 className="puc-hall__doors-title">Take a break</h2>
+        <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
+          <RoomDoor
+            icon="🌲"
+            label="Forest Adventure"
+            blurb="Dodge red, collect gold, jump trees."
+            variant="forest"
+            onClick={handleForest}
+          />
+          <RoomDoor
+            icon="✨"
+            label="Wizard's Duel"
+            blurb={
+              isWizardUnlocked
+                ? 'Chess with magic spells — for fun, not for chess practice.'
+                : `Locked — needs ${wizardGate} castle points.`
+            }
+            variant="starry"
+            locked={!isWizardUnlocked}
+            onClick={handleWizard}
+            disabled={!isWizardUnlocked}
+            title={
+              isWizardUnlocked
+                ? undefined
+                : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
+            }
+          />
         </div>
       </section>
 

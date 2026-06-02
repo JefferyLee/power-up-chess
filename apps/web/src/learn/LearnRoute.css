@@ -126,6 +126,22 @@
   font-size: 12px;
   font-style: italic;
 }
+.puc-learn__more--celebrate {
+  font-size: 14px;
+  color: var(--puc-text-accent);
+  font-style: normal;
+}
+
+.puc-learn__card-btn--done {
+  border-color: rgba(72, 200, 120, 0.45);
+  background: rgba(72, 200, 120, 0.06);
+}
+.puc-learn__card-btn--done .puc-learn__card-num {
+  color: rgba(72, 200, 120, 0.95);
+}
+.puc-learn__card-btn--done .puc-learn__card-cta {
+  color: var(--puc-text-muted);
+}
 
 @media (max-width: 540px) {
   .puc-learn__card-btn { grid-template-columns: 30px 48px 1fr auto; padding: 12px 14px; gap: 10px; }

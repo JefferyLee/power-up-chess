@@ -184,3 +184,21 @@
   0%, 100% { box-shadow: 0 0 0 0 rgba(244, 194, 102, 0); }
   50%      { box-shadow: 0 0 0 6px rgba(244, 194, 102, 0.22); }
 }
+
+.puc-lesson__reward {
+  margin-top: 4px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(244, 194, 102, 0.20), rgba(239, 154, 63, 0.10));
+  border: 1px solid rgba(244, 194, 102, 0.55);
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-display);
+  font-size: 14px;
+  text-align: center;
+  letter-spacing: 0.3px;
+  animation: puc-lesson-reward-pop 0.4s ease-out;
+}
+@keyframes puc-lesson-reward-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

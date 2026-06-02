@@ -475,6 +475,14 @@ export interface SubmitFeedbackResponse { ok: true; ts: number }
 export interface MarkFeedbackReadRequest { id: string; read?: boolean }
 export interface MarkFeedbackReadResponse { ok: true }
 
+export interface AwardTutorialCompleteRequest { normalizedName: string }
+export interface AwardTutorialCompleteResponse {
+  ok: true
+  added: number
+  castlePoints: number
+  alreadyClaimed: boolean
+}
+
 export interface GetCalibrationSetRequest {
   normalizedName: string
 }
@@ -527,6 +535,10 @@ const markFeedbackReadFn = httpsCallable<
   MarkFeedbackReadRequest,
   MarkFeedbackReadResponse
 >(functions, 'markFeedbackRead')
+const awardTutorialCompleteFn = httpsCallable<
+  AwardTutorialCompleteRequest,
+  AwardTutorialCompleteResponse
+>(functions, 'awardTutorialComplete')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -580,5 +592,11 @@ export async function callMarkFeedbackRead(
   req: MarkFeedbackReadRequest,
 ): Promise<MarkFeedbackReadResponse> {
   const { data } = await markFeedbackReadFn(req)
+  return data
+}
+export async function callAwardTutorialComplete(
+  req: AwardTutorialCompleteRequest,
+): Promise<AwardTutorialCompleteResponse> {
+  const { data } = await awardTutorialCompleteFn(req)
   return data
 }

@@ -14,8 +14,11 @@ import type { MoveInput, Square } from '../chess/types'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useSound } from '../sound/useSound'
 import { HostPortrait } from '../castle/HostPortrait'
-import { lessonById } from './lessons'
+import { lessonById, LESSONS } from './lessons'
 import type { LessonStep, TryMoveStep } from './lessonTypes'
+import { useCastle } from '../castle/useCastle'
+import { callAwardTutorialComplete } from '../firebase/callables'
+import { markLessonDone } from './progress'
 import './LessonScreen.css'
 
 const MAX_SQUARE_SIZE = 56
@@ -33,8 +36,12 @@ export function LessonScreen() {
   const lesson = lessonId ? lessonById(lessonId) : null
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const sound = useSound()
+  const { identity, setCastlePoints } = useCastle()
+  const isLastLesson =
+    lesson !== null && LESSONS[LESSONS.length - 1]?.id === lesson.id
 
   const [state, setState] = useState<RunnerState>({ stepIndex: 0, succeeded: false })
+  const [reward, setReward] = useState<{ added: number } | null>(null)
   const step = lesson ? lesson.steps[state.stepIndex] : undefined
 
   // Fresh ChessGame per step so the player's try-move doesn't carry
@@ -81,11 +88,34 @@ export function LessonScreen() {
     if (!lesson) return
     const next = state.stepIndex + 1
     if (next >= lesson.steps.length) {
+      // Lesson complete — mark client-side so /learn shows a checkmark.
+      markLessonDone(lesson.id)
+      // If this is the LAST lesson and the kid is signed in (not a
+      // bypass), claim the one-time tutorial-complete reward. Server
+      // enforces once-ever; we only update local state on a real award.
+      if (isLastLesson && identity && !identity.isBypass) {
+        void callAwardTutorialComplete({ normalizedName: identity.normalizedName })
+          .then((res) => {
+            if (res.added > 0) {
+              setCastlePoints(res.castlePoints)
+              setReward({ added: res.added })
+              // Hold the reward toast briefly before going back.
+              window.setTimeout(() => navigate('/learn'), 2200)
+              return
+            }
+            navigate('/learn')
+          })
+          .catch((err) => {
+            console.warn('awardTutorialComplete failed:', err)
+            navigate('/learn')
+          })
+        return
+      }
       navigate('/learn')
       return
     }
     setState({ stepIndex: next, succeeded: false })
-  }, [lesson, state.stepIndex, navigate])
+  }, [lesson, state.stepIndex, navigate, isLastLesson, identity, setCastlePoints])
 
   const goBack = useCallback(() => {
     navigate('/learn')
@@ -207,6 +237,12 @@ export function LessonScreen() {
             >
               {nextLabel}
             </button>
+          )}
+
+          {reward && reward.added > 0 && (
+            <div className="puc-lesson__reward" role="status">
+              🎉 Tutorial complete! +{reward.added} castle points
+            </div>
           )}
         </aside>
       </main>

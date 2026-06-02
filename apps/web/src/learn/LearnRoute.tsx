@@ -6,10 +6,13 @@
 import { useNavigate } from 'react-router-dom'
 import { HostPortrait } from '../castle/HostPortrait'
 import { LESSONS } from './lessons'
+import { lessonsDone } from './progress'
 import './LearnRoute.css'
 
 export function LearnRoute() {
   const navigate = useNavigate()
+  const done = new Set(lessonsDone())
+  const allDone = LESSONS.every((l) => done.has(l.id))
 
   return (
     <div className="puc-learn">
@@ -32,37 +35,43 @@ export function LearnRoute() {
         </p>
 
         <ol className="puc-learn__list">
-          {LESSONS.map((lesson, i) => (
-            <li
-              key={lesson.id}
-              className="puc-learn__card"
-            >
-              <button
-                type="button"
-                className="puc-learn__card-btn"
-                onClick={() => navigate(`/learn/${lesson.id}`)}
-              >
-                <span className="puc-learn__card-num">{i + 1}</span>
-                <span className="puc-learn__card-portrait">
-                  <HostPortrait hostId={lesson.hostId} variant="lobby" />
-                </span>
-                <span className="puc-learn__card-body">
-                  <span className="puc-learn__card-title">{lesson.title}</span>
-                  <span className="puc-learn__card-blurb">{lesson.blurb}</span>
-                  <span className="puc-learn__card-meta">
-                    ~{lesson.estimatedMinutes} min · {lesson.hostId === 'lucy' ? 'Lucy' : 'Luca'}
+          {LESSONS.map((lesson, i) => {
+            const isDone = done.has(lesson.id)
+            return (
+              <li key={lesson.id} className="puc-learn__card">
+                <button
+                  type="button"
+                  className={
+                    'puc-learn__card-btn ' +
+                    (isDone ? 'puc-learn__card-btn--done' : '')
+                  }
+                  onClick={() => navigate(`/learn/${lesson.id}`)}
+                >
+                  <span className="puc-learn__card-num">
+                    {isDone ? '✓' : i + 1}
                   </span>
-                </span>
-                <span className="puc-learn__card-cta">Start →</span>
-              </button>
-            </li>
-          ))}
+                  <span className="puc-learn__card-portrait">
+                    <HostPortrait hostId={lesson.hostId} variant="lobby" />
+                  </span>
+                  <span className="puc-learn__card-body">
+                    <span className="puc-learn__card-title">{lesson.title}</span>
+                    <span className="puc-learn__card-blurb">{lesson.blurb}</span>
+                    <span className="puc-learn__card-meta">
+                      ~{lesson.estimatedMinutes} min · {lesson.hostId === 'lucy' ? 'Lucy' : 'Luca'}
+                    </span>
+                  </span>
+                  <span className="puc-learn__card-cta">
+                    {isDone ? 'Replay →' : 'Start →'}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
         </ol>
 
-        {LESSONS.length < 5 && (
-          <p className="puc-learn__more">
-            More lessons coming soon — captures, checkmate, special moves, and
-            opening tips.
+        {allDone && (
+          <p className="puc-learn__more puc-learn__more--celebrate">
+            🎉 All lessons done! Try the Puzzle Garden next.
           </p>
         )}
       </main>

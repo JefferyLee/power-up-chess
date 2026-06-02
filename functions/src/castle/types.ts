@@ -260,7 +260,14 @@ export interface GuestDoc {
     /** LA-day key, e.g. "2026-06-02". */
     dayKey: string
   }
+  /** MVP3 — server ts when the kid finished the Chess Basics Tutorial
+   *  (the last lesson). Reward fires once-ever; subsequent completions
+   *  no-op. Drives the Hall tutorial card's "completed" state. */
+  learnedBasicsAt?: number
 }
+
+/** One-time castle-point reward for finishing all 5 basics lessons. */
+export const TUTORIAL_COMPLETE_REWARD = 50
 
 export interface GuestDailyEarn {
   /** floor(now / DAY_MS). When this differs from today's key the bucket

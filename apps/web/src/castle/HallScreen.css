@@ -148,6 +148,59 @@
   .puc-hall__chatcol > * { min-height: 380px; max-height: 480px; }
 }
 
+/* ── Learn-the-basics banner (above the doors row). */
+.puc-hall__learn {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  padding: 12px 18px;
+  background:
+    linear-gradient(135deg, rgba(244, 194, 102, 0.12), rgba(120, 80, 200, 0.04));
+  border: 1px solid rgba(244, 194, 102, 0.45);
+  border-radius: 12px;
+  color: var(--puc-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: filter 200ms ease, transform 180ms ease;
+}
+.puc-hall__learn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.puc-hall__learn-icon { font-size: 30px; text-align: center; }
+.puc-hall__learn-title {
+  display: block;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 15px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+}
+.puc-hall__learn-blurb {
+  display: block;
+  font-size: 12.5px;
+  color: var(--puc-text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.puc-hall__learn-cta {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--puc-accent);
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+@media (max-width: 540px) {
+  .puc-hall__learn { padding: 10px 14px; gap: 10px; }
+  .puc-hall__learn-icon { font-size: 24px; }
+  .puc-hall__learn-title { font-size: 13.5px; }
+  .puc-hall__learn-blurb { font-size: 11.5px; }
+}
+
 /* ── Doors row — hero CTA, lives directly under the header so a new
  *    visitor sees what they can DO before any social / informational
  *    surface. */
@@ -172,20 +225,36 @@
 
 .puc-hall__doors-grid {
   display: grid;
-  /* Desktop: one row of six. 6 × 110 + 5 × 22 = 770 px fits 1200 max-width. */
-  grid-template-columns: repeat(6, max-content);
   gap: 22px;
   justify-content: center;
 }
+.puc-hall__doors-grid--five {
+  /* 5 doors above the chat. 5 × 110 + 4 × 22 = 638 px. */
+  grid-template-columns: repeat(5, max-content);
+}
+.puc-hall__doors-grid--fun {
+  /* 2-4 doors below the chat. Centred, accommodates future growth. */
+  grid-template-columns: repeat(auto-fit, max-content);
+}
 
-/* Phones — 770 px of doors doesn't fit a 375 px screen and
- * justify-content: center clips both edges (Puzzle Garden falls off the
- * left, Wizard's Duel off the right, with no way to scroll). Wrap to a
- * tidy 3-up grid that takes the available width. */
+.puc-hall__doors--fun {
+  /* Slightly muted heading for the leisure row. */
+  margin-top: 16px;
+}
+.puc-hall__doors--fun .puc-hall__doors-title {
+  opacity: 0.55;
+}
+
+/* Phones — door grids wrap rather than clip. */
 @media (max-width: 720px) {
-  .puc-hall__doors-grid {
+  .puc-hall__doors-grid--five {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px 14px;
+    justify-content: stretch;
+  }
+  .puc-hall__doors-grid--fun {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
     justify-content: stretch;
   }
   .puc-hall__doors-grid > .puc-roomdoor {
@@ -193,7 +262,7 @@
   }
 }
 @media (max-width: 420px) {
-  .puc-hall__doors-grid {
+  .puc-hall__doors-grid--five {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
   }
