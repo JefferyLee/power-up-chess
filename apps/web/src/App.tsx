@@ -11,6 +11,8 @@ import { LeaderboardScreen } from './puzzles/LeaderboardScreen'
 import { DailyFiveScreen } from './puzzles/DailyFiveScreen'
 import { LegendsHallScreen } from './puzzles/LegendsHallScreen'
 import { MasterAtriumScreen } from './puzzles/MasterAtriumScreen'
+import { LearnRoute } from './learn/LearnRoute'
+import { LessonScreen } from './learn/LessonScreen'
 import { AiPracticeRoute } from './screens/AiPracticeRoute'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
@@ -40,6 +42,8 @@ export function App() {
           <Route path="/r/:roomId" element={<OnlineGameScreen />} />
           <Route path="/review" element={<PostGameAnalysisScreen />} />
           <Route path="/history" element={<HistoryScreen />} />
+          <Route path="/learn" element={<LearnRoute />} />
+          <Route path="/learn/:lessonId" element={<LessonScreen />} />
           <Route path="/puzzles" element={<PuzzleGardenScreen />} />
           <Route path="/puzzles/calibration" element={<CalibrationScreen />} />
           <Route path="/puzzles/leaderboard" element={<LeaderboardScreen />} />

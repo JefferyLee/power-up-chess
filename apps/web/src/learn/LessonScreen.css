@@ -1,0 +1,186 @@
+.puc-lesson {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+}
+.puc-lesson--centered {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.puc-lesson__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(231, 184, 65, 0.12);
+  background: rgba(10, 18, 12, 0.5);
+}
+.puc-lesson__back {
+  background: transparent;
+  color: var(--puc-text);
+  border: 1px solid rgba(231, 184, 65, 0.28);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.puc-lesson__back:hover { border-color: var(--puc-accent); color: var(--puc-accent); }
+.puc-lesson__title-wrap { flex: 1; min-width: 0; }
+.puc-lesson__title {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 17px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-lesson__progress {
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: var(--puc-text-muted);
+}
+.puc-lesson__skip {
+  background: transparent;
+  color: var(--puc-text-muted);
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.puc-lesson__skip:hover { color: var(--puc-text); }
+
+.puc-lesson__progressbar {
+  height: 3px;
+  background: rgba(120, 120, 140, 0.18);
+  overflow: hidden;
+}
+.puc-lesson__progressbar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f4c266, #ef9a3f);
+  transition: width 360ms cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.puc-lesson__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 18px;
+  padding: 22px 22px 28px;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .puc-lesson__main {
+    grid-template-columns: 1fr;
+    padding: 14px 14px 22px;
+  }
+}
+
+.puc-lesson__board {
+  display: flex;
+  justify-content: center;
+}
+
+.puc-lesson__side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.puc-lesson__host {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.puc-lesson__portrait {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(231, 184, 65, 0.4);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+.puc-lesson__hostname {
+  font-family: var(--puc-font-display);
+  font-size: 14px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+}
+
+.puc-lesson__bubble {
+  position: relative;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--puc-text);
+}
+.puc-lesson__bubble::before {
+  /* Tail pointing up to the host portrait. */
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 22px;
+  width: 12px;
+  height: 12px;
+  background: var(--puc-surface);
+  border-top: 1px solid var(--puc-surface-edge);
+  border-left: 1px solid var(--puc-surface-edge);
+  transform: rotate(45deg);
+}
+.puc-lesson__bubble--celebrate {
+  background: linear-gradient(180deg, rgba(244, 194, 102, 0.15), rgba(244, 194, 102, 0.06));
+  border-color: rgba(244, 194, 102, 0.55);
+}
+.puc-lesson__bubble-title {
+  margin: 0 0 6px;
+  font-family: var(--puc-font-display);
+  font-size: 18px;
+  color: var(--puc-text-accent);
+}
+.puc-lesson__bubble-text { margin: 0; }
+
+.puc-lesson__btn {
+  padding: 11px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 120, 140, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+}
+.puc-lesson__btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.puc-lesson__btn--primary {
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  color: #1a1a1f;
+  border-color: rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+}
+.puc-lesson__btn--primary:hover { filter: brightness(1.05); }
+.puc-lesson__btn--pulse {
+  animation: puc-lesson-btn-pulse 1.6s ease-in-out infinite;
+}
+@keyframes puc-lesson-btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 194, 102, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(244, 194, 102, 0.22); }
+}
