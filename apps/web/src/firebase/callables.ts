@@ -460,6 +460,21 @@ export interface GetMasterAtriumListResponse {
   unlockThreshold: number
 }
 
+export type FeedbackKind = 'bug' | 'suggestion'
+export interface SubmitFeedbackRequest {
+  kind: FeedbackKind
+  text: string
+  route?: string
+  userAgent?: string
+  authorName?: string
+  normalizedName?: string
+  isBypass?: boolean
+}
+export interface SubmitFeedbackResponse { ok: true; ts: number }
+
+export interface MarkFeedbackReadRequest { id: string; read?: boolean }
+export interface MarkFeedbackReadResponse { ok: true }
+
 export interface GetCalibrationSetRequest {
   normalizedName: string
 }
@@ -504,6 +519,14 @@ const getMasterAtriumListFn = httpsCallable<
   GetMasterAtriumListRequest,
   GetMasterAtriumListResponse
 >(functions, 'getMasterAtriumList')
+const submitFeedbackFn = httpsCallable<SubmitFeedbackRequest, SubmitFeedbackResponse>(
+  functions,
+  'submitFeedback',
+)
+const markFeedbackReadFn = httpsCallable<
+  MarkFeedbackReadRequest,
+  MarkFeedbackReadResponse
+>(functions, 'markFeedbackRead')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -545,5 +568,17 @@ export async function callGetMasterAtriumList(
   req: GetMasterAtriumListRequest,
 ): Promise<GetMasterAtriumListResponse> {
   const { data } = await getMasterAtriumListFn(req)
+  return data
+}
+export async function callSubmitFeedback(
+  req: SubmitFeedbackRequest,
+): Promise<SubmitFeedbackResponse> {
+  const { data } = await submitFeedbackFn(req)
+  return data
+}
+export async function callMarkFeedbackRead(
+  req: MarkFeedbackReadRequest,
+): Promise<MarkFeedbackReadResponse> {
+  const { data } = await markFeedbackReadFn(req)
   return data
 }

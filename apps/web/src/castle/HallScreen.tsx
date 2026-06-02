@@ -20,6 +20,8 @@ import { RoomDoor } from './RoomDoor'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
+import { FeedbackButton } from './FeedbackButton'
+import { FeedbackInbox } from './FeedbackInbox'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
 import './HallScreen.css'
@@ -143,6 +145,7 @@ export function HallScreen() {
       <header className="puc-hall__header">
         <h1 className="puc-hall__title">The Great Hall</h1>
         <div className="puc-hall__header-right">
+          <FeedbackInbox />
           <button type="button" className="puc-hall__link" onClick={() => navigate('/history')}>
             Match history
           </button>
@@ -243,6 +246,7 @@ export function HallScreen() {
             {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
             {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
             <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
+            <FeedbackButton />
           </div>
         </aside>
 

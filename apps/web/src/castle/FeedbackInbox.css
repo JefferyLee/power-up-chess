@@ -1,0 +1,181 @@
+.puc-inbox-pill {
+  background: rgba(244, 194, 102, 0.10);
+  color: var(--puc-text-accent);
+  border: 1px solid rgba(244, 194, 102, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.puc-inbox-pill:hover { background: rgba(244, 194, 102, 0.18); }
+.puc-inbox-pill--unread {
+  background: rgba(220, 130, 120, 0.18);
+  border-color: rgba(220, 130, 120, 0.6);
+  color: #f5b8a8;
+  animation: puc-inbox-pulse 2.4s ease-in-out infinite;
+}
+@keyframes puc-inbox-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 130, 120, 0); }
+  50%      { box-shadow: 0 0 0 4px rgba(220, 130, 120, 0.18); }
+}
+
+.puc-inbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(8, 6, 24, 0.78);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: puc-inbox-fadein 200ms ease-out;
+}
+@keyframes puc-inbox-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.puc-inbox {
+  width: min(720px, 100%);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(40, 32, 70, 0.96), rgba(20, 16, 38, 0.96));
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  border-radius: 14px;
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.puc-inbox__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(241, 195, 76, 0.25);
+  background: rgba(0, 0, 0, 0.18);
+}
+.puc-inbox__title {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 17px;
+  color: var(--puc-text-accent);
+  flex: 1;
+}
+.puc-inbox__count {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+}
+.puc-inbox__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  color: var(--puc-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+.puc-inbox__close:hover { color: var(--puc-text-accent); border-color: var(--puc-accent); }
+
+.puc-inbox__empty {
+  padding: 32px;
+  margin: 0;
+  text-align: center;
+  color: var(--puc-text-muted);
+  font-size: 14px;
+}
+
+.puc-inbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+.puc-inbox__row {
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.puc-inbox__row--unread {
+  background: rgba(220, 130, 120, 0.08);
+  border-left: 3px solid rgba(220, 130, 120, 0.6);
+}
+.puc-inbox__row--read { opacity: 0.7; }
+.puc-inbox__row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--puc-text-muted);
+}
+.puc-inbox__chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--puc-font-display);
+  white-space: nowrap;
+}
+.puc-inbox__chip--bug {
+  background: rgba(220, 130, 120, 0.15);
+  color: #f5b8a8;
+  border: 1px solid rgba(220, 130, 120, 0.4);
+}
+.puc-inbox__chip--suggestion {
+  background: rgba(244, 194, 102, 0.15);
+  color: var(--puc-text-accent);
+  border: 1px solid rgba(244, 194, 102, 0.4);
+}
+.puc-inbox__author {
+  flex: 1;
+  color: var(--puc-text);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-inbox__route {
+  color: var(--puc-text-muted);
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+}
+.puc-inbox__ts {
+  font-size: 11px;
+  color: var(--puc-text-muted);
+  white-space: nowrap;
+}
+.puc-inbox__text {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--puc-text);
+  white-space: pre-wrap;
+}
+.puc-inbox__ua {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--puc-text-muted);
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+}
+.puc-inbox__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.puc-inbox__btn {
+  background: transparent;
+  border: 1px solid rgba(120, 120, 140, 0.4);
+  color: var(--puc-text-muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.puc-inbox__btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--puc-text);
+}

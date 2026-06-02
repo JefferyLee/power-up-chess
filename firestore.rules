@@ -92,6 +92,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // In-app feedback — written via submitFeedback, read only by the
+    // dev (guests/jeff). Cross-doc lookup against guests/jeff lets the
+    // Hall snapshot listener show new feedback live without a callable
+    // round-trip. Writes are still function-only (no client tampering).
+    match /feedback/{id} {
+      allow read: if request.auth != null
+        && exists(/databases/$(database)/documents/guests/jeff)
+        && get(/databases/$(database)/documents/guests/jeff).data.uids.hasAny([request.auth.uid]);
+      allow write: if false;
+    }
+    // Per-uid feedback rate-limit counters. Function-only.
+    match /feedback_attempts/{uid} {
+      allow read, write: if false;
+    }
+
     // Chat rate-limit counters. Function-only.
     match /chat_rate_limits/{doc} {
       allow read, write: if false;
