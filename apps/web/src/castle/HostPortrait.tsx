@@ -15,9 +15,9 @@ interface Props {
 export function HostPortrait({ hostId, variant = 'lobby' }: Props) {
   const isLucy = hostId === 'lucy'
   // Lobby portrait was 220 — too dominant in the Hall's host column.
-  // 140 keeps it recognisable as a person without competing with the
-  // hero doors row above.
-  const size = variant === 'chip' ? 48 : 140
+  // 120 reads as ambient support; the hero doors row above the host
+  // card carries the primary visual weight.
+  const size = variant === 'chip' ? 48 : 120
   return (
     <svg
       width={size}

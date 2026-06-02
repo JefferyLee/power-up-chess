@@ -172,8 +172,9 @@
 
 .puc-hall__doors-grid {
   display: grid;
-  /* Always one row, never reflow — user wants all doors in a single line. */
-  grid-template-columns: repeat(5, max-content);
+  /* Always one row, never reflow — six doors in a single line.
+   * 6 × 110 + 5 × 22 = 770 px; fits the 1200 max-width comfortably. */
+  grid-template-columns: repeat(6, max-content);
   gap: 22px;
   justify-content: center;
 }
