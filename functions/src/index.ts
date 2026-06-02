@@ -24,6 +24,7 @@ export { postChat } from './castle/postChat'
 export { setPresence } from './castle/setPresence'
 export { hostAmbientStory } from './castle/hostAmbientStory'
 export { hostStoryAnswer } from './castle/hostStoryAnswer'
+export { hostTellStory } from './castle/hostTellStory'
 export { cleanupPresence } from './castle/cleanupPresence'
 export { submitForestScore } from './forest/submitForestScore'
 export {
@@ -31,6 +32,7 @@ export {
   joinWizardRoom,
   submitWizardMove,
   submitWizardSpell,
+  claimWizardTimeWin,
 } from './games/wizard/wizardRoom'
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'

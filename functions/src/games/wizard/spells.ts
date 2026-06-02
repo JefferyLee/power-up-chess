@@ -6,13 +6,19 @@ import type { Color, Square } from '../../shared/chessTypes'
 import type { Spell, SpellId, SpellTargetSpec } from './types'
 
 export const SPELLS: Spell[] = [
-  { id: 'freeze',   cost: 4, target: 'enemy-piece',     effectKind: 'freeze' },
-  { id: 'confuse',  cost: 3, target: 'enemy-piece',     effectKind: 'confuse' },
-  { id: 'shield',   cost: 5, target: 'own-piece',       effectKind: 'shield' },
-  { id: 'phantom',  cost: 7, target: 'own-piece',       effectKind: 'phantom' },
-  { id: 'teleport', cost: 6, target: 'own-pair' },
-  { id: 'summon',   cost: 8, target: 'empty-own-half' },
+  { id: 'freeze',     cost: 4,  target: 'enemy-piece' ,    effectKind: 'freeze' },
+  { id: 'confuse',    cost: 3,  target: 'enemy-piece',     effectKind: 'confuse' },
+  { id: 'shield',     cost: 5,  target: 'own-piece',       effectKind: 'shield' },
+  { id: 'phantom',    cost: 7,  target: 'own-piece',       effectKind: 'phantom' },
+  { id: 'teleport',   cost: 6,  target: 'own-pair' },
+  { id: 'summon',     cost: 8,  target: 'empty-own-half' },
+  { id: 'extra-time', cost: 10, target: 'self' },
 ]
+
+/** Bonus seconds the 'extra-time' spell adds to the caster's clock. The
+ *  server applies this in submitWizardSpell; the engine itself doesn't
+ *  touch clocks. */
+export const EXTRA_TIME_BONUS_MS = 60_000
 
 export const SPELLS_BY_ID = new Map<SpellId, Spell>(SPELLS.map((s) => [s.id, s]))
 
@@ -71,6 +77,10 @@ export const TARGET_SPECS: Record<SpellId, SpellTargetSpec> = {
       const p = board.pieceAt(sq)
       return p === null && board.isInOwnHalf(sq, caster)
     },
+  },
+  'extra-time': {
+    // Self-cast — no board target. The UI fires it directly when picked.
+    arity: 0,
   },
 }
 

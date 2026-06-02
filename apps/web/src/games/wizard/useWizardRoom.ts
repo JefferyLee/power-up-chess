@@ -15,6 +15,11 @@ export interface WizardPlayerSlot {
   isBypass: boolean
 }
 
+export interface WizardTimeControl {
+  initialMs: number
+  incrementMs: number
+}
+
 export interface WizardRoomDoc {
   white: WizardPlayerSlot
   black: WizardPlayerSlot | null
@@ -31,7 +36,14 @@ export interface WizardRoomDoc {
   }>
   actions: WizardActionRecord[]
   winner: Color | null
-  endReason: 'checkmate' | null
+  endReason: 'checkmate' | 'timeout' | null
+  /** Fischer time control — present on all rooms created since W.4.7. */
+  timeControl?: WizardTimeControl
+  whiteTimeMs?: number
+  blackTimeMs?: number
+  /** Server-ms when the side-to-move's clock started ticking. null while
+   *  waiting / after the game ends. */
+  lastTickServerTs?: number | null
   createdAt: number
   updatedAt: number
 }

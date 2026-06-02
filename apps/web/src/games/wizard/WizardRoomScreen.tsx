@@ -10,7 +10,8 @@ import { useSound } from '../../sound/useSound'
 import { useCastle } from '../../castle/useCastle'
 import { usePresenceHeartbeat } from '../../castle/usePresenceHeartbeat'
 import { useAuthUid } from '../../auth/useAuthUid'
-import { callSubmitWizardMove, callSubmitWizardSpell } from '../../firebase/callables'
+import { Clock } from '../../clock/Clock'
+import { callClaimWizardTimeWin, callSubmitWizardMove, callSubmitWizardSpell } from '../../firebase/callables'
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
 import { WizardBoard, type WizardBoardMode } from './WizardBoard'
 import { WizardChat } from './WizardChat'
@@ -80,7 +81,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     if (identity?.isBypass) return out
     for (const s of SPELLS) {
       if (callerPoints < s.cost) continue
-      if (engine.validTargetsFor(s.id).length === 0) continue
+      if (!engine.canCastSpell(s.id)) continue
       out.add(s.id)
     }
     return out
@@ -109,11 +110,6 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     [engine, roomId, yourTurn, submitting, sound],
   )
 
-  const handlePickSpell = useCallback((spellId: SpellId) => {
-    setCast({ stage: 'awaiting-1st', spellId })
-    setError(null)
-  }, [])
-
   const handleCancelCast = useCallback(() => setCast({ stage: 'idle' }), [])
 
   const submitSpell = useCallback(
@@ -138,6 +134,16 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     },
     [roomId, sound, setCastlePoints],
   )
+
+  const handlePickSpell = useCallback((spellId: SpellId) => {
+    setError(null)
+    // Arity-0 spells (e.g., extra-time) fire immediately — no target picking.
+    if (TARGET_SPECS[spellId].arity === 0) {
+      void submitSpell(spellId, [])
+      return
+    }
+    setCast({ stage: 'awaiting-1st', spellId })
+  }, [submitSpell])
 
   const handleSpellTarget = useCallback(
     async (sq: Square) => {
@@ -186,6 +192,30 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     }
   }, [room.status, yourColor])
 
+  // Flag-fall watcher: if it's the opponent's turn and their clock would
+  // run out before our next snapshot, schedule a claim. The server has
+  // the final say; we just nudge it.
+  useEffect(() => {
+    if (room.status !== 'live') return
+    if (!yourColor || !room.timeControl) return
+    if (yourColor === room.currentTurn) return
+    if (room.lastTickServerTs == null) return
+    const opponentTimeMs = room.currentTurn === 'w' ? room.whiteTimeMs : room.blackTimeMs
+    if (opponentTimeMs == null) return
+    const remaining = opponentTimeMs - (Date.now() - room.lastTickServerTs)
+    const fire = () => { void callClaimWizardTimeWin(roomId).catch(() => {}) }
+    if (remaining <= 0) {
+      fire()
+      return
+    }
+    const timer = window.setTimeout(fire, remaining + 250)
+    return () => window.clearTimeout(timer)
+  }, [
+    room.status, room.currentTurn, room.lastTickServerTs,
+    room.whiteTimeMs, room.blackTimeMs, room.timeControl,
+    yourColor, roomId,
+  ])
+
   return (
     <div className="puc-wd">
       <header className="puc-wd__header">
@@ -205,6 +235,9 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
             color={opponent}
             turn={room.currentTurn === opponent}
             label={yourColor ? 'Opponent' : 'Black'}
+            clockMs={opponent === 'w' ? room.whiteTimeMs : room.blackTimeMs}
+            clockRunning={room.status === 'live' && room.currentTurn === opponent}
+            lastTickServerTs={room.lastTickServerTs ?? null}
           />
         </aside>
 
@@ -229,7 +262,9 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
                   <h2 className="puc-wd__overlay-title">
                     {(winner === 'w' ? room.white.displayName : room.black?.displayName) ?? '—'} wins!
                   </h2>
-                  <p className="puc-wd__overlay-sub">The duel is over.</p>
+                  <p className="puc-wd__overlay-sub">
+                    {room.endReason === 'timeout' ? 'Opponent ran out of time.' : 'The duel is over.'}
+                  </p>
                   <div className="puc-wd__overlay-actions">
                     <button type="button" className="puc-wd__overlay-btn" onClick={onExit}>
                       Back to Hall
@@ -265,7 +300,10 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
             name={(yourColor === 'w' ? room.white : room.black)?.displayName ?? '—'}
             color={yourColor ?? 'w'}
             turn={yourTurn}
-            label="You"
+            label={yourColor ? 'You' : 'White'}
+            clockMs={(yourColor ?? 'w') === 'w' ? room.whiteTimeMs : room.blackTimeMs}
+            clockRunning={room.status === 'live' && room.currentTurn === (yourColor ?? 'w')}
+            lastTickServerTs={room.lastTickServerTs ?? null}
           />
           {yourColor && !identity?.isBypass && (
             <div className="puc-wd__points">
@@ -329,17 +367,30 @@ function WaitingOverlay({ roomId, onCopy }: { roomId: string; onCopy: () => void
 }
 
 function PlayerRow({
-  name, color, turn, label,
+  name, color, turn, label, clockMs, clockRunning, lastTickServerTs,
 }: {
   name: string
   color: Color
   turn: boolean
   label: string
+  clockMs: number | undefined
+  clockRunning: boolean
+  lastTickServerTs: number | null
 }) {
   return (
     <div className={`puc-wd__player puc-wd__player--${color}${turn ? ' puc-wd__player--turn' : ''}`}>
-      <span className="puc-wd__player-name">{turn ? '▸ ' : ''}{name}</span>
-      <span className="puc-wd__player-label">{label}</span>
+      <div className="puc-wd__player-info">
+        <span className="puc-wd__player-name">{turn ? '▸ ' : ''}{name}</span>
+        <span className="puc-wd__player-label">{label}</span>
+      </div>
+      {clockMs !== undefined && (
+        <Clock
+          baseMs={clockMs}
+          lastTickAt={clockRunning ? lastTickServerTs : null}
+          running={clockRunning}
+          className="puc-wd__player-clock"
+        />
+      )}
     </div>
   )
 }

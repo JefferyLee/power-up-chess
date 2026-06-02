@@ -25,6 +25,7 @@ export type Spell =
   | { id: 'phantom'; cost: number; target: 'own-piece';    effectKind: 'phantom' }
   | { id: 'teleport'; cost: number; target: 'own-pair' }
   | { id: 'summon';   cost: number; target: 'empty-own-half' }
+  | { id: 'extra-time'; cost: number; target: 'self' }
 
 export type SpellId = Spell['id']
 
@@ -38,11 +39,11 @@ export type WizardActionRecord =
   | { kind: 'spell'; spellId: SpellId; color: Color; targets: Square[] }
 
 export interface SpellTargetSpec {
-  /** What `castSpell` will accept. */
-  arity: 1 | 2
+  /** What `castSpell` will accept. 0 = self-cast (no board target). */
+  arity: 0 | 1 | 2
   /** Filter helper for the UI: returns true if `square` is a legal first
-   *  target right now. */
-  isValidFirstTarget(square: Square, board: BoardView, caster: Color): boolean
+   *  target right now. Omit for arity-0 spells. */
+  isValidFirstTarget?(square: Square, board: BoardView, caster: Color): boolean
   /** For 2-arity spells only — given a first target, which squares are valid
    *  as the second? Defaults to "not the first square". */
   isValidSecondTarget?(square: Square, firstTarget: Square, board: BoardView, caster: Color): boolean

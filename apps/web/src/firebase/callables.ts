@@ -165,6 +165,7 @@ const createWizardRoomFn = httpsCallable<WizardPlayerInfo, CreateWizardRoomRespo
 const joinWizardRoomFn = httpsCallable<JoinWizardRoomRequest, JoinWizardRoomResponse>(functions, 'joinWizardRoom')
 const submitWizardMoveFn = httpsCallable<SubmitWizardMoveRequest, { ok: true }>(functions, 'submitWizardMove')
 const submitWizardSpellFn = httpsCallable<SubmitWizardSpellRequest, SubmitWizardSpellResponse>(functions, 'submitWizardSpell')
+const claimWizardTimeWinFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'claimWizardTimeWin')
 
 export interface PostWizardMessageRequest {
   roomId: string
@@ -207,6 +208,16 @@ export type HostStoryAnswerResponse =
   | { status: 'closed'; explanation?: string }
   | { status: 'no-attempts-left'; explanation?: string }
 const hostStoryAnswerFn = httpsCallable<HostStoryAnswerRequest, HostStoryAnswerResponse>(functions, 'hostStoryAnswer')
+
+// MVP2 M.7: On-demand story request from the host avatar.
+export interface HostTellStoryRequest {
+  hostId?: 'lucy' | 'luca'
+}
+export type HostTellStoryResponse =
+  | { status: 'ok'; messageId: string; storyId: string; hostId: 'lucy' | 'luca' }
+  | { status: 'rate-limited'; retryAfterMs: number; scope: 'minute' | 'day' }
+  | { status: 'no-story-available' }
+const hostTellStoryFn = httpsCallable<HostTellStoryRequest, HostTellStoryResponse>(functions, 'hostTellStory')
 
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
@@ -286,6 +297,9 @@ export async function callSubmitWizardSpell(req: SubmitWizardSpellRequest): Prom
   const { data } = await submitWizardSpellFn(req)
   return data
 }
+export async function callClaimWizardTimeWin(roomId: string): Promise<void> {
+  await claimWizardTimeWinFn({ roomId })
+}
 export async function callPostWizardMessage(req: PostWizardMessageRequest): Promise<PostWizardMessageResponse> {
   const { data } = await postWizardMessageFn(req)
   return data
@@ -296,5 +310,9 @@ export async function callPostWizardVoice(req: PostWizardVoiceRequest): Promise<
 }
 export async function callHostStoryAnswer(req: HostStoryAnswerRequest): Promise<HostStoryAnswerResponse> {
   const { data } = await hostStoryAnswerFn(req)
+  return data
+}
+export async function callHostTellStory(req: HostTellStoryRequest): Promise<HostTellStoryResponse> {
+  const { data } = await hostTellStoryFn(req)
   return data
 }

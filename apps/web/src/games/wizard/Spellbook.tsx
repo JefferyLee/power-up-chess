@@ -16,12 +16,13 @@ interface Props {
 }
 
 const META: Record<SpellId, { icon: string; name: string; tag: string }> = {
-  freeze:   { icon: '❄',  name: 'Freeze',     tag: '2 turns no move' },
-  confuse:  { icon: '😵‍💫', name: 'Confuse',    tag: '2 turns no capture' },
-  shield:   { icon: '🛡',  name: 'Shield',     tag: '2 turns uncapturable' },
-  phantom:  { icon: '👻', name: 'Phantom',    tag: '1 turn pass-through' },
-  teleport: { icon: '✨', name: 'Teleport',   tag: 'swap 2 of your pieces' },
-  summon:   { icon: '🪄', name: 'Summon Pawn', tag: 'drop a pawn in your half' },
+  freeze:       { icon: '❄',  name: 'Freeze',      tag: '2 turns no move' },
+  confuse:      { icon: '😵‍💫', name: 'Confuse',    tag: '2 turns no capture' },
+  shield:       { icon: '🛡',  name: 'Shield',      tag: '2 turns uncapturable' },
+  phantom:      { icon: '👻', name: 'Phantom',     tag: '1 turn pass-through' },
+  teleport:     { icon: '✨', name: 'Teleport',    tag: 'swap 2 of your pieces' },
+  summon:       { icon: '🪄', name: 'Summon Pawn', tag: 'drop a pawn in your half' },
+  'extra-time': { icon: '⏳', name: 'Extra Time',  tag: '+1 min to your clock' },
 }
 
 export function Spellbook({ mana, activeSpell, castable, onPick }: Props) {

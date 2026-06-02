@@ -127,8 +127,18 @@ export class WizardChess {
 
   validTargetsFor(spellId: SpellId): Square[] {
     const spec = TARGET_SPECS[spellId]
+    if (spec.arity === 0 || !spec.isValidFirstTarget) return []
     const view = this.boardView()
-    return ALL_SQUARES.filter((sq) => spec.isValidFirstTarget(sq, view, this.currentTurn))
+    return ALL_SQUARES.filter((sq) => spec.isValidFirstTarget!(sq, view, this.currentTurn))
+  }
+
+  /** True iff this spell has at least one legal target (arity-1/2) OR is
+   *  a self-cast and the game is in progress (arity-0). */
+  canCastSpell(spellId: SpellId): boolean {
+    if (this.chess.isGameOver()) return false
+    const spec = TARGET_SPECS[spellId]
+    if (spec.arity === 0) return true
+    return this.validTargetsFor(spellId).length > 0
   }
 
   validSecondaryTargetsFor(spellId: SpellId, first: Square): Square[] {

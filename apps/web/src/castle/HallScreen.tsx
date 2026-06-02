@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
 import { HostPortrait } from './HostPortrait'
+import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
 import { loadProfile, pickRandomHost } from '../storage/profile'
 import { presetById } from '../clock/timeControl'
@@ -123,6 +124,7 @@ export function HallScreen() {
                 : `Welcome back, ${identity.displayName}!`}
             </p>
             {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
+            <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
           </div>
         </aside>
 

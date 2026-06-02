@@ -192,8 +192,18 @@ export class WizardChess {
 
   validTargetsFor(spellId: SpellId): Square[] {
     const spec = TARGET_SPECS[spellId]
+    if (spec.arity === 0 || !spec.isValidFirstTarget) return []
     const view = this.boardView()
-    return ALL_SQUARES.filter((sq) => spec.isValidFirstTarget(sq, view, this.currentTurn))
+    return ALL_SQUARES.filter((sq) => spec.isValidFirstTarget!(sq, view, this.currentTurn))
+  }
+
+  /** True iff there is at least one legal target for this spell (arity-1/2)
+   *  OR the spell is self-cast and the game is in progress (arity-0). */
+  canCastSpell(spellId: SpellId): boolean {
+    if (this.chess.isGameOver()) return false
+    const spec = TARGET_SPECS[spellId]
+    if (spec.arity === 0) return true
+    return this.validTargetsFor(spellId).length > 0
   }
 
   validSecondaryTargetsFor(spellId: SpellId, first: Square): Square[] {
@@ -212,7 +222,7 @@ export class WizardChess {
 
     const view = this.boardView()
     const caster = this.currentTurn
-    if (!spec.isValidFirstTarget(targets[0]!, view, caster)) return null
+    if (spec.arity >= 1 && !spec.isValidFirstTarget?.(targets[0]!, view, caster)) return null
     if (spec.arity === 2 && !spec.isValidSecondTarget?.(targets[1]!, targets[0]!, view, caster)) return null
 
     switch (spellId) {
@@ -275,6 +285,11 @@ export class WizardChess {
         if (this.pieceAt(target) !== null) return null
         if (!isInHalfOf(target, caster)) return null
         this.chess.put({ type: 'p', color: caster }, target)
+        break
+      }
+      case 'extra-time': {
+        // Pure clock spell — no board change here. The wrapping Cloud
+        // Function adds 60s to the caster's clock after this returns.
         break
       }
     }

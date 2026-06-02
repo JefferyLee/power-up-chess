@@ -115,11 +115,31 @@
   box-shadow: 0 0 0 1px rgba(241, 195, 76, 0.25);
 }
 
+.puc-wd__player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .puc-wd__player-name {
   font-family: 'Cinzel', Georgia, serif;
   font-size: 14px;
   color: var(--puc-text-accent);
   letter-spacing: 0.4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puc-wd__player-clock {
+  font-family: 'Cinzel', Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .puc-wd__player-mana {
