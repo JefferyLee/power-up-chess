@@ -57,19 +57,25 @@
   }
 }
 
-/* ── Expanded overlay ─────────────────────────────────────────────── */
+/* ── Expanded overlay ─────────────────────────────────────────────
+ * Anchored to the LEFT side of the screen so the centred wicket
+ * login dialog stays visible + tappable. No backdrop blur on
+ * desktop — only a thin scrim so the parchment reads cleanly.
+ * On phones the card falls back to a centred modal because the
+ * viewport is too narrow for side-by-side. */
 .puc-sign-overlay {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(8, 6, 24, 0.78);
-  backdrop-filter: blur(8px);
+  background: rgba(8, 6, 24, 0.20);
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
+  justify-content: flex-start;
+  padding: 24px 24px 24px 32px;
   animation: puc-sign-fadein 220ms ease-out;
+  pointer-events: none;   /* let clicks on the gate art pass through */
 }
+.puc-sign-overlay > * { pointer-events: auto; }
 @keyframes puc-sign-fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -77,10 +83,10 @@
 
 .puc-sign-overlay__card {
   position: relative;
-  width: min(560px, 100%);
+  width: min(440px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  padding: 36px 32px 24px;
+  padding: 36px 28px 22px;
   background:
     radial-gradient(120% 60% at 50% 0%, rgba(255, 240, 200, 1), rgba(245, 224, 175, 0.98) 55%, rgba(225, 195, 138, 0.96)),
     #f5e0af;
@@ -194,4 +200,17 @@
   color: #3a230c;
   text-align: right;
   font-style: italic;
+}
+
+/* Phone: viewport too narrow for left-anchored layout — fall back
+ * to a centred modal with a darker scrim, the wicket can wait. */
+@media (max-width: 720px) {
+  .puc-sign-overlay {
+    background: rgba(8, 6, 24, 0.78);
+    backdrop-filter: blur(8px);
+    justify-content: center;
+    padding: 24px;
+    pointer-events: auto;
+  }
+  .puc-sign-overlay__card { width: min(520px, 100%); }
 }
