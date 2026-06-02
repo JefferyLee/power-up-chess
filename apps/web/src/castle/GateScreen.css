@@ -172,6 +172,59 @@
   right: 24px;
 }
 
+/* Parchment-scroll treatment for the leaderboard — overrides the
+ * default panel chrome with a warmer, taller, more "Hall of Champions"
+ * presentation. Two darker bands at top + bottom suggest rolled ends. */
+.puc-gate__scroll {
+  background:
+    radial-gradient(ellipse at 50% 50%, #fbf3da 0%, #efe1bb 70%, #d8c294 100%);
+  border: 1px solid rgba(150, 110, 55, 0.55);
+  color: #3a2914;
+  font-family: 'IM Fell English', Georgia, serif;
+  min-width: 220px;
+  max-width: 260px;
+  padding: 22px 18px 18px;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.6),
+    inset 0 0 28px rgba(120, 85, 35, 0.32),
+    inset 0 0 0 1px rgba(150, 110, 55, 0.35);
+  /* Subtle deckle edge */
+  clip-path: polygon(
+    0% 5%, 8% 2%, 22% 4%, 38% 1%, 54% 3%, 70% 0%, 86% 2%, 96% 0%,
+    100% 8%, 99% 22%, 100% 38%, 98% 54%, 100% 70%, 99% 86%, 100% 96%,
+    92% 100%, 78% 98%, 62% 100%, 46% 98%, 30% 100%, 14% 98%, 0% 95%,
+    1% 80%, 0% 62%, 2% 44%, 0% 26%
+  );
+}
+
+.puc-gate__scroll-handle {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 8px;
+  background: linear-gradient(180deg, #b08a4a 0%, #6e5022 100%);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.puc-gate__scroll-handle--top    { top: 4px; }
+.puc-gate__scroll-handle--bottom { bottom: 4px; }
+
+.puc-gate__scroll .puc-gate__panel-title {
+  color: #6a3e10;
+  letter-spacing: 1.8px;
+  text-align: center;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+}
+
+.puc-gate__scroll .puc-gate__panel-note {
+  color: #6e5022;
+  font-style: italic;
+  text-align: center;
+  font-size: 10.5px;
+  margin-top: 4px;
+}
+
 .puc-gate__panel-title {
   margin: 0 0 6px;
   font-family: 'Cinzel', Georgia, serif;
@@ -202,27 +255,64 @@
   list-style: none;
   margin: 0 0 6px;
   padding: 0;
-  font-size: 12px;
+  font-size: 13px;
 }
 
-.puc-gate__leaderboard li {
-  display: flex;
-  justify-content: space-between;
-  padding: 2px 0;
-  border-bottom: 1px dashed rgba(120, 100, 160, 0.2);
+.puc-gate__lb-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: baseline;
   gap: 8px;
+  padding: 4px 2px;
+  border-bottom: 1px dashed rgba(150, 110, 55, 0.32);
+  color: #3a2914;
 }
-.puc-gate__leaderboard li:last-child { border-bottom: none; }
-.puc-gate__leaderboard li span:first-child {
-  color: #ece9ff;
+.puc-gate__lb-row:last-child { border-bottom: none; }
+
+.puc-gate__lb-row--placeholder {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.puc-gate__lb-rank {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a5818;
+  text-align: center;
+}
+
+.puc-gate__lb-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
 }
-.puc-gate__leaderboard li span:last-child {
-  color: #f1c34c;
+
+.puc-gate__lb-mark {
+  display: inline-block;
+  font-size: 11px;
+  filter: drop-shadow(0 0 3px rgba(255, 200, 90, 0.6));
+}
+.puc-gate__lb-mark--crown {
+  filter: drop-shadow(0 0 4px rgba(255, 140, 70, 0.85));
+}
+
+.puc-gate__lb-title {
+  font-size: 10.5px;
+  font-style: italic;
+  color: #6e5022;
+  font-weight: 500;
+}
+
+.puc-gate__lb-points {
+  color: #6a3e10;
   font-family: 'Cinzel', Georgia, serif;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13.5px;
 }
 
 .puc-gate__hint {

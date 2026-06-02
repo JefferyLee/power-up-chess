@@ -146,9 +146,20 @@ export const UNLOCK_THRESHOLD = 200
 
 export interface CastlePublicStats {
   activeToday: number
-  topGuests: Array<{ displayName: string; castlePoints: number }>
+  topGuests: TopGuest[]
   /** Server ts when this doc was last rebuilt. */
   refreshedAt: number
+}
+
+export interface TopGuest {
+  displayName: string
+  castlePoints: number
+  /** Lifetime-earn title label at refresh time ("Apprentice", etc.). */
+  title?: string
+  /** Has an active duel-winner halo (last 24 h). */
+  hasHalo?: boolean
+  /** Has an active 3-win streak crown (last 72 h). Overrides halo visually. */
+  hasCrown?: boolean
 }
 
 /** Firestore shape for guests/{normalizedName}. */

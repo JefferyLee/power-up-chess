@@ -113,27 +113,42 @@ export function GateScreen() {
           </p>
         </aside>
 
-        <aside className="puc-gate__panel puc-gate__panel--leaderboard">
-          <h2 className="puc-gate__panel-title">Top guests</h2>
+        <aside className="puc-gate__panel puc-gate__panel--leaderboard puc-gate__scroll">
+          <div className="puc-gate__scroll-handle puc-gate__scroll-handle--top" aria-hidden="true" />
+          <h2 className="puc-gate__panel-title">Hall of Champions</h2>
           <ol className="puc-gate__leaderboard">
             {publicStats.status === 'ready' && publicStats.stats.topGuests.length > 0 ? (
               publicStats.stats.topGuests.map((g, i) => (
-                <li key={`${g.displayName}-${i}`}>
-                  <span>{g.displayName}</span>
-                  <span>{g.castlePoints}</span>
+                <li key={`${g.displayName}-${i}`} className="puc-gate__lb-row">
+                  <span className="puc-gate__lb-rank">{i + 1}</span>
+                  <span className="puc-gate__lb-name">
+                    {g.hasCrown
+                      ? <span className="puc-gate__lb-mark puc-gate__lb-mark--crown" title="3+ duel wins in a row">🔥</span>
+                      : g.hasHalo
+                        ? <span className="puc-gate__lb-mark puc-gate__lb-mark--halo" title="Recent duel winner">✨</span>
+                        : null}
+                    {g.displayName}
+                    {g.title && <span className="puc-gate__lb-title"> · {g.title}</span>}
+                  </span>
+                  <span className="puc-gate__lb-points">{g.castlePoints}</span>
                 </li>
               ))
             ) : (
               Array.from({ length: 5 }).map((_, i) => (
-                <li key={i}><span>—</span><span>—</span></li>
+                <li key={i} className="puc-gate__lb-row puc-gate__lb-row--placeholder">
+                  <span className="puc-gate__lb-rank">{i + 1}</span>
+                  <span className="puc-gate__lb-name">—</span>
+                  <span className="puc-gate__lb-points">—</span>
+                </li>
               ))
             )}
           </ol>
           <p className="puc-gate__panel-note">
             {publicStats.status === 'ready' && publicStats.stats.topGuests.length > 0
-              ? 'castle points'
+              ? 'castle points · lifetime title'
               : 'be the first to set the bar'}
           </p>
+          <div className="puc-gate__scroll-handle puc-gate__scroll-handle--bottom" aria-hidden="true" />
         </aside>
 
         <p className="puc-gate__hint">

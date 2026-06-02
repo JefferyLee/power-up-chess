@@ -10,7 +10,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
-import type { CastlePublicStats, GuestDoc } from './types'
+import { titleFor, type CastlePublicStats, type GuestDoc, type TopGuest } from './types'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const TOP_N = 5
@@ -29,9 +29,19 @@ export const refreshCastlePublicStats = onSchedule(
       .limit(TOP_N)
       .get()
 
-    const topGuests = topSnap.docs.map((d) => {
+    const topGuests: TopGuest[] = topSnap.docs.map((d) => {
       const g = d.data() as GuestDoc
-      return { displayName: g.displayName, castlePoints: g.castlePoints }
+      const lifetime = g.lifetimeEarned ?? Math.max(0, g.castlePoints)
+      const titleLabel = titleFor(lifetime)?.label
+      const halo = g.cosmetics?.duelWinnerExpiresAt
+      const crown = g.cosmetics?.winStreakCrownExpiresAt
+      return {
+        displayName: g.displayName,
+        castlePoints: g.castlePoints,
+        ...(titleLabel ? { title: titleLabel } : {}),
+        ...(typeof halo === 'number' && halo > now ? { hasHalo: true } : {}),
+        ...(typeof crown === 'number' && crown > now ? { hasCrown: true } : {}),
+      }
     })
 
     // Active-today count — scan + filter. Cheap while the guest list is

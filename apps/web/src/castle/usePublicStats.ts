@@ -6,9 +6,20 @@ import { useEffect, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 
+export interface TopGuest {
+  displayName: string
+  castlePoints: number
+  /** Lifetime-earn title label (Apprentice/Adept/Sorcerer/Archmage). */
+  title?: string
+  /** Active duel-winner halo. */
+  hasHalo?: boolean
+  /** Active 3-win streak crown. Overrides halo visually. */
+  hasCrown?: boolean
+}
+
 export interface PublicStats {
   activeToday: number
-  topGuests: Array<{ displayName: string; castlePoints: number }>
+  topGuests: TopGuest[]
   refreshedAt: number
 }
 
