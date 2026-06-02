@@ -157,24 +157,57 @@ function knock(): void {
 
 // Wicket creak — a slow wood-on-wood pitch bend, like a small door
 // swinging open on a stiff hinge. Sawtooth gives the rough overtones.
+// Wicket creak — ~1.5 s composite: low wood groan slow-opening over
+// 700 ms, then a hinge squeak transient, then a sparkle chime tail
+// (3-note ascending arpeggio) that hints at the magic inside. Replaces
+// the old 0.6 s plain saw-tooth which felt thin and abrupt.
 function wicketCreak(): void {
+  // 1) Low wood groan: sawtooth slow descent, lowpassed, fills 0-700 ms.
   tone({
-    freq: [240, 170],
+    freq: [200, 90],
     type: 'sawtooth',
-    duration: 0.42,
-    peakGain: 0.16,
-    attack: 0.04,
-    release: 0.22,
+    duration: 0.75,
+    peakGain: 0.18,
+    attack: 0.08,
+    release: 0.4,
   })
-  // A subtle "settle" note as it stops moving.
+  // 2) Rubbing-wood texture under the groan.
+  noiseBurst({ startOffset: 0.05, duration: 0.6, freq: 380, q: 1.2, peakGain: 0.12, type: 'bandpass' })
+  // 3) Iron hinge squeak — quick high transient ~600 ms in.
+  noiseBurst({ startOffset: 0.55, duration: 0.18, freq: 2400, q: 4, peakGain: 0.14, type: 'bandpass' })
   tone({
-    freq: [170, 140],
-    type: 'triangle',
-    duration: 0.18,
-    peakGain: 0.08,
-    attack: 0.02,
-    release: 0.18,
-    startOffset: 0.38,
+    freq: [1600, 1900],
+    type: 'sine',
+    duration: 0.22,
+    peakGain: 0.07,
+    attack: 0.01,
+    release: 0.2,
+    startOffset: 0.58,
+  })
+  // 4) Magic chime tail — ascending three-note sparkle hinting at what's
+  //    behind the door. Tuned to a major-9 voicing (E, G#, B, F#) over
+  //    ~700 ms so the sound resolves warmly rather than just stopping.
+  const chimeStart = 0.85
+  ;[659.25, 830.61, 987.77, 1479.98].forEach((f, i) => {
+    tone({
+      freq: f,
+      type: 'sine',
+      duration: 0.55 - i * 0.08,
+      peakGain: 0.12 - i * 0.015,
+      attack: 0.005,
+      release: 0.5 - i * 0.06,
+      startOffset: chimeStart + i * 0.09,
+    })
+  })
+  // 5) Sub-bass "the door is open" thud at the end.
+  tone({
+    freq: [120, 60],
+    type: 'sine',
+    duration: 0.3,
+    peakGain: 0.12,
+    attack: 0.01,
+    release: 0.28,
+    startOffset: 1.05,
   })
 }
 

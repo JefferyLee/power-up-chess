@@ -35,7 +35,10 @@ export function GateScreen() {
       if (prev !== 'closed') return prev
       sound.play('wicket-creak')
       // After the creak animation finishes, mark as fully open so the dialog renders.
-      openTimerRef.current = window.setTimeout(() => setPhase('open'), 700)
+      // 850 ms lines the parchment unfurl up with the chime tail of the
+      // (now ~1.5 s) wicket-creak sound. Earlier and the dialog pops in
+      // over the door groan; later and the chime feels disconnected.
+      openTimerRef.current = window.setTimeout(() => setPhase('open'), 850)
       return 'opening'
     })
   }, [sound])
