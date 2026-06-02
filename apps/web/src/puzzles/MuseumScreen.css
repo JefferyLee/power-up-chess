@@ -1,4 +1,9 @@
-.puc-master {
+/* MuseumScreen — shared chrome for LegendsHall + MasterAtrium.
+ * Per-variant accent colour comes through --puc-museum-accent-rgb,
+ * set by the .puc-museum--legends / --master modifier on the root. */
+
+.puc-museum {
+  --puc-museum-accent-rgb: 244, 194, 102;
   min-height: 100dvh;
   background: var(--puc-bg-deep);
   background-image: var(--puc-bg-glow);
@@ -6,7 +11,10 @@
   font-family: var(--puc-font-body);
   padding: 0 0 32px;
 }
-.puc-master--centered {
+.puc-museum--legends { --puc-museum-accent-rgb: 244, 194, 102; }
+.puc-museum--master  { --puc-museum-accent-rgb: 200, 210, 230; }
+
+.puc-museum--centered {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -17,7 +25,7 @@
   padding: 20px;
 }
 
-.puc-master__header {
+.puc-museum__header {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -25,7 +33,7 @@
   border-bottom: 1px solid rgba(231, 184, 65, 0.12);
   background: rgba(10, 18, 12, 0.5);
 }
-.puc-master__back {
+.puc-museum__back {
   background: transparent;
   color: var(--puc-text);
   border: 1px solid rgba(231, 184, 65, 0.28);
@@ -35,8 +43,8 @@
   font-size: 18px;
   cursor: pointer;
 }
-.puc-master__back:hover { border-color: var(--puc-accent); color: var(--puc-accent); }
-.puc-master__title {
+.puc-museum__back:hover { border-color: var(--puc-accent); color: var(--puc-accent); }
+.puc-museum__title {
   margin: 0;
   font-family: var(--puc-font-display);
   font-size: 20px;
@@ -44,15 +52,15 @@
   flex: 1;
 }
 
-.puc-master__meta { display: flex; flex-direction: column; align-items: flex-end; }
-.puc-master__meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--puc-text-muted); }
-.puc-master__meta-value {
+.puc-museum__meta { display: flex; flex-direction: column; align-items: flex-end; }
+.puc-museum__meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--puc-text-muted); }
+.puc-museum__meta-value {
   font-family: var(--puc-font-display);
   font-size: 18px;
   color: var(--puc-text-accent);
 }
 
-.puc-master__intro {
+.puc-museum__intro {
   text-align: center;
   color: var(--puc-text-muted);
   font-size: 14px;
@@ -60,7 +68,7 @@
   margin: 0;
 }
 
-.puc-master__gallery {
+.puc-museum__gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
@@ -69,7 +77,7 @@
   margin: 0 auto;
 }
 
-.puc-master__plaque {
+.puc-museum__plaque {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -79,52 +87,52 @@
   border-radius: 10px;
   background: linear-gradient(
     135deg,
-    rgba(200, 210, 230, 0.06),
-    rgba(130, 160, 200, 0.04)
+    rgba(var(--puc-museum-accent-rgb), 0.06),
+    rgba(120, 80, 200, 0.04)
   );
-  border: 1px solid rgba(200, 210, 230, 0.25);
+  border: 1px solid rgba(var(--puc-museum-accent-rgb), 0.25);
   cursor: pointer;
   color: inherit;
   font-family: inherit;
   text-align: center;
   transition: transform 180ms ease, border-color 180ms ease;
 }
-.puc-master__plaque:hover {
+.puc-museum__plaque:hover {
   transform: translateY(-2px);
-  border-color: rgba(200, 210, 230, 0.6);
+  border-color: rgba(var(--puc-museum-accent-rgb), 0.6);
 }
-.puc-master__plaque--solved {
+.puc-museum__plaque--solved {
   background: linear-gradient(
     135deg,
-    rgba(200, 210, 230, 0.18),
-    rgba(200, 210, 230, 0.06)
+    rgba(var(--puc-museum-accent-rgb), 0.18),
+    rgba(var(--puc-museum-accent-rgb), 0.06)
   );
-  border-color: rgba(200, 210, 230, 0.7);
+  border-color: rgba(var(--puc-museum-accent-rgb), 0.7);
 }
-.puc-master__plaque-num {
+.puc-museum__plaque-num {
   font-family: var(--puc-font-display);
   font-size: 12px;
   color: var(--puc-text-muted);
 }
-.puc-master__plaque-rating {
+.puc-museum__plaque-rating {
   font-family: var(--puc-font-display);
   font-size: 22px;
   color: var(--puc-text-accent);
 }
-.puc-master__plaque-plot {
+.puc-museum__plaque-plot {
   font-size: 11px;
   color: var(--puc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.puc-master__plaque-badge {
+.puc-museum__plaque-badge {
   position: absolute;
   top: 6px;
   right: 8px;
   font-size: 16px;
 }
 
-.puc-master__play {
+.puc-museum__play {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
   gap: 16px;
@@ -134,17 +142,17 @@
   align-items: start;
 }
 @media (max-width: 760px) {
-  .puc-master__play { grid-template-columns: 1fr; }
+  .puc-museum__play { grid-template-columns: 1fr; }
 }
-.puc-master__board { display: flex; justify-content: center; }
-.puc-master__board--shake { animation: puc-master-shake 0.4s ease-in-out; }
-@keyframes puc-master-shake {
+.puc-museum__board { display: flex; justify-content: center; }
+.puc-museum__board--shake { animation: puc-museum-shake 0.4s ease-in-out; }
+@keyframes puc-museum-shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-6px); }
   40%, 80% { transform: translateX(6px); }
 }
-.puc-master__side { display: flex; flex-direction: column; gap: 12px; }
-.puc-master__row {
+.puc-museum__side { display: flex; flex-direction: column; gap: 12px; }
+.puc-museum__row {
   display: flex;
   justify-content: space-between;
   padding: 8px 14px;
@@ -154,9 +162,9 @@
   font-size: 13px;
   color: var(--puc-text-muted);
 }
-.puc-master__row strong { color: var(--puc-text); }
+.puc-museum__row strong { color: var(--puc-text); }
 
-.puc-master__btn {
+.puc-museum__btn {
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(120, 120, 140, 0.4);
@@ -167,44 +175,44 @@
   font-family: inherit;
   font-weight: 500;
 }
-.puc-master__btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
-.puc-master__btn--primary {
+.puc-museum__btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.puc-museum__btn--primary {
   background: linear-gradient(135deg, #f4c266, #ef9a3f);
   color: #1a1a1f;
   border-color: rgba(0, 0, 0, 0.15);
   font-weight: 600;
 }
-.puc-master__btn--primary:hover { filter: brightness(1.05); }
-.puc-master__btn--skip {
+.puc-museum__btn--primary:hover { filter: brightness(1.05); }
+.puc-museum__btn--skip {
   color: rgba(220, 130, 120, 0.95);
   border-color: rgba(220, 130, 120, 0.4);
 }
 
-.puc-master__result {
+.puc-museum__result {
   padding: 14px 16px;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  animation: puc-master-pop 0.35s ease-out;
+  animation: puc-museum-pop 0.35s ease-out;
 }
-@keyframes puc-master-pop {
+@keyframes puc-museum-pop {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.puc-master__result--ok {
-  background: rgba(200, 210, 230, 0.16);
-  border: 1px solid rgba(200, 210, 230, 0.6);
+.puc-museum__result--ok {
+  background: rgba(var(--puc-museum-accent-rgb), 0.16);
+  border: 1px solid rgba(var(--puc-museum-accent-rgb), 0.6);
 }
-.puc-master__result--fail {
+.puc-museum__result--fail {
   background: rgba(120, 120, 140, 0.12);
   border: 1px solid rgba(120, 120, 140, 0.4);
 }
-.puc-master__result-head { margin: 0; font-size: 15px; font-weight: 600; }
-.puc-master__result-delta { margin: 0; font-size: 14px; }
-.puc-master__result-points { margin: 0; font-size: 13px; color: var(--puc-accent); }
+.puc-museum__result-head { margin: 0; font-size: 15px; font-weight: 600; }
+.puc-museum__result-delta { margin: 0; font-size: 14px; }
+.puc-museum__result-points { margin: 0; font-size: 13px; color: var(--puc-accent); }
 
-.puc-master__locked-icon { font-size: 56px; }
-.puc-master__locked-title { margin: 0; font-family: var(--puc-font-display); font-size: 22px; color: var(--puc-text-accent); }
-.puc-master__locked-blurb { font-size: 14px; color: var(--puc-text-muted); max-width: 380px; }
-.puc-master__error { color: rgba(220, 130, 120, 0.95); font-size: 14px; max-width: 380px; }
+.puc-museum__locked-icon { font-size: 56px; }
+.puc-museum__locked-title { margin: 0; font-family: var(--puc-font-display); font-size: 22px; color: var(--puc-text-accent); }
+.puc-museum__locked-blurb { font-size: 14px; color: var(--puc-text-muted); max-width: 380px; }
+.puc-museum__error { color: rgba(220, 130, 120, 0.95); font-size: 14px; max-width: 380px; }
