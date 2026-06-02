@@ -8,6 +8,12 @@ interface AiState {
   coHostId?: HostId
   playerName: string
   difficultyId: DifficultyId
+  // The Hall's TimeControlDialog passes this through when starting
+  // a Practice game. AiPracticeScreen doesn't render a visible clock
+  // yet — wiring per-side timers + flag detection is a follow-up.
+  // For now we accept (and silently ignore) the chosen TC so the
+  // route navigation contract matches Local/Online.
+  // timeControl?: TimeControl | null
 }
 
 export function AiPracticeRoute() {

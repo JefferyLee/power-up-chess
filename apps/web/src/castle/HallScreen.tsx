@@ -12,7 +12,6 @@ import { HostPortrait } from './HostPortrait'
 import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
 import { loadProfile, pickRandomHost } from '../storage/profile'
-import { presetById } from '../clock/timeControl'
 import { callCreateRoom } from '../firebase/callables'
 import { ChatPanel } from './ChatPanel'
 import { OnlineList } from './OnlineList'
@@ -61,7 +60,6 @@ export function HallScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const timeControl = presetById(profile.timeControlId).value
   const displayName = identity?.displayName ?? ''
   const castlePoints = identity?.castlePoints ?? 0
   const isUnlocked = castlePoints >= UNLOCK_THRESHOLD && !(identity?.isBypass ?? false)
@@ -76,13 +74,40 @@ export function HallScreen() {
   const isWizardUnlocked =
     !(identity?.isBypass ?? false) && castlePoints >= wizardGate
 
-  const [tcDialogOpen, setTcDialogOpen] = useState(false)
-  const handleOnline = () => {
+  type TcTarget = 'online' | 'local' | 'practice'
+  const [tcTarget, setTcTarget] = useState<TcTarget | null>(null)
+  const openTcDialog = (target: TcTarget) => {
     if (creating || !identity) return
-    setTcDialogOpen(true)
+    setTcTarget(target)
   }
+  const handleOnline = () => openTcDialog('online')
   const handleConfirmTimeControl = async (preset: TimeControlPreset) => {
-    if (!identity) return
+    if (!identity || tcTarget === null) return
+    if (tcTarget === 'local') {
+      setTcTarget(null)
+      navigate('/local', {
+        state: {
+          hostId: pickRandomHost(),
+          whiteName: displayName,
+          blackName: DEFAULT_OPPONENT_NAME,
+          timeControl: preset.value,
+        },
+      })
+      return
+    }
+    if (tcTarget === 'practice') {
+      setTcTarget(null)
+      navigate('/ai', {
+        state: {
+          hostId: pickRandomHost(),
+          playerName: displayName,
+          difficultyId: profile.aiDifficultyId,
+          timeControl: preset.value,
+        },
+      })
+      return
+    }
+    // tcTarget === 'online'
     setCreating(true)
     setError(null)
     try {
@@ -92,7 +117,7 @@ export function HallScreen() {
         isBypass: identity.isBypass,
         timeControl: preset.value,
       })
-      setTcDialogOpen(false)
+      setTcTarget(null)
       navigate(`/r/${roomId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -101,26 +126,8 @@ export function HallScreen() {
     }
   }
 
-  const handleLocal = () => {
-    navigate('/local', {
-      state: {
-        hostId: pickRandomHost(),
-        whiteName: displayName,
-        blackName: DEFAULT_OPPONENT_NAME,
-        timeControl,
-      },
-    })
-  }
-
-  const handlePractice = () => {
-    navigate('/ai', {
-      state: {
-        hostId: pickRandomHost(),
-        playerName: displayName,
-        difficultyId: profile.aiDifficultyId,
-      },
-    })
-  }
+  const handleLocal = () => openTcDialog('local')
+  const handlePractice = () => openTcDialog('practice')
 
   const handlePuzzles = () => navigate('/puzzles')
   const handleForest = () => navigate('/forest')
@@ -256,10 +263,10 @@ export function HallScreen() {
         />
       )}
 
-      {tcDialogOpen && (
+      {tcTarget !== null && (
         <TimeControlDialog
           busy={creating}
-          onCancel={() => setTcDialogOpen(false)}
+          onCancel={() => setTcTarget(null)}
           onConfirm={handleConfirmTimeControl}
         />
       )}
