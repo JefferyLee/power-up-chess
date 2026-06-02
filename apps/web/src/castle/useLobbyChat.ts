@@ -30,6 +30,9 @@ export interface ChatMessage {
   hostId?: 'lucy' | 'luca'
   action?: ChatMessageAction
   quiz?: QuizState
+  /** Set on the server snapshot if the author had a cosmetic effect
+   *  active at send time (currently only the post-duel-win halo). */
+  hasHalo?: boolean
 }
 
 export type LocationTag =
@@ -47,6 +50,8 @@ export interface PresenceRow {
   lastSeenAt: number
   /** Where the user is right now — undefined ≈ hall (legacy rows). */
   location?: LocationTag
+  /** True if this guest currently has the post-duel-win halo cosmetic. */
+  hasHalo?: boolean
 }
 
 export interface RoomOccupancy {

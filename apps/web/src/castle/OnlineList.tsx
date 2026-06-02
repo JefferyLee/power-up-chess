@@ -22,10 +22,11 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
         {groups.hall.map((p) => (
           <li
             key={p.sessionId}
-            className={`puc-online__row${p.uid === youUid ? ' puc-online__row--you' : ''}`}
+            className={`puc-online__row${p.uid === youUid ? ' puc-online__row--you' : ''}${p.hasHalo ? ' puc-online__row--halo' : ''}`}
           >
             <span className="puc-online__name">
               {p.isBypass ? '👻 ' : ''}
+              {p.hasHalo && <span className="puc-online__halo" title="Duel winner — last 24h">✨</span>}
               {p.displayName}
               {p.uid === youUid ? ' (you)' : ''}
             </span>

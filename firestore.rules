@@ -138,6 +138,15 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Spell pricing state (function-only). castle_spell_supply is the
+    // shared daily pool; wizard_spell_quota tracks per-uid surges.
+    match /castle_spell_supply/{spellId} {
+      allow read, write: if false;
+    }
+    match /wizard_spell_quota/{key} {
+      allow read, write: if false;
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

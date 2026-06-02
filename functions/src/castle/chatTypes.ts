@@ -49,6 +49,10 @@ export interface ChatMessageDoc {
   /** Optional quiz attached to a 'host' ambient story. Visible state
    *  only; the answer key is in story_quiz_keys/{messageId}. */
   quiz?: QuizState
+  /** True if the author had an active cosmetic at send time. Snapshot
+   *  so historical bubbles render consistently even after the cosmetic
+   *  expires. Currently only "duel-winner halo" sets this. */
+  hasHalo?: boolean
 }
 
 /** Where the user currently is in the app. `hall` is the default; any
@@ -72,6 +76,9 @@ export interface PresenceDoc {
   lastSeenAt: number
   /** Where the user currently is — defaults to hall when omitted. */
   location?: LocationTag
+  /** True if the guest currently has the post-duel-win halo cosmetic.
+   *  Refreshed each heartbeat from guests/{name}.cosmetics. */
+  hasHalo?: boolean
 }
 
 // ─── Callables ─────────────────────────────────────────────────────────────

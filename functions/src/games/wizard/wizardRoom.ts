@@ -11,9 +11,10 @@ import { generateRoomId } from '../../rooms/roomId'
 import { postRoomInvite } from '../../castle/postRoomInvite'
 import { WizardChess, type SerializedEffect, type WizardRoomState } from './WizardChess'
 import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
+import { reserveAndPriceSpell, type SpellPricing } from './wizardSpellPricing'
 import type { SpellId, WizardActionRecord } from './types'
 import type { Color, Square } from '../../shared/chessTypes'
-import { AWARD_CAPS, type GuestDoc } from '../../castle/types'
+import { AWARD_CAPS, DUEL_HALO_HOURS, type GuestDoc } from '../../castle/types'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -249,7 +250,10 @@ export const submitWizardMove = onCall<SubmitMoveRequest, Promise<{ ok: true }>>
 
 // ── submitWizardSpell ───────────────────────────────────────────────────
 
-export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; castlePoints: number }>>(
+export const submitWizardSpell = onCall<
+  SubmitSpellRequest,
+  Promise<{ ok: true; castlePoints: number; pricing: SpellPricing }>
+>(
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const uid = req.auth.uid
@@ -257,11 +261,12 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
     if (!roomId || !spellId || !Array.isArray(targets)) {
       throw new HttpsError('invalid-argument', 'Missing fields.')
     }
-    const spell = spellById(spellId)
+    spellById(spellId)  // sanity check that the id is known
     const db = getFirestore()
     const roomRef = db.doc(`wizard_rooms/${roomId}`)
 
     return db.runTransaction(async (tx) => {
+      // ── Phase 1: all reads ────────────────────────────────────────────
       const roomSnap = await tx.get(roomRef)
       if (!roomSnap.exists) throw new HttpsError('not-found', 'Room not found.')
       const room = roomSnap.data() as WizardRoomDoc
@@ -275,18 +280,32 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
         throw new HttpsError('permission-denied', 'Bypass guests cannot cast spells (no castle points to spend).')
       }
 
-      // Check & charge castle points atomically.
       const guestRef = db.doc(`guests/${callerSlot.normalizedName}`)
       const guestSnap = await tx.get(guestRef)
       if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
       const guest = guestSnap.data() as GuestDoc
-      if (guest.castlePoints < spell.cost) {
-        throw new HttpsError('failed-precondition', `Need ${spell.cost} castle points, you have ${guest.castlePoints}.`)
+
+      // Compute pricing + reserve quota/supply (also reads, then writes).
+      // If anything later throws, all of these writes roll back with the tx.
+      const now = Date.now()
+      const pricing = await reserveAndPriceSpell(tx, uid, spellId, now, db)
+      if (!pricing) {
+        throw new HttpsError(
+          'resource-exhausted',
+          'This spell is sold out castle-wide today. Try again tomorrow or pick another.',
+        )
+      }
+      if (guest.castlePoints < pricing.effectiveCost) {
+        const surgeNote = pricing.effectiveCost > pricing.baseCost
+          ? ` (surge ×${(pricing.effectiveCost / pricing.baseCost).toFixed(1)})`
+          : ''
+        throw new HttpsError(
+          'failed-precondition',
+          `Need ${pricing.effectiveCost} castle points${surgeNote}; you have ${guest.castlePoints}.`,
+        )
       }
 
-      const now = Date.now()
       // 'extra-time' is its own time bonus — skip the standard increment.
-      // Other spells use the regular Fischer increment.
       const isTimeSpell = spellId === 'extra-time'
       const tick = tickClock(room, callerColor, now, { addIncrement: !isTimeSpell })
       if (tick.flagged) {
@@ -314,7 +333,8 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
       const rec = engine.castSpell(spellId, targets as Square[])
       if (!rec) throw new HttpsError('invalid-argument', 'Illegal spell.')
 
-      const nextPoints = guest.castlePoints - spell.cost
+      // ── Phase 2: remaining writes ─────────────────────────────────────
+      const nextPoints = guest.castlePoints - pricing.effectiveCost
       tx.update(guestRef, { castlePoints: nextPoints })
 
       const next = engine.toState()
@@ -329,7 +349,7 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
       }
       tx.update(roomRef, update)
 
-      return { ok: true as const, castlePoints: nextPoints }
+      return { ok: true as const, castlePoints: nextPoints, pricing }
     })
   },
 )
@@ -455,12 +475,17 @@ async function applyDuelPayouts(
   const winnerSlot = winner === 'w' ? room.white : room.black
   const loserSlot = winner === 'w' ? room.black : room.white
   const db = getFirestore()
+  const haloExpiresAt = Date.now() + DUEL_HALO_HOURS * 60 * 60 * 1000
 
   if (winnerSlot && !winnerSlot.isBypass && winnerSlot.normalizedName) {
     const ref = db.doc(`guests/${winnerSlot.normalizedName}`)
     const snap = await tx.get(ref)
     if (snap.exists) {
-      tx.update(ref, { castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner) })
+      // Winner gets the payout AND a 24-hour golden halo cosmetic.
+      tx.update(ref, {
+        castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner),
+        'cosmetics.duelWinnerExpiresAt': haloExpiresAt,
+      })
     }
   }
   if (loserSlot && !loserSlot.isBypass && loserSlot.normalizedName) {

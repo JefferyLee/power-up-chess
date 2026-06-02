@@ -127,7 +127,18 @@ export interface GuestDoc {
   castlePoints: number
   createdAt: number
   lastVisitAt: number
+  /** Time-limited cosmetic effects active on the guest's name/avatar.
+   *  Currently just the post-duel-win golden halo. */
+  cosmetics?: GuestCosmetics
 }
+
+export interface GuestCosmetics {
+  /** Server-ms when the duel-winner halo expires; absent / past = no halo. */
+  duelWinnerExpiresAt?: number
+}
+
+/** Hours the duel-winner halo lasts after a Wizard's Duel victory. */
+export const DUEL_HALO_HOURS = 24
 
 /** Firestore shape for castle_enter_attempts/{uid} — used to track the
  *  per-session 3-strike state on the server, so the bypass link can't

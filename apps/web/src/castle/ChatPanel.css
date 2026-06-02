@@ -209,6 +209,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Duel-winner halo: a soft golden glow on the bubble + a sparkle prefix.
+ * Only set for the 24 hours after winning a Wizard's Duel. */
+.puc-chat__bubble--halo {
+  box-shadow: 0 0 0 1px rgba(241, 195, 76, 0.45),
+              0 0 14px rgba(241, 195, 76, 0.25);
+}
+
+.puc-chat__halo {
+  display: inline-block;
+  margin-right: 3px;
+  color: #ffd86b;
+  filter: drop-shadow(0 0 3px rgba(255, 216, 107, 0.7));
+  animation: puc-chat-halo-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes puc-chat-halo-twinkle {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
 .puc-chat__text {
   color: var(--puc-text);
   word-wrap: break-word;

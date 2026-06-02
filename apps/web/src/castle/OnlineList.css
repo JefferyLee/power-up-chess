@@ -97,6 +97,25 @@
   color: #f0d8a0;
 }
 
+/* Duel-winner halo overlay for the OnlineList row + sparkle prefix.
+ * Mirrors the chat-bubble halo so the same guest visually pops in both. */
+.puc-online__row--halo .puc-online__name {
+  color: #ffd86b;
+}
+
+.puc-online__halo {
+  display: inline-block;
+  margin-right: 3px;
+  color: #ffd86b;
+  filter: drop-shadow(0 0 3px rgba(255, 216, 107, 0.7));
+  animation: puc-online-halo-twinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes puc-online-halo-twinkle {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.2); }
+}
+
 .puc-online__follow {
   appearance: none;
   background: transparent;

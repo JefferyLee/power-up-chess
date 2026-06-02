@@ -56,6 +56,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     // 1 castle point per message. Bypass guests get to chat for free
     // since they have no persistent balance.
     let guestRefForDeduct: FirebaseFirestore.DocumentReference | null = null
+    let hasHalo = false
     if (!isBypass) {
       const guestRef = db.doc(`guests/${normalizedName}`)
       const gSnap = await guestRef.get()
@@ -70,6 +71,8 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
         )
       }
       guestRefForDeduct = guestRef
+      const halo = guest.cosmetics?.duelWinnerExpiresAt
+      hasHalo = typeof halo === 'number' && halo > Date.now()
     }
 
     const scrub = scrubMessage(text)
@@ -90,6 +93,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       kind: 'user',
       text: scrub.text,
       ts: Date.now(),
+      ...(hasHalo ? { hasHalo: true } : {}),
     }
     const ref = await db.collection('lobby/messages/items').add(msg)
 
