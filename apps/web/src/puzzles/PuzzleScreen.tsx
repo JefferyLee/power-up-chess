@@ -64,7 +64,13 @@ export function PuzzleScreen() {
     interactedRef.current = false
   }, [puzzleId, puzzleFen])
 
-  const pieces = useMemo(() => puzzle ? piecesFromFen(game.fen()) : {}, [game, puzzle])
+  // ChessGame is mutated in place by game.move(), so the reference never
+  // changes after the first render. We key board-derived memos off the
+  // current FEN string instead — that DOES change every move, so the
+  // board re-renders after each ply (including the auto-played opponent
+  // reply in multi-move puzzles like mateIn2).
+  const fen = puzzle ? game.fen() : ''
+  const pieces = useMemo(() => fen ? piecesFromFen(fen) : {}, [fen])
   const status = game.status()
   const checkSquare = status.kind === 'in_progress' && status.inCheck ? findKing(pieces, game.turn()) : null
   const lastMove = useMemo(() => {
@@ -72,7 +78,9 @@ export function PuzzleScreen() {
     if (hist.length === 0) return null
     const last = hist[hist.length - 1]!
     return { from: last.from, to: last.to }
-  }, [game])
+    // Same fen-keyed memo: history grows whenever fen changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fen])
 
   // Solution UCI parser
   const parseUci = (uci: string): MoveInput => ({

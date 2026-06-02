@@ -19,7 +19,10 @@ export interface StoryQuizKey {
   createdAt: number
 }
 
-const TIMEOUT_MS = 4000
+// Bumped from 4 s → 20 s. Production logs showed Gemini regularly takes
+// ~5-10 s for the quiz-shaped JSON output; the old 4 s race was killing
+// half-generated responses (which then showed up as "unparseable").
+const TIMEOUT_MS = 20_000
 const SYSTEM_PROMPT = `
 You write one short comprehension question for an 8-10 year old based on a
 short chess story they just heard. Pick a single concrete fact from the story
@@ -46,8 +49,10 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
   const cacheRef = db.doc(`story_quiz_cache/${story.id}`)
   const cacheSnap = await cacheRef.get()
   if (cacheSnap.exists) {
+    console.log(`storyQuiz: cache HIT for ${story.id}`)
     return cacheSnap.data() as StoryQuizKey
   }
+  console.log(`storyQuiz: cache MISS for ${story.id} — calling Gemini`)
 
   const apiKey = process.env.GEMINI_API_KEY ?? GEMINI_API_KEY.value()
   if (!apiKey) {
@@ -74,13 +79,14 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
         systemPrompt: SYSTEM_PROMPT,
         userPrompt,
         temperature: 0.6,
-        // Bumped from 250 → 600: the model sometimes wraps the JSON in
-        // a short preamble or uses generous whitespace, and 250 was
-        // truncating responses mid-string.
-        maxOutputTokens: 600,
-        // Force JSON output — Gemini honours this strictly and stops
-        // emitting markdown fences / commentary preambles.
-        responseMimeType: 'application/json',
+        // gemini-3.5-flash is a thinking model: it burns ~hundreds of
+        // tokens on hidden reasoning before producing visible output,
+        // and those reasoning tokens count against maxOutputTokens.
+        // We saw MAX_TOKENS firing at 13-15 visible tokens with a 400
+        // budget — i.e. ~385 tokens of invisible reasoning ate the rest.
+        // 4000 gives reasoning ample room AND leaves several hundred
+        // for the actual JSON.
+        maxOutputTokens: 4000,
       }),
       timeoutAfter(TIMEOUT_MS),
     ])
@@ -91,7 +97,11 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
 
   const parsed = tryParseQuizJson(raw)
   if (!parsed) {
-    console.warn(`storyQuiz: unparseable LLM response for ${story.id}:`, raw.slice(0, 200))
+    // Log the FULL response (not slice(0,200)) plus its length so we can
+    // tell truncation from genuine malformed output.
+    console.warn(
+      `storyQuiz: unparseable LLM response for ${story.id} (len=${raw.length}): ${raw}`,
+    )
     return null
   }
 
@@ -104,6 +114,7 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
   }
   if (quiz.acceptedAnswers.length === 0) return null
   await cacheRef.set(quiz)
+  console.log(`storyQuiz: cached new quiz for ${story.id} — q="${quiz.question.slice(0, 60)}..."`)
   return quiz
 }
 

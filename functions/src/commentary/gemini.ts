@@ -23,6 +23,12 @@ export interface GeminiCallOptions {
   maxOutputTokens?: number
   /** Force structured output. Gemini honours it strictly for application/json. */
   responseMimeType?: 'text/plain' | 'application/json'
+  /** Token budget for internal "thinking" / reasoning on models that
+   *  support it (Gemini 2.5+, 3.x). Pass 0 to disable thinking entirely
+   *  — needed for short-output tasks (one-question quizzes, 1-2 sentence
+   *  replies) where reasoning eats the maxOutputTokens budget before the
+   *  model writes anything visible. */
+  thinkingBudget?: number
 }
 
 export async function callGemini(opts: GeminiCallOptions): Promise<string> {
@@ -34,6 +40,9 @@ export async function callGemini(opts: GeminiCallOptions): Promise<string> {
   if (opts.responseMimeType) {
     generationConfig.responseMimeType = opts.responseMimeType
   }
+  if (opts.thinkingBudget !== undefined) {
+    generationConfig.thinkingConfig = { thinkingBudget: opts.thinkingBudget }
+  }
   const model = client.getGenerativeModel({
     model: MODEL,
     systemInstruction: opts.systemPrompt,
@@ -41,5 +50,17 @@ export async function callGemini(opts: GeminiCallOptions): Promise<string> {
   })
   const result = await model.generateContent(opts.userPrompt)
   const text = result.response.text().trim()
+  // Diagnostics: surface why the model stopped + how many tokens it
+  // actually used. Without this we can't tell MAX_TOKENS from a SAFETY
+  // block or a normal STOP at a short answer.
+  const candidate = (result.response.candidates ?? [])[0]
+  const usage = result.response.usageMetadata
+  if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
+    console.warn(
+      `callGemini: finishReason=${candidate.finishReason}` +
+      ` outChars=${text.length}` +
+      (usage ? ` candTok=${usage.candidatesTokenCount} promTok=${usage.promptTokenCount}` : ''),
+    )
+  }
   return text
 }

@@ -13,7 +13,10 @@ import { pickAndPostStory } from './pickAndPostStory'
 import type { HostId } from '../shared/hostId'
 
 const PER_MIN_CAP = 1
-const PER_DAY_CAP = 5
+// Temporarily bumped from 5 → 50 while the quiz-generation pipeline is
+// being debugged. Will lower back to 5 once we confirm fresh stories
+// reliably carry quizzes.
+const PER_DAY_CAP = 50
 
 interface Request {
   /** Optional host hint — usually the host currently on duty. */
@@ -32,10 +35,12 @@ export const hostTellStory = onCall<Request, Promise<Response>>(
 
     const minCheck = await bumpAndCheck(uid, 'story-min', PER_MIN_CAP)
     if (!minCheck.allowed) {
+      console.log(`hostTellStory: uid=${uid} rate-limited minute (retry ${minCheck.retryAfterMs}ms)`)
       return { status: 'rate-limited', retryAfterMs: minCheck.retryAfterMs, scope: 'minute' }
     }
     const dayCheck = await bumpAndCheck(uid, 'story-day', PER_DAY_CAP)
     if (!dayCheck.allowed) {
+      console.log(`hostTellStory: uid=${uid} rate-limited day (retry ${dayCheck.retryAfterMs}ms)`)
       return { status: 'rate-limited', retryAfterMs: dayCheck.retryAfterMs, scope: 'day' }
     }
 
@@ -43,7 +48,11 @@ export const hostTellStory = onCall<Request, Promise<Response>>(
       req.data?.hostId === 'lucy' || req.data?.hostId === 'luca' ? req.data.hostId : undefined
 
     const result = await pickAndPostStory({ now: Date.now(), hostId })
-    if (!result) return { status: 'no-story-available' }
+    if (!result) {
+      console.log(`hostTellStory: uid=${uid} no-story-available`)
+      return { status: 'no-story-available' }
+    }
+    console.log(`hostTellStory: uid=${uid} posted ${result.storyId} as ${result.hostId} (messageId=${result.messageId})`)
     return { status: 'ok', messageId: result.messageId, storyId: result.storyId, hostId: result.hostId }
   },
 )

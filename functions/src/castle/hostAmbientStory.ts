@@ -10,7 +10,10 @@ import { GEMINI_API_KEY } from './hostChatReply'
 import { HOUR_MS, pickAndPostStory, type AmbientState } from './pickAndPostStory'
 
 const PRESENCE_TTL_MS = 60 * 1000
-const MAX_PER_HOUR = 6
+// Temporarily bumped from 6 → 30 while debugging quiz generation; the
+// existing 6/hr burned through with broken quizzes and there's no
+// per-story-failed retry. Will lower back to 6 once fix is verified.
+const MAX_PER_HOUR = 30
 
 export const hostAmbientStory = onSchedule(
   { schedule: 'every 3 minutes', timeoutSeconds: 60, secrets: [GEMINI_API_KEY] },
