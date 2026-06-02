@@ -371,3 +371,106 @@ export async function callHostTellStory(req: HostTellStoryRequest): Promise<Host
   const { data } = await hostTellStoryFn(req)
   return data
 }
+
+// MVP2 Puzzle Garden — server-driven adaptive serving.
+
+export type Plot = 'mate' | 'fork' | 'pinSkewer' | 'sacrifice' | 'endgame' | 'defense'
+
+export interface ServerPuzzle {
+  id: string
+  fen: string
+  sideToMove: 'w' | 'b'
+  solution: string[]
+  motifs: string[]
+  plot: Plot
+  difficulty: number
+  ratingDeviation: number
+  legends: boolean
+  source: { provider: 'lichess'; puzzleId: string; license: 'CC0' }
+  explanation?: string
+  hints?: [string, string, string]
+}
+
+export interface GetNextPuzzleRequest {
+  normalizedName: string
+  plot: Plot
+  ratingOverride?: number
+}
+export type GetNextPuzzleResponse =
+  | { ok: true; puzzle: ServerPuzzle; playerRating: number }
+  | { ok: false; reason: 'empty' | 'invalid-input' | 'not-found' }
+
+export interface SubmitPuzzleAttemptRequest {
+  normalizedName: string
+  puzzleId: string
+  success: boolean
+  timeMs?: number
+}
+export interface SubmitPuzzleAttemptResponse {
+  ok: true
+  plot: Plot
+  ratingBefore: number
+  ratingAfter: number
+  puzzleRating: number
+  castlePointsAdded: number
+  castlePoints: number
+  legends: boolean
+}
+
+export interface GetCalibrationSetRequest {
+  normalizedName: string
+}
+export type GetCalibrationSetResponse =
+  | { ok: true; puzzles: ServerPuzzle[]; alreadyCalibrated: boolean }
+  | { ok: false; reason: 'invalid-input' | 'empty' }
+
+export interface SubmitCalibrationRequest {
+  normalizedName: string
+  results: boolean[]
+}
+export interface SubmitCalibrationResponse {
+  ok: true
+  seedRating: number
+}
+
+const getNextPuzzleFn = httpsCallable<GetNextPuzzleRequest, GetNextPuzzleResponse>(
+  functions,
+  'getNextPuzzle',
+)
+const submitPuzzleAttemptFn = httpsCallable<
+  SubmitPuzzleAttemptRequest,
+  SubmitPuzzleAttemptResponse
+>(functions, 'submitPuzzleAttempt')
+const getCalibrationSetFn = httpsCallable<
+  GetCalibrationSetRequest,
+  GetCalibrationSetResponse
+>(functions, 'getCalibrationSet')
+const submitCalibrationFn = httpsCallable<
+  SubmitCalibrationRequest,
+  SubmitCalibrationResponse
+>(functions, 'submitCalibration')
+
+export async function callGetNextPuzzle(
+  req: GetNextPuzzleRequest,
+): Promise<GetNextPuzzleResponse> {
+  const { data } = await getNextPuzzleFn(req)
+  return data
+}
+export async function callSubmitPuzzleAttempt(
+  req: SubmitPuzzleAttemptRequest,
+): Promise<SubmitPuzzleAttemptResponse> {
+  const { data } = await submitPuzzleAttemptFn(req)
+  return data
+}
+export async function callGetCalibrationSet(
+  req: GetCalibrationSetRequest,
+): Promise<GetCalibrationSetResponse> {
+  const { data } = await getCalibrationSetFn(req)
+  return data
+}
+export async function callSubmitCalibration(
+  req: SubmitCalibrationRequest,
+): Promise<SubmitCalibrationResponse> {
+  const { data } = await submitCalibrationFn(req)
+  return data
+}
