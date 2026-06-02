@@ -59,6 +59,9 @@ export function WicketDialog() {
             ...(res.status === 'returning' && res.decayedBy > 0
               ? { lastDecay: { decayedBy: res.decayedBy, pointsBefore: res.pointsBeforeDecay } }
               : {}),
+            ...(res.bonus && res.bonus.total > 0
+              ? { lastBonus: res.bonus }
+              : {}),
           })
           navigate('/', { replace: true })
         } else if (res.status === 'wrong-magic') {

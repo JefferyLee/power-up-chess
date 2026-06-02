@@ -100,6 +100,20 @@
   text-align: left;
 }
 
+/* Phase C welcome bonus toast — green tint so it reads positive next to
+ * the amber decay note (they can stack on a returning visit). */
+.puc-hall__bonus-note {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  background: rgba(90, 160, 110, 0.18);
+  border-left: 3px solid #7cc28b;
+  border-radius: 0 6px 6px 0;
+  color: var(--puc-text);
+  text-align: left;
+  font-weight: 500;
+}
+
 .puc-hall__chatcol {
   display: flex;
   flex-direction: column;

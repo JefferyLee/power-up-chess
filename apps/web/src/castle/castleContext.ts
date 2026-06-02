@@ -15,6 +15,9 @@ export interface CastleContextValue {
   /** Remove `lastDecay` from the identity after the Hall has shown its
    *  welcome line. Idempotent — fine to call when no decay is present. */
   clearDecayInfo: () => void
+  /** Remove `lastBonus` (Phase C check-in / starter / streak) after the
+   *  Hall toast has fired. */
+  clearBonusInfo: () => void
 }
 
 export const CastleContext = createContext<CastleContextValue | null>(null)

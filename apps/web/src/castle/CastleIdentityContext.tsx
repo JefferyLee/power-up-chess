@@ -77,9 +77,19 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const clearBonusInfo = useCallback(() => {
+    setIdentity((prev) => {
+      if (!prev || !prev.lastBonus) return prev
+      const updated = { ...prev }
+      delete updated.lastBonus
+      saveIdentity(updated)
+      return updated
+    })
+  }, [])
+
   const value = useMemo<CastleContextValue>(
-    () => ({ identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo }),
-    [identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo],
+    () => ({ identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo, clearBonusInfo }),
+    [identity, hostId, signIn, signOut, setCastlePoints, clearDecayInfo, clearBonusInfo],
   )
 
   return <CastleContext.Provider value={value}>{children}</CastleContext.Provider>

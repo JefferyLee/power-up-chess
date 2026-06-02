@@ -25,6 +25,15 @@ export interface CastleIdentity {
    *  shows a one-time welcome message and then clears this field via
    *  the context's `clearDecayInfo` callback. */
   lastDecay?: { decayedBy: number; pointsBefore: number }
+  /** Phase C bonus on this visit: starter + check-in + streak. The Hall
+   *  shows a toast and then clears via the same flow as lastDecay. */
+  lastBonus?: {
+    starter?: number
+    checkIn?: number
+    streak?: number
+    streakDays?: number
+    total: number
+  }
 }
 
 export function normalizeName(name: string): string {
@@ -52,6 +61,7 @@ export function loadIdentity(): CastleIdentity | null {
     if (typeof parsed.displayName !== 'string' || parsed.displayName.length === 0) return null
     if (typeof parsed.normalizedName !== 'string' || parsed.normalizedName.length === 0) return null
     const lastDecay = parsed.lastDecay
+    const lastBonus = parsed.lastBonus
     return {
       displayName: parsed.displayName,
       normalizedName: parsed.normalizedName,
@@ -60,6 +70,9 @@ export function loadIdentity(): CastleIdentity | null {
       isFirstVisit: parsed.isFirstVisit === true,
       ...(lastDecay && typeof lastDecay.decayedBy === 'number' && typeof lastDecay.pointsBefore === 'number'
         ? { lastDecay: { decayedBy: lastDecay.decayedBy, pointsBefore: lastDecay.pointsBefore } }
+        : {}),
+      ...(lastBonus && typeof lastBonus.total === 'number' && lastBonus.total > 0
+        ? { lastBonus: { ...lastBonus, total: lastBonus.total } }
         : {}),
     }
   } catch {

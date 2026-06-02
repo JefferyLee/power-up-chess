@@ -71,9 +71,31 @@ export interface CastleEnterRequest {
   name: string
   hash: string
 }
+export interface EnterBonus {
+  starter?: number
+  checkIn?: number
+  streak?: number
+  streakDays?: number
+  /** Sum of starter + checkIn + streak — handy for the toast headline. */
+  total: number
+}
 export type CastleEnterResponse =
-  | { status: 'new'; displayName: string; castlePoints: 0; decayedBy: 0; pointsBeforeDecay: 0 }
-  | { status: 'returning'; displayName: string; castlePoints: number; decayedBy: number; pointsBeforeDecay: number }
+  | {
+      status: 'new'
+      displayName: string
+      castlePoints: number
+      decayedBy: 0
+      pointsBeforeDecay: 0
+      bonus?: EnterBonus
+    }
+  | {
+      status: 'returning'
+      displayName: string
+      castlePoints: number
+      decayedBy: number
+      pointsBeforeDecay: number
+      bonus?: EnterBonus
+    }
   | { status: 'wrong-magic'; attemptsRemaining: number }
   | { status: 'rate-limited'; retryAfterMs: number }
   | { status: 'invalid-input'; reason: string }

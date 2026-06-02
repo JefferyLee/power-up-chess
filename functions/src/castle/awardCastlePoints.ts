@@ -6,6 +6,10 @@
 // inflate their points. The caller's uid must appear in the target guest's
 // `uids[]` array (set during castleEnter), so you can only award yourself.
 //
+// Phase C: per-source daily caps. Each award is clamped against
+// `dailyEarn[source]` so e.g. 50 puzzles a day can't farm unlimited
+// points. The bucket auto-resets when the day rolls over.
+//
 // Bypass guests (no guests doc) silently get a no-op response — points
 // don't persist anywhere for them.
 
@@ -17,8 +21,11 @@ import {
   type AwardCastlePointsRequest,
   type AwardCastlePointsResponse,
   type AwardSource,
+  type GuestDailyEarn,
   type GuestDoc,
 } from './types'
+
+const DAY_MS = 24 * 60 * 60 * 1000
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, Math.floor(n)))
@@ -49,6 +56,19 @@ function amountFor(award: AwardSource): number {
   }
 }
 
+/** Which dailyEarn bucket + daily cap apply to this award source. */
+function dailyCapFor(source: AwardSource['source']): { key: keyof Omit<GuestDailyEarn, 'dayKey'>; cap: number } {
+  switch (source) {
+    case 'puzzle':       return { key: 'puzzle',       cap: AWARD_CAPS.puzzleDailyMax }
+    case 'chess-win':    return { key: 'chessWin',     cap: AWARD_CAPS.chessWinDailyMax }
+    case 'chess-review': return { key: 'chessReview',  cap: AWARD_CAPS.chessReviewDailyMax }
+  }
+}
+
+function emptyEarn(dayKey: number): GuestDailyEarn {
+  return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0 }
+}
+
 export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>(
   async (req) => {
     if (!req.auth) {
@@ -67,28 +87,53 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
 
     const db = getFirestore()
     const guestRef = db.doc(`guests/${normalizedName}`)
-    const snap = await guestRef.get()
-    if (!snap.exists) {
-      // Bypass guest or invalid name — silent no-op. Returning 0 keeps the
-      // client UX simple and avoids leaking which names exist.
-      return { castlePoints: 0, added: 0, unlockedJustNow: false }
-    }
-    const guest = snap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError('permission-denied', 'You can only earn points for yourself.')
-    }
-
-    const amount = amountFor(award)
-    if (amount <= 0) {
+    const baseAmount = amountFor(award)
+    if (baseAmount <= 0) {
+      // Read once to return the current balance shape.
+      const snap = await guestRef.get()
+      if (!snap.exists) return { castlePoints: 0, added: 0, unlockedJustNow: false }
+      const guest = snap.data() as GuestDoc
       return { castlePoints: guest.castlePoints, added: 0, unlockedJustNow: false }
     }
 
-    const before = guest.castlePoints
-    const after = before + amount
-    const unlockedJustNow = before < UNLOCK_THRESHOLD && after >= UNLOCK_THRESHOLD
+    // Transactional read-modify-write: bucket may need to roll over to today
+    // AND the award gets clamped against the daily cap atomically. Keeps two
+    // concurrent puzzle solves from each blowing past the cap by 1.
+    const { key: bucketKey, cap } = dailyCapFor(award.source)
+    const todayKey = Math.floor(Date.now() / DAY_MS)
 
-    await guestRef.update({ castlePoints: after })
+    return db.runTransaction(async (tx) => {
+      const snap = await tx.get(guestRef)
+      if (!snap.exists) {
+        // Bypass guest or invalid name — silent no-op.
+        return { castlePoints: 0, added: 0, unlockedJustNow: false }
+      }
+      const guest = snap.data() as GuestDoc
+      if (!guest.uids.includes(uid)) {
+        throw new HttpsError('permission-denied', 'You can only earn points for yourself.')
+      }
 
-    return { castlePoints: after, added: amount, unlockedJustNow }
+      const earn = guest.dailyEarn && guest.dailyEarn.dayKey === todayKey
+        ? { ...guest.dailyEarn }
+        : emptyEarn(todayKey)
+
+      const headroom = Math.max(0, cap - earn[bucketKey])
+      const grantedAmount = Math.min(baseAmount, headroom)
+      if (grantedAmount <= 0) {
+        // Cap hit for the day; persist any bucket roll-over but don't add points.
+        if (guest.dailyEarn?.dayKey !== todayKey) {
+          tx.update(guestRef, { dailyEarn: earn })
+        }
+        return { castlePoints: guest.castlePoints, added: 0, unlockedJustNow: false }
+      }
+
+      const before = guest.castlePoints
+      const after = before + grantedAmount
+      earn[bucketKey] += grantedAmount
+      const unlockedJustNow = before < UNLOCK_THRESHOLD && after >= UNLOCK_THRESHOLD
+
+      tx.update(guestRef, { castlePoints: after, dailyEarn: earn })
+      return { castlePoints: after, added: grantedAmount, unlockedJustNow }
+    })
   },
 )

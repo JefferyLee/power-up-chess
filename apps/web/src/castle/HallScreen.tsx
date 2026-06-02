@@ -28,7 +28,7 @@ const UNLOCK_THRESHOLD = 200
 
 export function HallScreen() {
   const navigate = useNavigate()
-  const { identity, hostId, signOut, clearDecayInfo } = useCastle()
+  const { identity, hostId, signOut, clearDecayInfo, clearBonusInfo } = useCastle()
   const profile = loadProfile()
   const host = HOSTS[hostId]
   const auth = useAuthUid()
@@ -43,8 +43,20 @@ export function HallScreen() {
       : ''
     return `Things got dusty while you were away — your castle points went from ${d.pointsBefore} to ${identity?.castlePoints ?? 0}.${reLockedHint}`
   })
+  const [bonusMessage] = useState(() => {
+    const b = identity?.lastBonus
+    if (!b || b.total <= 0) return null
+    const parts: string[] = []
+    if (b.starter) parts.push(`🎁 Welcome gift +${b.starter}`)
+    if (b.checkIn) parts.push(`☀️ Daily check-in +${b.checkIn}`)
+    if (b.streak) parts.push(`🔥 ${b.streakDays}-day streak +${b.streak}`)
+    return parts.length > 0
+      ? `${parts.join(' · ')} (+${b.total} castle points total)`
+      : null
+  })
   useEffect(() => {
     if (identity?.lastDecay) clearDecayInfo()
+    if (identity?.lastBonus) clearBonusInfo()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -128,6 +140,7 @@ export function HallScreen() {
                 ? `Welcome to the Castle, ${identity.displayName}! I'm so glad you came.`
                 : `Welcome back, ${identity.displayName}!`}
             </p>
+            {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
             {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
             <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
           </div>

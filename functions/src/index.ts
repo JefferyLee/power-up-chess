@@ -38,3 +38,4 @@ export {
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'
 export { cleanupOldLobbyMessages } from './cleanup/cleanupOldLobbyMessages'
+export { cleanupDormantGuests } from './cleanup/cleanupDormantGuests'

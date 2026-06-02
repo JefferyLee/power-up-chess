@@ -12,9 +12,11 @@ export type CastleEnterResponse =
   | {
       status: 'new'
       displayName: string
-      castlePoints: 0
+      castlePoints: number
       decayedBy: 0
       pointsBeforeDecay: 0
+      /** Phase C: the starter pack + (optional) future bonuses on first visit. */
+      bonus?: EnterBonus
     }
   | {
       status: 'returning'
@@ -24,6 +26,8 @@ export type CastleEnterResponse =
       decayedBy: number
       /** Castle points before decay was applied. Equal to `castlePoints + decayedBy`. */
       pointsBeforeDecay: number
+      /** Phase C: bundled check-in + streak bonus, if any fired this visit. */
+      bonus?: EnterBonus
     }
   | {
       status: 'wrong-magic'
@@ -41,6 +45,19 @@ export type CastleEnterResponse =
 export interface CastleBypassResponse {
   /** A generated throwaway display name, format `Guest-NNNN`. */
   displayName: string
+}
+
+/** Optional bonus block returned by castleEnter. Any combination of the
+ *  three sources can fire on one visit (e.g. brand-new + first-of-day +
+ *  hitting day 7 → all three). Client surfaces a single combined toast. */
+export interface EnterBonus {
+  starter?: number
+  checkIn?: number
+  streak?: number
+  /** Current streak day count after this visit. */
+  streakDays?: number
+  /** Sum of all the above — handy for the toast headline. */
+  total: number
 }
 
 // ─── Award castle points ───────────────────────────────────────────────────
@@ -105,6 +122,22 @@ export const AWARD_CAPS = {
   /** Cost to OPEN a Wizard's Duel — pricier because the duel itself is
    *  the premium / point-burn experience. */
   wizardRoomOpenCost: 10,
+  // ── Phase C: time-based earning ──────────────────────────────────────
+  /** Awarded on the first castleEnter of a new calendar day. */
+  checkInDaily: 2,
+  /** Awarded on top of check-in every multiple of streakDaysRequired. */
+  streakBonus: 20,
+  streakDaysRequired: 7,
+  /** Awarded once, on the first castleEnter of a brand-new account. */
+  newAccountStarter: 30,
+  // ── Phase C: anti-grinding daily caps per source per guest ───────────
+  /** Generous puzzle cap — encourages many puzzles before headroom
+   *  shrinks. ~10-20 solid solves at average tier before the cap hits. */
+  puzzleDailyMax: 150,
+  /** Two top-tier AI wins / two human wins worth of headroom per day. */
+  chessWinDailyMax: 80,
+  /** One generous post-game review per day (per-review cap is already 80). */
+  chessReviewDailyMax: 100,
 } as const
 
 export const UNLOCK_THRESHOLD = 200
@@ -130,6 +163,25 @@ export interface GuestDoc {
   /** Time-limited cosmetic effects active on the guest's name/avatar.
    *  Currently just the post-duel-win golden halo. */
   cosmetics?: GuestCosmetics
+  /** Phase C — floor(now/DAY_MS) of the last check-in bonus claim. Used
+   *  to gate the daily +2 pt to once per calendar day. */
+  lastCheckInDayKey?: number
+  /** Consecutive-day check-in count. Resets to 1 on a >1-day gap; on
+   *  every multiple of AWARD_CAPS.streakDaysRequired the streak bonus
+   *  fires on top of the daily check-in. */
+  streakDays?: number
+  /** Today's per-source earnings, used to enforce daily caps without
+   *  bloating the doc. Replaced whole-cloth when the day rolls over. */
+  dailyEarn?: GuestDailyEarn
+}
+
+export interface GuestDailyEarn {
+  /** floor(now / DAY_MS). When this differs from today's key the bucket
+   *  is treated as empty and lazily replaced on the next award. */
+  dayKey: number
+  puzzle: number
+  chessWin: number
+  chessReview: number
 }
 
 export interface GuestCosmetics {
