@@ -5,6 +5,9 @@ import type { HostId } from '../shared/hostId'
 
 export type ChatMessageKind = 'user' | 'host' | 'system'
 
+export type ChatMessageAction =
+  | { kind: 'join-room'; roomKind: 'chess' | 'wizard'; roomId: string; openerName: string }
+
 export interface ChatMessageDoc {
   /** Display name as the message author should appear. */
   name: string
@@ -23,6 +26,9 @@ export interface ChatMessageDoc {
   hidden?: boolean
   /** For 'host' messages — which persona spoke. */
   hostId?: HostId
+  /** Optional CTA button rendered with the message. Used today for
+   *  "someone just opened a room — click to join". */
+  action?: ChatMessageAction
 }
 
 export interface PresenceDoc {

@@ -45,10 +45,41 @@
 }
 
 .puc-chat__bubble--system {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.04);
   font-style: italic;
-  text-align: center;
-  color: var(--puc-text-muted);
+  color: var(--puc-text);
+  border-left: 3px solid rgba(241, 195, 76, 0.5);
+}
+
+/* Join-room CTA inside a system bubble. */
+.puc-chat__action {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--puc-accent, #f1c34c);
+  background: linear-gradient(180deg, var(--puc-accent, #f1c34c), var(--puc-accent-strong, #e8a429));
+  color: #1f1408;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 200ms ease;
+}
+
+.puc-chat__action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(241, 195, 76, 0.32);
+}
+
+.puc-chat__action--wizard {
+  border-color: #8d6fd9;
+  background: linear-gradient(180deg, #8d6fd9, #5e3aa0);
+  color: #fff;
+}
+
+.puc-chat__action--wizard:hover {
+  box-shadow: 0 6px 14px rgba(141, 111, 217, 0.4);
 }
 
 .puc-chat__name {

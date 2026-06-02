@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from './roomId'
 import type { CreateRoomRequest, CreateRoomResponse, RoomDoc, TimeControl } from './types'
+import { postRoomInvite } from '../castle/postRoomInvite'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -71,6 +72,8 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
       try {
         // .create() fails if the doc already exists — exactly the precondition we want.
         await ref.create(doc)
+        // Best-effort Hall announcement so other guests can hop in.
+        void postRoomInvite({ roomKind: 'chess', roomId, openerName: displayName })
         return { roomId }
       } catch (err: unknown) {
         // Collision (ALREADY_EXISTS) → try again with a new ID.

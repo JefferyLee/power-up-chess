@@ -2,8 +2,9 @@
 // onSnapshot, renders bubbles, posts via callPostChat.
 
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { callPostChat } from '../firebase/callables'
-import { useLobbyMessages, type ChatMessage } from './useLobbyChat'
+import { useLobbyMessages, type ChatMessage, type ChatMessageAction } from './useLobbyChat'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
@@ -117,7 +118,24 @@ function Bubble({ message }: { message: ChatMessage }) {
       ) : (
         <span className="puc-chat__text">{message.text}</span>
       )}
+      {message.action && <ActionButton action={message.action} />}
     </div>
+  )
+}
+
+function ActionButton({ action }: { action: ChatMessageAction }) {
+  const navigate = useNavigate()
+  if (action.kind !== 'join-room') return null
+  const path = action.roomKind === 'wizard' ? `/wizard/${action.roomId}` : `/r/${action.roomId}`
+  const label = action.roomKind === 'wizard' ? 'Enter duel' : 'Join room'
+  return (
+    <button
+      type="button"
+      className={`puc-chat__action puc-chat__action--${action.roomKind}`}
+      onClick={() => navigate(path)}
+    >
+      ▸ {label}
+    </button>
   )
 }
 

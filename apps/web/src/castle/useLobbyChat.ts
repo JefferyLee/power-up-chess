@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase/app'
 
+export type ChatMessageAction =
+  | { kind: 'join-room'; roomKind: 'chess' | 'wizard'; roomId: string; openerName: string }
+
 export interface ChatMessage {
   id: string
   name: string
@@ -15,6 +18,7 @@ export interface ChatMessage {
   ts: number
   hidden?: boolean
   hostId?: 'lucy' | 'luca'
+  action?: ChatMessageAction
 }
 
 export interface PresenceRow {

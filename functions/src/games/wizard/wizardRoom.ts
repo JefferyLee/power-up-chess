@@ -8,6 +8,7 @@
 import { getFirestore, type Firestore, type Transaction } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from '../../rooms/roomId'
+import { postRoomInvite } from '../../castle/postRoomInvite'
 import { WizardChess, type SerializedEffect, type WizardRoomState } from './WizardChess'
 import { spellById } from './spells'
 import type { SpellId, WizardActionRecord } from './types'
@@ -89,6 +90,7 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
       }
       try {
         await ref.create(doc)
+        void postRoomInvite({ roomKind: 'wizard', roomId, openerName: slot.displayName })
         return { roomId }
       } catch (err: unknown) {
         const code = (err as { code?: number | string }).code
