@@ -12,6 +12,7 @@ import { WicketDialog } from './WicketDialog'
 import { useCastle } from './useCastle'
 import { CastleArt } from './CastleArt'
 import { usePublicStats } from './usePublicStats'
+import { LivePulsePanel } from './LivePulsePanel'
 import './GateScreen.css'
 
 type GatePhase = 'closed' | 'opening' | 'open'
@@ -138,6 +139,8 @@ export function GateScreen() {
         <p className="puc-gate__hint">
           {phase === 'closed' ? 'Tap the door to knock — or wait a moment.' : 'The wicket is opening…'}
         </p>
+
+        <LivePulsePanel />
       </div>
 
       {phase === 'open' && !identity && <WicketDialog />}

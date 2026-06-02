@@ -38,6 +38,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // MVP2 G.2 — castle gate "live pulse": duel count, recent duel
+    // results, last host-story snippet. PUBLIC read for the gate page;
+    // rebuilt every 2 min by refreshCastleLivePulse.
+    match /castle_live/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Castle guests — function-only. Holds magicWordHash, uids, castlePoints.
     // Clients never read this directly; castleEnter returns what they need.
     match /guests/{normalizedName} {
