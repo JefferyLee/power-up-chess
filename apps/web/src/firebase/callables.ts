@@ -170,6 +170,11 @@ export interface SubmitForestScoreResponse {
   ok: true
   best: number
   improved: boolean
+  /** Phase E — castle points credited for this run (0 if score below
+   *  the lowest tier OR the daily cap was already hit). */
+  castlePointsAdded: number
+  /** Guest's castle-point balance AFTER this run's payout. */
+  castlePoints: number
 }
 
 const submitForestScoreFn = httpsCallable<SubmitForestScoreRequest, SubmitForestScoreResponse>(functions, 'submitForestScore')

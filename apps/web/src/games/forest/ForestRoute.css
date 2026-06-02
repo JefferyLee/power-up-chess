@@ -70,6 +70,50 @@
   font-size: 13px;
 }
 
+/* Castle-point payout toast after a Forest run. Fades in below the
+ * game and drifts away after ~5 s. */
+.puc-forest-route__payout {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6a4cb0, #8d6fd9);
+  border: 1px solid #b9a3ff;
+  color: #fffbe6;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 6px 18px rgba(141, 111, 217, 0.45);
+  animation: puc-forest-payout-in 280ms ease-out,
+             puc-forest-payout-out 360ms ease-in 4.5s both;
+}
+
+.puc-forest-route__payout-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px rgba(255, 216, 107, 0.6));
+}
+
+.puc-forest-route__payout-body b {
+  color: #ffd86b;
+}
+
+.puc-forest-route__payout-cap {
+  color: rgba(255, 251, 230, 0.78);
+  font-size: 12px;
+  font-style: italic;
+}
+
+@keyframes puc-forest-payout-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes puc-forest-payout-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+
 @media (max-width: 980px) {
   .puc-forest-route__main {
     grid-template-columns: 1fr;

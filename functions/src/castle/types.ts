@@ -138,6 +138,16 @@ export const AWARD_CAPS = {
   chessWinDailyMax: 80,
   /** One generous post-game review per day (per-review cap is already 80). */
   chessReviewDailyMax: 100,
+  /** Forest Adventure tier table — payout in castle points per run, by
+   *  end-of-run score. Capped daily by forestDailyMax. */
+  forestTiers: [
+    { minScore:   0, pt:  0 },
+    { minScore:  20, pt:  5 },
+    { minScore:  50, pt: 10 },
+    { minScore:  90, pt: 18 },
+    { minScore: 140, pt: 30 },
+  ] as const,
+  forestDailyMax: 30,
 } as const
 
 export const UNLOCK_THRESHOLD = 200
@@ -198,6 +208,8 @@ export interface GuestDailyEarn {
   puzzle: number
   chessWin: number
   chessReview: number
+  /** Phase E — Forest Adventure castle-point payout this day. */
+  forest?: number
 }
 
 export interface GuestCosmetics {

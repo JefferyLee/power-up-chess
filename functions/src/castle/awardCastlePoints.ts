@@ -56,8 +56,13 @@ function amountFor(award: AwardSource): number {
   }
 }
 
-/** Which dailyEarn bucket + daily cap apply to this award source. */
-function dailyCapFor(source: AwardSource['source']): { key: keyof Omit<GuestDailyEarn, 'dayKey'>; cap: number } {
+/** Which dailyEarn bucket + daily cap apply to this award source.
+ *  `forest` is intentionally not handled here — Forest pays out via
+ *  submitForestScore directly. */
+function dailyCapFor(source: AwardSource['source']): {
+  key: 'puzzle' | 'chessWin' | 'chessReview'
+  cap: number
+} {
   switch (source) {
     case 'puzzle':       return { key: 'puzzle',       cap: AWARD_CAPS.puzzleDailyMax }
     case 'chess-win':    return { key: 'chessWin',     cap: AWARD_CAPS.chessWinDailyMax }

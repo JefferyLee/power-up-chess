@@ -2,7 +2,7 @@
 // header chrome and a leaderboard side-panel. Persists each finished run
 // to local IDB + (non-bypass) Firestore via submitForestScore.
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useCastle } from '../../castle/useCastle'
 import { ForestGame } from './ForestGame'
@@ -13,9 +13,17 @@ import './ForestRoute.css'
 
 export function ForestRoute() {
   const navigate = useNavigate()
-  const { identity } = useCastle()
+  const { identity, setCastlePoints } = useCastle()
   const [leaderboardKey, setLeaderboardKey] = useState(0)
   const [lastError, setLastError] = useState<string | null>(null)
+  const [payoutToast, setPayoutToast] = useState<{ id: number; pts: number; capped: boolean } | null>(null)
+
+  // Auto-dismiss the payout toast after ~5 s.
+  useEffect(() => {
+    if (!payoutToast) return
+    const t = window.setTimeout(() => setPayoutToast(null), 5000)
+    return () => window.clearTimeout(t)
+  }, [payoutToast])
 
   const handleExit = useCallback(() => navigate('/'), [navigate])
 
@@ -33,11 +41,18 @@ export function ForestRoute() {
       // Firestore + global leaderboard only for non-bypass guests.
       if (!identity.isBypass) {
         try {
-          await callSubmitForestScore({
+          const res = await callSubmitForestScore({
             normalizedName: identity.normalizedName,
             runId,
             score: finalScore,
           })
+          if (res.castlePointsAdded > 0) {
+            setCastlePoints(res.castlePoints)
+            // "capped" = the tier would have paid more but the day's cap clipped it.
+            // We can't tell precisely without re-doing the tier math, so we just
+            // surface the awarded number; the user sees "+N castle points".
+            setPayoutToast({ id: Date.now(), pts: res.castlePointsAdded, capped: false })
+          }
         } catch (err) {
           setLastError(err instanceof Error ? err.message : String(err))
         }
@@ -45,7 +60,7 @@ export function ForestRoute() {
       // Bump the leaderboard refresh key so the panel re-fetches.
       setLeaderboardKey((k) => k + 1)
     },
-    [identity],
+    [identity, setCastlePoints],
   )
 
   if (!identity) return <Navigate to="/" replace />
@@ -71,6 +86,15 @@ export function ForestRoute() {
             <p className="puc-forest-route__error">
               Couldn&apos;t save score to the leaderboard: {lastError}
             </p>
+          )}
+          {payoutToast && (
+            <div key={payoutToast.id} className="puc-forest-route__payout" role="status">
+              <span className="puc-forest-route__payout-icon" aria-hidden="true">🏰</span>
+              <span className="puc-forest-route__payout-body">
+                <b>+{payoutToast.pts}</b> castle points
+                {payoutToast.capped && <span className="puc-forest-route__payout-cap"> (daily cap)</span>}
+              </span>
+            </div>
           )}
         </div>
         <aside className="puc-forest-route__leaderboard">
