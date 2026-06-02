@@ -1,0 +1,177 @@
+.puc-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+  min-height: 100dvh;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+}
+.puc-cal--centered {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+
+.puc-cal__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.puc-cal__back {
+  background: transparent;
+  color: var(--puc-text);
+  border: 1px solid rgba(231, 184, 65, 0.28);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.puc-cal__back:hover { border-color: var(--puc-accent); color: var(--puc-accent); }
+
+.puc-cal__title-wrap { display: flex; flex-direction: column; }
+.puc-cal__title {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 22px;
+  color: var(--puc-text-accent);
+}
+.puc-cal__sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--puc-text-muted);
+}
+
+.puc-cal__steps {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 6px 0;
+}
+.puc-cal__step {
+  width: 56px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(120, 120, 140, 0.2);
+  transition: background 240ms ease;
+}
+.puc-cal__step--pending { background: rgba(120, 120, 140, 0.2); }
+.puc-cal__step--current {
+  background: var(--puc-accent);
+  animation: puc-cal-pulse 1.2s ease-in-out infinite;
+}
+@keyframes puc-cal-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.puc-cal__step--solved { background: rgba(72, 200, 120, 0.85); }
+.puc-cal__step--failed { background: rgba(220, 130, 120, 0.85); }
+
+.puc-cal__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .puc-cal__main { grid-template-columns: 1fr; }
+}
+
+.puc-cal__board { display: flex; justify-content: center; }
+.puc-cal__board--shake { animation: puc-cal-shake 0.4s ease-in-out; }
+@keyframes puc-cal-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.puc-cal__side { display: flex; flex-direction: column; gap: 12px; }
+.puc-cal__puzzleinfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+}
+.puc-cal__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--puc-text-muted);
+}
+.puc-cal__row strong { color: var(--puc-text); font-weight: 600; }
+
+.puc-cal__btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 120, 140, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+}
+.puc-cal__btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.puc-cal__btn:disabled { opacity: 0.5; cursor: default; }
+.puc-cal__btn--primary {
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  color: #1a1a1f;
+  border-color: rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+}
+.puc-cal__btn--primary:hover { filter: brightness(1.05); }
+.puc-cal__btn--skip {
+  color: rgba(220, 130, 120, 0.95);
+  border-color: rgba(220, 130, 120, 0.4);
+}
+
+.puc-cal__note {
+  font-size: 13px;
+  color: var(--puc-text-muted);
+  text-align: center;
+}
+.puc-cal__error {
+  color: rgba(220, 130, 120, 0.95);
+  font-size: 14px;
+  max-width: 380px;
+}
+
+/* Done screen */
+.puc-cal__done-title {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 28px;
+  color: var(--puc-text-accent);
+}
+.puc-cal__done-sub {
+  font-size: 16px;
+  color: var(--puc-text);
+}
+.puc-cal__done-sub strong { color: var(--puc-accent); }
+.puc-cal__done-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--puc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.puc-cal__seed {
+  font-family: var(--puc-font-display);
+  font-size: 48px;
+  color: var(--puc-text-accent);
+  letter-spacing: 1px;
+  text-transform: none;
+}

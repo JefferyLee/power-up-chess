@@ -59,6 +59,15 @@ export function PuzzleGardenScreen() {
 
   const ratings = state?.puzzleRatings ?? {}
   const stats = state?.puzzleStats ?? { solved: 0, attempted: 0 }
+  const hasAnyRating = Object.keys(ratings).length > 0
+  const isCalibrated = state?.puzzleCalibrated === true
+  const isCalibrationCandidate =
+    !!identity && !identity.isBypass && !isCalibrated && !hasAnyRating
+  // Session-scoped dismissal so the banner doesn't keep nagging within
+  // a single visit. A reload brings it back — by design, since it's a
+  // genuinely useful onboarding step.
+  const dismissed = sessionStorage.getItem('puc-cal-dismissed') === '1'
+  const showCalibrationBanner = isCalibrationCandidate && !dismissed
 
   return (
     <div className="puc-garden">
@@ -79,6 +88,40 @@ export function PuzzleGardenScreen() {
       </header>
 
       <main className="puc-garden__main">
+        {showCalibrationBanner && (
+          <div className="puc-garden__calibrate" role="region" aria-label="Calibration">
+            <div className="puc-garden__calibrate-body">
+              <div className="puc-garden__calibrate-title">
+                Find your level in 3 minutes
+              </div>
+              <div className="puc-garden__calibrate-blurb">
+                Five quick puzzles tell us where to start serving you. Otherwise
+                you&apos;ll grind from the easiest end.
+              </div>
+            </div>
+            <div className="puc-garden__calibrate-actions">
+              <button
+                type="button"
+                className="puc-garden__calibrate-btn puc-garden__calibrate-btn--primary"
+                onClick={() => navigate('/puzzles/calibration')}
+              >
+                Start
+              </button>
+              <button
+                type="button"
+                className="puc-garden__calibrate-btn"
+                onClick={() => {
+                  sessionStorage.setItem('puc-cal-dismissed', '1')
+                  // Re-render with the dismissal noticed.
+                  setState((s) => (s ? { ...s } : s))
+                }}
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        )}
+
         <p className="puc-garden__intro">
           Six plots, thousands of puzzles. Pick one — we&apos;ll serve puzzles at your level.
         </p>

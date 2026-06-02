@@ -6,6 +6,7 @@ import { HistoryScreen } from './screens/HistoryScreen'
 import { PuzzleScreen } from './puzzles/PuzzleScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 import { PlotScreen } from './puzzles/PlotScreen'
+import { CalibrationScreen } from './puzzles/CalibrationScreen'
 import { AiPracticeRoute } from './screens/AiPracticeRoute'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
@@ -24,6 +25,7 @@ export function App() {
           <Route path="/review" element={<PostGameAnalysisScreen />} />
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/puzzles" element={<PuzzleGardenScreen />} />
+          <Route path="/puzzles/calibration" element={<CalibrationScreen />} />
           <Route path="/puzzles/plot/:plot" element={<PlotScreen />} />
           <Route path="/puzzles/:id" element={<PuzzleScreen />} />
           <Route path="/forest" element={<ForestRoute />} />
