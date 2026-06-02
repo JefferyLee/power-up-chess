@@ -24,10 +24,11 @@ import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
+import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import './LocalGameScreen.css'
 import './AiPracticeScreen.css'
 
-const SQUARE_SIZE = 72
+const MAX_SQUARE_SIZE = 72
 
 interface Props {
   hostId: HostId
@@ -72,6 +73,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   const navigate = useNavigate()
   const { identity, setCastlePoints } = useCastle()
   const sound = useSound()
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   // Difficulty is local state so the player can switch mid-screen
   // (next game uses the new setting). Prop is just the initial value.
   const [activeDifficultyId, setActiveDifficultyId] = useState<DifficultyId>(difficultyId)

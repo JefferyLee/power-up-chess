@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { piecesFromFen } from '../chess/fen'
 import { isBrilliant } from '../engine/brilliant'
 import type { AnalyzedGame, AnalyzedMove } from '../engine/analyzeGame'
@@ -30,7 +31,7 @@ type Phase =
   | { kind: 'ready'; analysis: AnalyzedGame; brilliantIdx: Set<number> }
   | { kind: 'error'; error: string }
 
-const SQUARE_SIZE = 56
+const MAX_SQUARE_SIZE = 56
 
 export function PostGameAnalysisScreen() {
   const navigate = useNavigate()
@@ -155,6 +156,7 @@ function ReviewView({
   setSelectedIdx: (i: number) => void
   onBack: () => void
 }) {
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const host = HOSTS[state.hostId]
   const picker = useMemo(() => new TemplatePicker(), [])
 

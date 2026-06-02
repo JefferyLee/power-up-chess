@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { PIECE_GLYPH } from '../board/pieceGlyphs'
@@ -89,10 +90,11 @@ function snapshot(g: ChessGame): GameSnapshot {
   }
 }
 
-const SQUARE_SIZE = 72
+const MAX_SQUARE_SIZE = 72
 
 export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeControl, onExit }: Props) {
   const navigate = useNavigate()
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   // The ChessGame is mutable but its identity is stable across renders unless restarted.
   // Pair it with a snapshot in state so React re-renders after each move.
   const [game, setGame] = useState(() => new ChessGame())

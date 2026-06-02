@@ -27,10 +27,11 @@ import { loadProfile, addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import { usePresenceHeartbeat } from '../castle/usePresenceHeartbeat'
+import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
 
-const SQUARE_SIZE = 72
+const MAX_SQUARE_SIZE = 72
 
 export function OnlineGameScreen() {
   const { roomId } = useParams<{ roomId: string }>()
@@ -207,6 +208,7 @@ interface RoomViewProps {
 function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
   const sound = useSound()
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const { identity, setCastlePoints } = useCastle()
   // Broadcast presence as "in this chess room" so the Hall sidebar can
   // show occupants + offer a Watch button to spectators.

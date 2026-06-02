@@ -16,9 +16,10 @@ import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import type { PuzzleAttempt } from '../history/db'
 import { useSound } from '../sound/useSound'
+import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import './PuzzleScreen.css'
 
-const SQUARE_SIZE = 64
+const MAX_SQUARE_SIZE = 64
 
 type Phase =
   | { kind: 'playing' }
@@ -30,6 +31,7 @@ export function PuzzleScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const sound = useSound()
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const { identity, setCastlePoints } = useCastle()
   const puzzle = id ? getPuzzle(id) : null
 

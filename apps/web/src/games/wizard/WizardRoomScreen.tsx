@@ -11,6 +11,7 @@ import { useCastle } from '../../castle/useCastle'
 import { usePresenceHeartbeat } from '../../castle/usePresenceHeartbeat'
 import { useAuthUid } from '../../auth/useAuthUid'
 import { Clock } from '../../clock/Clock'
+import { useResponsiveSquareSize } from '../../board/useResponsiveSquareSize'
 import {
   callClaimWizardTimeWin,
   callResignWizardGame,
@@ -34,7 +35,7 @@ type CastFlow =
   | { stage: 'awaiting-1st'; spellId: SpellId }
   | { stage: 'awaiting-2nd'; spellId: SpellId; first: Square }
 
-const SQUARE_SIZE = 60
+const MAX_SQUARE_SIZE = 60
 
 interface Props {
   roomId: string
@@ -47,6 +48,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const auth = useAuthUid()
   const { identity, setCastlePoints } = useCastle()
   const navigate = useNavigate()
+  const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   // Broadcast presence as "in this wizard duel" so the Hall sidebar can
   // show who's here + offer a Watch button to spectators.
   usePresenceHeartbeat({ kind: 'wizard', roomId })
