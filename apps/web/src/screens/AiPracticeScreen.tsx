@@ -25,6 +25,8 @@ import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
+import { Clock } from '../clock/Clock'
+import type { TimeControl } from '../clock/timeControl'
 import './LocalGameScreen.css'
 import './AiPracticeScreen.css'
 
@@ -37,7 +39,32 @@ interface Props {
   coHostId?: HostId
   playerName: string
   difficultyId: DifficultyId
+  /** Optional clock. null = untimed (no Clock component renders). */
+  timeControl?: TimeControl | null
   onExit: () => void
+}
+
+interface ClockState {
+  whiteMs: number
+  blackMs: number
+  /** Date.now() when the running side's clock started ticking. Null
+   *  when the game is over (or untimed). */
+  lastTickAt: number | null
+  /** Which side's clock is currently running. */
+  running: Color | null
+}
+
+function initialClockState(timeControl: TimeControl | null | undefined): ClockState {
+  if (!timeControl) {
+    return { whiteMs: 0, blackMs: 0, lastTickAt: null, running: null }
+  }
+  return {
+    whiteMs: timeControl.initialMs,
+    blackMs: timeControl.initialMs,
+    // White's clock starts ticking the moment the game opens.
+    lastTickAt: Date.now(),
+    running: 'w',
+  }
 }
 
 function newAiGameId(): string {
@@ -69,7 +96,7 @@ function snapshot(g: ChessGame): GameSnapshot {
   }
 }
 
-export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, onExit }: Props) {
+export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, timeControl, onExit }: Props) {
   const navigate = useNavigate()
   const { identity, setCastlePoints } = useCastle()
   const sound = useSound()
@@ -97,6 +124,8 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   const [savedThisGame, setSavedThisGame] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
   const [engineError, setEngineError] = useState<string | null>(null)
+  const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl ?? null))
+  const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
 
   // Boot one AiOpponent for the lifetime of the screen. We terminate it on
   // unmount; the post-game review screen spins up its own analysis engine.
@@ -104,6 +133,13 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   useEffect(() => () => opponent.terminate(), [opponent])
 
   const effectiveStatus: GameStatus = useMemo(() => {
+    if (timeoutLoser) {
+      return {
+        kind: 'timeout' as const,
+        loser: timeoutLoser,
+        winner: timeoutLoser === 'w' ? ('b' as const) : ('w' as const),
+      }
+    }
     if (resignation) {
       return {
         kind: 'resign' as const,
@@ -112,7 +148,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
       }
     }
     return snap.status
-  }, [resignation, snap.status])
+  }, [timeoutLoser, resignation, snap.status])
   const gameOver = effectiveStatus.kind !== 'in_progress'
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
@@ -136,6 +172,26 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
       if (result.captured) sound.play('capture')
       else sound.play('move')
       if (newStatus.kind === 'in_progress' && newStatus.inCheck) sound.play('check')
+
+      // Advance the clock just like LocalGameScreen — applyMove runs for
+      // both the player and the AI, so this single block covers both.
+      if (timeControl) {
+        setClocks((c) => {
+          if (!c.running || c.lastTickAt === null) return c
+          const now = Date.now()
+          const elapsed = now - c.lastTickAt
+          const movedColor = result.color
+          const movedBefore = movedColor === 'w' ? c.whiteMs : c.blackMs
+          const movedAfter = Math.max(0, movedBefore - elapsed) + timeControl.incrementMs
+          const nextRunning: Color = movedColor === 'w' ? 'b' : 'w'
+          return {
+            whiteMs: movedColor === 'w' ? movedAfter : c.whiteMs,
+            blackMs: movedColor === 'b' ? movedAfter : c.blackMs,
+            lastTickAt: now,
+            running: nextRunning,
+          }
+        })
+      }
 
       if (result.captured) {
         const captureSquare: Square = result.flags.includes('e')
@@ -166,7 +222,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
       }
       return true
     },
-    [game, hostId, coHostId, picker, sound],
+    [game, hostId, coHostId, picker, sound, timeControl],
   )
 
   const handleBloomDone = useCallback((id: number) => {
@@ -211,6 +267,34 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     }
   }, [snap.turn, snap.fen, gameOver, aiColor, opponent, preset.settings, applyMove])
 
+  // Flag-fall detector — same shape as LocalGameScreen. When the
+  // running side's displayed time hits 0, record the timeout; the
+  // effectiveStatus memo then resolves to 'timeout' and freezes things.
+  useEffect(() => {
+    if (!timeControl || timeoutLoser || gameOver) return
+    if (!clocks.running || clocks.lastTickAt === null) return
+    const running = clocks.running
+    const base = running === 'w' ? clocks.whiteMs : clocks.blackMs
+    const fire = () => {
+      const remaining = base - (Date.now() - clocks.lastTickAt!)
+      if (remaining <= 0) setTimeoutLoser(running)
+    }
+    const wait = Math.max(50, base - (Date.now() - clocks.lastTickAt))
+    const exactTimer = window.setTimeout(fire, wait)
+    const safetyInterval = window.setInterval(fire, 1000)
+    return () => {
+      window.clearTimeout(exactTimer)
+      window.clearInterval(safetyInterval)
+    }
+  }, [timeControl, timeoutLoser, gameOver, clocks])
+
+  // Freeze the clock when the game ends from any non-flag path.
+  useEffect(() => {
+    if (effectiveStatus.kind === 'in_progress') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setClocks((c) => (c.lastTickAt === null && c.running === null ? c : { ...c, lastTickAt: null, running: null }))
+  }, [effectiveStatus.kind])
+
   const handleRestart = useCallback(() => {
     const fresh = new ChessGame()
     setGame(fresh)
@@ -222,7 +306,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     setGameId(newAiGameId())
     setSavedThisGame(false)
     setEngineError(null)
-  }, [])
+    setClocks(initialClockState(timeControl ?? null))
+    setTimeoutLoser(null)
+  }, [timeControl])
 
   const handlePickDifficulty = useCallback((id: DifficultyId) => {
     if (id === activeDifficultyId) return
@@ -372,6 +458,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
             captured={lostByWhite}
             capturedColor="w"
             thinking={aiThinking}
+            clockMs={timeControl ? clocks.blackMs : null}
+            clockRunning={clocks.running === 'b'}
+            clockTickAt={clocks.lastTickAt}
           />
         </aside>
 
@@ -416,6 +505,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
             isTurn={snap.turn === 'w' && !gameOver}
             captured={lostByBlack}
             capturedColor="b"
+            clockMs={timeControl ? clocks.whiteMs : null}
+            clockRunning={clocks.running === 'w'}
+            clockTickAt={clocks.lastTickAt}
           />
         </aside>
 
@@ -461,6 +553,9 @@ function PlayerCard({
   captured,
   capturedColor,
   thinking,
+  clockMs,
+  clockRunning,
+  clockTickAt,
 }: {
   name: string
   color: Color
@@ -468,6 +563,9 @@ function PlayerCard({
   captured: PieceSymbol[]
   capturedColor: Color
   thinking?: boolean
+  clockMs: number | null
+  clockRunning: boolean
+  clockTickAt: number | null
 }) {
   return (
     <div className={`puc-player ${isTurn ? 'puc-player--active' : ''}`}>
@@ -476,6 +574,9 @@ function PlayerCard({
         {name}
         {thinking && <span className="puc-ai__thinking" aria-label="thinking">·  ·  ·</span>}
       </span>
+      {clockMs !== null && (
+        <Clock baseMs={clockMs} lastTickAt={clockTickAt} running={clockRunning} />
+      )}
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>

@@ -2,18 +2,16 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { AiPracticeScreen } from './AiPracticeScreen'
 import type { HostId } from '../hosts/hosts'
 import type { DifficultyId } from '../ai/difficulty'
+import type { TimeControl } from '../clock/timeControl'
 
 interface AiState {
   hostId: HostId
   coHostId?: HostId
   playerName: string
   difficultyId: DifficultyId
-  // The Hall's TimeControlDialog passes this through when starting
-  // a Practice game. AiPracticeScreen doesn't render a visible clock
-  // yet — wiring per-side timers + flag detection is a follow-up.
-  // For now we accept (and silently ignore) the chosen TC so the
-  // route navigation contract matches Local/Online.
-  // timeControl?: TimeControl | null
+  /** Optional chess clock chosen via the Hall's TimeControlDialog.
+   *  null/undefined = untimed (no Clock renders). */
+  timeControl?: TimeControl | null
 }
 
 export function AiPracticeRoute() {
@@ -27,6 +25,7 @@ export function AiPracticeRoute() {
       coHostId={state.coHostId}
       playerName={state.playerName}
       difficultyId={state.difficultyId}
+      timeControl={state.timeControl ?? null}
       onExit={() => navigate('/')}
     />
   )
