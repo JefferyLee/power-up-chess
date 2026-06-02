@@ -13,6 +13,7 @@ import { useCastle } from './useCastle'
 import { CastleArt } from './CastleArt'
 import { usePublicStats } from './usePublicStats'
 import { LivePulsePanel } from './LivePulsePanel'
+import { CastleSign } from './CastleSign'
 import './GateScreen.css'
 
 type GatePhase = 'closed' | 'opening' | 'open'
@@ -177,6 +178,7 @@ export function GateScreen() {
         </p>
 
         <LivePulsePanel />
+        <CastleSign />
       </div>
 
       {phase === 'open' && !identity && <WicketDialog />}
