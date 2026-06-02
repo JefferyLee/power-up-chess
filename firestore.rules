@@ -46,10 +46,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Castle guests — function-only. Holds magicWordHash, uids, castlePoints.
-    // Clients never read this directly; castleEnter returns what they need.
+    // Castle guests — holds magicWordHash, uids, castlePoints, puzzle
+    // state, etc. Writes are always function-only (admin SDK).
+    //
+    // Reads: a signed-in user can read their OWN guest doc (uids array
+    // contains their uid). This lets the Puzzle Garden subscribe to
+    // puzzleRatings / puzzleCalibrated / puzzleDaily / puzzleStats and
+    // react when the server updates them after calibration, a solve, or
+    // a daily-five completion. No cross-guest reads — that path is
+    // still server-mediated.
     match /guests/{normalizedName} {
-      allow read, write: if false;
+      allow read: if request.auth != null
+        && resource.data.uids.hasAny([request.auth.uid]);
+      allow write: if false;
     }
 
     // Per-uid enter-attempt counters (rate limiting + 3-strike tracking).
