@@ -1,13 +1,26 @@
-// WebAudio synthesis for game sounds.
+// WebAudio + asset playback for game sounds.
 //
-// No asset files — everything is generated at play time with oscillator +
-// gain envelopes. Keeps the bundle small and lets us tune Magic Forest's
-// warm, low-key aesthetic without shipping MP3s.
+// Most sounds are synthesized inline (no asset files, tiny bundle, easy
+// to tune the warm Magic-Forest aesthetic). A few — currently the gate's
+// knock and wicket-creak — play real MP3 recordings, imported here via
+// Vite's asset pipeline so they end up content-hashed in /assets/.
+
+import knockUrl from './assets/knock.mp3'
+import wicketCreakUrl from './assets/wicket-creak.mp3'
 
 export type SoundName =
   | 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw'
   | 'knock' | 'wicket-creak'
   | 'powerup-classic' | 'powerup-lightning' | 'powerup-comet'
+
+/** Sounds backed by a real audio file (vs. one of the RECIPES synths).
+ *  When a name is in this map, playSound() routes to an Audio element
+ *  instead of building oscillators. Volume per-asset because each MP3
+ *  ships with its own loudness floor. */
+const ASSET_URLS: Partial<Record<SoundName, { url: string; volume: number }>> = {
+  knock:          { url: knockUrl,        volume: 0.55 },
+  'wicket-creak': { url: wicketCreakUrl,  volume: 0.55 },
+}
 
 let ctx: AudioContext | null = null
 let masterGain: GainNode | null = null
@@ -338,7 +351,23 @@ export function playSound(name: SoundName): void {
   if (c.state === 'suspended') {
     void c.resume()
   }
+  const asset = ASSET_URLS[name]
+  if (asset) {
+    playAsset(asset.url, asset.volume)
+    return
+  }
   RECIPES[name]()
+}
+
+function playAsset(url: string, volume: number): void {
+  // Fresh Audio element per shot so back-to-back plays don't cut each
+  // other off. Browsers GC the element once it finishes (no .preload,
+  // no cached ref needed for occasional sounds).
+  const audio = new Audio(url)
+  audio.volume = Math.max(0, Math.min(1, volume))
+  // Some browsers reject autoplay even after resume(); the catch keeps
+  // the console clean and falls back silently.
+  void audio.play().catch(() => { /* ignore */ })
 }
 
 export function setMasterVolume(volume: number): void {
