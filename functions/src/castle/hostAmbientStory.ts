@@ -8,6 +8,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { GEMINI_API_KEY } from './hostChatReply'
 import { HOUR_MS, pickAndPostStory, type AmbientState } from './pickAndPostStory'
+import type { PresenceDoc } from './chatTypes'
 
 const PRESENCE_TTL_MS = 60 * 1000
 // Temporarily bumped from 6 → 30 while debugging quiz generation; the
@@ -21,13 +22,19 @@ export const hostAmbientStory = onSchedule(
     const db = getFirestore()
     const now = Date.now()
 
-    // Any guests in the Hall right now?
+    // Any guests in the Hall RIGHT NOW? Stories post to the Hall chat,
+    // so a kid in a puzzle/forest/wizard room doesn't count — the
+    // story would land in a room they aren't watching.
     const presSnap = await db
       .collection('lobby/presence/items')
       .where('lastSeenAt', '>=', now - PRESENCE_TTL_MS)
       .get()
-    if (presSnap.empty) {
-      console.log('hostAmbientStory: no live presence, skipping')
+    const inHall = presSnap.docs.filter((d) => {
+      const loc = (d.data() as PresenceDoc).location
+      return !loc || loc.kind === 'hall'
+    })
+    if (inHall.length === 0) {
+      console.log('hostAmbientStory: no one in the Hall, skipping')
       return
     }
 
