@@ -86,6 +86,22 @@
 @media (max-width: 700px) {
   .puc-lb__cols { grid-template-columns: 1fr; }
 }
+@media (max-width: 540px) {
+  /* Phone: bigger back tap target, tighter header + tabs so 6 plot
+   * pills wrap without dominating the screen, and rows fit a 320 px
+   * viewport without the metric clipping. */
+  .puc-lb__header { padding: 12px 14px; gap: 12px; }
+  .puc-lb__back { width: 44px; height: 44px; font-size: 20px; }
+  .puc-lb__title { font-size: 18px; letter-spacing: 0.2px; }
+  .puc-lb__tabs { padding: 12px 14px 0; gap: 5px; }
+  .puc-lb__tab { padding: 6px 10px; font-size: 12px; }
+  .puc-lb__meta { padding: 6px 14px 0; font-size: 11px; }
+  .puc-lb__cols { padding: 14px; gap: 14px; }
+  .puc-lb__col { padding: 12px; }
+  .puc-lb__row { grid-template-columns: 32px 1fr auto; gap: 10px; padding: 8px; font-size: 13px; }
+  .puc-lb__rank { font-size: 12px; }
+  .puc-lb__metric { font-size: 14px; }
+}
 
 .puc-lb__col {
   background: var(--puc-surface);

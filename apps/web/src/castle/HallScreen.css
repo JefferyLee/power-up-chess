@@ -233,8 +233,13 @@
   grid-template-columns: repeat(5, max-content);
 }
 .puc-hall__doors-grid--fun {
-  /* 2-4 doors below the chat. Centred, accommodates future growth. */
-  grid-template-columns: repeat(auto-fit, max-content);
+  /* 2-4 doors below the chat — always horizontal on desktop.
+   * grid-auto-flow: column makes each door a column with intrinsic
+   * (max-content) width, so 2 doors today and 4 future doors all
+   * sit side-by-side and centre nicely. */
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  grid-template-columns: none;
 }
 
 .puc-hall__doors--fun {
@@ -253,6 +258,9 @@
     justify-content: stretch;
   }
   .puc-hall__doors-grid--fun {
+    /* Reset the desktop auto-flow:column so the explicit
+     * grid-template-columns below actually applies. */
+    grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
     justify-content: stretch;

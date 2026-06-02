@@ -220,3 +220,14 @@
   letter-spacing: 0.4px;
   color: rgba(216, 200, 255, 0.8);
 }
+
+@media (max-width: 540px) {
+  /* Phone: tap target on Send + Record, slightly larger input so iOS
+   * doesn't auto-zoom (which fires when font-size < 16 px). */
+  .puc-wdchat { min-height: 180px; max-height: 280px; padding: 10px; }
+  .puc-wdchat__input { font-size: 16px; padding: 10px 12px; min-height: 44px; }
+  .puc-wdchat__send { padding: 10px 14px; min-height: 44px; font-size: 13px; }
+  .puc-wdchat__rec { padding: 8px 12px; min-height: 40px; font-size: 12px; }
+  .puc-wdchat__voice { padding: 8px 12px; min-height: 36px; }
+  .puc-wdchat__bubble { font-size: 13px; max-width: 95%; }
+}

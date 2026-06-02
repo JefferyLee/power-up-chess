@@ -76,15 +76,36 @@
   color: var(--puc-text-accent);
 }
 
-/* Phone: drop title size + tighten gaps so back + title + trophies +
- * solved all fit a 375 px viewport. Title shrinks; trophies + total
- * stay full-width (flex-shrink:0 above) and the title takes the rest. */
+/* Phone: drop the "Solved" counter, shrink the title, and turn the
+ * Trophies button into an icon-only pill so the whole header reliably
+ * fits a 320-375 px viewport with no clipping. */
 @media (max-width: 540px) {
   .puc-garden__header { gap: 8px; padding: 12px 12px; }
-  .puc-garden__title { font-size: 17px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .puc-garden__trophies { padding: 6px 10px; font-size: 12px; }
+  .puc-garden__title {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 17px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .puc-garden__trophies {
+    padding: 6px 10px;
+    font-size: 16px;
+    /* icon-only on phone — the JSX text "Trophies" is hidden by truncation */
+    max-width: 44px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
   .puc-garden__total { display: none; }
   .puc-garden__main { padding: 18px 14px; }
+}
+
+@media (max-width: 540px) {
+  /* Card sizing — keep within the parent so the right edge doesn't clip. */
+  .puc-garden__card { padding: 14px 14px; min-width: 0; }
+  .puc-garden__card-body { min-width: 0; }
+  .puc-garden__card-cta { font-size: 11px; }
 }
 
 .puc-garden__main {
@@ -332,7 +353,11 @@
 .puc-garden__card:hover .puc-garden__card-cta { opacity: 1; }
 
 @media (max-width: 540px) {
-  .puc-garden__grid { grid-template-columns: 1fr; }
-  .puc-garden__card { grid-template-columns: 48px 1fr auto; }
-  .puc-garden__card-icon { font-size: 26px; width: 48px; height: 48px; }
+  /* On phone the cards stack 1-up; relax the column min so a
+   * cell can shrink below 260 px without forcing horizontal scroll. */
+  .puc-garden__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .puc-garden__card { grid-template-columns: 44px 1fr auto; gap: 10px; }
+  .puc-garden__card-icon { font-size: 24px; width: 44px; height: 44px; }
 }

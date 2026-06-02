@@ -272,7 +272,21 @@
 
 /* Phone-ish — shrink the header chip set so things don't wrap. */
 @media (max-width: 540px) {
-  .puc-local__header { gap: 8px; padding: 10px 12px; }
+  .puc-local__header { gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+  .puc-local__exit { width: 44px; height: 44px; font-size: 20px; }
   .puc-local__host-blurb { display: none; }
-  .puc-local__actions button { padding: 6px 10px; font-size: 13px; }
+  .puc-local__host-name { font-size: 16px; }
+  .puc-local__actions { gap: 6px; flex-wrap: wrap; }
+  .puc-local__actions button { padding: 8px 10px; font-size: 12px; min-height: 36px; }
+  .puc-local__diff-chip { font-size: 10px; padding: 4px 6px; }
+  .puc-local__main { padding: 12px; gap: 10px 12px; }
+  .puc-player { padding: 10px 12px; gap: 10px; }
+  .puc-player__name { font-size: 15px; }
+  .puc-player__captures { font-size: 16px; }
+  .puc-player__cap { height: 18px; font-size: 18px; }
+  .puc-local__moves { padding: 12px; max-height: 240px; }
+  .puc-local__moves-title { font-size: 14px; }
+  .puc-local__moves-row { font-size: 13px; }
+  .puc-local__status { font-size: 13px; }
+  .puc-local__status--end { font-size: 16px; }
 }

@@ -44,6 +44,17 @@
 @media (max-width: 760px) {
   .puc-plot__main { grid-template-columns: 1fr; }
 }
+@media (max-width: 540px) {
+  /* Tighten outer padding + bump tap targets on phone widths. */
+  .puc-plot { padding: 14px; gap: 12px; }
+  .puc-plot__header { gap: 12px; }
+  .puc-plot__back { width: 44px; height: 44px; font-size: 22px; }
+  .puc-plot__title { font-size: 18px; }
+  .puc-plot__sub { font-size: 12px; }
+  .puc-plot__btn { padding: 12px 14px; min-height: 44px; font-size: 14px; }
+  .puc-plot__puzzleinfo { padding: 12px; }
+  .puc-plot__row { font-size: 12px; }
+}
 
 .puc-plot__board {
   display: flex;

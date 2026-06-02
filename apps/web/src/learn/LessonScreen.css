@@ -91,6 +91,14 @@
     padding: 14px 14px 22px;
   }
 }
+@media (max-width: 540px) {
+  .puc-lesson__header { padding: 10px 14px; gap: 10px; }
+  .puc-lesson__title { font-size: 15px; }
+  .puc-lesson__skip { padding: 4px 10px; }
+  .puc-lesson__bubble { font-size: 14px; padding: 12px 14px; }
+  .puc-lesson__portrait { width: 40px; height: 40px; }
+  .puc-lesson__hostname { font-size: 13px; }
+}
 
 .puc-lesson__board {
   display: flex;

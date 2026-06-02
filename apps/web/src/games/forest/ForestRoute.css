@@ -122,3 +122,14 @@
     position: static;
   }
 }
+@media (max-width: 540px) {
+  /* Phone: tighten outer padding so the 800-px stage (which scales to
+   * 100 % width) gets max room, and ensure the back button has a real
+   * tap target. */
+  .puc-forest-route { padding: 10px 12px 32px; }
+  .puc-forest-route__header { gap: 10px; margin-bottom: 12px; padding: 0; }
+  .puc-forest-route__back { font-size: 14px; padding: 10px 12px; min-height: 44px; }
+  .puc-forest-route__title { font-size: 17px; }
+  .puc-forest-route__player { font-size: 11px; }
+  .puc-forest-route__main { gap: 14px; }
+}

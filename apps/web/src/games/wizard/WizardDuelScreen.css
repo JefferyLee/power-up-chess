@@ -382,3 +382,24 @@
   }
   .puc-wd__side--right { grid-column: 1 / 2; grid-row: auto; }
 }
+@media (max-width: 540px) {
+  /* Phone: tighter outer padding so the board scales larger, real tap
+   * target on Back, and shrink the chrome around the player rows. */
+  .puc-wd { padding: 10px 12px 24px; }
+  .puc-wd__header { gap: 10px; margin-bottom: 10px; padding: 0; }
+  .puc-wd__back { font-size: 14px; padding: 10px 12px; min-height: 44px; }
+  .puc-wd__title { font-size: 17px; letter-spacing: 0.8px; }
+  .puc-wd__sub { font-size: 11px; }
+  .puc-wd__main { gap: 10px; }
+  .puc-wd__player { padding: 8px 12px; max-width: 100%; }
+  .puc-wd__player-name { font-size: 13px; }
+  .puc-wd__player-clock { font-size: 14px; padding: 3px 8px; }
+  .puc-wd__player-mana-num { font-size: 18px; }
+  .puc-wd__points-num { font-size: 20px; }
+  .puc-wd__hint { font-size: 13px; }
+  .puc-wd__resign { min-height: 40px; }
+  .puc-wd__overlay-card { padding: 18px 20px; }
+  .puc-wd__overlay-title { font-size: 18px; }
+  .puc-wd__overlay-sub { font-size: 13px; }
+  .puc-wd__overlay-btn { padding: 12px 16px; min-height: 44px; }
+}

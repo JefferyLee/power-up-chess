@@ -102,3 +102,13 @@
 .puc-wizardwarn__confirm:hover {
   transform: translateY(-1px);
 }
+
+@media (max-width: 540px) {
+  .puc-wizardwarn__panel { padding: 22px 20px 18px; border-radius: 14px; }
+  .puc-wizardwarn__title { font-size: 18px; margin-bottom: 12px; }
+  .puc-wizardwarn__body { font-size: 14px; }
+  .puc-wizardwarn__body--em { font-size: 14px; }
+  .puc-wizardwarn__actions { gap: 8px; }
+  .puc-wizardwarn__cancel,
+  .puc-wizardwarn__confirm { padding: 12px 14px; min-height: 44px; flex: 1; font-size: 12px; }
+}
