@@ -21,6 +21,9 @@ export interface PublicStats {
   activeToday: number
   topGuests: TopGuest[]
   refreshedAt: number
+  /** Min castlePoints to open/join a Wizard's Duel. Looser of an
+   *  absolute 1000 floor and the rolling top-10% threshold. */
+  wizardGateMinPoints?: number
 }
 
 export type PublicStatsState =

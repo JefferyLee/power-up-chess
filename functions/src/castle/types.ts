@@ -164,7 +164,16 @@ export interface CastlePublicStats {
   topGuests: TopGuest[]
   /** Server ts when this doc was last rebuilt. */
   refreshedAt: number
+  /** Min castlePoints to open or join a Wizard's Duel — the looser of
+   *  WIZARD_ABSOLUTE_FLOOR (1000) and the rolling top-10% threshold,
+   *  rounded down. Clients use this for the friendly "Earn X to unlock"
+   *  message; the server still re-enforces in createWizardRoom + join. */
+  wizardGateMinPoints?: number
 }
+
+/** Hard upper limit for the wizard gate — even if the community gets
+ *  rich and top-10% climbs past this, anyone over 1000 still gets in. */
+export const WIZARD_ABSOLUTE_FLOOR = 1000
 
 export interface TopGuest {
   displayName: string

@@ -14,7 +14,15 @@ import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
 import { reserveAndPriceSpell, type SpellPricing } from './wizardSpellPricing'
 import type { SpellId, WizardActionRecord } from './types'
 import type { Color, Square } from '../../shared/chessTypes'
-import { AWARD_CAPS, CROWN_HOURS, CROWN_THRESHOLD, DUEL_HALO_HOURS, type GuestDoc } from '../../castle/types'
+import {
+  AWARD_CAPS,
+  CROWN_HOURS,
+  CROWN_THRESHOLD,
+  DUEL_HALO_HOURS,
+  WIZARD_ABSOLUTE_FLOOR,
+  type CastlePublicStats,
+  type GuestDoc,
+} from '../../castle/types'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -121,6 +129,11 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
         createdAt: now,
         updatedAt: now,
       }
+      // Wizard-duel gate — opening requires the looser of 1000 castle
+      // points and the rolling top-10% threshold. Pulled outside the
+      // tx because it's a read of a public stats doc, not the guest.
+      const gateMin = await wizardGateMinPoints(db)
+
       // Returns false on room-id collision so the outer loop retries with a
       // fresh id; throws HttpsError on real failures (no guest, low balance).
       const committed = await db.runTransaction(async (tx) => {
@@ -129,6 +142,12 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
           throw new HttpsError('failed-precondition', 'Guest record missing.')
         }
         const guest = guestSnap.data() as GuestDoc
+        if (guest.castlePoints < gateMin) {
+          throw new HttpsError(
+            'failed-precondition',
+            `Wizard's Duel unlocks at ${gateMin} castle points; you have ${guest.castlePoints}. Solve puzzles or win chess games to earn more.`,
+          )
+        }
         if (guest.castlePoints < cost) {
           throw new HttpsError(
             'failed-precondition',
@@ -163,6 +182,27 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
     const db = getFirestore()
     const ref = db.doc(`wizard_rooms/${roomId}`)
 
+    // Same gate as createWizardRoom — bypass guests can't join either
+    // (they have no guest doc / no castlePoints).
+    if (slot.isBypass || !slot.normalizedName) {
+      throw new HttpsError(
+        'permission-denied',
+        'Bypass guests can\'t join Wizard\'s Duels. Set a magic word in the castle gate first.',
+      )
+    }
+    const gateMin = await wizardGateMinPoints(db)
+    const joinerSnap = await db.doc(`guests/${slot.normalizedName}`).get()
+    const joiner = joinerSnap.data() as GuestDoc | undefined
+    if (!joiner) {
+      throw new HttpsError('failed-precondition', 'Guest record missing.')
+    }
+    if (joiner.castlePoints < gateMin) {
+      throw new HttpsError(
+        'failed-precondition',
+        `Wizard's Duel unlocks at ${gateMin} castle points; you have ${joiner.castlePoints}.`,
+      )
+    }
+
     return db.runTransaction(async (tx) => {
       const snap = await tx.get(ref)
       if (!snap.exists) throw new HttpsError('not-found', 'Room not found.')
@@ -190,6 +230,19 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
     })
   },
 )
+
+/** Resolve the current wizard-gate min castle-points from the public
+ *  stats doc; falls back to the absolute floor if the doc is missing
+ *  or hasn't been refreshed yet. */
+async function wizardGateMinPoints(db: Firestore): Promise<number> {
+  const snap = await db.doc('castle_public/stats').get()
+  const stats = snap.data() as CastlePublicStats | undefined
+  const v = stats?.wizardGateMinPoints
+  if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+    return Math.min(WIZARD_ABSOLUTE_FLOOR, v)
+  }
+  return WIZARD_ABSOLUTE_FLOOR
+}
 
 // ── submitWizardMove ────────────────────────────────────────────────────
 

@@ -21,6 +21,7 @@ import { RoomDoor } from './RoomDoor'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { usePresenceHeartbeat } from './usePresenceHeartbeat'
 import { useAuthUid } from '../auth/useAuthUid'
+import { usePublicStats } from './usePublicStats'
 import './HallScreen.css'
 
 const DEFAULT_OPPONENT_NAME = 'Friend'
@@ -64,6 +65,16 @@ export function HallScreen() {
   const displayName = identity?.displayName ?? ''
   const castlePoints = identity?.castlePoints ?? 0
   const isUnlocked = castlePoints >= UNLOCK_THRESHOLD && !(identity?.isBypass ?? false)
+  const publicStats = usePublicStats()
+  // Default to 1000 if the stats doc hasn't loaded — matches the server
+  // fallback in createWizardRoom / joinWizardRoom.
+  const wizardGate =
+    publicStats.status === 'ready' &&
+    typeof publicStats.stats.wizardGateMinPoints === 'number'
+      ? publicStats.stats.wizardGateMinPoints
+      : 1000
+  const isWizardUnlocked =
+    !(identity?.isBypass ?? false) && castlePoints >= wizardGate
 
   const handleOnline = async () => {
     if (creating || !identity) return
@@ -182,9 +193,20 @@ export function HallScreen() {
           <RoomDoor
             icon="✨"
             label="Wizard's Duel"
-            blurb="Chess with magic spells — for fun, not for chess practice."
+            blurb={
+              isWizardUnlocked
+                ? 'Chess with magic spells — for fun, not for chess practice.'
+                : `Locked — needs ${wizardGate} castle points.`
+            }
             variant="starry"
+            locked={!isWizardUnlocked}
             onClick={handleWizard}
+            disabled={!isWizardUnlocked}
+            title={
+              isWizardUnlocked
+                ? undefined
+                : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
+            }
           />
         </div>
         {error && <p className="puc-hall__error">{error}</p>}

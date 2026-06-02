@@ -172,11 +172,31 @@
 
 .puc-hall__doors-grid {
   display: grid;
-  /* Always one row, never reflow — six doors in a single line.
-   * 6 × 110 + 5 × 22 = 770 px; fits the 1200 max-width comfortably. */
+  /* Desktop: one row of six. 6 × 110 + 5 × 22 = 770 px fits 1200 max-width. */
   grid-template-columns: repeat(6, max-content);
   gap: 22px;
   justify-content: center;
+}
+
+/* Phones — 770 px of doors doesn't fit a 375 px screen and
+ * justify-content: center clips both edges (Puzzle Garden falls off the
+ * left, Wizard's Duel off the right, with no way to scroll). Wrap to a
+ * tidy 3-up grid that takes the available width. */
+@media (max-width: 720px) {
+  .puc-hall__doors-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 14px;
+    justify-content: stretch;
+  }
+  .puc-hall__doors-grid > .puc-roomdoor {
+    justify-self: center;
+  }
+}
+@media (max-width: 420px) {
+  .puc-hall__doors-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+  }
 }
 
 .puc-hall__error {
