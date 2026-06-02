@@ -24,8 +24,10 @@ const ASSET_URLS: Partial<Record<SoundName, {
   volume: number
   overlay?: () => void
 }>> = {
-  knock:          { url: knockUrl,        volume: 0.55 },
-  'wicket-creak': { url: wicketCreakUrl,  volume: 0.55, overlay: wicketChimeOverlay },
+  knock:          { url: knockUrl,        volume: 0.6 },
+  // Wicket bumped 0.55 → 0.8 so the real door creak reads clearly above
+  // the layered magic-chime overlay (overlay was overshadowing it).
+  'wicket-creak': { url: wicketCreakUrl,  volume: 0.8, overlay: wicketChimeOverlay },
 }
 
 let ctx: AudioContext | null = null

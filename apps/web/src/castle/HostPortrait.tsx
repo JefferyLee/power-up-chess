@@ -137,20 +137,23 @@ function LucaArt() {
         </radialGradient>
         <linearGradient id="luca-hair" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor="#3a2670" />
-          <stop offset="100%" stopColor="#0c0820" />
+          <stop offset="100%" stopColor="#0a0618" />
+        </linearGradient>
+        <linearGradient id="luca-hair-shine" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="rgba(180, 150, 255, 0.55)" />
+          <stop offset="100%" stopColor="rgba(180, 150, 255, 0)" />
         </linearGradient>
         <linearGradient id="luca-skin" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"  stopColor="#fbe1c8" />
-          <stop offset="100%" stopColor="#e8c2a3" />
+          <stop offset="0%"  stopColor="#f3d2b2" />
+          <stop offset="100%" stopColor="#d6a682" />
         </linearGradient>
         <radialGradient id="luca-cheek" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"  stopColor="rgba(232,140,140,0.55)" />
-          <stop offset="100%" stopColor="rgba(232,140,140,0)" />
+          <stop offset="0%"  stopColor="rgba(196,120,150,0.35)" />
+          <stop offset="100%" stopColor="rgba(196,120,150,0)" />
         </radialGradient>
       </defs>
 
-      {/* Background — night sky with stars + crescent moon. Same palette
-       *  as before; Luca's signature is the night, Lucy's is dusk. */}
+      {/* Background — night sky with stars + crescent moon. */}
       <circle cx="120" cy="120" r="118" fill="url(#luca-bg)" stroke="#1a0f30" strokeWidth="3" />
       <g fill="#fff">
         <circle cx="46"  cy="54"  r="1.8" />
@@ -161,98 +164,141 @@ function LucaArt() {
         <circle cx="22"  cy="120" r="1.2" opacity="0.7" />
         <circle cx="210" cy="118" r="1.0" opacity="0.7" />
       </g>
-      <g transform="translate(180, 52)">
+      <g transform="translate(182, 54)">
         <circle cx="0" cy="0" r="13" fill="#fff7d8" />
         <circle cx="5" cy="-2" r="11" fill="url(#luca-bg)" />
       </g>
 
-      {/* Hair back — soft dark mass behind the head, fills the upper third
-       *  of the portrait so the tousled fringe in front reads as a layer. */}
+      {/* Face — slimmer with a defined-but-not-harsh jaw. Drawn first
+       *  so the hair on top sits ON the head, not floating around it. */}
       <path
-        d="M 56 122 Q 56 56 120 50 Q 184 56 184 122 L 184 200 L 56 200 Z"
-        fill="url(#luca-hair)"
+        d="M 82 126
+           Q 82 92 120 88
+           Q 158 92 158 126
+           L 156 158
+           Q 150 184 120 188
+           Q 90 184 84 158 Z"
+        fill="url(#luca-skin)"
       />
 
-      {/* Face — rounded and friendly (mirrors Lucy's structure). The old
-       *  angular jaw made Luca look stern; this softer ellipse reads as
-       *  kind without losing the boyish vibe (the hair carries that). */}
-      <ellipse cx="120" cy="132" rx="52" ry="60" fill="url(#luca-skin)" />
+      {/* Subtle cheekbone shadow for a young-man read without harshness. */}
+      <path d="M 86 162 Q 100 174 116 168" stroke="rgba(160, 90, 60, 0.2)" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M 124 168 Q 140 174 154 162" stroke="rgba(160, 90, 60, 0.2)" strokeWidth="2" fill="none" strokeLinecap="round" />
 
-      {/* Cheeks — same warmth as Lucy's so the pair feels matched. */}
-      <circle cx="96"  cy="152" r="10" fill="url(#luca-cheek)" />
-      <circle cx="144" cy="152" r="10" fill="url(#luca-cheek)" />
+      {/* Cheeks — barely there. */}
+      <circle cx="96"  cy="158" r="7" fill="url(#luca-cheek)" />
+      <circle cx="144" cy="158" r="7" fill="url(#luca-cheek)" />
 
-      {/* Big anime eyes — same structure as Lucy, in Luca's violet. */}
+      {/* Ears — small, hugging the head. */}
+      <ellipse cx="80" cy="140" rx="4" ry="8" fill="url(#luca-skin)" stroke="#a07058" strokeWidth="0.7" />
+      <ellipse cx="160" cy="140" rx="4" ry="8" fill="url(#luca-skin)" stroke="#a07058" strokeWidth="0.7" />
+
+      {/* Eyes — sharper than Lucy's (less round, more almond), bright
+       *  violet irises, single eyelid line instead of fanned lashes. */}
       <g>
-        <ellipse cx="102" cy="134" rx="10" ry="13" fill="#fffbe8" />
-        <ellipse cx="138" cy="134" rx="10" ry="13" fill="#fffbe8" />
-        <ellipse cx="102" cy="136" rx="7"  ry="10" fill="#5e3aa0" />
-        <ellipse cx="138" cy="136" rx="7"  ry="10" fill="#5e3aa0" />
-        <circle  cx="104" cy="132" r="2.4" fill="#fff" />
-        <circle  cx="140" cy="132" r="2.4" fill="#fff" />
-        <circle  cx="100" cy="139" r="1.2" fill="#fff" opacity="0.85" />
-        <circle  cx="136" cy="139" r="1.2" fill="#fff" opacity="0.85" />
-        {/* Top eyelash */}
-        <path d="M 92 126 Q 102 123 112 126" stroke="#0c0820" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-        <path d="M 128 126 Q 138 123 148 126" stroke="#0c0820" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-        {/* Soft upturned brows — warmer than the previous angular zigzags. */}
-        <path d="M 91 117 Q 102 113 113 118" stroke="#1a0f30" strokeWidth="2.6" fill="none" strokeLinecap="round" />
-        <path d="M 127 118 Q 138 113 149 117" stroke="#1a0f30" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+        <ellipse cx="103" cy="138" rx="9.5" ry="10" fill="#fffbe8" />
+        <ellipse cx="137" cy="138" rx="9.5" ry="10" fill="#fffbe8" />
+        <ellipse cx="103" cy="140" rx="6.5" ry="8" fill="#5e3aa0" />
+        <ellipse cx="137" cy="140" rx="6.5" ry="8" fill="#5e3aa0" />
+        {/* Pupils */}
+        <circle  cx="103" cy="141" r="2.6" fill="#1a0830" />
+        <circle  cx="137" cy="141" r="2.6" fill="#1a0830" />
+        {/* Catchlights — single big highlight + tiny lower one (looks alive) */}
+        <circle  cx="106" cy="135" r="2.4" fill="#fff" />
+        <circle  cx="140" cy="135" r="2.4" fill="#fff" />
+        <circle  cx="100" cy="143" r="1.0" fill="#fff" opacity="0.8" />
+        <circle  cx="134" cy="143" r="1.0" fill="#fff" opacity="0.8" />
+        {/* Upper eyelid line — one clean stroke per eye, no fanned lashes */}
+        <path d="M 93 130 Q 103 127 113 131" stroke="#0a0618" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+        <path d="M 127 131 Q 137 127 147 130" stroke="#0a0618" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+        {/* Brows — solid, slight arch, confident but not stern. */}
+        <path d="M 90 120 Q 102 116 114 120" stroke="#0c0820" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 126 120 Q 138 116 150 120" stroke="#0c0820" strokeWidth="3" fill="none" strokeLinecap="round" />
       </g>
 
-      {/* Tiny nose */}
-      <path d="M 118 156 Q 120 160 122 156" stroke="#a07050" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+      {/* Nose — small ridge + soft underside, giving a tiny bit of structure
+       *  without overdoing it. */}
+      <path d="M 119 148 L 118 160 Q 120 163 122 160 L 121 148" stroke="#a07060" strokeWidth="1.4" fill="none" strokeLinecap="round" />
 
-      {/* Smile (Lucy-style closed-mouth grin — was a wider teeth-showing
-       *  grin which felt off against the softer face). */}
-      <path d="M 108 170 Q 120 180 132 170" stroke="#3a1838" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      <path d="M 113 172 Q 120 176 127 172" fill="rgba(180,80,80,0.45)" />
+      {/* Confident half-smile — slightly higher on the right than the left
+       *  so he reads as quietly amused rather than blank. */}
+      <path d="M 105 173 Q 120 180 138 169" stroke="#3a1838" strokeWidth="2.4" fill="none" strokeLinecap="round" />
 
-      {/* Tousled fringe — soft wavy hair sweeping across forehead instead
-       *  of the prior zigzag spikes. Drawn as one continuous wavy band. */}
+      {/* Hair — clearly short, "longer-on-top" cut with a side-part fringe
+       *  sweeping right. Built as three layered shapes so it reads as
+       *  volume rather than flat color:
+       *    1. Tight short sides hugging the head above the ears.
+       *    2. The top mass that sits ON the crown.
+       *    3. A sharp side-swept fringe across the right brow.
+       */}
+
+      {/* (1) Sides — short, tight to the head, just above + behind ears */}
       <path
-        d="M 60 116
-           Q 76 78  100 88
-           Q 116 82 130 90
-           Q 152 80 178 102
-           Q 184 112 184 122
-           L 168 118
-           Q 152 102 130 104
-           Q 110 102 88  112
-           Q 70  114 60 116 Z"
+        d="M 78 132
+           Q 76 116 84 104
+           Q 92 96 100 94
+           L 96 118
+           Q 86 124 80 134 Z"
+        fill="url(#luca-hair)"
+      />
+      <path
+        d="M 162 132
+           Q 164 116 156 104
+           Q 148 96 140 94
+           L 144 118
+           Q 154 124 160 134 Z"
         fill="url(#luca-hair)"
       />
 
-      {/* Two rounded tufts on top for a hint of bedhead. */}
-      <path d="M 94 84 Q 104 70 116 80 Q 118 88 110 94 Q 100 92 94 84 Z" fill="url(#luca-hair)" />
-      <path d="M 142 80 Q 152 70 162 82 Q 162 92 152 96 Q 144 92 142 80 Z" fill="url(#luca-hair)" />
+      {/* (2) Top mass — sits ON the crown, taller in the middle, shorter
+       *  toward the temples. Reads as "longer on top" cleanly. */}
+      <path
+        d="M 82 106
+           Q 86 70 120 64
+           Q 154 70 158 106
+           L 154 102
+           Q 150 80 120 78
+           Q 90 80 86 102 Z"
+        fill="url(#luca-hair)"
+      />
 
-      {/* Side hair flowing past the ears, matched to the back panel. */}
-      <path d="M 56 130 Q 50 155 60 178 L 70 172 Q 64 152 66 132 Z" fill="url(#luca-hair)" />
-      <path d="M 184 130 Q 190 155 180 178 L 170 172 Q 176 152 174 132 Z" fill="url(#luca-hair)" />
+      {/* (3) Side-swept fringe — sharp diagonal sweep from the part
+       *  (around x=128) down across the right brow. The signature shape
+       *  that makes him read as a young man with intentional hair. */}
+      <path
+        d="M 128 76
+           Q 116 88 100 110
+           Q 94 120 102 124
+           Q 116 110 134 100
+           Q 146 94 152 88
+           Q 142 78 128 76 Z"
+        fill="url(#luca-hair)"
+      />
 
-      {/* Star clip — bigger + with a soft inner highlight so it actually
-       *  reads as Luca's signature instead of an afterthought. */}
-      <g transform="translate(150, 78) rotate(14)">
+      {/* Hair shine — thin highlight streak along the top of the crown so
+       *  the dark mass picks up the indigo sky-light. */}
+      <path
+        d="M 96 88 Q 122 72 152 84 L 148 96 Q 124 82 100 96 Z"
+        fill="url(#luca-hair-shine)"
+        opacity="0.7"
+      />
+
+      {/* Star clip — small, tucked into the part on the left where the
+       *  fringe begins its sweep. Subtle accent, not centerpiece. */}
+      <g transform="translate(98, 92) rotate(-15)">
         <polygon
-          points="0,-13 3.8,-3.8 13,-3.8 5.2,2.2 8.1,12 0,5.8 -8.1,12 -5.2,2.2 -13,-3.8 -3.8,-3.8"
+          points="0,-8 2.4,-2.4 8,-2.4 3.2,1.4 5,7.4 0,3.7 -5,7.4 -3.2,1.4 -8,-2.4 -2.4,-2.4"
           fill="#f6e3a1"
           stroke="#a87a18"
-          strokeWidth="1"
-        />
-        <polygon
-          points="0,-7 2,-2 7,-2 3,1.4 4.5,6 0,3 -4.5,6 -3,1.4 -7,-2 -2,-2"
-          fill="#fff7d8"
-          opacity="0.6"
+          strokeWidth="0.8"
         />
       </g>
 
-      {/* Cozy high collar — one tone with a rolled lip. Replaces the busy
-       *  V-neck + lapel-pin combo. */}
-      <path d="M 30 240 Q 40 198 78 196 L 162 196 Q 200 198 210 240 Z" fill="#3b2a78" />
+      {/* Cozy high collar — single dark blue/violet tone with a roll. */}
+      <path d="M 30 240 Q 40 196 78 192 L 162 192 Q 200 196 210 240 Z" fill="#2a1a58" />
       <path
-        d="M 78 196 Q 100 210 120 212 Q 140 210 162 196 L 162 200 Q 140 214 120 216 Q 100 214 78 200 Z"
-        fill="#2a1a58"
+        d="M 78 192 Q 100 208 120 210 Q 140 208 162 192 L 162 198 Q 140 214 120 216 Q 100 214 78 198 Z"
+        fill="#1a1038"
       />
     </>
   )
