@@ -167,7 +167,19 @@ export interface SubmitWizardSpellRequest {
   spellId: string
   targets: string[]
 }
-export interface SubmitWizardSpellResponse { ok: true; castlePoints: number }
+export interface SpellPricing {
+  effectiveCost: number
+  baseCost: number
+  personalMultiplier: number
+  supplyMultiplier: number
+  supplyRemaining: number
+  personalCastCount: number
+}
+export interface SubmitWizardSpellResponse {
+  ok: true
+  castlePoints: number
+  pricing: SpellPricing
+}
 
 const createWizardRoomFn = httpsCallable<WizardPlayerInfo, CreateWizardRoomResponse>(functions, 'createWizardRoom')
 const joinWizardRoomFn = httpsCallable<JoinWizardRoomRequest, JoinWizardRoomResponse>(functions, 'joinWizardRoom')

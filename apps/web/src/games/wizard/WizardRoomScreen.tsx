@@ -17,6 +17,7 @@ import {
   callResignWizardGame,
   callSubmitWizardMove,
   callSubmitWizardSpell,
+  type SpellPricing,
 } from '../../firebase/callables'
 import { ResignDialog } from '../../powerups/ResignDialog'
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
@@ -57,6 +58,9 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [resignOpen, setResignOpen] = useState(false)
   const [resigning, setResigning] = useState(false)
+  /** Surge-pricing toast: shown for ~4s after a spell costs more than its
+   *  base price (personal quota burned or castle supply low). */
+  const [surgeToast, setSurgeToast] = useState<{ id: number; spellId: SpellId; pricing: SpellPricing } | null>(null)
 
   // Rebuild a transient engine instance from the room doc — used only as a
   // read-only oracle for legal moves / spell targets / status. Never mutated.
@@ -142,6 +146,9 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
         // Sound plays from the snapshot-diff effect (so the opponent hears it too).
         setCastlePoints(res.castlePoints)
         setCast({ stage: 'idle' })
+        if (res.pricing.effectiveCost > res.pricing.baseCost) {
+          setSurgeToast({ id: Date.now(), spellId, pricing: res.pricing })
+        }
       } catch (e) {
         setError(humanError(e))
         setCast({ stage: 'idle' })
@@ -151,6 +158,13 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     },
     [roomId, setCastlePoints],
   )
+
+  // Auto-dismiss surge toast after 4 s.
+  useEffect(() => {
+    if (!surgeToast) return
+    const t = window.setTimeout(() => setSurgeToast(null), 4000)
+    return () => window.clearTimeout(t)
+  }, [surgeToast])
 
   const handlePickSpell = useCallback((spellId: SpellId) => {
     setError(null)
@@ -313,6 +327,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
             {room.status === 'waiting' && (
               <WaitingOverlay roomId={roomId} onCopy={copyLink} />
             )}
+            {surgeToast && <SurgeToast key={surgeToast.id} spellId={surgeToast.spellId} pricing={surgeToast.pricing} />}
             {isOver && (
               <div className="puc-wd__overlay">
                 <div className="puc-wd__overlay-card">
@@ -444,6 +459,35 @@ function WaitingOverlay({ roomId, onCopy }: { roomId: string; onCopy: () => void
       </div>
     </div>
   )
+}
+
+function SurgeToast({ spellId, pricing }: { spellId: SpellId; pricing: SpellPricing }) {
+  // Explain which axis (or both) drove the surge so kids learn the rule.
+  const reasons: string[] = []
+  if (pricing.personalMultiplier > 1) {
+    reasons.push(`your ${ordinalSuffix(pricing.personalCastCount)} cast today`)
+  }
+  if (pricing.supplyMultiplier > 1) {
+    reasons.push(`castle supply low (${pricing.supplyRemaining} left)`)
+  }
+  const totalMult = (pricing.effectiveCost / pricing.baseCost).toFixed(1).replace(/\.0$/, '')
+  return (
+    <div className="puc-wd__surge" role="status">
+      <span className="puc-wd__surge-icon" aria-hidden="true">⚡</span>
+      <span className="puc-wd__surge-body">
+        <b>{spellId}</b> surged: {pricing.baseCost} → <b>{pricing.effectiveCost}</b> pt
+        {' '}(×{totalMult})
+        {reasons.length > 0 && <span className="puc-wd__surge-reason">{' — '}{reasons.join(' & ')}</span>}
+      </span>
+    </div>
+  )
+}
+
+function ordinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'] as const
+  const v = n % 100
+  const suffix = s[(v - 20) % 10] ?? s[v] ?? s[0]
+  return `${n}${suffix}`
 }
 
 function PlayerRow({

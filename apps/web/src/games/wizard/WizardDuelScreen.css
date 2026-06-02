@@ -142,6 +142,57 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Surge toast: 4-second ephemeral banner above the board telling the
+ * player WHY a spell cost more than its base price. */
+.puc-wd__surge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6a4a18, #c08030);
+  border: 1px solid #f6b94a;
+  color: #fffbe6;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45),
+              0 0 22px rgba(246, 185, 74, 0.45);
+  animation: puc-wd-surge-in 280ms ease-out, puc-wd-surge-out 360ms ease-in 3.6s both;
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.puc-wd__surge-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px rgba(246, 185, 74, 0.9));
+}
+
+.puc-wd__surge-body b {
+  color: #ffd86b;
+}
+
+.puc-wd__surge-reason {
+  color: rgba(255, 251, 230, 0.78);
+  font-size: 12px;
+}
+
+@keyframes puc-wd-surge-in {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes puc-wd-surge-out {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to   { opacity: 0; transform: translate(-50%, -10px); }
+}
+
 .puc-wd__resign {
   appearance: none;
   align-self: stretch;
