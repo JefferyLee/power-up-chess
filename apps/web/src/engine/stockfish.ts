@@ -151,13 +151,19 @@ export class StockfishEngine {
     if (line.startsWith('info ')) {
       const info = parseInfoLine(line)
       if (info) {
-        if (info.depth !== undefined) a.latest.depth = info.depth
+        if (info.depth !== undefined) a.latest.depth = Number(info.depth)
         if (info.cp !== undefined) {
-          a.latest.evalCp = a.latest.sideToMove === 'b' ? -info.cp : info.cp
+          // Defensive Number() — stockfish-18-lite's wasm bindings have
+          // shipped builds that emit BigInt-typed numerics on some paths.
+          // Mixing one into our Number-only analysis pipeline crashes
+          // downstream (Math.abs, subtraction in cpLossFromMover, etc).
+          const cp = Number(info.cp)
+          a.latest.evalCp = a.latest.sideToMove === 'b' ? -cp : cp
           a.latest.mate = null
         }
         if (info.mate !== undefined) {
-          const fromWhite = a.latest.sideToMove === 'b' ? -info.mate : info.mate
+          const mate = Number(info.mate)
+          const fromWhite = a.latest.sideToMove === 'b' ? -mate : mate
           a.latest.mate = fromWhite
           a.latest.evalCp = fromWhite > 0 ? MATE_CP - Math.abs(fromWhite) : -(MATE_CP - Math.abs(fromWhite))
         }

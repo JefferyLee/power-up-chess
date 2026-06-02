@@ -19,13 +19,16 @@ export interface TimeControlPreset {
 }
 
 export const TIME_CONTROL_PRESETS: TimeControlPreset[] = [
-  { id: 'untimed', label: 'No clock', short: '∞', value: null },
   { id: '5-0', label: '5 minutes', short: '5 min', value: { initialMs: 5 * 60_000, incrementMs: 0 } },
-  { id: '10-5', label: '10 + 5', short: '10+5', value: { initialMs: 10 * 60_000, incrementMs: 5_000 } },
+  { id: '10-0', label: '10 minutes', short: '10 min', value: { initialMs: 10 * 60_000, incrementMs: 0 } },
   { id: '15-10', label: '15 + 10', short: '15+10', value: { initialMs: 15 * 60_000, incrementMs: 10_000 } },
+  // Correspondence-style — long enough that a kid can think over a meal
+  // without flagging. Same clock display logic handles hours fine.
+  { id: '1-day', label: '1 day', short: '1d', value: { initialMs: 24 * 60 * 60_000, incrementMs: 0 } },
+  { id: 'untimed', label: 'No clock', short: '∞', value: null },
 ]
 
-export const DEFAULT_TIME_CONTROL_ID = 'untimed'
+export const DEFAULT_TIME_CONTROL_ID = '10-0'
 
 export function presetById(id: string): TimeControlPreset {
   return TIME_CONTROL_PRESETS.find((p) => p.id === id) ?? TIME_CONTROL_PRESETS[0]!

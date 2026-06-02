@@ -62,6 +62,16 @@
   margin-bottom: 18px;
 }
 
+.puc-online__join-asyou {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--puc-text-muted);
+}
+.puc-online__join-asyou strong {
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
 .puc-online__field span {
   font-size: 12px;
   color: var(--puc-text-muted);

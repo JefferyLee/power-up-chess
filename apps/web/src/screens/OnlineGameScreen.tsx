@@ -136,16 +136,23 @@ function JoinPanel({
   onWatchInstead?: () => void
   onBack: () => void
 }) {
+  const { identity } = useCastle()
+  // Profile name is the fallback for the rare case where someone hits a
+  // room URL without a castle identity (cleared cache, shared link, etc.).
   const initial = loadProfile()
-  const [displayName, setDisplayName] = useState(initial.displayName)
+  const [fallbackName, setFallbackName] = useState(initial.displayName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Prefer the castle identity — no need to ask for a name we already know.
+  const displayName = identity?.displayName ?? fallbackName.trim()
+  const haveIdentity = !!identity
 
   const onJoin = async () => {
     setBusy(true)
     setError(null)
     try {
-      await callJoinRoom({ roomId, displayName: displayName.trim() })
+      await callJoinRoom({ roomId, displayName })
       onJoined()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -159,22 +166,28 @@ function JoinPanel({
       <div className="puc-online__join-card">
         <h2>Join private room</h2>
         <p className="puc-online__room-code">{roomId}</p>
-        <label className="puc-online__field">
-          <span>Your name</span>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={24}
-            autoComplete="off"
-          />
-        </label>
+        {haveIdentity ? (
+          <p className="puc-online__join-asyou">
+            Joining as <strong>{displayName}</strong>
+          </p>
+        ) : (
+          <label className="puc-online__field">
+            <span>Your name</span>
+            <input
+              type="text"
+              value={fallbackName}
+              onChange={(e) => setFallbackName(e.target.value)}
+              maxLength={24}
+              autoComplete="off"
+            />
+          </label>
+        )}
         <div className="puc-online__join-actions">
           <button type="button" className="puc-online__btn--ghost" onClick={onBack}>Back</button>
           <button
             type="button"
             className="puc-online__btn--primary"
-            disabled={busy || displayName.trim().length === 0}
+            disabled={busy || displayName.length === 0}
             onClick={onJoin}
           >
             {busy ? 'Joining…' : 'Join room'}

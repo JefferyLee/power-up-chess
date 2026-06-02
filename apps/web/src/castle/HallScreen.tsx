@@ -19,6 +19,8 @@ import { OnlineList } from './OnlineList'
 import { VisitorCard } from './VisitorCard'
 import { RoomDoor } from './RoomDoor'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
+import { TimeControlDialog } from '../screens/TimeControlDialog'
+import type { TimeControlPreset } from '../clock/timeControl'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
 import './HallScreen.css'
@@ -74,8 +76,13 @@ export function HallScreen() {
   const isWizardUnlocked =
     !(identity?.isBypass ?? false) && castlePoints >= wizardGate
 
-  const handleOnline = async () => {
+  const [tcDialogOpen, setTcDialogOpen] = useState(false)
+  const handleOnline = () => {
     if (creating || !identity) return
+    setTcDialogOpen(true)
+  }
+  const handleConfirmTimeControl = async (preset: TimeControlPreset) => {
+    if (!identity) return
     setCreating(true)
     setError(null)
     try {
@@ -83,8 +90,9 @@ export function HallScreen() {
         displayName,
         normalizedName: identity.normalizedName,
         isBypass: identity.isBypass,
-        timeControl,
+        timeControl: preset.value,
       })
+      setTcDialogOpen(false)
       navigate(`/r/${roomId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -245,6 +253,14 @@ export function HallScreen() {
         <WizardWarningDialog
           onCancel={() => setWizardWarnOpen(false)}
           onConfirm={() => { setWizardWarnOpen(false); navigate('/wizard') }}
+        />
+      )}
+
+      {tcDialogOpen && (
+        <TimeControlDialog
+          busy={creating}
+          onCancel={() => setTcDialogOpen(false)}
+          onConfirm={handleConfirmTimeControl}
         />
       )}
     </div>
