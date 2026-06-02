@@ -1,7 +1,15 @@
 // Mute-aware play hook + persisted mute state.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { playSound, unlockAudio, type SoundName } from './synth'
+import {
+  playSound,
+  setAmbientMuted,
+  startAmbient,
+  stopAmbient,
+  unlockAudio,
+  type AmbientName,
+  type SoundName,
+} from './synth'
 
 const MUTE_KEY = 'puc:muted:v1'
 
@@ -31,6 +39,9 @@ function setMutedGlobal(m: boolean): void {
   if (m === currentMuted) return
   currentMuted = m
   persistMuted(m)
+  // Duck the ambient bed without tearing it down so unmuting brings it
+  // straight back. One-shot SFX are gated separately via the play() guard.
+  setAmbientMuted(m)
   for (const l of listeners) l(m)
 }
 
@@ -38,6 +49,12 @@ export interface SoundApi {
   muted: boolean
   toggleMute: () => void
   play: (name: SoundName) => void
+  /** Start a long-running ambient bed. No-op if one is already
+   *  playing under the same name. */
+  startAmbient: (name: AmbientName) => void
+  /** Fade out + tear down the active ambient bed. Safe to call when
+   *  nothing is playing. */
+  stopAmbient: () => void
 }
 
 export function useSound(): SoundApi {
@@ -65,8 +82,23 @@ export function useSound(): SoundApi {
     playSound(name)
   }, [])
 
+  const startAmbientCb = useCallback((name: AmbientName) => {
+    unlockAudio()
+    startAmbient(name)
+    // If the user is currently muted, immediately duck — startAmbient
+    // would otherwise fade IN to audible while muted.
+    if (currentMuted) setAmbientMuted(true)
+  }, [])
+
+  const stopAmbientCb = useCallback(() => {
+    stopAmbient()
+  }, [])
+
   // Return a stable object so consumers that put `sound` into useCallback /
   // useEffect dep arrays do not re-fire on every render. Only the `muted`
   // flag actually changes meaningfully.
-  return useMemo(() => ({ muted, toggleMute, play }), [muted, toggleMute, play])
+  return useMemo(
+    () => ({ muted, toggleMute, play, startAmbient: startAmbientCb, stopAmbient: stopAmbientCb }),
+    [muted, toggleMute, play, startAmbientCb, stopAmbientCb],
+  )
 }

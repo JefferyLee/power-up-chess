@@ -346,3 +346,153 @@ export function setMasterVolume(volume: number): void {
   if (!c || !masterGain) return
   masterGain.gain.value = Math.max(0, Math.min(1, volume))
 }
+
+// ─── Ambient sound bed (G.5) ───────────────────────────────────────────
+//
+// Long-running background loop used by the gate page. Separate from the
+// one-shot play() API: ambient lives on a dedicated gain node that we
+// can fade in / out / mute independently of SFX.
+
+export type AmbientName = 'gate-night'
+
+/** Perceived target gain for the ambient bed. Quiet enough that the
+ *  wicket-creak and other SFX still cut through. */
+const AMBIENT_PEAK = 0.045
+
+interface AmbientState {
+  name: AmbientName
+  gain: GainNode
+  /** Tear-down for every node + scheduled chime timer. */
+  destroy: () => void
+}
+
+let ambient: AmbientState | null = null
+
+export function startAmbient(name: AmbientName): void {
+  const c = ensureContext()
+  if (!c || !masterGain) return
+  if (ambient?.name === name) return
+  if (ambient) stopAmbientNow()
+  if (name === 'gate-night') {
+    ambient = startGateNight(c, masterGain)
+  }
+}
+
+export function stopAmbient(): void {
+  const a = ambient
+  if (!a || !ctx) return
+  ambient = null
+  const now = ctx.currentTime
+  // Quick exponential fade then tear down. The setTimeout is deliberately
+  // a bit longer than the fade so the ramp has settled before we disconnect.
+  a.gain.gain.cancelScheduledValues(now)
+  const cur = Math.max(0.0001, a.gain.gain.value)
+  a.gain.gain.setValueAtTime(cur, now)
+  a.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6)
+  window.setTimeout(() => a.destroy(), 750)
+}
+
+function stopAmbientNow(): void {
+  const a = ambient
+  if (!a) return
+  ambient = null
+  a.destroy()
+}
+
+/** Mute hook — called from useSound when the global mute toggles.
+ *  Ducks the ambient gain to silence instead of tearing it down so the
+ *  user gets immediate audio back when they unmute. */
+export function setAmbientMuted(muted: boolean): void {
+  const a = ambient
+  if (!a || !ctx) return
+  const now = ctx.currentTime
+  const target = muted ? 0.0001 : AMBIENT_PEAK
+  a.gain.gain.cancelScheduledValues(now)
+  a.gain.gain.setValueAtTime(Math.max(0.0001, a.gain.gain.value), now)
+  a.gain.gain.exponentialRampToValueAtTime(target, now + 0.5)
+}
+
+/** Generate a "night-by-the-castle-gate" bed: 4 s pink-noise wind loop
+ *  through a slowly LFO-modulated lowpass, plus sparse maj9 chimes
+ *  every 8-18 s in the same palette as the wicket-creak resolve. */
+function startGateNight(c: AudioContext, dest: GainNode): AmbientState {
+  // ── Wind: pink-ish noise buffer, looped ──
+  const seconds = 4
+  const buf = c.createBuffer(1, c.sampleRate * seconds, c.sampleRate)
+  const data = buf.getChannelData(0)
+  // Paul Kellet's pink-noise approximation, scaled for safe gain headroom.
+  let b0 = 0, b1 = 0, b2 = 0
+  for (let i = 0; i < data.length; i++) {
+    const w = Math.random() * 2 - 1
+    b0 = 0.99765 * b0 + w * 0.099046
+    b1 = 0.96300 * b1 + w * 0.296108
+    b2 = 0.57000 * b2 + w * 1.040367
+    data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.16
+  }
+  const source = c.createBufferSource()
+  source.buffer = buf
+  source.loop = true
+
+  const filter = c.createBiquadFilter()
+  filter.type = 'lowpass'
+  filter.frequency.value = 420
+  filter.Q.value = 0.7
+
+  // Very slow LFO on the lowpass cutoff — the "wind drifting" feel.
+  const lfo = c.createOscillator()
+  const lfoGain = c.createGain()
+  lfo.type = 'sine'
+  lfo.frequency.value = 0.08
+  lfoGain.gain.value = 220
+  lfo.connect(lfoGain).connect(filter.frequency)
+
+  const gain = c.createGain()
+  gain.gain.setValueAtTime(0.0001, c.currentTime)
+  gain.gain.exponentialRampToValueAtTime(AMBIENT_PEAK, c.currentTime + 2.5)
+
+  source.connect(filter).connect(gain).connect(dest)
+  source.start()
+  lfo.start()
+
+  // ── Chimes: scheduled one at a time with a random 8-18 s gap ──
+  const chimeFreqs = [659.25, 830.61, 987.77, 1479.98]
+  let chimeTimer: number | null = null
+  const scheduleNextChime = (): void => {
+    const gap = 8000 + Math.random() * 10000
+    chimeTimer = window.setTimeout(() => {
+      if (!ambient || ambient.name !== 'gate-night') return
+      const freq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)] ?? 880
+      playOneChime(c, dest, freq)
+      scheduleNextChime()
+    }, gap)
+  }
+  scheduleNextChime()
+
+  return {
+    name: 'gate-night',
+    gain,
+    destroy: () => {
+      try { source.stop() } catch { /* already stopped */ }
+      try { lfo.stop() } catch { /* */ }
+      try { source.disconnect() } catch { /* */ }
+      try { filter.disconnect() } catch { /* */ }
+      try { gain.disconnect() } catch { /* */ }
+      try { lfoGain.disconnect() } catch { /* */ }
+      if (chimeTimer !== null) window.clearTimeout(chimeTimer)
+    },
+  }
+}
+
+function playOneChime(c: AudioContext, dest: GainNode, freq: number): void {
+  const t0 = c.currentTime
+  const osc = c.createOscillator()
+  osc.type = 'sine'
+  osc.frequency.value = freq
+  const g = c.createGain()
+  g.gain.setValueAtTime(0.0001, t0)
+  g.gain.exponentialRampToValueAtTime(AMBIENT_PEAK * 0.65, t0 + 0.02)
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.5)
+  osc.connect(g).connect(dest)
+  osc.start(t0)
+  osc.stop(t0 + 2.7)
+}

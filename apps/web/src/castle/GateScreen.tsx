@@ -53,19 +53,25 @@ export function GateScreen() {
     }
   }, [phase, beginOpening])
 
-  // Clear all pending timers on unmount.
+  // Clear all pending timers on unmount + stop the ambient bed so the
+  // wind/chimes don't keep playing inside the castle.
   useEffect(() => {
     return () => {
       if (idleTimerRef.current !== null) window.clearTimeout(idleTimerRef.current)
       if (knockTimerRef.current !== null) window.clearTimeout(knockTimerRef.current)
       if (openTimerRef.current !== null) window.clearTimeout(openTimerRef.current)
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current)
+      sound.stopAmbient()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleKnock = useCallback(() => {
     if (phase !== 'closed') return
     sound.play('knock')
+    // First knock unlocks audio — start the ambient bed now. Subsequent
+    // knocks are no-ops because startAmbient checks the active name.
+    sound.startAmbient('gate-night')
     setKnockShake(true)
     if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current)
     shakeTimerRef.current = window.setTimeout(() => setKnockShake(false), 600)
