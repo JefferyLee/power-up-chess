@@ -70,11 +70,19 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
     const keyRef = db.doc(`story_quiz_keys/${messageId}`)
     const attemptRef = db.doc(`story_quiz_attempts/${messageId}/uids/${uid}`)
 
+    // Pre-resolve the guest ref so we can read it inside the transaction's
+    // read phase (Firestore requires ALL reads before ANY writes).
+    const guestRef = !idData.isBypass && idData.normalizedName
+      ? db.doc(`guests/${idData.normalizedName}`)
+      : null
+
     return db.runTransaction(async (tx) => {
-      const [msgSnap, keySnap, attemptSnap] = await Promise.all([
+      // ── Phase 1: all reads ──────────────────────────────────────────
+      const [msgSnap, keySnap, attemptSnap, guestSnap] = await Promise.all([
         tx.get(msgRef),
         tx.get(keyRef),
         tx.get(attemptRef),
+        guestRef ? tx.get(guestRef) : Promise.resolve(null),
       ])
       if (!msgSnap.exists) throw new HttpsError('not-found', 'Message not found.')
       const msg = msgSnap.data() as ChatMessageDoc
@@ -101,6 +109,8 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
 
       const correct = keyData.acceptedAnswers.some((a) => a === guess)
       const nextAttempts = attempts + 1
+
+      // ── Phase 2: all writes ─────────────────────────────────────────
       tx.set(attemptRef, { count: nextAttempts, lastAt: Date.now() }, { merge: true })
 
       if (!correct) {
@@ -114,16 +124,17 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
       // Correct — claim the win + award the point.
       let earnedPoint = false
       let castlePoints = 0
-      if (!idData.isBypass && idData.normalizedName) {
-        const guestRef = db.doc(`guests/${idData.normalizedName}`)
-        const guestSnap = await tx.get(guestRef)
-        if (guestSnap.exists) {
-          const guest = guestSnap.data() as GuestDoc
-          if (guest.uids.includes(uid)) {
-            castlePoints = guest.castlePoints + ANSWER_AWARD
-            tx.update(guestRef, { castlePoints })
-            earnedPoint = true
-          }
+      if (guestRef && guestSnap?.exists) {
+        const guest = guestSnap.data() as GuestDoc
+        if (guest.uids.includes(uid)) {
+          castlePoints = guest.castlePoints + ANSWER_AWARD
+          // Lifetime-earn lazy migration (Phase D).
+          const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
+          tx.update(guestRef, {
+            castlePoints,
+            lifetimeEarned: lifetimePrev + ANSWER_AWARD,
+          })
+          earnedPoint = true
         }
       }
 

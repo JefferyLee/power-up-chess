@@ -16,10 +16,16 @@ export type SoundName =
 /** Sounds backed by a real audio file (vs. one of the RECIPES synths).
  *  When a name is in this map, playSound() routes to an Audio element
  *  instead of building oscillators. Volume per-asset because each MP3
- *  ships with its own loudness floor. */
-const ASSET_URLS: Partial<Record<SoundName, { url: string; volume: number }>> = {
+ *  ships with its own loudness floor. Optional `overlay` is a synth
+ *  recipe layered ON TOP of the asset — used by wicket-creak to add
+ *  the magic-chime tail that the real door MP3 doesn't carry. */
+const ASSET_URLS: Partial<Record<SoundName, {
+  url: string
+  volume: number
+  overlay?: () => void
+}>> = {
   knock:          { url: knockUrl,        volume: 0.55 },
-  'wicket-creak': { url: wicketCreakUrl,  volume: 0.55 },
+  'wicket-creak': { url: wicketCreakUrl,  volume: 0.55, overlay: wicketChimeOverlay },
 }
 
 let ctx: AudioContext | null = null
@@ -170,36 +176,15 @@ function knock(): void {
 
 // Wicket creak — a slow wood-on-wood pitch bend, like a small door
 // swinging open on a stiff hinge. Sawtooth gives the rough overtones.
-// Wicket creak — ~1.5 s composite: low wood groan slow-opening over
-// 700 ms, then a hinge squeak transient, then a sparkle chime tail
-// (3-note ascending arpeggio) that hints at the magic inside. Replaces
-// the old 0.6 s plain saw-tooth which felt thin and abrupt.
-function wicketCreak(): void {
-  // 1) Low wood groan: sawtooth slow descent, lowpassed, fills 0-700 ms.
-  tone({
-    freq: [200, 90],
-    type: 'sawtooth',
-    duration: 0.75,
-    peakGain: 0.18,
-    attack: 0.08,
-    release: 0.4,
-  })
-  // 2) Rubbing-wood texture under the groan.
-  noiseBurst({ startOffset: 0.05, duration: 0.6, freq: 380, q: 1.2, peakGain: 0.12, type: 'bandpass' })
-  // 3) Iron hinge squeak — quick high transient ~600 ms in.
-  noiseBurst({ startOffset: 0.55, duration: 0.18, freq: 2400, q: 4, peakGain: 0.14, type: 'bandpass' })
-  tone({
-    freq: [1600, 1900],
-    type: 'sine',
-    duration: 0.22,
-    peakGain: 0.07,
-    attack: 0.01,
-    release: 0.2,
-    startOffset: 0.58,
-  })
-  // 4) Magic chime tail — ascending three-note sparkle hinting at what's
-  //    behind the door. Tuned to a major-9 voicing (E, G#, B, F#) over
-  //    ~700 ms so the sound resolves warmly rather than just stopping.
+// Magic-chime tail layered on top of the wicket-creak MP3.
+// The real door recording handles the wood groan + hinge squeak; this
+// overlay adds the sparkle that hints at the magic inside. Timed so
+// the chime peaks at ~0.85 s — exactly when GateScreen's parchment-
+// unfurl transition fires (see KNOCK_TO_OPEN_MS + the setTimeout in
+// beginOpening()).
+function wicketChimeOverlay(): void {
+  // Ascending maj9 voicing (E, G#, B, F#) — same chord palette as the
+  // ambient gate-night chimes for cross-scene continuity.
   const chimeStart = 0.85
   ;[659.25, 830.61, 987.77, 1479.98].forEach((f, i) => {
     tone({
@@ -212,7 +197,7 @@ function wicketCreak(): void {
       startOffset: chimeStart + i * 0.09,
     })
   })
-  // 5) Sub-bass "the door is open" thud at the end.
+  // Sub-bass "the door is open" thud at the tail.
   tone({
     freq: [120, 60],
     type: 'sine',
@@ -222,6 +207,14 @@ function wicketCreak(): void {
     release: 0.28,
     startOffset: 1.05,
   })
+}
+
+// Kept on RECIPES as a silent fallback in case the MP3 ever fails to
+// load — playAsset's catch is silent so without this name in RECIPES
+// the user would get nothing. wicket-creak normally routes to the
+// asset path before reaching this.
+function wicketCreak(): void {
+  wicketChimeOverlay()
 }
 
 // ─── Power Up capture ceremony sounds ───────────────────────────────────
@@ -354,20 +347,31 @@ export function playSound(name: SoundName): void {
   const asset = ASSET_URLS[name]
   if (asset) {
     playAsset(asset.url, asset.volume)
+    asset.overlay?.()
     return
   }
   RECIPES[name]()
 }
 
+// Cache one HTMLAudioElement per asset URL. Reusing the same element
+// across plays is more reliable than `new Audio()` per shot on iOS
+// Safari — Safari ties the autoplay grant to specific elements, so a
+// freshly-constructed element after a user gesture can still be
+// blocked. The cache is rewound (currentTime = 0) on each play so
+// rapid re-clicks restart instead of overlapping.
+const audioCache = new Map<string, HTMLAudioElement>()
+
 function playAsset(url: string, volume: number): void {
-  // Fresh Audio element per shot so back-to-back plays don't cut each
-  // other off. Browsers GC the element once it finishes (no .preload,
-  // no cached ref needed for occasional sounds).
-  const audio = new Audio(url)
+  let audio = audioCache.get(url)
+  if (!audio) {
+    audio = new Audio(url)
+    audio.preload = 'auto'
+    audioCache.set(url, audio)
+  }
   audio.volume = Math.max(0, Math.min(1, volume))
-  // Some browsers reject autoplay even after resume(); the catch keeps
-  // the console clean and falls back silently.
-  void audio.play().catch(() => { /* ignore */ })
+  // Rewind so rapid presses always start the sound fresh.
+  try { audio.currentTime = 0 } catch { /* not seeked yet — ignore */ }
+  void audio.play().catch(() => { /* autoplay blocked / no gesture yet */ })
 }
 
 export function setMasterVolume(volume: number): void {

@@ -53,25 +53,40 @@ export function GateScreen() {
     }
   }, [phase, beginOpening])
 
-  // Clear all pending timers on unmount + stop the ambient bed so the
-  // wind/chimes don't keep playing inside the castle.
+  // Ambient wind/chime bed — try to start as soon as the gate mounts so
+  // the wind is already breathing when the visitor arrives. Browser
+  // autoplay policy may keep the AudioContext suspended until the user
+  // interacts; a one-shot window-level listener resumes it on the very
+  // first pointer/key event. Once any sound has played (e.g. clicking
+  // the door), the second startAmbient call is a no-op because the
+  // ambient with that name is already running.
+  useEffect(() => {
+    sound.startAmbient('gate-night')
+    const unlockOnGesture = (): void => { sound.startAmbient('gate-night') }
+    window.addEventListener('pointerdown', unlockOnGesture, { once: true })
+    window.addEventListener('keydown', unlockOnGesture, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', unlockOnGesture)
+      window.removeEventListener('keydown', unlockOnGesture)
+      sound.stopAmbient()
+    }
+  }, [sound])
+
+  // Clear all pending timers on unmount. Ambient cleanup lives in its
+  // own effect above (alongside the start call), so navigating into the
+  // castle silences the wind/chimes there.
   useEffect(() => {
     return () => {
       if (idleTimerRef.current !== null) window.clearTimeout(idleTimerRef.current)
       if (knockTimerRef.current !== null) window.clearTimeout(knockTimerRef.current)
       if (openTimerRef.current !== null) window.clearTimeout(openTimerRef.current)
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current)
-      sound.stopAmbient()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleKnock = useCallback(() => {
     if (phase !== 'closed') return
     sound.play('knock')
-    // First knock unlocks audio — start the ambient bed now. Subsequent
-    // knocks are no-ops because startAmbient checks the active name.
-    sound.startAmbient('gate-night')
     setKnockShake(true)
     if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current)
     shakeTimerRef.current = window.setTimeout(() => setKnockShake(false), 600)

@@ -101,9 +101,91 @@
   70%      { opacity: 0.5;  transform: scale(0.95) translateY(1px); }
 }
 
+/* Pennant flags wave around their flagpole edge. Two offsets so the
+ * two flags don't move in lockstep. */
+.puc-castle-art__flag {
+  animation: puc-castle-flag-wave 4s ease-in-out infinite;
+}
+.puc-castle-art__flag--left  { animation-delay: 0s;    }
+.puc-castle-art__flag--right { animation-delay: 0.45s; animation-duration: 4.4s; }
+
+@keyframes puc-castle-flag-wave {
+  0%, 100% { transform: skewY(0deg)   scaleX(1);    }
+  25%      { transform: skewY(-6deg)  scaleX(0.92); }
+  50%      { transform: skewY(0deg)   scaleX(0.97); }
+  75%      { transform: skewY(5deg)   scaleX(0.94); }
+}
+
+/* Window flicker — four staggered cycles so the row breathes. */
+.puc-castle-art__window {
+  animation: puc-castle-window-flicker 5s ease-in-out infinite;
+}
+.puc-castle-art__window--1 { animation-duration: 4.6s; animation-delay: 0s;   }
+.puc-castle-art__window--2 { animation-duration: 5.3s; animation-delay: 1.1s; }
+.puc-castle-art__window--3 { animation-duration: 4.9s; animation-delay: 2.4s; }
+.puc-castle-art__window--4 { animation-duration: 5.7s; animation-delay: 0.7s; }
+@keyframes puc-castle-window-flicker {
+  0%, 100% { opacity: 0.85; }
+  35%      { opacity: 0.95; }
+  55%      { opacity: 0.55; }
+  72%      { opacity: 0.92; }
+}
+
+/* Wall-lantern halo + flame both pulse, but the inner core is faster
+ * (suggests a candle wick moving) so the lantern feels alive. */
+.puc-castle-art__lantern {
+  animation: puc-castle-lantern-halo 3.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.puc-castle-art__lantern--b { animation-delay: 0.9s; animation-duration: 3.8s; }
+.puc-castle-art__lantern-core {
+  animation: puc-castle-lantern-core 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.puc-castle-art__lantern-core--b { animation-delay: 0.5s; animation-duration: 1.9s; }
+@keyframes puc-castle-lantern-halo {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%      { opacity: 0.75; transform: scale(0.94); }
+}
+@keyframes puc-castle-lantern-core {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  40%      { opacity: 0.9;  transform: scale(1.06); }
+  60%      { opacity: 0.85; transform: scale(0.94); }
+}
+
+/* Wind chimes — the assembly sways gently; each rod swings around its
+ * attachment point with a staggered phase, so they tap each other in
+ * the imagination. */
+.puc-castle-art__chimes {
+  animation: puc-castle-chimes-sway 5.2s ease-in-out infinite;
+}
+.puc-castle-art__chime {
+  animation: puc-castle-chime-swing 2.6s ease-in-out infinite;
+}
+.puc-castle-art__chime--1 { animation-delay: 0s;    animation-duration: 2.4s; }
+.puc-castle-art__chime--2 { animation-delay: 0.3s;  animation-duration: 2.9s; }
+.puc-castle-art__chime--3 { animation-delay: 0.7s;  animation-duration: 2.5s; }
+.puc-castle-art__chime--4 { animation-delay: 1.1s;  animation-duration: 2.8s; }
+@keyframes puc-castle-chimes-sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50%      { transform: rotate( 1.5deg); }
+}
+@keyframes puc-castle-chime-swing {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate( 3deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .puc-castle-art__mist,
-  .puc-castle-art__firefly {
+  .puc-castle-art__firefly,
+  .puc-castle-art__flag,
+  .puc-castle-art__window,
+  .puc-castle-art__lantern,
+  .puc-castle-art__lantern-core,
+  .puc-castle-art__chimes,
+  .puc-castle-art__chime {
     animation: none;
   }
 }

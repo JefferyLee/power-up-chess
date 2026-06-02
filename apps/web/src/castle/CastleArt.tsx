@@ -187,13 +187,20 @@ export function CastleArt({ phase }: Props) {
         <rect key={i} x={825 + i * 32} y="208" width="20" height="16" fill="url(#puc-stone)" />
       ))}
 
-      {/* Tower flags */}
+      {/* Tower flags — pennants wave around their flagpole edge. The two
+       *  flags have slightly different timing offsets so they don't move
+       *  in lockstep (left lags right by ~0.4 s). */}
       <line x1="90" y1="90" x2="90" y2="50" stroke="#d0bfff" strokeWidth="2" />
-      <polygon points="90,50 134,62 90,74" fill="#e7b841" />
+      <g className="puc-castle-art__flag puc-castle-art__flag--left" style={{ transformOrigin: '90px 62px' }}>
+        <polygon points="90,50 134,62 90,74" fill="#e7b841" />
+      </g>
       <line x1="870" y1="90" x2="870" y2="50" stroke="#d0bfff" strokeWidth="2" />
-      <polygon points="870,50 914,62 870,74" fill="#e7b841" />
+      <g className="puc-castle-art__flag puc-castle-art__flag--right" style={{ transformOrigin: '870px 62px' }}>
+        <polygon points="870,50 914,62 870,74" fill="#e7b841" />
+      </g>
 
-      {/* Inner wall — windows */}
+      {/* Inner wall — windows. Each glow flickers on a slightly different
+       *  cycle (1-4) so the row doesn't pulse in unison. */}
       {([
         [220, 380],
         [280, 380],
@@ -202,20 +209,68 @@ export function CastleArt({ phase }: Props) {
       ] as Array<[number, number]>).map(([x, y], i) => (
         <g key={i}>
           <rect x={x} y={y} width="22" height="40" fill="#0e0c12" />
-          <rect x={x + 2} y={y + 2} width="18" height="22" fill="url(#puc-lantern)" opacity="0.85" />
+          <rect
+            x={x + 2}
+            y={y + 2}
+            width="18"
+            height="22"
+            fill="url(#puc-lantern)"
+            opacity="0.85"
+            className={`puc-castle-art__window puc-castle-art__window--${(i % 4) + 1}`}
+          />
         </g>
       ))}
 
-      {/* Wall-mounted lanterns flanking the gate */}
+      {/* Wall-mounted lanterns flanking the gate — both flame circles
+       *  flicker at slightly offset rates. */}
       <g>
         <rect x="320" y="430" width="6" height="40" fill="#3a2c20" />
-        <circle cx="323" cy="478" r="14" fill="url(#puc-lantern)" />
-        <circle cx="323" cy="478" r="5" fill="#ffeec6" />
+        <circle cx="323" cy="478" r="14" fill="url(#puc-lantern)" className="puc-castle-art__lantern puc-castle-art__lantern--a" />
+        <circle cx="323" cy="478" r="5" fill="#ffeec6" className="puc-castle-art__lantern-core puc-castle-art__lantern-core--a" />
       </g>
       <g>
         <rect x="634" y="430" width="6" height="40" fill="#3a2c20" />
-        <circle cx="637" cy="478" r="14" fill="url(#puc-lantern)" />
-        <circle cx="637" cy="478" r="5" fill="#ffeec6" />
+        <circle cx="637" cy="478" r="14" fill="url(#puc-lantern)" className="puc-castle-art__lantern puc-castle-art__lantern--b" />
+        <circle cx="637" cy="478" r="5" fill="#ffeec6" className="puc-castle-art__lantern-core puc-castle-art__lantern-core--b" />
+      </g>
+
+      {/* Wind chimes — small cluster hanging from a horizontal bar tied
+       *  to the right-lantern arm. Four rods on staggered swings; the
+       *  bar itself sways gently. */}
+      <g
+        className="puc-castle-art__chimes"
+        style={{ transformOrigin: '676px 472px' }}
+      >
+        {/* Hanger from the lantern arm */}
+        <line x1="640" y1="436" x2="676" y2="470" stroke="#3a2c20" strokeWidth="1" />
+        {/* Crossbar */}
+        <rect x="660" y="470" width="32" height="2.5" rx="1" fill="#6a4a20" />
+        {/* Four chime rods + caps. Each rod's <g> rotates around its
+         *  attachment point at the crossbar (y=472) with a per-rod
+         *  staggered animation. */}
+        {[
+          { x: 664, len: 18 },
+          { x: 671, len: 22 },
+          { x: 678, len: 16 },
+          { x: 685, len: 20 },
+        ].map((rod, i) => (
+          <g
+            key={i}
+            className={`puc-castle-art__chime puc-castle-art__chime--${i + 1}`}
+            style={{ transformOrigin: `${rod.x}px 472px` }}
+          >
+            <circle cx={rod.x} cy={472} r="1.4" fill="#caa14a" />
+            <line
+              x1={rod.x}
+              y1={472}
+              x2={rod.x}
+              y2={472 + rod.len}
+              stroke="#d8b65c"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </g>
+        ))}
       </g>
 
       {/* Main arched gate */}
