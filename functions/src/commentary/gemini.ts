@@ -21,17 +21,23 @@ export interface GeminiCallOptions {
   userPrompt: string
   temperature?: number
   maxOutputTokens?: number
+  /** Force structured output. Gemini honours it strictly for application/json. */
+  responseMimeType?: 'text/plain' | 'application/json'
 }
 
 export async function callGemini(opts: GeminiCallOptions): Promise<string> {
   const client = getClient(opts.apiKey)
+  const generationConfig: Record<string, unknown> = {
+    temperature: opts.temperature ?? 0.7,
+    maxOutputTokens: opts.maxOutputTokens ?? 120,
+  }
+  if (opts.responseMimeType) {
+    generationConfig.responseMimeType = opts.responseMimeType
+  }
   const model = client.getGenerativeModel({
     model: MODEL,
     systemInstruction: opts.systemPrompt,
-    generationConfig: {
-      temperature: opts.temperature ?? 0.7,
-      maxOutputTokens: opts.maxOutputTokens ?? 120,
-    },
+    generationConfig,
   })
   const result = await model.generateContent(opts.userPrompt)
   const text = result.response.text().trim()

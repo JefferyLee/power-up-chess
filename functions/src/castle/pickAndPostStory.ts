@@ -92,12 +92,14 @@ export async function pickAndPostStory(args: Args): Promise<PostStoryResult | nu
 
   const recentPostedAt = state.postedAt.filter((t) => now - t < HOUR_MS)
   const nextRecent = [story.id, ...state.recentIds.filter((id) => id !== story.id)].slice(0, RECENT_MEMORY)
+  // Plain set() (no merge) replaces the whole doc, so omitting
+  // lastQuizMessageId when there's no quiz naturally removes the old one.
   await stateRef.set({
     recentIds: nextRecent,
     postedAt: [...recentPostedAt, now],
     lastStoryId: story.id,
     lastStoryAt: FieldValue.serverTimestamp(),
-    ...(quizKey ? { lastQuizMessageId: msgRef.id } : { lastQuizMessageId: FieldValue.delete() }),
+    ...(quizKey ? { lastQuizMessageId: msgRef.id } : {}),
   })
 
   return { messageId: msgRef.id, storyId: story.id, hostId }

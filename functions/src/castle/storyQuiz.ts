@@ -69,7 +69,19 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
   let raw: string
   try {
     raw = await Promise.race([
-      callGemini({ apiKey, systemPrompt: SYSTEM_PROMPT, userPrompt, temperature: 0.6, maxOutputTokens: 250 }),
+      callGemini({
+        apiKey,
+        systemPrompt: SYSTEM_PROMPT,
+        userPrompt,
+        temperature: 0.6,
+        // Bumped from 250 → 600: the model sometimes wraps the JSON in
+        // a short preamble or uses generous whitespace, and 250 was
+        // truncating responses mid-string.
+        maxOutputTokens: 600,
+        // Force JSON output — Gemini honours this strictly and stops
+        // emitting markdown fences / commentary preambles.
+        responseMimeType: 'application/json',
+      }),
       timeoutAfter(TIMEOUT_MS),
     ])
   } catch (err) {
@@ -111,25 +123,49 @@ interface ParsedQuiz {
 }
 
 function tryParseQuizJson(raw: string): ParsedQuiz | null {
-  // Models sometimes wrap JSON in ```json fences despite instructions; strip them.
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim()
-  try {
-    const obj = JSON.parse(cleaned) as unknown
-    if (!obj || typeof obj !== 'object') return null
-    const o = obj as { question?: unknown; acceptedAnswers?: unknown; explanation?: unknown }
-    if (typeof o.question !== 'string' || o.question.length < 4) return null
-    if (typeof o.explanation !== 'string' || o.explanation.length < 4) return null
-    if (!Array.isArray(o.acceptedAnswers) || o.acceptedAnswers.length === 0) return null
-    const answers = o.acceptedAnswers
-      .filter((a): a is string => typeof a === 'string' && a.length > 0 && a.length < 60)
-    if (answers.length === 0) return null
-    return { question: o.question, acceptedAnswers: answers, explanation: o.explanation }
-  } catch {
-    return null
+  // Try a sequence of progressively more lenient parses. responseMimeType
+  // 'application/json' should give us clean JSON, but if the model strays
+  // into ```json fences or wraps it in prose, salvage the inner object.
+  const candidates = [
+    raw.trim(),
+    raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim(),
+    extractJsonObject(raw),
+  ].filter((s): s is string => !!s && s.length > 0)
+
+  for (const candidate of candidates) {
+    try {
+      const obj = JSON.parse(candidate) as unknown
+      if (!obj || typeof obj !== 'object') continue
+      const o = obj as { question?: unknown; acceptedAnswers?: unknown; explanation?: unknown }
+      if (typeof o.question !== 'string' || o.question.length < 4) continue
+      if (typeof o.explanation !== 'string' || o.explanation.length < 4) continue
+      if (!Array.isArray(o.acceptedAnswers) || o.acceptedAnswers.length === 0) continue
+      const answers = o.acceptedAnswers
+        .filter((a): a is string => typeof a === 'string' && a.length > 0 && a.length < 60)
+      if (answers.length === 0) continue
+      return { question: o.question, acceptedAnswers: answers, explanation: o.explanation }
+    } catch {
+      // try next candidate
+    }
   }
+  return null
+}
+
+/** Find the first balanced { ... } substring. Useful when the model
+ *  prefixes its JSON with prose like "Sure, here you go: { ... }". */
+function extractJsonObject(s: string): string | null {
+  const start = s.indexOf('{')
+  if (start < 0) return null
+  let depth = 0
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i]
+    if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) return s.slice(start, i + 1)
+    }
+  }
+  return null
 }
 
 function timeoutAfter(ms: number): Promise<string> {
