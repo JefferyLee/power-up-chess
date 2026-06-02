@@ -97,6 +97,18 @@ export const submitPuzzleAttempt = onCall<
       solved: (guest.puzzleStats?.solved ?? 0) + (success ? 1 : 0),
     }
 
+    // Today's-solves counter for the gate's live pulse. Lazily reset
+    // when the day rolls over so we don't need a separate cron.
+    let nextPuzzleSolvesToday = guest.puzzleSolvesToday
+    if (success) {
+      const today = laDayKey(Date.now())
+      const cur = guest.puzzleSolvesToday
+      nextPuzzleSolvesToday =
+        cur && cur.dayKey === today
+          ? { count: cur.count + 1, dayKey: today }
+          : { count: 1, dayKey: today }
+    }
+
     // Today's Five hook — if this puzzle is in today's slate, record the
     // slot result + fire the +10 completion bonus on the 5th attempt.
     let dailyCompletedNow = false
@@ -151,6 +163,9 @@ export const submitPuzzleAttempt = onCall<
     if (nextDaily !== guest.puzzleDaily) update.puzzleDaily = nextDaily
     if (nextBadges !== guest.puzzleLegendsBadges) {
       update.puzzleLegendsBadges = nextBadges
+    }
+    if (nextPuzzleSolvesToday !== guest.puzzleSolvesToday) {
+      update.puzzleSolvesToday = nextPuzzleSolvesToday
     }
     if (totalPoints > 0) {
       update.castlePoints = FieldValue.increment(totalPoints)

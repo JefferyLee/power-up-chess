@@ -252,6 +252,14 @@ export interface GuestDoc {
   /** Legends Hall — puzzle ids the kid has solved in the 100-puzzle
    *  Legends pool. Drives the gold-badge plaques in the museum. */
   puzzleLegendsBadges?: string[]
+  /** Today's puzzle solve count, LA-day-scoped. Lazily reset to 1 on
+   *  the first solve of a new dayKey. Used by the gate's live pulse
+   *  to surface top-solvers-today. */
+  puzzleSolvesToday?: {
+    count: number
+    /** LA-day key, e.g. "2026-06-02". */
+    dayKey: string
+  }
 }
 
 export interface GuestDailyEarn {
