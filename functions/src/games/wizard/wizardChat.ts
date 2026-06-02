@@ -1,12 +1,14 @@
 // Per-duel chat. Lives separately from the Hall (lobby/messages) so a
-// duel's chat doesn't pollute the public scroll and only the two players
-// in the duel can read / post.
+// duel's chat doesn't pollute the public scroll. Both the two players
+// AND spectators can post; spectators pay a higher price per message
+// to keep the duel's chat focused.
 //
 // Storage: wizard_rooms/{roomId}/messages/{messageId}
-// Cost:    1 castle point per text message (deducted atomically). Voice
-//          messages (planned for W.4.3) will cost 5 points each.
-// Limits:  6 messages / minute / room — keeps bursty spam from being too
-//          loud even when the caster has plenty of points.
+// Cost:    1 / 5 pt for players (text / voice), 2 / 20 pt for spectators.
+//          Charged atomically with the message write so we never debit
+//          without posting or vice versa.
+// Limits:  6 messages / minute / room — keeps bursty spam quiet even
+//          when the speaker has plenty of points.
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
@@ -16,7 +18,27 @@ import type { GuestDoc } from '../../castle/types'
 const MAX_CHARS = 240
 const PER_MIN_CAP = 6
 const MIN_WINDOW_MS = 60 * 1000
-const TEXT_COST = 1
+
+const TEXT_COST_PLAYER = 1
+const TEXT_COST_SPECTATOR = 2
+const VOICE_COST_PLAYER = 5
+const VOICE_COST_SPECTATOR = 20
+
+const MAX_VOICE_MS = 15_000
+const MIN_VOICE_MS = 300
+// 200 KB base64 ≈ 150 KB raw audio — plenty of headroom for 15 s opus
+// at 32 kbps (~60 KB raw) while staying well under Firestore's 1 MB
+// per-document limit even after all the other doc fields.
+const MAX_VOICE_BYTES_BASE64 = 200_000
+const ALLOWED_VOICE_MIMES = new Set(['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg'])
+
+interface CallerProfile {
+  displayName: string
+  normalizedName: string
+  isBypass: boolean
+  role: 'player' | 'spectator'
+  color: 'w' | 'b' | null
+}
 
 interface PostRequest {
   roomId: string
@@ -40,6 +62,18 @@ interface RateDoc {
   minCount: number
 }
 
+interface PostVoiceRequest {
+  roomId: string
+  audioBase64: string
+  mimeType: string
+  durationMs: number
+}
+interface PostVoiceResponse {
+  status: 'ok'
+  messageId: string
+  castlePoints: number
+}
+
 export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
@@ -52,33 +86,27 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
     if (text.length > MAX_CHARS) throw new HttpsError('invalid-argument', `Message > ${MAX_CHARS} chars.`)
 
     const db = getFirestore()
-    const roomRef = db.doc(`wizard_rooms/${roomId}`)
     const rateRef = db.doc(`wizard_rooms/${roomId}/rate_limits/${uid}`)
+
+    // Resolve caller identity. Players are read straight off the room
+    // doc; spectators come from the chat_identity shadow (set by
+    // setPresence). Either way we end up with displayName + normalizedName
+    // and a role/color tag that gets stamped on the message.
+    const callerPre = await resolveCaller(uid, roomId)
 
     // Everything that touches castle points must be transactional with the
     // message write so we never charge without posting (or vice versa).
     return db.runTransaction(async (tx) => {
-      const roomSnap = await tx.get(roomRef)
-      if (!roomSnap.exists) throw new HttpsError('not-found', 'Room not found.')
-      const room = roomSnap.data() as WizardRoomLite
+      const cost = callerPre.role === 'player' ? TEXT_COST_PLAYER : TEXT_COST_SPECTATOR
 
-      const callerSlot =
-        room.white.uid === uid ? room.white :
-        room.black?.uid === uid ? room.black :
-        null
-      if (!callerSlot) throw new HttpsError('permission-denied', 'Only players in this duel can chat here.')
-      if (callerSlot.isBypass || !callerSlot.normalizedName) {
-        throw new HttpsError('permission-denied', 'Bypass guests cannot chat in duels (no castle points to spend).')
-      }
-
-      const guestRef = db.doc(`guests/${callerSlot.normalizedName}`)
+      const guestRef = db.doc(`guests/${callerPre.normalizedName}`)
       const guestSnap = await tx.get(guestRef)
       if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
       const guest = guestSnap.data() as GuestDoc
-      if (guest.castlePoints < TEXT_COST) {
+      if (guest.castlePoints < cost) {
         throw new HttpsError(
           'failed-precondition',
-          `Need ${TEXT_COST} castle point to send a message; you have ${guest.castlePoints}.`,
+          `Need ${cost} castle point${cost === 1 ? '' : 's'} to send a message; you have ${guest.castlePoints}.`,
         )
       }
 
@@ -92,17 +120,17 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
       }
 
       const scrub = scrubMessage(text)
-      const color: 'w' | 'b' = room.white.uid === uid ? 'w' : 'b'
-      const nextPoints = guest.castlePoints - TEXT_COST
+      const nextPoints = guest.castlePoints - cost
 
       const msgRef = db.collection(`wizard_rooms/${roomId}/messages`).doc()
       tx.set(msgRef, {
         uid,
-        displayName: callerSlot.displayName,
+        displayName: callerPre.displayName,
         isBypass: false,
-        color,
+        role: callerPre.role,
+        color: callerPre.color,
         kind: 'text',
-        cost: TEXT_COST,
+        cost,
         text: scrub.text,
         ts: now,
         serverTs: FieldValue.serverTimestamp(),
@@ -122,3 +150,147 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
     })
   },
 )
+
+// ── postWizardVoice ─────────────────────────────────────────────────────
+//
+// Push-to-talk voice messages. The client records with MediaRecorder
+// (opus webm) for ≤ 15 s, base64-encodes the Blob, and sends it here.
+// We store the bytes on the message doc itself so we don't have to
+// wire up Firebase Storage; opus @ 32 kbps × 15 s ≈ 80 KB base64,
+// well under Firestore's 1 MB doc cap.
+//
+// Cost is 5 castle points per clip — same atomicity guarantee as the
+// text post (deduct + write or neither).
+
+export const postWizardVoice = onCall<PostVoiceRequest, Promise<PostVoiceResponse>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const uid = req.auth.uid
+    const roomId = String(req.data?.roomId ?? '')
+    const audioBase64 = String(req.data?.audioBase64 ?? '')
+    const mimeType = String(req.data?.mimeType ?? '')
+    const durationMs = Number(req.data?.durationMs ?? 0)
+    if (!roomId) throw new HttpsError('invalid-argument', 'roomId required.')
+    if (!audioBase64) throw new HttpsError('invalid-argument', 'audioBase64 required.')
+    if (audioBase64.length > MAX_VOICE_BYTES_BASE64) {
+      throw new HttpsError('invalid-argument', 'Voice clip too large.')
+    }
+    const cleanMime = mimeType.split(';')[0]?.trim() ?? ''
+    if (!ALLOWED_VOICE_MIMES.has(cleanMime)) {
+      throw new HttpsError('invalid-argument', `Unsupported mimeType: ${mimeType}`)
+    }
+    if (!Number.isFinite(durationMs) || durationMs < MIN_VOICE_MS || durationMs > MAX_VOICE_MS) {
+      throw new HttpsError('invalid-argument', `durationMs must be between ${MIN_VOICE_MS} and ${MAX_VOICE_MS}.`)
+    }
+
+    const db = getFirestore()
+    const rateRef = db.doc(`wizard_rooms/${roomId}/rate_limits/${uid}`)
+    const callerPre = await resolveCaller(uid, roomId)
+
+    return db.runTransaction(async (tx) => {
+      const cost = callerPre.role === 'player' ? VOICE_COST_PLAYER : VOICE_COST_SPECTATOR
+
+      const guestRef = db.doc(`guests/${callerPre.normalizedName}`)
+      const guestSnap = await tx.get(guestRef)
+      if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
+      const guest = guestSnap.data() as GuestDoc
+      if (guest.castlePoints < cost) {
+        throw new HttpsError(
+          'failed-precondition',
+          `Need ${cost} castle points to send a voice message; you have ${guest.castlePoints}.`,
+        )
+      }
+
+      const rateSnap = await tx.get(rateRef)
+      const now = Date.now()
+      const cur = (rateSnap.data() as RateDoc | undefined) ?? { minStart: now, minCount: 0 }
+      const minFresh = now - cur.minStart >= MIN_WINDOW_MS
+      const minCount = (minFresh ? 0 : cur.minCount) + 1
+      if (minCount > PER_MIN_CAP) {
+        throw new HttpsError('resource-exhausted', `Slow down — max ${PER_MIN_CAP}/min in this duel.`)
+      }
+
+      const nextPoints = guest.castlePoints - cost
+
+      const msgRef = db.collection(`wizard_rooms/${roomId}/messages`).doc()
+      tx.set(msgRef, {
+        uid,
+        displayName: callerPre.displayName,
+        isBypass: false,
+        role: callerPre.role,
+        color: callerPre.color,
+        kind: 'voice',
+        cost,
+        audioBase64,
+        mimeType: cleanMime,
+        durationMs: Math.round(durationMs),
+        ts: now,
+        serverTs: FieldValue.serverTimestamp(),
+      })
+      tx.set(rateRef, {
+        minStart: minFresh ? now : cur.minStart,
+        minCount,
+      } satisfies RateDoc)
+      tx.update(guestRef, { castlePoints: nextPoints })
+
+      return {
+        status: 'ok' as const,
+        messageId: msgRef.id,
+        castlePoints: nextPoints,
+      }
+    })
+  },
+)
+
+// ── Caller resolution ───────────────────────────────────────────────────
+//
+// A caller is either one of the two seated players (cheap — look at the
+// room doc) or a spectator (must be authed, must have an identity in
+// chat_identity/{uid} set by the Hall's presence heartbeat). Bypass
+// guests have no castlePoints balance so they can't pay; they're
+// rejected here with a clear message.
+
+async function resolveCaller(uid: string, roomId: string): Promise<CallerProfile> {
+  const db = getFirestore()
+  const roomRef = db.doc(`wizard_rooms/${roomId}`)
+  const roomSnap = await roomRef.get()
+  if (!roomSnap.exists) throw new HttpsError('not-found', 'Room not found.')
+  const room = roomSnap.data() as WizardRoomLite
+
+  // Seated player? Cheap path.
+  const playerSlot =
+    room.white.uid === uid ? { slot: room.white, color: 'w' as const } :
+    room.black?.uid === uid ? { slot: room.black, color: 'b' as const } :
+    null
+  if (playerSlot) {
+    if (playerSlot.slot.isBypass || !playerSlot.slot.normalizedName) {
+      throw new HttpsError('permission-denied', 'Bypass guests cannot chat in duels (no castle points to spend).')
+    }
+    return {
+      displayName: playerSlot.slot.displayName,
+      normalizedName: playerSlot.slot.normalizedName,
+      isBypass: false,
+      role: 'player',
+      color: playerSlot.color,
+    }
+  }
+
+  // Spectator path: read the shadow identity doc that setPresence writes.
+  const idSnap = await db.doc(`chat_identity/${uid}`).get()
+  const idData = idSnap.data() as
+    | { displayName: string; normalizedName: string; isBypass: boolean }
+    | undefined
+  if (!idData) {
+    throw new HttpsError('failed-precondition', 'Set your presence (open the Hall first) before chatting.')
+  }
+  if (idData.isBypass || !idData.normalizedName) {
+    throw new HttpsError('permission-denied', 'Bypass guests cannot chat in duels (no castle points to spend).')
+  }
+  return {
+    displayName: idData.displayName,
+    normalizedName: idData.normalizedName,
+    isBypass: false,
+    role: 'spectator',
+    color: null,
+  }
+}

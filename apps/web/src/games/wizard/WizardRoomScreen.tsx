@@ -14,6 +14,7 @@ import { callSubmitWizardMove, callSubmitWizardSpell } from '../../firebase/call
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
 import { WizardBoard, type WizardBoardMode } from './WizardBoard'
 import { WizardChat } from './WizardChat'
+import { WizardRoomOccupants } from './WizardRoomOccupants'
 import { Spellbook } from './Spellbook'
 import { WizardChess } from './WizardChess'
 import { SPELLS, spellById, TARGET_SPECS } from './spells'
@@ -285,11 +286,19 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
           />
           <WizardChat
             roomId={roomId}
-            canPost={yourColor !== null}
+            yourRole={yourColor !== null ? 'player' : 'spectator'}
             isBypass={!!identity?.isBypass}
             callerPoints={callerPoints}
             yourColor={yourColor}
             onPosted={setCastlePoints}
+          />
+          <WizardRoomOccupants
+            roomId={roomId}
+            playerUids={{
+              w: { uid: room.white.uid, name: room.white.displayName },
+              b: room.black ? { uid: room.black.uid, name: room.black.displayName } : null,
+            }}
+            youUid={uid}
           />
         </aside>
       </main>

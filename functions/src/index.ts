@@ -32,5 +32,5 @@ export {
   submitWizardMove,
   submitWizardSpell,
 } from './games/wizard/wizardRoom'
-export { postWizardMessage } from './games/wizard/wizardChat'
+export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'

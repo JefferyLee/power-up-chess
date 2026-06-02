@@ -179,6 +179,20 @@ export interface PostWizardMessageResponse {
 }
 const postWizardMessageFn = httpsCallable<PostWizardMessageRequest, PostWizardMessageResponse>(functions, 'postWizardMessage')
 
+export interface PostWizardVoiceRequest {
+  roomId: string
+  audioBase64: string
+  mimeType: string
+  durationMs: number
+}
+export interface PostWizardVoiceResponse {
+  status: 'ok'
+  messageId: string
+  /** Caller's castle points AFTER the 5-point deduction. */
+  castlePoints: number
+}
+const postWizardVoiceFn = httpsCallable<PostWizardVoiceRequest, PostWizardVoiceResponse>(functions, 'postWizardVoice')
+
 // MVP2 M.5: Story Q&A — judge a guess at the comprehension question
 // attached to a host's ambient story. The first correct answer per
 // quiz earns +1 castle point (non-bypass guests only).
@@ -274,6 +288,10 @@ export async function callSubmitWizardSpell(req: SubmitWizardSpellRequest): Prom
 }
 export async function callPostWizardMessage(req: PostWizardMessageRequest): Promise<PostWizardMessageResponse> {
   const { data } = await postWizardMessageFn(req)
+  return data
+}
+export async function callPostWizardVoice(req: PostWizardVoiceRequest): Promise<PostWizardVoiceResponse> {
+  const { data } = await postWizardVoiceFn(req)
   return data
 }
 export async function callHostStoryAnswer(req: HostStoryAnswerRequest): Promise<HostStoryAnswerResponse> {

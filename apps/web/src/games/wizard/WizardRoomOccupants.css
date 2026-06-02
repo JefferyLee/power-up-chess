@@ -1,0 +1,91 @@
+.puc-wdroom {
+  background: rgba(20, 14, 38, 0.6);
+  border: 1px solid rgba(141, 111, 217, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.puc-wdroom__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.puc-wdroom__title {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d8c8ff;
+  font-weight: 600;
+}
+
+.puc-wdroom__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.puc-wdroom__empty {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(216, 200, 255, 0.55);
+  font-style: italic;
+}
+
+.puc-wdroom__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 13px;
+  color: var(--puc-text);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.puc-wdroom__row:last-child {
+  border-bottom: none;
+}
+
+.puc-wdroom__row--empty {
+  color: rgba(216, 200, 255, 0.45);
+  font-style: italic;
+}
+
+.puc-wdroom__row--you .puc-wdroom__name {
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+
+.puc-wdroom__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puc-wdroom__tag {
+  font-family: var(--puc-font-display);
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.puc-wdroom__tag--player {
+  background: rgba(141, 111, 217, 0.3);
+  color: #e0d4ff;
+}
+
+.puc-wdroom__tag--spectator {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(216, 200, 255, 0.7);
+}
