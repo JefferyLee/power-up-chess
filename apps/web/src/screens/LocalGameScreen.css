@@ -194,10 +194,14 @@
 }
 
 .puc-player__cap {
-  width: auto;
+  width: 22px;
   height: 22px;
   font-size: 22px;
   -webkit-text-stroke: 0.8px var(--puc-piece-white-stroke);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .puc-player__cap.puc-piece--b {

@@ -1,17 +1,39 @@
 // Piece-set registry — the inventory the Theme Shop draws from.
 //
-// MVP3 P1.D Slice 1: two Unicode-based starter sets that ship today as
-// free, plus three placeholder cards (Common / Rare / Master tiers)
-// shown as "Coming soon" in the shop so the pricing structure is
-// visible. Slice 2 will plug real SVG sets + a server-side purchase
-// callable in.
+// MVP3 P1.D current state:
+//   classic   free, Unicode solid       — default
+//   outline   free, Unicode hollow
+//   cburnett  common (200 pts), SVG     — vendored lichess set
+//   fantasy   rare   (500 pts), placeholder — locked, awaiting assets
+//   animated  master (1000 pts), placeholder — locked, awaiting assets
 //
-// The glyphFor function returns a string today because all live sets
-// are Unicode-based; SVG sets will need a richer shape (React node or
-// component reference) when we add them.
+// glyphFor returns ReactNode so SVG sets can render an <img>; Unicode
+// sets return a string. Server-side prices live in
+// functions/src/cosmetics/registry.ts and MUST stay in sync.
 
+import type { ReactNode } from 'react'
 import type { Color, PieceSymbol } from '../chess/types'
 import { PIECE_GLYPH_HOLLOW, PIECE_GLYPH_SOLID } from '../board/pieceGlyphs'
+
+// Cburnett SVGs — vendored at apps/web/src/cosmetics/assets/cburnett/
+// (see LICENSE.md in that folder). Vite resolves these to URLs.
+import cburnettWK from './assets/cburnett/wK.svg'
+import cburnettWQ from './assets/cburnett/wQ.svg'
+import cburnettWR from './assets/cburnett/wR.svg'
+import cburnettWB from './assets/cburnett/wB.svg'
+import cburnettWN from './assets/cburnett/wN.svg'
+import cburnettWP from './assets/cburnett/wP.svg'
+import cburnettBK from './assets/cburnett/bK.svg'
+import cburnettBQ from './assets/cburnett/bQ.svg'
+import cburnettBR from './assets/cburnett/bR.svg'
+import cburnettBB from './assets/cburnett/bB.svg'
+import cburnettBN from './assets/cburnett/bN.svg'
+import cburnettBP from './assets/cburnett/bP.svg'
+
+const CBURNETT: Record<Color, Record<PieceSymbol, string>> = {
+  w: { k: cburnettWK, q: cburnettWQ, r: cburnettWR, b: cburnettWB, n: cburnettWN, p: cburnettWP },
+  b: { k: cburnettBK, q: cburnettBQ, r: cburnettBR, b: cburnettBB, n: cburnettBN, p: cburnettBP },
+}
 
 export type PieceSetTier = 'free' | 'common' | 'rare' | 'master'
 export type PieceSetId =
@@ -31,7 +53,10 @@ export interface PieceSet {
   /** True until the set has real assets in place. The shop renders
    *  locked cards with the price visible but no Equip action. */
   locked: boolean
-  glyphFor: (type: PieceSymbol, color: Color) => string
+  /** Returns a renderable for one piece. Unicode sets return a string
+   *  (rendered via CSS colour on the parent `.puc-piece--w/b`); SVG sets
+   *  return an `<img>` element so the artwork carries its own colour. */
+  glyphFor: (type: PieceSymbol, color: Color) => ReactNode
 }
 
 export const PIECE_SETS: Record<PieceSetId, PieceSet> = {
@@ -59,8 +84,15 @@ export const PIECE_SETS: Record<PieceSetId, PieceSet> = {
     blurb: 'The lichess classic — crisp SVG silhouettes.',
     tier: 'common',
     priceCp: 200,
-    locked: true,
-    glyphFor: (t) => PIECE_GLYPH_SOLID[t],
+    locked: false,
+    glyphFor: (t, c) => (
+      <img
+        src={CBURNETT[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg"
+      />
+    ),
   },
   fantasy: {
     id: 'fantasy',

@@ -540,6 +540,36 @@ const awardTutorialCompleteFn = httpsCallable<
   AwardTutorialCompleteResponse
 >(functions, 'awardTutorialComplete')
 
+// P1.D Theme Shop
+export interface PurchaseCosmeticRequest {
+  normalizedName: string
+  sessionId: string
+  pieceSetId: string
+}
+export interface PurchaseCosmeticResponse {
+  ok: true
+  castlePoints: number
+  ownedPieceSets: string[]
+  equippedPieceSet: string
+}
+export interface EquipCosmeticRequest {
+  normalizedName: string
+  sessionId: string
+  pieceSetId: string
+}
+export interface EquipCosmeticResponse {
+  ok: true
+  equippedPieceSet: string
+}
+const purchaseCosmeticFn = httpsCallable<
+  PurchaseCosmeticRequest,
+  PurchaseCosmeticResponse
+>(functions, 'purchaseCosmetic')
+const equipCosmeticFn = httpsCallable<
+  EquipCosmeticRequest,
+  EquipCosmeticResponse
+>(functions, 'equipCosmetic')
+
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
 ): Promise<GetNextPuzzleResponse> {
@@ -598,5 +628,17 @@ export async function callAwardTutorialComplete(
   req: AwardTutorialCompleteRequest,
 ): Promise<AwardTutorialCompleteResponse> {
   const { data } = await awardTutorialCompleteFn(req)
+  return data
+}
+export async function callPurchaseCosmetic(
+  req: PurchaseCosmeticRequest,
+): Promise<PurchaseCosmeticResponse> {
+  const { data } = await purchaseCosmeticFn(req)
+  return data
+}
+export async function callEquipCosmetic(
+  req: EquipCosmeticRequest,
+): Promise<EquipCosmeticResponse> {
+  const { data } = await equipCosmeticFn(req)
   return data
 }

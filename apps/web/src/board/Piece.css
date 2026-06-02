@@ -31,6 +31,18 @@
   animation: puc-piece-settle 220ms ease-out;
 }
 
+/* SVG-based piece sets (cburnett etc.) render an <img> inside the piece
+ * slot. Fill the slot, ignore drags, keep CSS colour/stroke out of the
+ * picture — the artwork supplies its own colour. */
+.puc-piece-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 @keyframes puc-piece-settle {
   0%   { transform: scale(1.18); }
   60%  { transform: scale(0.96); }

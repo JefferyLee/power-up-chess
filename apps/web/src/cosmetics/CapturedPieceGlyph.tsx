@@ -3,12 +3,18 @@
 // stay visually consistent with the board pieces.
 
 import { useCosmetics } from './useCosmetics'
-import type { PieceSymbol } from '../chess/types'
+import type { Color, PieceSymbol } from '../chess/types'
 
-export function CapturedPieceGlyph({ piece }: { piece: PieceSymbol }) {
+export function CapturedPieceGlyph({
+  piece,
+  color,
+}: {
+  piece: PieceSymbol
+  color: Color
+}) {
   const { pieceSet } = useCosmetics()
-  // Captured-piece colour comes from the parent CSS class
-  // (puc-piece--w / --b); the Unicode glyph itself is colour-agnostic
-  // so 'w' is just a stable input.
-  return <>{pieceSet.glyphFor(piece, 'w')}</>
+  // For Unicode sets the visible colour comes from the parent CSS class
+  // (.puc-piece--w/--b). For SVG sets the colour lives in the artwork
+  // itself, so glyphFor needs to pick the right file.
+  return <>{pieceSet.glyphFor(piece, color)}</>
 }

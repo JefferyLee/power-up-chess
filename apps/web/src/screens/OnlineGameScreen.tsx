@@ -710,7 +710,7 @@ function OpponentCard({
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>
-            <CapturedPieceGlyph piece={p} />
+            <CapturedPieceGlyph piece={p} color={capturedColor} />
           </span>
         ))}
       </span>

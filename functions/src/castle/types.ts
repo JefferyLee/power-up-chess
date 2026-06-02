@@ -288,6 +288,12 @@ export interface GuestCosmetics {
   winStreak?: number
   /** Server-ms when the 3-win-streak crown expires; absent / past = no crown. */
   winStreakCrownExpiresAt?: number
+  /** P1.D Theme Shop — currently-equipped piece-set id. Default 'classic'
+   *  when missing. Validated against functions/src/cosmetics/registry. */
+  pieceSet?: string
+  /** Piece-set ids the guest has purchased. Free sets (classic, outline)
+   *  are NOT stored here — they're always considered owned. */
+  ownedPieceSets?: string[]
 }
 
 /** Hours the duel-winner halo lasts after a Wizard's Duel victory. */

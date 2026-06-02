@@ -113,6 +113,11 @@
 .puc-shop__card-preview-piece {
   font-size: 28px;
   line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   /* The preview chips use the white palette so all 6 pieces read clearly
    * against the dark inset background, regardless of equipped colour
    * preference. */
@@ -186,6 +191,35 @@
   background: rgba(120, 120, 140, 0.12);
   color: var(--puc-text-muted);
   border-color: rgba(120, 120, 140, 0.3);
+}
+.puc-shop__card-cta--buy {
+  background: linear-gradient(135deg, #6a4cb0, #8d6fd9);
+  color: #fff;
+  border-color: rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  font-weight: 600;
+}
+.puc-shop__card-cta--buy:hover:not(:disabled) { filter: brightness(1.05); }
+.puc-shop__card-cta--buy:disabled {
+  cursor: not-allowed;
+  background: rgba(120, 120, 140, 0.18);
+  color: var(--puc-text-muted);
+  border-color: rgba(120, 120, 140, 0.35);
+}
+.puc-shop__card-cta--equip:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.puc-shop__error-banner {
+  max-width: 1100px;
+  margin: 12px auto 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(220, 130, 120, 0.16);
+  border: 1px solid rgba(220, 130, 120, 0.55);
+  color: #ffd8d2;
+  font-size: 13px;
 }
 
 .puc-shop__btn {

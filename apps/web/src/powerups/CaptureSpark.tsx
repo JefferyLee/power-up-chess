@@ -118,7 +118,7 @@ export function CaptureSpark({ data, squareSize, orientation = 'w', onDone }: Pr
         aria-live="polite"
       >
         <span className={`puc-spark__piece puc-piece puc-piece--${data.capturedColor}`}>
-          <CapturedPieceGlyph piece={data.capturedPiece} />
+          <CapturedPieceGlyph piece={data.capturedPiece} color={data.capturedColor} />
         </span>
         <span className="puc-spark__value">+{PIECE_VALUE[data.capturedPiece]}</span>
         <span className="puc-spark__text">{data.text}</span>
