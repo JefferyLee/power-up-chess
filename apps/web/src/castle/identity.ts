@@ -38,6 +38,14 @@ export interface CastleIdentity {
     streakDays?: number
     total: number
   }
+  /** P1.D — local cosmetics selection. Server-side mirror lands in the
+   *  next slice; for now this is sessionStorage-only. */
+  cosmetics?: {
+    /** PieceSetId, kept as a plain string here so a stale stored value
+     *  from a future client doesn't crash older builds — see
+     *  cosmetics/pieceSets.ts `getPieceSet` which defaults unknown ids. */
+    pieceSet?: string
+  }
 }
 
 export function normalizeName(name: string): string {
@@ -80,6 +88,11 @@ export function loadIdentity(): CastleIdentity | null {
         : {}),
       ...(typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0
         ? { sessionId: parsed.sessionId }
+        : {}),
+      ...(parsed.cosmetics &&
+      typeof parsed.cosmetics === 'object' &&
+      typeof parsed.cosmetics.pieceSet === 'string'
+        ? { cosmetics: { pieceSet: parsed.cosmetics.pieceSet } }
         : {}),
     }
   } catch {

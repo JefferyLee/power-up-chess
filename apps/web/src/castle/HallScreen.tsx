@@ -273,6 +273,13 @@ export function HallScreen() {
                 : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
             }
           />
+          <RoomDoor
+            icon="🎨"
+            label="Theme Shop"
+            blurb="Pick the look of your chess pieces. New sets unlock soon."
+            variant="parchment"
+            onClick={() => navigate('/shop')}
+          />
         </div>
       </section>
 

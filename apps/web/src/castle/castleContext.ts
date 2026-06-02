@@ -18,6 +18,8 @@ export interface CastleContextValue {
   /** Remove `lastBonus` (Phase C check-in / starter / streak) after the
    *  Hall toast has fired. */
   clearBonusInfo: () => void
+  /** Set the equipped piece-set id and persist it on the identity. */
+  setPieceSetId: (id: string) => void
 }
 
 export const CastleContext = createContext<CastleContextValue | null>(null)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Board } from '../board/Board'
-import { PIECE_GLYPH } from '../board/pieceGlyphs'
+import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { ChessGame } from '../chess/game'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
@@ -710,7 +710,7 @@ function OpponentCard({
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>
-            {PIECE_GLYPH[p]}
+            <CapturedPieceGlyph piece={p} />
           </span>
         ))}
       </span>

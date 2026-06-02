@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import clsx from 'clsx'
-import { PIECE_GLYPH } from '../board/pieceGlyphs'
+import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import { FILES, RANKS } from '../board/squares'
 import type { Color, PieceSymbol, Square } from '../chess/types'
 import { PIECE_VALUE } from './pieceValues'
@@ -118,7 +118,7 @@ export function CaptureSpark({ data, squareSize, orientation = 'w', onDone }: Pr
         aria-live="polite"
       >
         <span className={`puc-spark__piece puc-piece puc-piece--${data.capturedColor}`}>
-          {PIECE_GLYPH[data.capturedPiece]}
+          <CapturedPieceGlyph piece={data.capturedPiece} />
         </span>
         <span className="puc-spark__value">+{PIECE_VALUE[data.capturedPiece]}</span>
         <span className="puc-spark__text">{data.text}</span>

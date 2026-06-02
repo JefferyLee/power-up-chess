@@ -4,7 +4,7 @@ import { Board } from '../board/Board'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
-import { PIECE_GLYPH } from '../board/pieceGlyphs'
+import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
@@ -527,7 +527,7 @@ function PlayerCard({
       <span className="puc-player__captures" aria-label="Captured pieces">
         {captured.map((p, i) => (
           <span key={i} className={`puc-piece puc-piece--${capturedColor} puc-player__cap`}>
-            {PIECE_GLYPH[p]}
+            <CapturedPieceGlyph piece={p} />
           </span>
         ))}
       </span>

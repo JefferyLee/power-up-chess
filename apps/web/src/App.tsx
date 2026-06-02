@@ -18,6 +18,7 @@ import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
+import { ShopScreen } from './cosmetics/ShopScreen'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 
@@ -55,6 +56,7 @@ export function App() {
           <Route path="/forest" element={<ForestRoute />} />
           <Route path="/wizard" element={<WizardDuelRoute />} />
           <Route path="/wizard/:roomId" element={<WizardRoomRoute />} />
+          <Route path="/shop" element={<ShopScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>
