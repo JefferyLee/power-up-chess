@@ -1,0 +1,3 @@
+# Screenshots are regenerated every driver run; keep them out of the
+# tree so verifying the skill doesn't dirty git status.
+*.png
