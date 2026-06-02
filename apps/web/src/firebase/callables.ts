@@ -166,6 +166,7 @@ const joinWizardRoomFn = httpsCallable<JoinWizardRoomRequest, JoinWizardRoomResp
 const submitWizardMoveFn = httpsCallable<SubmitWizardMoveRequest, { ok: true }>(functions, 'submitWizardMove')
 const submitWizardSpellFn = httpsCallable<SubmitWizardSpellRequest, SubmitWizardSpellResponse>(functions, 'submitWizardSpell')
 const claimWizardTimeWinFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'claimWizardTimeWin')
+const resignWizardGameFn = httpsCallable<{ roomId: string }, { ok: true }>(functions, 'resignWizardGame')
 
 export interface PostWizardMessageRequest {
   roomId: string
@@ -299,6 +300,9 @@ export async function callSubmitWizardSpell(req: SubmitWizardSpellRequest): Prom
 }
 export async function callClaimWizardTimeWin(roomId: string): Promise<void> {
   await claimWizardTimeWinFn({ roomId })
+}
+export async function callResignWizardGame(roomId: string): Promise<void> {
+  await resignWizardGameFn({ roomId })
 }
 export async function callPostWizardMessage(req: PostWizardMessageRequest): Promise<PostWizardMessageResponse> {
   const { data } = await postWizardMessageFn(req)

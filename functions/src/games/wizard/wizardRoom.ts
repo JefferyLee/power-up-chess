@@ -18,9 +18,10 @@ import type { GuestDoc } from '../../castle/types'
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
 
-// Fischer clock: 10 minutes initial, 1 minute per move (locked for V1).
-const INITIAL_MS = 10 * 60 * 1000
-const INCREMENT_MS = 60 * 1000
+// Sudden-death clock: 8 minutes per side, no per-move increment. The
+// only way to add time is the 'extra-time' spell (10 castle points → +60 s).
+const INITIAL_MS = 8 * 60 * 1000
+const INCREMENT_MS = 0
 
 interface TimeControl {
   initialMs: number
@@ -45,7 +46,7 @@ interface WizardRoomDoc {
   effects: SerializedEffect[]
   actions: WizardActionRecord[]
   winner: Color | null
-  endReason: 'checkmate' | 'timeout' | null
+  endReason: 'checkmate' | 'timeout' | 'resign' | null
   timeControl: TimeControl
   whiteTimeMs: number
   blackTimeMs: number
@@ -292,6 +293,43 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
 
       return { ok: true as const, castlePoints: nextPoints }
     })
+  },
+)
+
+// ── resignWizardGame ────────────────────────────────────────────────────
+//
+// Caller forfeits the duel. Allowed from either seated player while the
+// room is live. The opposite color becomes the winner, endReason='resign'.
+
+export const resignWizardGame = onCall<{ roomId: string }, Promise<{ ok: true }>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const uid = req.auth.uid
+    const roomId = String(req.data?.roomId ?? '')
+    if (!roomId) throw new HttpsError('invalid-argument', 'roomId required.')
+    const db = getFirestore()
+    const ref = db.doc(`wizard_rooms/${roomId}`)
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref)
+      if (!snap.exists) throw new HttpsError('not-found', 'Room not found.')
+      const room = snap.data() as WizardRoomDoc
+      // Idempotent: re-resigning a completed game is a no-op.
+      if (room.status === 'completed') return
+      if (room.status !== 'live') throw new HttpsError('failed-precondition', 'Game is not in progress.')
+
+      const callerColor = colorFor(uid, room)
+      if (callerColor === null) throw new HttpsError('permission-denied', 'Not a player.')
+
+      tx.update(ref, {
+        status: 'completed',
+        winner: opposite(callerColor),
+        endReason: 'resign',
+        lastTickServerTs: null,
+        updatedAt: Date.now(),
+      })
+    })
+    return { ok: true }
   },
 )
 

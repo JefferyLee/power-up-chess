@@ -142,6 +142,31 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.puc-wd__resign {
+  appearance: none;
+  align-self: stretch;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 120, 120, 0.45);
+  background: rgba(120, 40, 40, 0.18);
+  color: #ffd0d0;
+  font-family: var(--puc-font-display);
+  font-size: 12px;
+  letter-spacing: 0.7px;
+  cursor: pointer;
+}
+
+.puc-wd__resign:hover:not(:disabled) {
+  background: rgba(180, 60, 60, 0.3);
+  border-color: #ff9a9a;
+}
+
+.puc-wd__resign:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .puc-wd__player-mana {
   display: flex;
   align-items: baseline;

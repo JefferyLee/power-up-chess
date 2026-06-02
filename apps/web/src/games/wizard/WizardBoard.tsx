@@ -35,6 +35,10 @@ interface Props {
   onSpellTarget?: (square: SquareName) => void
   mode: WizardBoardMode
   squareSize?: number
+  /** Squares touched by the most recent action (move from→to, or the
+   *  pair from a teleport / single target from a piece-targeted spell).
+   *  Rendered with the standard last-move highlight overlay. */
+  lastTouched?: { from: SquareName; to: SquareName } | null
 }
 
 export function WizardBoard({
@@ -46,6 +50,7 @@ export function WizardBoard({
   onSpellTarget,
   mode,
   squareSize = 64,
+  lastTouched,
 }: Props) {
   const [selected, setSelected] = useState<SquareName | null>(null)
 
@@ -102,6 +107,8 @@ export function WizardBoard({
           selected: selected === sq || isFirstPick,
           legalDestination: isLegalDest,
           legalCapture: isCapture,
+          lastMoveFrom: lastTouched?.from === sq,
+          lastMoveTo: lastTouched?.to === sq,
         }
         return (
           <Square

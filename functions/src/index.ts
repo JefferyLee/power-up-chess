@@ -33,6 +33,7 @@ export {
   submitWizardMove,
   submitWizardSpell,
   claimWizardTimeWin,
+  resignWizardGame,
 } from './games/wizard/wizardRoom'
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'

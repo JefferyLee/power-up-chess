@@ -36,7 +36,7 @@ export interface WizardRoomDoc {
   }>
   actions: WizardActionRecord[]
   winner: Color | null
-  endReason: 'checkmate' | 'timeout' | null
+  endReason: 'checkmate' | 'timeout' | 'resign' | null
   /** Fischer time control — present on all rooms created since W.4.7. */
   timeControl?: WizardTimeControl
   whiteTimeMs?: number

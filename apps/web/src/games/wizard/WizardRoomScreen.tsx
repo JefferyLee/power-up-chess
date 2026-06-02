@@ -2,7 +2,7 @@
 // every move and spell is submitted to a Cloud Function and we react to
 // the Firestore snapshot. Mana is the caller's live castle-points balance.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { piecesFromFen } from '../../chess/fen'
 import type { Color, Piece, Square } from '../../chess/types'
@@ -11,7 +11,13 @@ import { useCastle } from '../../castle/useCastle'
 import { usePresenceHeartbeat } from '../../castle/usePresenceHeartbeat'
 import { useAuthUid } from '../../auth/useAuthUid'
 import { Clock } from '../../clock/Clock'
-import { callClaimWizardTimeWin, callSubmitWizardMove, callSubmitWizardSpell } from '../../firebase/callables'
+import {
+  callClaimWizardTimeWin,
+  callResignWizardGame,
+  callSubmitWizardMove,
+  callSubmitWizardSpell,
+} from '../../firebase/callables'
+import { ResignDialog } from '../../powerups/ResignDialog'
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
 import { WizardBoard, type WizardBoardMode } from './WizardBoard'
 import { WizardChat } from './WizardChat'
@@ -47,6 +53,8 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const [cast, setCast] = useState<CastFlow>({ stage: 'idle' })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [resignOpen, setResignOpen] = useState(false)
+  const [resigning, setResigning] = useState(false)
 
   // Rebuild a transient engine instance from the room doc — used only as a
   // read-only oracle for legal moves / spell targets / status. Never mutated.
@@ -61,6 +69,13 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const fen = engine.fen()
   const pieces = useMemo(() => piecesFromFen(fen), [fen]) as Partial<Record<Square, Piece>>
   const effects = engine.allEffects()
+
+  // Highlight the most recent action's from→to squares so the player can
+  // see what the opponent just did. Teleport surfaces both swapped squares;
+  // single-target spells (freeze / shield / etc.) highlight just the target;
+  // self-cast spells (extra-time) and summon don't produce a highlight.
+  // React Compiler memoizes this from the deps.
+  const lastTouched = computeLastTouched(room.actions)
 
   const uid = auth.status === 'ready' ? auth.uid : null
   const yourColor: Color | null = !uid
@@ -98,16 +113,16 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
       setSubmitting(true)
       setError(null)
       try {
-        const captured = engine.pieceAt(to)
+        // Sound plays when the snapshot returns (see action-diff effect
+        // below) so opponents + spectators hear it too, not just the mover.
         await callSubmitWizardMove({ roomId, from, to })
-        sound.play(captured ? 'capture' : 'move')
       } catch (e) {
         setError(humanError(e))
       } finally {
         setSubmitting(false)
       }
     },
-    [engine, roomId, yourTurn, submitting, sound],
+    [roomId, yourTurn, submitting],
   )
 
   const handleCancelCast = useCallback(() => setCast({ stage: 'idle' }), [])
@@ -122,7 +137,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
           spellId,
           targets,
         })
-        sound.play(`powerup-${pickPowerUpVariant()}` as const)
+        // Sound plays from the snapshot-diff effect (so the opponent hears it too).
         setCastlePoints(res.castlePoints)
         setCast({ stage: 'idle' })
       } catch (e) {
@@ -132,7 +147,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
         setSubmitting(false)
       }
     },
-    [roomId, sound, setCastlePoints],
+    [roomId, setCastlePoints],
   )
 
   const handlePickSpell = useCallback((spellId: SpellId) => {
@@ -176,6 +191,21 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     }
   }, [cast, engine])
 
+  const handleConfirmResign = useCallback(async () => {
+    if (resigning) return
+    setResigning(true)
+    setError(null)
+    try {
+      await callResignWizardGame(roomId)
+      setResignOpen(false)
+      onExit()
+    } catch (e) {
+      setError(humanError(e))
+    } finally {
+      setResigning(false)
+    }
+  }, [resigning, roomId, onExit])
+
   const copyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/wizard/${roomId}`)
@@ -191,6 +221,30 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
       setError('This duel is already in progress between two other guests.')
     }
   }, [room.status, yourColor])
+
+  // Sound on any new action — including the opponent's. Tracks the
+  // last seen action count so we don't replay the whole game's sounds
+  // on first load (or on every snapshot diff that isn't action-related).
+  const lastSeenActionsRef = useRef<number | null>(null)
+  useEffect(() => {
+    const actions = room.actions
+    if (lastSeenActionsRef.current === null) {
+      lastSeenActionsRef.current = actions.length
+      return
+    }
+    const seen = lastSeenActionsRef.current
+    if (actions.length <= seen) return
+    for (let i = seen; i < actions.length; i++) {
+      const rec = actions[i]
+      if (!rec) continue
+      if (rec.kind === 'move') {
+        sound.play(rec.captured ? 'capture' : 'move')
+      } else if (rec.kind === 'spell') {
+        sound.play(`powerup-${pickPowerUpVariant()}` as const)
+      }
+    }
+    lastSeenActionsRef.current = actions.length
+  }, [room.actions, sound])
 
   // Flag-fall watcher: if it's the opponent's turn and their clock would
   // run out before our next snapshot, schedule a claim. The server has
@@ -252,6 +306,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
               onSpellTarget={(s) => { void handleSpellTarget(s) }}
               mode={boardMode}
               squareSize={SQUARE_SIZE}
+              lastTouched={lastTouched}
             />
             {room.status === 'waiting' && (
               <WaitingOverlay roomId={roomId} onCopy={copyLink} />
@@ -263,7 +318,11 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
                     {(winner === 'w' ? room.white.displayName : room.black?.displayName) ?? '—'} wins!
                   </h2>
                   <p className="puc-wd__overlay-sub">
-                    {room.endReason === 'timeout' ? 'Opponent ran out of time.' : 'The duel is over.'}
+                    {room.endReason === 'timeout'
+                      ? 'Opponent ran out of time.'
+                      : room.endReason === 'resign'
+                        ? 'Opponent resigned.'
+                        : 'The duel is over.'}
                   </p>
                   <div className="puc-wd__overlay-actions">
                     <button type="button" className="puc-wd__overlay-btn" onClick={onExit}>
@@ -322,6 +381,16 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
             castable={castable}
             onPick={handlePickSpell}
           />
+          {yourColor && !isOver && room.status === 'live' && (
+            <button
+              type="button"
+              className="puc-wd__resign"
+              onClick={() => setResignOpen(true)}
+              disabled={submitting || resigning}
+            >
+              🏳 Resign & leave
+            </button>
+          )}
           <WizardChat
             roomId={roomId}
             yourRole={yourColor !== null ? 'player' : 'spectator'}
@@ -340,6 +409,15 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
           />
         </aside>
       </main>
+      {resignOpen && (
+        <ResignDialog
+          mode="online"
+          yourName={(yourColor === 'w' ? room.white : room.black)?.displayName ?? 'You'}
+          busy={resigning}
+          onResign={() => { void handleConfirmResign() }}
+          onCancel={() => setResignOpen(false)}
+        />
+      )}
     </div>
   )
 }
@@ -398,4 +476,27 @@ function PlayerRow({
 function humanError(e: unknown): string {
   if (e instanceof Error) return e.message.replace(/^FirebaseError: /, '')
   return String(e)
+}
+
+function computeLastTouched(
+  actions: WizardRoomDoc['actions'],
+): { from: Square; to: Square } | null {
+  for (let i = actions.length - 1; i >= 0; i--) {
+    const rec = actions[i]
+    if (!rec) continue
+    if (rec.kind === 'move') {
+      return { from: rec.from as Square, to: rec.to as Square }
+    }
+    if (rec.kind === 'spell') {
+      if (rec.targets.length >= 2) {
+        return { from: rec.targets[0] as Square, to: rec.targets[1] as Square }
+      }
+      if (rec.targets.length === 1) {
+        const sq = rec.targets[0] as Square
+        return { from: sq, to: sq }
+      }
+      return null
+    }
+  }
+  return null
 }
