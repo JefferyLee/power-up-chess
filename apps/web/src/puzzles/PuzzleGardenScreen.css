@@ -41,6 +41,20 @@
   letter-spacing: 0.4px;
 }
 
+.puc-garden__trophies {
+  background: rgba(244, 194, 102, 0.10);
+  color: var(--puc-text-accent);
+  border: 1px solid rgba(244, 194, 102, 0.45);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.puc-garden__trophies:hover {
+  background: rgba(244, 194, 102, 0.18);
+}
+
 .puc-garden__total {
   display: flex;
   flex-direction: column;

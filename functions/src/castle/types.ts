@@ -222,6 +222,14 @@ export interface GuestDoc {
   puzzleSeen?: string[]
   /** Aggregate counters across all plots. */
   puzzleStats?: { solved: number; attempted: number }
+  /** Per-plot rating snapshot taken at the start of the current ISO
+   *  week (Monday 00:00 LA). The leaderboard "this week's climbers"
+   *  list uses (puzzleRatings[plot] - puzzleWeekStarts[plot]) as the
+   *  ranking key. Reset by refreshPuzzleLeaderboards on week rollover. */
+  puzzleWeekStarts?: Partial<Record<
+    'mate' | 'fork' | 'pinSkewer' | 'sacrifice' | 'endgame' | 'defense',
+    number
+  >>
 }
 
 export interface GuestDailyEarn {

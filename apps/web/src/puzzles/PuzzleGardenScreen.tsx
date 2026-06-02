@@ -81,6 +81,14 @@ export function PuzzleGardenScreen() {
           ←
         </button>
         <h1 className="puc-garden__title">Puzzle Garden</h1>
+        <button
+          type="button"
+          className="puc-garden__trophies"
+          onClick={() => navigate('/puzzles/leaderboard')}
+          aria-label="View trophies"
+        >
+          🏆 Trophies
+        </button>
         <div className="puc-garden__total">
           <span className="puc-garden__total-label">Solved</span>
           <span className="puc-garden__total-value">{stats.solved}</span>
