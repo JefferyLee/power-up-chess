@@ -216,30 +216,37 @@ function DailyStrip({
       }
       onClick={onOpen}
     >
+      <div className="puc-garden__daily-glyph" aria-hidden="true">⭐</div>
       <div className="puc-garden__daily-body">
-        <div className="puc-garden__daily-title">
-          {allDone ? "Today's Five — done!" : "Today's Five"}
+        <div className="puc-garden__daily-head">
+          <span className="puc-garden__daily-chip">Today</span>
+          <span className="puc-garden__daily-title">
+            {allDone ? "Today's Five — done!" : "Today's Five"}
+          </span>
         </div>
         <div className="puc-garden__daily-sub">
           {allDone
             ? `${solved} of 5 solved — come back tomorrow`
-            : 'Hand-picked daily quest, +10 castle-point bonus on completion'}
+            : 'Hand-picked daily quest · +10 castle points on completion'}
+        </div>
+        <div className="puc-garden__daily-stones" aria-hidden="true">
+          {slots.map((r, i) => (
+            <span
+              key={i}
+              className={
+                'puc-garden__daily-stone ' +
+                (r === true
+                  ? 'puc-garden__daily-stone--solved'
+                  : r === false
+                    ? 'puc-garden__daily-stone--failed'
+                    : 'puc-garden__daily-stone--pending')
+              }
+            />
+          ))}
         </div>
       </div>
-      <div className="puc-garden__daily-stones" aria-hidden="true">
-        {slots.map((r, i) => (
-          <span
-            key={i}
-            className={
-              'puc-garden__daily-stone ' +
-              (r === true
-                ? 'puc-garden__daily-stone--solved'
-                : r === false
-                  ? 'puc-garden__daily-stone--failed'
-                  : 'puc-garden__daily-stone--pending')
-            }
-          />
-        ))}
+      <div className="puc-garden__daily-cta" aria-hidden="true">
+        {allDone ? 'Review →' : 'Open →'}
       </div>
     </button>
   )
