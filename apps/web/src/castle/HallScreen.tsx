@@ -128,34 +128,9 @@ export function HallScreen() {
         </div>
       </header>
 
-      <section className="puc-hall__top">
-        <aside className="puc-hall__host">
-          <div className="puc-hall__portrait">
-            <HostPortrait hostId={hostId} variant="lobby" />
-          </div>
-          <div className="puc-hall__greeting">
-            <h2 className="puc-hall__hostname">{host.name}</h2>
-            <p className="puc-hall__welcome">
-              {identity.isFirstVisit
-                ? `Welcome to the Castle, ${identity.displayName}! I'm so glad you came.`
-                : `Welcome back, ${identity.displayName}!`}
-            </p>
-            {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
-            {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
-            <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
-          </div>
-        </aside>
-
-        <div className="puc-hall__chatcol">
-          <ChatPanel canChat={auth.status === 'ready'} />
-        </div>
-
-        <div className="puc-hall__sidecol">
-          <VisitorCard />
-          <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
-        </div>
-      </section>
-
+      {/* Doors first — the page's primary CTA, hero-sized right under
+       *  the header so a new visitor sees what they can DO before the
+       *  social / informational layer. */}
       <section className="puc-hall__doors">
         <h2 className="puc-hall__doors-title">Choose a room</h2>
         <div className="puc-hall__doors-grid">
@@ -213,6 +188,37 @@ export function HallScreen() {
           />
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
+      </section>
+
+      {/* Social row below the doors — host on the left, chat in the
+       *  middle (the most vertical real-estate), passive info on the
+       *  right. */}
+      <section className="puc-hall__top">
+        <aside className="puc-hall__host">
+          <div className="puc-hall__portrait">
+            <HostPortrait hostId={hostId} variant="lobby" />
+          </div>
+          <div className="puc-hall__greeting">
+            <h2 className="puc-hall__hostname">{host.name}</h2>
+            <p className="puc-hall__welcome">
+              {identity.isFirstVisit
+                ? `Welcome to the Castle, ${identity.displayName}! I'm so glad you came.`
+                : `Welcome back, ${identity.displayName}!`}
+            </p>
+            {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
+            {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
+            <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
+          </div>
+        </aside>
+
+        <div className="puc-hall__chatcol">
+          <ChatPanel canChat={auth.status === 'ready'} />
+        </div>
+
+        <div className="puc-hall__sidecol">
+          <VisitorCard />
+          <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
+        </div>
       </section>
 
       {wizardWarnOpen && (
