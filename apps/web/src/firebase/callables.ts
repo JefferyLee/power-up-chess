@@ -451,6 +451,15 @@ export interface GetLegendsListResponse {
   unlockThreshold: number
 }
 
+export interface GetMasterAtriumListRequest { normalizedName: string }
+export interface GetMasterAtriumListResponse {
+  ok: true
+  puzzles: ServerPuzzle[]
+  solved: string[]
+  totalSolved: number
+  unlockThreshold: number
+}
+
 export interface GetCalibrationSetRequest {
   normalizedName: string
 }
@@ -491,6 +500,10 @@ const getLegendsListFn = httpsCallable<
   GetLegendsListRequest,
   GetLegendsListResponse
 >(functions, 'getLegendsList')
+const getMasterAtriumListFn = httpsCallable<
+  GetMasterAtriumListRequest,
+  GetMasterAtriumListResponse
+>(functions, 'getMasterAtriumList')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -526,5 +539,11 @@ export async function callGetLegendsList(
   req: GetLegendsListRequest,
 ): Promise<GetLegendsListResponse> {
   const { data } = await getLegendsListFn(req)
+  return data
+}
+export async function callGetMasterAtriumList(
+  req: GetMasterAtriumListRequest,
+): Promise<GetMasterAtriumListResponse> {
+  const { data } = await getMasterAtriumListFn(req)
   return data
 }

@@ -42,6 +42,7 @@ interface GuestPuzzleState {
   puzzleLegendsBadges?: string[]
 }
 
+const MASTER_UNLOCK_SOLVES = 25
 const LEGENDS_UNLOCK_SOLVES = 50
 
 export function PuzzleGardenScreen() {
@@ -162,12 +163,32 @@ export function PuzzleGardenScreen() {
         </div>
 
         {!!identity && !identity.isBypass && (
-          <LegendsEntrance
-            unlocked={stats.solved >= LEGENDS_UNLOCK_SOLVES}
-            solved={stats.solved}
-            badges={state?.puzzleLegendsBadges?.length ?? 0}
-            onEnter={() => navigate('/puzzles/legends')}
-          />
+          <>
+            <ChallengeEntrance
+              tier="master"
+              label="Master's Atrium"
+              icon="🥈"
+              blurbUnlocked="Hundreds of 2500-3000 puzzles. Touch any plaque and warm up for the Legends."
+              blurbLockedTpl={(have) =>
+                `Unlocks at ${MASTER_UNLOCK_SOLVES} solves — you have ${have}.`
+              }
+              unlocked={stats.solved >= MASTER_UNLOCK_SOLVES}
+              solved={stats.solved}
+              onEnter={() => navigate('/puzzles/master')}
+            />
+            <ChallengeEntrance
+              tier="legend"
+              label="Legends Hall"
+              icon="🏛️"
+              blurbUnlocked={`100 master-tier puzzles. Solve any for a permanent gold badge. (${state?.puzzleLegendsBadges?.length ?? 0} earned)`}
+              blurbLockedTpl={(have) =>
+                `Unlocks at ${LEGENDS_UNLOCK_SOLVES} solves — you have ${have}.`
+              }
+              unlocked={stats.solved >= LEGENDS_UNLOCK_SOLVES}
+              solved={stats.solved}
+              onEnter={() => navigate('/puzzles/legends')}
+            />
+          </>
         )}
       </main>
     </div>
@@ -224,35 +245,40 @@ function DailyStrip({
   )
 }
 
-function LegendsEntrance({
+function ChallengeEntrance({
+  tier,
+  label,
+  icon,
+  blurbUnlocked,
+  blurbLockedTpl,
   unlocked,
   solved,
-  badges,
   onEnter,
 }: {
+  tier: 'master' | 'legend'
+  label: string
+  icon: string
+  blurbUnlocked: string
+  blurbLockedTpl: (haveSolved: number) => string
   unlocked: boolean
   solved: number
-  badges: number
   onEnter: () => void
 }) {
   return (
     <button
       type="button"
       className={
-        'puc-garden__legends ' + (unlocked ? '' : 'puc-garden__legends--locked')
+        `puc-garden__legends puc-garden__legends--${tier} ` +
+        (unlocked ? '' : 'puc-garden__legends--locked')
       }
       onClick={unlocked ? onEnter : undefined}
       disabled={!unlocked}
     >
-      <div className="puc-garden__legends-icon" aria-hidden="true">
-        🏛️
-      </div>
+      <div className="puc-garden__legends-icon" aria-hidden="true">{icon}</div>
       <div className="puc-garden__legends-body">
-        <div className="puc-garden__legends-title">Legends Hall</div>
+        <div className="puc-garden__legends-title">{label}</div>
         <div className="puc-garden__legends-blurb">
-          {unlocked
-            ? `100 master-tier puzzles. Solve any for a permanent gold badge. (${badges} earned)`
-            : `Unlocks at 50 solves — you have ${solved}.`}
+          {unlocked ? blurbUnlocked : blurbLockedTpl(solved)}
         </div>
       </div>
       <div className="puc-garden__legends-cta">

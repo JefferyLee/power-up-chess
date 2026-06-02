@@ -25,9 +25,12 @@ const BANDS: Array<{ lo: number; hi: number; target: number }> = [
   { lo: 1100, hi: 1500, target: 900 },
   { lo: 1500, hi: 1900, target: 600 },
   { lo: 1900, hi: 2400, target: 400 },
-  { lo: 2400, hi: 3000, target: 100 },
+  { lo: 2400, hi: 2500, target: 60 },
+  // Master's Atrium tier — surfaced separately on the garden as a
+  // dedicated high-difficulty entrance, so we want real depth here.
+  { lo: 2500, hi: 3000, target: 300 },
 ]
-// Sum: 5000. Per (band × plot) target = target / 6, rounded up so we
+// Sum: 5260. Per (band × plot) target = target / 6, rounded up so we
 // don't lose puzzles to division.
 
 export async function runSample(): Promise<void> {

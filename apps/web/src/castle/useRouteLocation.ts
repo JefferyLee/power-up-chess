@@ -20,6 +20,10 @@ export function useRouteLocation(): LocationTag {
     return { kind: 'puzzle-leaderboard' }
   if (matchPath('/puzzles/daily', pathname)) return { kind: 'puzzle-daily' }
   if (matchPath('/puzzles/legends', pathname)) return { kind: 'puzzle-legends' }
+  if (matchPath('/puzzles/master', pathname)) return { kind: 'puzzle-garden' }
+    // ↑ master tier shares the garden location tag for now (no separate
+    // pulse entry). If we surface "in Master's Atrium" later, add a
+    // dedicated 'puzzle-master' kind to LocationTag + setPresence.
   const plotMatch = matchPath('/puzzles/plot/:plot', pathname)
   if (plotMatch && plotMatch.params.plot) {
     return { kind: 'puzzle-plot', plot: plotMatch.params.plot }
