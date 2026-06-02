@@ -11,10 +11,10 @@ import { HOUR_MS, pickAndPostStory, type AmbientState } from './pickAndPostStory
 import type { PresenceDoc } from './chatTypes'
 
 const PRESENCE_TTL_MS = 60 * 1000
-// Temporarily bumped from 6 → 30 while debugging quiz generation; the
-// existing 6/hr burned through with broken quizzes and there's no
-// per-story-failed retry. Will lower back to 6 once fix is verified.
-const MAX_PER_HOUR = 30
+// 6 stories per hour — one every ~10 minutes during a busy stretch.
+// Was temporarily 30/hr during quiz-generation debugging; restored
+// now that the explain-mode generation is stable.
+const MAX_PER_HOUR = 6
 
 export const hostAmbientStory = onSchedule(
   { schedule: 'every 3 minutes', timeoutSeconds: 60, secrets: [GEMINI_API_KEY] },
