@@ -229,6 +229,36 @@
   50%      { opacity: 1;    transform: scale(1.15); }
 }
 
+/* Streak crown — earned after 3 consecutive duel wins, lasts 72 h.
+ * Overrides the halo styling (the crown is the "louder" cosmetic). */
+.puc-chat__bubble--crown {
+  box-shadow: 0 0 0 1px rgba(255, 120, 60, 0.55),
+              0 0 16px rgba(255, 120, 60, 0.35);
+}
+
+.puc-chat__crown {
+  display: inline-block;
+  margin-right: 3px;
+  filter: drop-shadow(0 0 4px rgba(255, 140, 70, 0.85));
+  animation: puc-chat-crown-flicker 1.8s ease-in-out infinite;
+}
+
+@keyframes puc-chat-crown-flicker {
+  0%, 100% { transform: scale(1)    rotate(-2deg); }
+  50%      { transform: scale(1.15) rotate( 2deg); }
+}
+
+/* Lifetime-earn title chip rendered inline after the author's name. */
+.puc-chat__title {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.4px;
+  color: rgba(231, 184, 65, 0.85);
+  text-transform: none;
+}
+
 .puc-chat__text {
   color: var(--puc-text);
   word-wrap: break-word;

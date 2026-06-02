@@ -105,11 +105,14 @@ function Bubble({ message }: { message: ChatMessage }) {
   // paragraphs so a 4-sentence anecdote doesn't render as one wall of text.
   const paragraphs = isHost ? splitForReading(message.text) : null
   return (
-    <div className={`puc-chat__bubble puc-chat__bubble--${message.kind}${message.hasHalo ? ' puc-chat__bubble--halo' : ''}`}>
+    <div className={`puc-chat__bubble puc-chat__bubble--${message.kind}${message.hasCrown ? ' puc-chat__bubble--crown' : message.hasHalo ? ' puc-chat__bubble--halo' : ''}`}>
       <span className="puc-chat__name">
         {message.isBypass ? '👻 ' : ''}
-        {message.hasHalo && <span className="puc-chat__halo" title="Duel winner — last 24h">✨</span>}
+        {message.hasCrown
+          ? <span className="puc-chat__crown" title="3+ duel wins in a row — last 72h">🔥</span>
+          : message.hasHalo && <span className="puc-chat__halo" title="Duel winner — last 24h">✨</span>}
         {message.name}
+        {message.title && <span className="puc-chat__title">· {message.title}</span>}
         {isHost ? ' · host' : ''}
         {isSystem ? ' · system' : ''}
         <span className="puc-chat__time">{formatChatTime(message.ts)}</span>

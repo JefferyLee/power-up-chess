@@ -14,7 +14,7 @@ import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
 import { reserveAndPriceSpell, type SpellPricing } from './wizardSpellPricing'
 import type { SpellId, WizardActionRecord } from './types'
 import type { Color, Square } from '../../shared/chessTypes'
-import { AWARD_CAPS, DUEL_HALO_HOURS, type GuestDoc } from '../../castle/types'
+import { AWARD_CAPS, CROWN_HOURS, CROWN_THRESHOLD, DUEL_HALO_HOURS, type GuestDoc } from '../../castle/types'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -475,24 +475,44 @@ async function applyDuelPayouts(
   const winnerSlot = winner === 'w' ? room.white : room.black
   const loserSlot = winner === 'w' ? room.black : room.white
   const db = getFirestore()
-  const haloExpiresAt = Date.now() + DUEL_HALO_HOURS * 60 * 60 * 1000
+  const now = Date.now()
+  const haloExpiresAt = now + DUEL_HALO_HOURS * 60 * 60 * 1000
+  const crownExtensionMs = CROWN_HOURS * 60 * 60 * 1000
 
   if (winnerSlot && !winnerSlot.isBypass && winnerSlot.normalizedName) {
     const ref = db.doc(`guests/${winnerSlot.normalizedName}`)
     const snap = await tx.get(ref)
     if (snap.exists) {
-      // Winner gets the payout AND a 24-hour golden halo cosmetic.
-      tx.update(ref, {
+      const winnerDoc = snap.data() as GuestDoc
+      const nextStreak = (winnerDoc.cosmetics?.winStreak ?? 0) + 1
+      // Phase D: lifetime-earn lazy-migrates from current balance for old guests.
+      const lifetimePrev = winnerDoc.lifetimeEarned ?? Math.max(0, winnerDoc.castlePoints)
+      const updates: Record<string, unknown> = {
         castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner),
+        lifetimeEarned: lifetimePrev + AWARD_CAPS.duelWinner,
         'cosmetics.duelWinnerExpiresAt': haloExpiresAt,
-      })
+        'cosmetics.winStreak': nextStreak,
+      }
+      // Hitting (or staying past) the threshold extends the crown another
+      // CROWN_HOURS from now — so a sustained streak keeps the crown lit.
+      if (nextStreak >= CROWN_THRESHOLD) {
+        updates['cosmetics.winStreakCrownExpiresAt'] = now + crownExtensionMs
+      }
+      tx.update(ref, updates)
     }
   }
   if (loserSlot && !loserSlot.isBypass && loserSlot.normalizedName) {
     const ref = db.doc(`guests/${loserSlot.normalizedName}`)
     const snap = await tx.get(ref)
     if (snap.exists) {
-      tx.update(ref, { castlePoints: FieldValue.increment(AWARD_CAPS.duelLoser) })
+      const loserDoc = snap.data() as GuestDoc
+      const lifetimePrev = loserDoc.lifetimeEarned ?? Math.max(0, loserDoc.castlePoints)
+      tx.update(ref, {
+        castlePoints: FieldValue.increment(AWARD_CAPS.duelLoser),
+        lifetimeEarned: lifetimePrev + AWARD_CAPS.duelLoser,
+        // Loss resets the streak; the crown lives out its natural expiry.
+        'cosmetics.winStreak': 0,
+      })
     }
   }
 }

@@ -132,7 +132,16 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
       earn[bucketKey] += grantedAmount
       const unlockedJustNow = before < UNLOCK_THRESHOLD && after >= UNLOCK_THRESHOLD
 
-      tx.update(guestRef, { castlePoints: after, dailyEarn: earn })
+      // Lazy-migrate lifetimeEarned: if absent, seed from current balance
+      // so existing guests don't start their title ladder from 0.
+      const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, before)
+      const lifetimeAfter = lifetimePrev + grantedAmount
+
+      tx.update(guestRef, {
+        castlePoints: after,
+        dailyEarn: earn,
+        lifetimeEarned: lifetimeAfter,
+      })
       return { castlePoints: after, added: grantedAmount, unlockedJustNow }
     })
   },

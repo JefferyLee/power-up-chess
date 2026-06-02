@@ -173,6 +173,11 @@ export interface GuestDoc {
   /** Today's per-source earnings, used to enforce daily caps without
    *  bloating the doc. Replaced whole-cloth when the day rolls over. */
   dailyEarn?: GuestDailyEarn
+  /** Phase D — sum of every positive castle-point credit this guest has
+   *  ever received. Only ever goes up; drives the lifetime-earn title
+   *  ladder (Apprentice / Adept / Sorcerer / Archmage). Missing = treated
+   *  as max(0, current castlePoints) on first read (lazy migration). */
+  lifetimeEarned?: number
 }
 
 export interface GuestDailyEarn {
@@ -187,10 +192,53 @@ export interface GuestDailyEarn {
 export interface GuestCosmetics {
   /** Server-ms when the duel-winner halo expires; absent / past = no halo. */
   duelWinnerExpiresAt?: number
+  /** Consecutive Wizard's Duel wins (reset on any loss). Once it hits
+   *  CROWN_THRESHOLD the winStreakCrownExpiresAt is set/extended. */
+  winStreak?: number
+  /** Server-ms when the 3-win-streak crown expires; absent / past = no crown. */
+  winStreakCrownExpiresAt?: number
 }
 
 /** Hours the duel-winner halo lasts after a Wizard's Duel victory. */
 export const DUEL_HALO_HOURS = 24
+
+/** Consecutive-wins needed to earn the streak crown cosmetic. */
+export const CROWN_THRESHOLD = 3
+/** Hours the streak crown lasts after each qualifying win. Each new
+ *  win at or above CROWN_THRESHOLD pushes the expiry forward by this
+ *  many hours from `now` (not from previous expiry). */
+export const CROWN_HOURS = 72
+
+// ── Lifetime-earn titles (Phase D) ──────────────────────────────────────
+//
+// lifetimeEarned is incremented every time a guest gets POSITIVE castle
+// points (awards, duel payouts, starter pack, check-in/streak bonuses).
+// Spending — chat costs, spell casts, room-open fees — does NOT subtract
+// from lifetimeEarned; titles only ever go up.
+
+export interface TitleRank {
+  id: 'apprentice' | 'adept' | 'sorcerer' | 'archmage'
+  label: string
+  /** Minimum lifetimeEarned to display this title. */
+  threshold: number
+}
+
+export const TITLE_LADDER: TitleRank[] = [
+  { id: 'apprentice', label: 'Apprentice', threshold: 100 },
+  { id: 'adept',      label: 'Adept',      threshold: 500 },
+  { id: 'sorcerer',   label: 'Sorcerer',   threshold: 2000 },
+  { id: 'archmage',   label: 'Archmage',   threshold: 10000 },
+]
+
+/** Resolve the highest-rank title for a given lifetime-earn total.
+ *  Returns null when below the entry threshold. */
+export function titleFor(lifetimeEarned: number): TitleRank | null {
+  let best: TitleRank | null = null
+  for (const rank of TITLE_LADDER) {
+    if (lifetimeEarned >= rank.threshold) best = rank
+  }
+  return best
+}
 
 /** Firestore shape for castle_enter_attempts/{uid} — used to track the
  *  per-session 3-strike state on the server, so the bypass link can't

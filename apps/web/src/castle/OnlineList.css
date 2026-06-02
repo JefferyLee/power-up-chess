@@ -116,6 +116,31 @@
   50%      { opacity: 1;    transform: scale(1.2); }
 }
 
+/* Streak-crown overlay — supersedes halo when present. */
+.puc-online__row--crown .puc-online__name {
+  color: #ffb060;
+}
+
+.puc-online__crown {
+  display: inline-block;
+  margin-right: 3px;
+  filter: drop-shadow(0 0 4px rgba(255, 140, 70, 0.85));
+  animation: puc-online-crown-flicker 1.8s ease-in-out infinite;
+}
+
+@keyframes puc-online-crown-flicker {
+  0%, 100% { transform: scale(1)    rotate(-2deg); }
+  50%      { transform: scale(1.15) rotate( 2deg); }
+}
+
+/* Lifetime-earn title chip in the OnlineList row. */
+.puc-online__title {
+  font-size: 10.5px;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  color: rgba(231, 184, 65, 0.85);
+}
+
 .puc-online__follow {
   appearance: none;
   background: transparent;

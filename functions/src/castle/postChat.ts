@@ -13,7 +13,7 @@ import { CHAT_LIMITS, type ChatMessageDoc, type PostChatRequest, type PostChatRe
 import { bumpAndCheck } from './chatRateLimit'
 import { scrubMessage } from './profanity'
 import { generateHostReply, GEMINI_API_KEY, mentionedHost } from './hostChatReply'
-import type { GuestDoc } from './types'
+import { titleFor, type GuestDoc } from './types'
 
 /** Cost per Hall message, in castle points. Kids who can't earn yet
  *  (bypass guests) skip this — they have no balance. Designed to nudge
@@ -57,6 +57,8 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     // since they have no persistent balance.
     let guestRefForDeduct: FirebaseFirestore.DocumentReference | null = null
     let hasHalo = false
+    let hasCrown = false
+    let title: string | null = null
     if (!isBypass) {
       const guestRef = db.doc(`guests/${normalizedName}`)
       const gSnap = await guestRef.get()
@@ -71,8 +73,13 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
         )
       }
       guestRefForDeduct = guestRef
+      const now = Date.now()
       const halo = guest.cosmetics?.duelWinnerExpiresAt
-      hasHalo = typeof halo === 'number' && halo > Date.now()
+      hasHalo = typeof halo === 'number' && halo > now
+      const crown = guest.cosmetics?.winStreakCrownExpiresAt
+      hasCrown = typeof crown === 'number' && crown > now
+      const lifetime = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
+      title = titleFor(lifetime)?.label ?? null
     }
 
     const scrub = scrubMessage(text)
@@ -94,6 +101,8 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       text: scrub.text,
       ts: Date.now(),
       ...(hasHalo ? { hasHalo: true } : {}),
+      ...(hasCrown ? { hasCrown: true } : {}),
+      ...(title ? { title } : {}),
     }
     const ref = await db.collection('lobby/messages/items').add(msg)
 

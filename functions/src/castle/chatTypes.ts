@@ -53,6 +53,13 @@ export interface ChatMessageDoc {
    *  so historical bubbles render consistently even after the cosmetic
    *  expires. Currently only "duel-winner halo" sets this. */
   hasHalo?: boolean
+  /** True if the author had the streak crown (3+ consecutive Wizard's
+   *  Duel wins) at send time. Visually overrides hasHalo. */
+  hasCrown?: boolean
+  /** Author's lifetime-earn title label at send time ("Apprentice", etc.),
+   *  omitted when below the entry threshold. Snapshot — historical
+   *  bubbles keep showing the title from when they were posted. */
+  title?: string
 }
 
 /** Where the user currently is in the app. `hall` is the default; any
@@ -79,6 +86,10 @@ export interface PresenceDoc {
   /** True if the guest currently has the post-duel-win halo cosmetic.
    *  Refreshed each heartbeat from guests/{name}.cosmetics. */
   hasHalo?: boolean
+  /** True if the guest currently has the streak crown. Overrides halo. */
+  hasCrown?: boolean
+  /** Live lifetime-earn title label, refreshed each heartbeat. */
+  title?: string
 }
 
 // ─── Callables ─────────────────────────────────────────────────────────────

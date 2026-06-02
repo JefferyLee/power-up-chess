@@ -33,6 +33,10 @@ export interface ChatMessage {
   /** Set on the server snapshot if the author had a cosmetic effect
    *  active at send time (currently only the post-duel-win halo). */
   hasHalo?: boolean
+  /** Streak crown — 3+ consecutive Wizard's Duel wins. Overrides halo. */
+  hasCrown?: boolean
+  /** Lifetime-earn title at send time (Apprentice/Adept/Sorcerer/Archmage). */
+  title?: string
 }
 
 export type LocationTag =
@@ -52,6 +56,10 @@ export interface PresenceRow {
   location?: LocationTag
   /** True if this guest currently has the post-duel-win halo cosmetic. */
   hasHalo?: boolean
+  /** True if this guest currently has the 3-win streak crown. Overrides halo. */
+  hasCrown?: boolean
+  /** Live lifetime-earn title label. */
+  title?: string
 }
 
 export interface RoomOccupancy {

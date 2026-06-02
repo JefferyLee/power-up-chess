@@ -8,7 +8,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { LocationTag, SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
-import type { GuestDoc } from './types'
+import { titleFor, type GuestDoc } from './types'
 import { hostOnDuty } from '../shared/hostOnDuty'
 
 interface FullPresenceRequest extends SetPresenceRequest {
@@ -35,6 +35,8 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
 
     const db = getFirestore()
     let hasHalo = false
+    let hasCrown = false
+    let title: string | null = null
     // Verify non-bypass identity against the guest doc + read cosmetic state.
     if (!isBypass) {
       if (!normalizedName) throw new HttpsError('invalid-argument', 'normalizedName required for non-bypass guests.')
@@ -43,8 +45,13 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       if (!guest || !guest.uids.includes(uid)) {
         throw new HttpsError('permission-denied', 'You can only set presence as yourself.')
       }
+      const now = Date.now()
       const halo = guest.cosmetics?.duelWinnerExpiresAt
-      hasHalo = typeof halo === 'number' && halo > Date.now()
+      hasHalo = typeof halo === 'number' && halo > now
+      const crown = guest.cosmetics?.winStreakCrownExpiresAt
+      hasCrown = typeof crown === 'number' && crown > now
+      const lifetime = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
+      title = titleFor(lifetime)?.label ?? null
     }
 
     const now = Date.now()
@@ -59,6 +66,8 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       lastSeenAt: now,
       ...(location ? { location } : {}),
       ...(hasHalo ? { hasHalo: true } : {}),
+      ...(hasCrown ? { hasCrown: true } : {}),
+      ...(title ? { title } : {}),
     }
     await db.doc(`lobby/presence/items/${sessionId}`).set(presence)
 
