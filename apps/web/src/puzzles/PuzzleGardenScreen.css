@@ -143,6 +143,97 @@
   .puc-garden__calibrate-actions { justify-content: flex-end; }
 }
 
+.puc-garden__daily {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  margin: 0 0 18px;
+  border-radius: 12px;
+  background: rgba(244, 194, 102, 0.07);
+  border: 1px solid rgba(244, 194, 102, 0.35);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--puc-text);
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.puc-garden__daily:hover {
+  background: rgba(244, 194, 102, 0.13);
+  border-color: rgba(244, 194, 102, 0.6);
+}
+.puc-garden__daily--done {
+  background: rgba(72, 200, 120, 0.08);
+  border-color: rgba(72, 200, 120, 0.4);
+}
+.puc-garden__daily-title {
+  font-family: var(--puc-font-display);
+  font-size: 15px;
+  color: var(--puc-text-accent);
+}
+.puc-garden__daily-sub {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+  margin-top: 2px;
+}
+.puc-garden__daily-stones {
+  display: flex;
+  gap: 6px;
+}
+.puc-garden__daily-stone {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(120, 120, 140, 0.3);
+}
+.puc-garden__daily-stone--pending { background: rgba(120, 120, 140, 0.3); }
+.puc-garden__daily-stone--solved { background: rgba(72, 200, 120, 0.85); }
+.puc-garden__daily-stone--failed { background: rgba(220, 130, 120, 0.85); }
+
+.puc-garden__legends {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  margin: 20px 0 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(244, 194, 102, 0.10),
+    rgba(120, 80, 200, 0.06)
+  );
+  border: 1px solid rgba(244, 194, 102, 0.45);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--puc-text);
+  transition: filter 200ms ease;
+}
+.puc-garden__legends:hover:not(:disabled) { filter: brightness(1.1); }
+.puc-garden__legends--locked {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.6);
+  border-color: rgba(120, 120, 140, 0.4);
+}
+.puc-garden__legends-icon { font-size: 32px; text-align: center; }
+.puc-garden__legends-title {
+  font-family: var(--puc-font-display);
+  font-size: 16px;
+  color: var(--puc-text-accent);
+}
+.puc-garden__legends-blurb {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+  margin-top: 4px;
+}
+.puc-garden__legends-cta {
+  font-family: var(--puc-font-display);
+  color: var(--puc-accent);
+  font-size: 14px;
+}
+
 .puc-garden__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

@@ -230,6 +230,19 @@ export interface GuestDoc {
     'mate' | 'fork' | 'pinSkewer' | 'sacrifice' | 'endgame' | 'defense',
     number
   >>
+  /** Today's Five — 5 hand-picked puzzles per LA day. Replaced when the
+   *  day rolls over. results[i] = true (solved) / false (failed/skip) /
+   *  null (not yet attempted). completionBonusPaid flips true after the
+   *  +10 castle-point bonus fires on the 5th attempt. */
+  puzzleDaily?: {
+    dayKey: string                  // YYYY-MM-DD in LA
+    puzzleIds: string[]             // length 5
+    results: Array<boolean | null>  // length 5
+    completionBonusPaid?: boolean
+  }
+  /** Legends Hall — puzzle ids the kid has solved in the 100-puzzle
+   *  Legends pool. Drives the gold-badge plaques in the museum. */
+  puzzleLegendsBadges?: string[]
 }
 
 export interface GuestDailyEarn {

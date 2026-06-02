@@ -415,6 +415,28 @@ export interface SubmitPuzzleAttemptResponse {
   castlePointsAdded: number
   castlePoints: number
   legends: boolean
+  dailyCompletedNow?: boolean
+  dailyBonusAdded?: number
+}
+
+export interface GetDailyFiveRequest { normalizedName: string }
+export type GetDailyFiveResponse =
+  | {
+      ok: true
+      dayKey: string
+      puzzles: ServerPuzzle[]
+      results: Array<boolean | null>
+      completionBonusPaid: boolean
+    }
+  | { ok: false; reason: 'invalid-input' | 'empty' }
+
+export interface GetLegendsListRequest { normalizedName: string }
+export interface GetLegendsListResponse {
+  ok: true
+  puzzles: ServerPuzzle[]
+  solved: string[]
+  totalSolved: number
+  unlockThreshold: number
 }
 
 export interface GetCalibrationSetRequest {
@@ -449,6 +471,14 @@ const submitCalibrationFn = httpsCallable<
   SubmitCalibrationRequest,
   SubmitCalibrationResponse
 >(functions, 'submitCalibration')
+const getDailyFiveFn = httpsCallable<GetDailyFiveRequest, GetDailyFiveResponse>(
+  functions,
+  'getDailyFive',
+)
+const getLegendsListFn = httpsCallable<
+  GetLegendsListRequest,
+  GetLegendsListResponse
+>(functions, 'getLegendsList')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -472,5 +502,17 @@ export async function callSubmitCalibration(
   req: SubmitCalibrationRequest,
 ): Promise<SubmitCalibrationResponse> {
   const { data } = await submitCalibrationFn(req)
+  return data
+}
+export async function callGetDailyFive(
+  req: GetDailyFiveRequest,
+): Promise<GetDailyFiveResponse> {
+  const { data } = await getDailyFiveFn(req)
+  return data
+}
+export async function callGetLegendsList(
+  req: GetLegendsListRequest,
+): Promise<GetLegendsListResponse> {
+  const { data } = await getLegendsListFn(req)
   return data
 }

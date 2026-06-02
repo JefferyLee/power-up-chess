@@ -33,7 +33,16 @@ interface GuestPuzzleState {
   puzzleRatings?: Partial<Record<Plot, number>>
   puzzleCalibrated?: boolean
   puzzleStats?: { solved: number; attempted: number }
+  puzzleDaily?: {
+    dayKey: string
+    puzzleIds: string[]
+    results: Array<boolean | null>
+    completionBonusPaid?: boolean
+  }
+  puzzleLegendsBadges?: string[]
 }
+
+const LEGENDS_UNLOCK_SOLVES = 50
 
 export function PuzzleGardenScreen() {
   const navigate = useNavigate()
@@ -130,6 +139,13 @@ export function PuzzleGardenScreen() {
           </div>
         )}
 
+        {!!identity && !identity.isBypass && (
+          <DailyStrip
+            daily={state?.puzzleDaily ?? null}
+            onOpen={() => navigate('/puzzles/daily')}
+          />
+        )}
+
         <p className="puc-garden__intro">
           Six plots, thousands of puzzles. Pick one — we&apos;ll serve puzzles at your level.
         </p>
@@ -144,8 +160,105 @@ export function PuzzleGardenScreen() {
             />
           ))}
         </div>
+
+        {!!identity && !identity.isBypass && (
+          <LegendsEntrance
+            unlocked={stats.solved >= LEGENDS_UNLOCK_SOLVES}
+            solved={stats.solved}
+            badges={state?.puzzleLegendsBadges?.length ?? 0}
+            onEnter={() => navigate('/puzzles/legends')}
+          />
+        )}
       </main>
     </div>
+  )
+}
+
+function DailyStrip({
+  daily,
+  onOpen,
+}: {
+  daily: GuestPuzzleState['puzzleDaily'] | null
+  onOpen: () => void
+}) {
+  const slots: Array<boolean | null> =
+    daily && Array.isArray(daily.results) && daily.results.length === 5
+      ? daily.results
+      : [null, null, null, null, null]
+  const allDone = slots.every((r) => r !== null && r !== undefined)
+  const solved = slots.filter((r) => r === true).length
+  return (
+    <button
+      type="button"
+      className={
+        'puc-garden__daily ' + (allDone ? 'puc-garden__daily--done' : '')
+      }
+      onClick={onOpen}
+    >
+      <div className="puc-garden__daily-body">
+        <div className="puc-garden__daily-title">
+          {allDone ? "Today's Five — done!" : "Today's Five"}
+        </div>
+        <div className="puc-garden__daily-sub">
+          {allDone
+            ? `${solved} of 5 solved — come back tomorrow`
+            : 'Hand-picked daily quest, +10 castle-point bonus on completion'}
+        </div>
+      </div>
+      <div className="puc-garden__daily-stones" aria-hidden="true">
+        {slots.map((r, i) => (
+          <span
+            key={i}
+            className={
+              'puc-garden__daily-stone ' +
+              (r === true
+                ? 'puc-garden__daily-stone--solved'
+                : r === false
+                  ? 'puc-garden__daily-stone--failed'
+                  : 'puc-garden__daily-stone--pending')
+            }
+          />
+        ))}
+      </div>
+    </button>
+  )
+}
+
+function LegendsEntrance({
+  unlocked,
+  solved,
+  badges,
+  onEnter,
+}: {
+  unlocked: boolean
+  solved: number
+  badges: number
+  onEnter: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={
+        'puc-garden__legends ' + (unlocked ? '' : 'puc-garden__legends--locked')
+      }
+      onClick={unlocked ? onEnter : undefined}
+      disabled={!unlocked}
+    >
+      <div className="puc-garden__legends-icon" aria-hidden="true">
+        🏛️
+      </div>
+      <div className="puc-garden__legends-body">
+        <div className="puc-garden__legends-title">Legends Hall</div>
+        <div className="puc-garden__legends-blurb">
+          {unlocked
+            ? `100 master-tier puzzles. Solve any for a permanent gold badge. (${badges} earned)`
+            : `Unlocks at 50 solves — you have ${solved}.`}
+        </div>
+      </div>
+      <div className="puc-garden__legends-cta">
+        {unlocked ? 'Enter →' : '🔒'}
+      </div>
+    </button>
   )
 }
 

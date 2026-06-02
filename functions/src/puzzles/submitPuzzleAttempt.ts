@@ -22,6 +22,7 @@ import {
   type SubmitPuzzleAttemptRequest,
   type SubmitPuzzleAttemptResponse,
 } from './types'
+import { DAILY_BONUS_POINTS, laDayKey } from './dailyFive'
 
 export const submitPuzzleAttempt = onCall<
   SubmitPuzzleAttemptRequest,
@@ -96,15 +97,64 @@ export const submitPuzzleAttempt = onCall<
       solved: (guest.puzzleStats?.solved ?? 0) + (success ? 1 : 0),
     }
 
+    // Today's Five hook — if this puzzle is in today's slate, record the
+    // slot result + fire the +10 completion bonus on the 5th attempt.
+    let dailyCompletedNow = false
+    let dailyBonusAdded = 0
+    const today = laDayKey(Date.now())
+    let nextDaily = guest.puzzleDaily
+    if (
+      nextDaily &&
+      nextDaily.dayKey === today &&
+      Array.isArray(nextDaily.puzzleIds)
+    ) {
+      const slot = nextDaily.puzzleIds.indexOf(puzzle.id)
+      if (slot >= 0) {
+        const newResults = [...nextDaily.results]
+        // First attempt for the slot wins — subsequent attempts shouldn't
+        // overwrite a true with a later false.
+        if (newResults[slot] === null || newResults[slot] === undefined) {
+          newResults[slot] = success
+        }
+        const allDone = newResults.every((r) => r !== null && r !== undefined)
+        const shouldPayBonus = allDone && nextDaily.completionBonusPaid !== true
+        nextDaily = {
+          ...nextDaily,
+          results: newResults,
+          completionBonusPaid: shouldPayBonus ? true : nextDaily.completionBonusPaid,
+        }
+        if (shouldPayBonus) {
+          dailyCompletedNow = true
+          dailyBonusAdded = DAILY_BONUS_POINTS
+        }
+      }
+    }
+
+    // Legends Hall badge tracking — push id once on first solve.
+    let nextBadges = guest.puzzleLegendsBadges
+    if (success && puzzle.legends) {
+      const set = new Set(nextBadges ?? [])
+      if (!set.has(puzzle.id)) {
+        set.add(puzzle.id)
+        nextBadges = Array.from(set)
+      }
+    }
+
+    const totalPoints = pointsAdded + dailyBonusAdded
+
     const update: Record<string, unknown> = {
       [`puzzleRatings.${puzzle.plot}`]: newRating,
       puzzleSeen: trimmed,
       puzzleStats: nextStats,
       lastVisitAt: Date.now(),
     }
-    if (pointsAdded > 0) {
-      update.castlePoints = FieldValue.increment(pointsAdded)
-      update.lifetimeEarned = FieldValue.increment(pointsAdded)
+    if (nextDaily !== guest.puzzleDaily) update.puzzleDaily = nextDaily
+    if (nextBadges !== guest.puzzleLegendsBadges) {
+      update.puzzleLegendsBadges = nextBadges
+    }
+    if (totalPoints > 0) {
+      update.castlePoints = FieldValue.increment(totalPoints)
+      update.lifetimeEarned = FieldValue.increment(totalPoints)
     }
     tx.update(guestRef, update)
 
@@ -112,7 +162,9 @@ export const submitPuzzleAttempt = onCall<
       ratingBefore: prior,
       ratingAfter: newRating,
       pointsAdded,
-      castlePointsAfter: guest.castlePoints + pointsAdded,
+      dailyCompletedNow,
+      dailyBonusAdded,
+      castlePointsAfter: guest.castlePoints + totalPoints,
     }
   })
 
@@ -122,9 +174,11 @@ export const submitPuzzleAttempt = onCall<
     ratingBefore: result.ratingBefore,
     ratingAfter: result.ratingAfter,
     puzzleRating: puzzle.difficulty,
-    castlePointsAdded: result.pointsAdded,
+    castlePointsAdded: result.pointsAdded + result.dailyBonusAdded,
     castlePoints: result.castlePointsAfter,
     legends: puzzle.legends,
+    dailyCompletedNow: result.dailyCompletedNow,
+    dailyBonusAdded: result.dailyBonusAdded,
   }
 })
 

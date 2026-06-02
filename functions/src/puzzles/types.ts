@@ -109,11 +109,17 @@ export interface SubmitPuzzleAttemptResponse {
   /** Puzzle's own rating, returned so the client can show the delta. */
   puzzleRating: number
   /** Castle points awarded for this attempt (0 on failure, or if the
-   *  guest is a bypass that doesn't have a doc). */
+   *  guest is a bypass). Includes the +10 daily-completion bonus when
+   *  this attempt closes out Today's Five. */
   castlePointsAdded: number
   /** Guest's castle-point balance after this award. */
   castlePoints: number
   legends: boolean
+  /** True if this attempt was the 5th of Today's Five and the
+   *  completion bonus fired. */
+  dailyCompletedNow?: boolean
+  /** Amount of the daily-completion bonus (0 unless dailyCompletedNow). */
+  dailyBonusAdded?: number
 }
 
 // ─── getCalibrationSet ───────────────────────────────────────────────────
