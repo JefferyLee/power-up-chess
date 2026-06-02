@@ -31,8 +31,15 @@ function amountFor(award: AwardSource): number {
       const base = clamp(award.scorePoints, AWARD_CAPS.puzzleMin, AWARD_CAPS.puzzleMax)
       return base + (award.isFirstSolve ? AWARD_CAPS.puzzleFirstSolveBonus : 0)
     }
-    case 'chess-win':
+    case 'chess-win': {
+      // Newer clients send an opponent tier; older ones don't. Fall back
+      // to the legacy flat rate so old builds keep paying out.
+      const op = award.opponent
+      if (op && op in AWARD_CAPS.chessWinByOpponent) {
+        return AWARD_CAPS.chessWinByOpponent[op]
+      }
       return AWARD_CAPS.chessWin
+    }
     case 'chess-review': {
       const brilliant = clamp(award.brilliant, 0, 20)
       const bestExcellent = clamp(award.bestExcellent, 0, 200)

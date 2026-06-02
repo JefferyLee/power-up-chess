@@ -60,6 +60,11 @@ export interface RoomDoc {
 
 export interface CreateRoomRequest {
   displayName: string
+  /** Caller's normalized castle name — used server-side to debit the
+   *  room-opening cost. Required for non-bypass guests. */
+  normalizedName?: string
+  /** True for bypass guests. Bypass guests cannot open rooms. */
+  isBypass?: boolean
   hostMode?: 'lucy' | 'luca'
   timeControl?: TimeControlWire | null
 }

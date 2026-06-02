@@ -5,7 +5,7 @@
 // the castle-points deduction in the SAME transaction as the spell apply
 // so we never apply a spell without charging or vice versa.
 
-import { getFirestore, type Firestore, type Transaction } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore, type Firestore, type Transaction } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from '../../rooms/roomId'
 import { postRoomInvite } from '../../castle/postRoomInvite'
@@ -13,7 +13,8 @@ import { WizardChess, type SerializedEffect, type WizardRoomState } from './Wiza
 import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
 import type { SpellId, WizardActionRecord } from './types'
 import type { Color, Square } from '../../shared/chessTypes'
-import type { GuestDoc } from '../../castle/types'
+import { AWARD_CAPS, type GuestDoc } from '../../castle/types'
+import type { ChatMessageDoc } from '../../castle/chatTypes'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -85,8 +86,19 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const slot = validatePlayer(req.auth.uid, req.data)
+    // Opening a duel costs castle points; bypass guests have no balance,
+    // so we refuse them and ask them to register a magic word.
+    if (slot.isBypass || !slot.normalizedName) {
+      throw new HttpsError(
+        'permission-denied',
+        'Bypass guests can\'t open Wizard\'s Duels. Set a magic word in the castle gate first.',
+      )
+    }
     const db = getFirestore()
     const now = Date.now()
+    const guestRef = db.doc(`guests/${slot.normalizedName}`)
+    const cost = AWARD_CAPS.wizardRoomOpenCost
+
     for (let i = 0; i < MAX_TRIES; i++) {
       const roomId = generateRoomId()
       const ref = db.doc(`wizard_rooms/${roomId}`)
@@ -108,14 +120,30 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
         createdAt: now,
         updatedAt: now,
       }
-      try {
-        await ref.create(doc)
+      // Returns false on room-id collision so the outer loop retries with a
+      // fresh id; throws HttpsError on real failures (no guest, low balance).
+      const committed = await db.runTransaction(async (tx) => {
+        const guestSnap = await tx.get(guestRef)
+        if (!guestSnap.exists) {
+          throw new HttpsError('failed-precondition', 'Guest record missing.')
+        }
+        const guest = guestSnap.data() as GuestDoc
+        if (guest.castlePoints < cost) {
+          throw new HttpsError(
+            'failed-precondition',
+            `Need ${cost} castle points to open a duel; you have ${guest.castlePoints}.`,
+          )
+        }
+        const roomSnap = await tx.get(ref)
+        if (roomSnap.exists) return false
+        tx.create(ref, doc)
+        tx.update(guestRef, { castlePoints: FieldValue.increment(-cost) })
+        return true
+      })
+
+      if (committed) {
         void postRoomInvite({ roomKind: 'wizard', roomId, openerName: slot.displayName })
         return { roomId }
-      } catch (err: unknown) {
-        const code = (err as { code?: number | string }).code
-        if (code === 6 || code === 'already-exists') continue
-        throw err
       }
     }
     throw new HttpsError('internal', 'Could not allocate a unique roomId; please retry.')
@@ -175,13 +203,16 @@ export const submitWizardMove = onCall<SubmitMoveRequest, Promise<{ ok: true }>>
       const now = Date.now()
       const tick = tickClock(room, callerColor, now, { addIncrement: true })
       if (tick.flagged) {
+        const winner = opposite(callerColor)
+        await applyDuelPayouts(tx, room, winner)
         tx.update(ref, {
           ...tick.update,
           status: 'completed',
-          winner: opposite(callerColor),
+          winner,
           endReason: 'timeout',
           updatedAt: now,
         })
+        scheduleDuelAnnouncement(roomId, room, winner, 'timeout')
         throw new HttpsError('failed-precondition', 'Your time ran out.')
       }
 
@@ -205,8 +236,12 @@ export const submitWizardMove = onCall<SubmitMoveRequest, Promise<{ ok: true }>>
         update.winner = status.winner
         update.endReason = 'checkmate'
         update.lastTickServerTs = null
+        await applyDuelPayouts(tx, room, status.winner)
       }
       tx.update(ref, update)
+      if (status.kind === 'king_captured') {
+        scheduleDuelAnnouncement(roomId, room, status.winner, 'checkmate')
+      }
     })
     return { ok: true }
   },
@@ -255,13 +290,16 @@ export const submitWizardSpell = onCall<SubmitSpellRequest, Promise<{ ok: true; 
       const isTimeSpell = spellId === 'extra-time'
       const tick = tickClock(room, callerColor, now, { addIncrement: !isTimeSpell })
       if (tick.flagged) {
+        const winner = opposite(callerColor)
+        await applyDuelPayouts(tx, room, winner)
         tx.update(roomRef, {
           ...tick.update,
           status: 'completed',
-          winner: opposite(callerColor),
+          winner,
           endReason: 'timeout',
           updatedAt: now,
         })
+        scheduleDuelAnnouncement(roomId, room, winner, 'timeout')
         throw new HttpsError('failed-precondition', 'Your time ran out.')
       }
       if (isTimeSpell) {
@@ -321,13 +359,16 @@ export const resignWizardGame = onCall<{ roomId: string }, Promise<{ ok: true }>
       const callerColor = colorFor(uid, room)
       if (callerColor === null) throw new HttpsError('permission-denied', 'Not a player.')
 
+      const winner = opposite(callerColor)
+      await applyDuelPayouts(tx, room, winner)
       tx.update(ref, {
         status: 'completed',
-        winner: opposite(callerColor),
+        winner,
         endReason: 'resign',
         lastTickServerTs: null,
         updatedAt: Date.now(),
       })
+      scheduleDuelAnnouncement(roomId, room, winner, 'resign')
     })
     return { ok: true }
   },
@@ -386,12 +427,87 @@ export const claimWizardTimeWin = onCall<ClaimTimeRequest, Promise<{ ok: true }>
       }
       if (room.currentTurn === 'w') update.whiteTimeMs = 0
       else update.blackTimeMs = 0
+      await applyDuelPayouts(tx, room, callerColor)
       tx.update(ref, update)
+      scheduleDuelAnnouncement(roomId, room, callerColor, 'timeout')
     })
 
     return { ok: true }
   },
 )
+
+// ── Duel completion side-effects ────────────────────────────────────────
+//
+// Payouts: winner +25, loser +5 (consolation). Both deducted via the
+// existing castle-points mechanic — non-bypass guests only, since bypass
+// guests have no persistent balance.
+//
+// Announcement: posted to the Hall as a system message AFTER the txn
+// commits (best-effort, no retries — duplicate announcements are worse
+// than missing ones). Uses scheduleDuelAnnouncement so we don't have to
+// thread a deferred-write through every caller.
+
+async function applyDuelPayouts(
+  tx: Transaction,
+  room: WizardRoomDoc,
+  winner: Color,
+): Promise<void> {
+  const winnerSlot = winner === 'w' ? room.white : room.black
+  const loserSlot = winner === 'w' ? room.black : room.white
+  const db = getFirestore()
+
+  if (winnerSlot && !winnerSlot.isBypass && winnerSlot.normalizedName) {
+    const ref = db.doc(`guests/${winnerSlot.normalizedName}`)
+    const snap = await tx.get(ref)
+    if (snap.exists) {
+      tx.update(ref, { castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner) })
+    }
+  }
+  if (loserSlot && !loserSlot.isBypass && loserSlot.normalizedName) {
+    const ref = db.doc(`guests/${loserSlot.normalizedName}`)
+    const snap = await tx.get(ref)
+    if (snap.exists) {
+      tx.update(ref, { castlePoints: FieldValue.increment(AWARD_CAPS.duelLoser) })
+    }
+  }
+}
+
+function scheduleDuelAnnouncement(
+  roomId: string,
+  room: WizardRoomDoc,
+  winner: Color,
+  reason: 'checkmate' | 'timeout' | 'resign',
+): void {
+  // Defer the Hall write to the next microtask so the room transaction
+  // commits first. We don't await — duel responsiveness > announcement
+  // certainty. Errors logged, not thrown.
+  void Promise.resolve().then(async () => {
+    try {
+      const db = getFirestore()
+      const winnerSlot = winner === 'w' ? room.white : room.black
+      const loserSlot = winner === 'w' ? room.black : room.white
+      const winnerName = winnerSlot?.displayName ?? 'Someone'
+      const loserName = loserSlot?.displayName ?? 'their opponent'
+      const flavor =
+        reason === 'checkmate' ? 'checkmated' :
+        reason === 'timeout' ? 'outlasted' :
+        'won by resignation against'
+      const msg: ChatMessageDoc = {
+        name: 'Castle herald',
+        uid: '',
+        normalizedName: '',
+        isBypass: false,
+        kind: 'system',
+        text: `🏆 ${winnerName} ${flavor} ${loserName} in a Wizard's Duel!`,
+        ts: Date.now(),
+        action: { kind: 'join-room', roomKind: 'wizard', roomId, openerName: winnerName },
+      }
+      await db.collection('lobby/messages/items').add(msg)
+    } catch (err) {
+      console.warn('scheduleDuelAnnouncement failed:', err)
+    }
+  })
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 

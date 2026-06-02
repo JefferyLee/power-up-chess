@@ -45,9 +45,19 @@ export interface CastleBypassResponse {
 
 // ─── Award castle points ───────────────────────────────────────────────────
 
+/** Tags the kind of opponent for chess-win awards. Local AI tier wins
+ *  are scaled by strength; human PvP wins pay the same as the top AI tier. */
+export type ChessOpponent =
+  | 'human'
+  | 'ai-beginner'
+  | 'ai-easy'
+  | 'ai-medium'
+  | 'ai-hard'
+  | 'ai-expert'
+
 export type AwardSource =
   | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
-  | { source: 'chess-win'; gameId: string }
+  | { source: 'chess-win'; gameId: string; opponent?: ChessOpponent }
   | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
 
 export interface AwardCastlePointsRequest {
@@ -67,11 +77,34 @@ export const AWARD_CAPS = {
   puzzleMin: 10,
   puzzleMax: 25,
   puzzleFirstSolveBonus: 5,
+  /** Legacy flat chess-win amount, retained as a fallback when the client
+   *  doesn't specify an opponent (older clients / unknown source). */
   chessWin: 10,
-  chessBrilliantEach: 5,
+  chessBrilliantEach: 8,
   chessBestExcellentEach: 1,
-  // Per-review absolute ceiling to short-circuit "I had 1000 best moves" claims.
-  chessReviewMax: 60,
+  /** Per-review ceiling — bumped 60 → 80 to leave room for the new
+   *  brilliant-per-each rate. */
+  chessReviewMax: 80,
+  /** Per-opponent win awards. Beats the previous flat 10 for medium+ AI
+   *  and humans; intentional cliff so beating a stronger opponent pays. */
+  chessWinByOpponent: {
+    'ai-beginner': 5,
+    'ai-easy': 10,
+    'ai-medium': 15,
+    'ai-hard': 25,
+    'ai-expert': 40,
+    'human': 40,
+  },
+  /** Wizard's Duel end-of-game payouts (server-side only, not client-claimed). */
+  duelWinner: 25,
+  duelLoser: 5,
+  /** Cost to OPEN (host) a private chess room. Both players don't pay —
+   *  the opener is treating, joiner is free. Drains points + prevents
+   *  spam-creating rooms. */
+  chessRoomOpenCost: 5,
+  /** Cost to OPEN a Wizard's Duel — pricier because the duel itself is
+   *  the premium / point-burn experience. */
+  wizardRoomOpenCost: 10,
 } as const
 
 export const UNLOCK_THRESHOLD = 200

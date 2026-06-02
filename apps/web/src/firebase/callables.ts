@@ -81,9 +81,17 @@ export interface CastleBypassResponse {
   displayName: string
 }
 
+export type ChessOpponent =
+  | 'human'
+  | 'ai-beginner'
+  | 'ai-easy'
+  | 'ai-medium'
+  | 'ai-hard'
+  | 'ai-expert'
+
 export type AwardSource =
   | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
-  | { source: 'chess-win'; gameId: string }
+  | { source: 'chess-win'; gameId: string; opponent?: ChessOpponent }
   | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
 export interface AwardCastlePointsRequest {
   normalizedName: string

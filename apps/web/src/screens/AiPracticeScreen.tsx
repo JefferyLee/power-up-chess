@@ -294,7 +294,13 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
       sound.play(youWon ? 'mate-win' : 'mate-loss')
       if (youWon) {
         addCrowns(1)
-        void awardPoints(identity, { source: 'chess-win', gameId }).then((res) => {
+        // Tag the opponent tier so the award scales with AI strength
+        // (Beginner pays 5 pt … Expert 40 pt).
+        void awardPoints(identity, {
+          source: 'chess-win',
+          gameId,
+          opponent: `ai-${preset.id}` as const,
+        }).then((res) => {
           if (res) setCastlePoints(res.castlePoints)
         })
       }

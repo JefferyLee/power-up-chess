@@ -7,13 +7,18 @@
 // side: non-bypass callers must have a guest doc whose uids[] contains the
 // caller's auth uid.
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { CHAT_LIMITS, type ChatMessageDoc, type PostChatRequest, type PostChatResponse } from './chatTypes'
 import { bumpAndCheck } from './chatRateLimit'
 import { scrubMessage } from './profanity'
 import { generateHostReply, GEMINI_API_KEY, mentionedHost } from './hostChatReply'
 import type { GuestDoc } from './types'
+
+/** Cost per Hall message, in castle points. Kids who can't earn yet
+ *  (bypass guests) skip this — they have no balance. Designed to nudge
+ *  toward listening to stories + answering quizzes rather than chatting. */
+const HALL_CHAT_COST = 1
 
 const GENERIC_REPLY = 'I just listened in.'
 
@@ -47,16 +52,35 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     }
     const { displayName, normalizedName, isBypass, hostId } = idData
 
-    // For non-bypass callers, verify the guest doc + uids[].
+    // For non-bypass callers, verify the guest doc + uids[] AND charge
+    // 1 castle point per message. Bypass guests get to chat for free
+    // since they have no persistent balance.
+    let guestRefForDeduct: FirebaseFirestore.DocumentReference | null = null
     if (!isBypass) {
-      const gSnap = await db.doc(`guests/${normalizedName}`).get()
+      const guestRef = db.doc(`guests/${normalizedName}`)
+      const gSnap = await guestRef.get()
       const guest = gSnap.data() as GuestDoc | undefined
       if (!guest || !guest.uids.includes(uid)) {
         throw new HttpsError('permission-denied', 'You can only post as yourself.')
       }
+      if (guest.castlePoints < HALL_CHAT_COST) {
+        throw new HttpsError(
+          'failed-precondition',
+          `Need ${HALL_CHAT_COST} castle point to send a message; earn some with puzzles or quizzes.`,
+        )
+      }
+      guestRefForDeduct = guestRef
     }
 
     const scrub = scrubMessage(text)
+
+    // Deduct cost atomically (FieldValue.increment avoids a read-write race
+    // if two posts arrive back-to-back). We already verified balance ≥ cost
+    // above, but the per-minute rate limit makes a real-world underflow
+    // here implausible enough to ignore.
+    if (guestRefForDeduct) {
+      await guestRefForDeduct.update({ castlePoints: FieldValue.increment(-HALL_CHAT_COST) })
+    }
 
     const msg: ChatMessageDoc = {
       name: displayName,

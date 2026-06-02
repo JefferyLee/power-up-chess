@@ -53,6 +53,10 @@ export interface Move {
 
 export interface CreateRoomRequest {
   displayName: string
+  /** Caller's normalized castle name — used to debit the room-opening cost. */
+  normalizedName?: string
+  /** True for bypass guests. Bypass guests cannot open rooms (no balance). */
+  isBypass?: boolean
   timeControl?: TimeControl | null
 }
 

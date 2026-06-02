@@ -442,7 +442,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       sound.play(youWon ? 'mate-win' : 'mate-loss')
       if (youWon) {
         addCrowns(1)
-        void awardPoints(identity, { source: 'chess-win', gameId: roomId }).then((res) => {
+        void awardPoints(identity, { source: 'chess-win', gameId: roomId, opponent: 'human' }).then((res) => {
           if (res) setCastlePoints(res.castlePoints)
         })
       }

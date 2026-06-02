@@ -58,7 +58,12 @@ export function HallScreen() {
     setCreating(true)
     setError(null)
     try {
-      const { roomId } = await callCreateRoom({ displayName, timeControl })
+      const { roomId } = await callCreateRoom({
+        displayName,
+        normalizedName: identity.normalizedName,
+        isBypass: identity.isBypass,
+        timeControl,
+      })
       navigate(`/r/${roomId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
