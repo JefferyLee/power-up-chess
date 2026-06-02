@@ -70,6 +70,44 @@
   50%      { opacity: 0.55; }
 }
 
+/* Mist drifting across the pine line. Two layers move at different
+ * rates so the parallax suggests depth. */
+.puc-castle-art__mist {
+  animation: puc-castle-mist-drift 28s linear infinite;
+  transform-origin: center;
+}
+@keyframes puc-castle-mist-drift {
+  0%   { transform: translateX(-8px); opacity: 0.85; }
+  50%  { transform: translateX( 8px); opacity: 1; }
+  100% { transform: translateX(-8px); opacity: 0.85; }
+}
+
+/* Fireflies — five offset cycles so the cluster pulses organically
+ * instead of all blinking in unison. Tiny scale + opacity wobble. */
+.puc-castle-art__firefly {
+  filter: drop-shadow(0 0 4px rgba(255, 241, 168, 0.9));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: puc-firefly-pulse 4.2s ease-in-out infinite;
+}
+.puc-castle-art__firefly--1 { animation-duration: 3.6s; animation-delay: 0s;    }
+.puc-castle-art__firefly--2 { animation-duration: 4.2s; animation-delay: 0.7s;  }
+.puc-castle-art__firefly--3 { animation-duration: 5.1s; animation-delay: 1.5s;  }
+.puc-castle-art__firefly--4 { animation-duration: 3.9s; animation-delay: 2.2s;  }
+.puc-castle-art__firefly--5 { animation-duration: 4.7s; animation-delay: 0.4s;  }
+@keyframes puc-firefly-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.7) translateY(0); }
+  45%      { opacity: 1;    transform: scale(1.15) translateY(-3px); }
+  70%      { opacity: 0.5;  transform: scale(0.95) translateY(1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puc-castle-art__mist,
+  .puc-castle-art__firefly {
+    animation: none;
+  }
+}
+
 /* ── Floating overlay layer ─────────────────────────────────────────── */
 
 .puc-gate__overlay {

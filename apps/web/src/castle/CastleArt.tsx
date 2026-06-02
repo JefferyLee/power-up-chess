@@ -22,15 +22,44 @@ export function CastleArt({ phase }: Props) {
       aria-label="Power Up Castle gate"
     >
       <defs>
+        {/* Deeper indigo at the zenith → violet middle → warm-ember horizon
+         * so the sky feels like real twilight rather than a flat purple. */}
         <linearGradient id="puc-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1c1638" />
-          <stop offset="55%" stopColor="#3d2c5c" />
-          <stop offset="100%" stopColor="#6a4a7a" />
+          <stop offset="0%"  stopColor="#0d0828" />
+          <stop offset="35%" stopColor="#1f1748" />
+          <stop offset="65%" stopColor="#3d2c5c" />
+          <stop offset="90%" stopColor="#6a4a6a" />
+          <stop offset="100%" stopColor="#92543a" />
         </linearGradient>
-        <radialGradient id="puc-moon" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#fff9dd" />
-          <stop offset="60%" stopColor="#f6e3a1" />
-          <stop offset="100%" stopColor="rgba(246,227,161,0)" />
+        {/* Soft halo around the moon — separate from the moon body so the
+         * crescent shape can sit cleanly on top. */}
+        <radialGradient id="puc-moon-halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stopColor="rgba(255, 245, 200, 0.5)" />
+          <stop offset="60%" stopColor="rgba(255, 220, 160, 0.18)" />
+          <stop offset="100%" stopColor="rgba(255, 200, 130, 0)" />
+        </radialGradient>
+        {/* Pine silhouette gradient — solid near base, soft fade at top to
+         * suggest mist swallowing the canopy. */}
+        <linearGradient id="puc-pines-far" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="rgba(20, 16, 36, 0)" />
+          <stop offset="60%" stopColor="rgba(20, 16, 36, 0.55)" />
+          <stop offset="100%" stopColor="rgba(20, 16, 36, 0.78)" />
+        </linearGradient>
+        <linearGradient id="puc-pines-mid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="rgba(12, 10, 22, 0.55)" />
+          <stop offset="100%" stopColor="rgba(8, 6, 16, 0.95)" />
+        </linearGradient>
+        {/* Mist bands — soft horizontal washes drifting through the pines. */}
+        <linearGradient id="puc-mist" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="rgba(160, 150, 180, 0)" />
+          <stop offset="50%" stopColor="rgba(190, 175, 200, 0.18)" />
+          <stop offset="100%" stopColor="rgba(160, 150, 180, 0)" />
+        </linearGradient>
+        {/* Vignette for corner depth — radial darkening centered on the
+         * castle, so the gate reads as the focal point. */}
+        <radialGradient id="puc-vignette" cx="50%" cy="65%" r="75%">
+          <stop offset="40%" stopColor="rgba(0,0,0,0)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
         </radialGradient>
         <linearGradient id="puc-hills" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#2c2540" />
@@ -81,12 +110,37 @@ export function CastleArt({ phase }: Props) {
         ))}
       </g>
 
-      {/* Moon */}
-      <circle cx="800" cy="120" r="46" fill="url(#puc-moon)" />
-      <circle cx="800" cy="120" r="32" fill="#fdf6da" opacity="0.95" />
+      {/* Moon — crescent: warm halo, full disc, then a cut-out indigo
+       *  disc offset to the right to carve the inner curve. */}
+      <circle cx="800" cy="115" r="72" fill="url(#puc-moon-halo)" />
+      <circle cx="800" cy="115" r="34" fill="#fdf6da" />
+      <circle cx="812" cy="111" r="30" fill="#1f1748" />
+
+      {/* Far pine silhouettes — softest layer, sits in the mist behind the
+       *  hills. Uneven triangular crowns suggest a dense conifer line. */}
+      <path
+        d="M 0 480 L 30 410 L 55 470 L 78 395 L 100 460 L 130 420 L 158 480 L 188 415 L 215 470 L 250 400 L 275 465 L 310 425 L 340 475 L 370 405 L 400 470 L 432 420 L 465 478 L 500 410 L 530 472 L 565 415 L 600 475 L 632 408 L 665 470 L 700 420 L 735 478 L 770 405 L 805 472 L 840 418 L 875 478 L 910 410 L 940 470 L 960 440 L 960 540 L 0 540 Z"
+        fill="url(#puc-pines-far)"
+      />
+
+      {/* Drifting mist bands — three soft horizontal washes through the
+       *  forest. Slow CSS animation defined in GateScreen.css makes them
+       *  breathe. */}
+      <g className="puc-castle-art__mist">
+        <rect x="-40" y="430" width="1040" height="55" fill="url(#puc-mist)" />
+        <rect x="-40" y="470" width="1040" height="40" fill="url(#puc-mist)" opacity="0.7" />
+        <rect x="-40" y="500" width="1040" height="35" fill="url(#puc-mist)" opacity="0.5" />
+      </g>
 
       {/* Distant hills */}
       <path d="M 0 460 Q 200 380 380 440 T 700 420 T 960 460 L 960 540 L 0 540 Z" fill="url(#puc-hills)" />
+
+      {/* Mid-layer pines — darker, sharper, sit between hills and castle. */}
+      <path
+        d="M 0 530 L 25 470 L 50 525 L 78 460 L 105 528 L 138 465 L 168 530 L 200 470 L 230 522 L 262 460 L 295 528 L 760 528 L 790 465 L 818 530 L 850 470 L 880 525 L 910 460 L 935 528 L 960 510 L 960 600 L 0 600 Z"
+        fill="url(#puc-pines-mid)"
+      />
+
 
       {/* Ground */}
       <rect x="0" y="540" width="960" height="180" fill="#1d1820" />
@@ -231,9 +285,39 @@ export function CastleArt({ phase }: Props) {
           P
         </text>
       </g>
+
+      {/* Fireflies — small drifting glints in front of the foreground.
+       *  Each has its own slow loop offset so the cluster pulses
+       *  organically. Animation lives in GateScreen.css. */}
+      <g className="puc-castle-art__fireflies">
+        {FIREFLIES.map((f, i) => (
+          <circle
+            key={i}
+            cx={f.x}
+            cy={f.y}
+            r={f.r}
+            fill="#fff1a8"
+            className={`puc-castle-art__firefly puc-castle-art__firefly--${(i % 5) + 1}`}
+          />
+        ))}
+      </g>
+
+      {/* Soft vignette so corners frame the gate as the focal point. */}
+      <rect x="0" y="0" width="960" height="720" fill="url(#puc-vignette)" pointerEvents="none" />
     </svg>
   )
 }
+
+interface Firefly { x: number; y: number; r: number }
+
+const FIREFLIES: ReadonlyArray<Firefly> = [
+  { x:  90, y: 470, r: 1.6 }, { x: 175, y: 510, r: 1.2 }, { x: 250, y: 480, r: 1.8 },
+  { x: 320, y: 520, r: 1.0 }, { x: 200, y: 560, r: 1.4 }, { x: 280, y: 590, r: 1.1 },
+  { x: 680, y: 480, r: 1.7 }, { x: 750, y: 500, r: 1.3 }, { x: 820, y: 470, r: 1.5 },
+  { x: 880, y: 520, r: 1.2 }, { x: 720, y: 555, r: 1.4 }, { x: 800, y: 590, r: 1.0 },
+  { x: 380, y: 660, r: 1.3 }, { x: 470, y: 670, r: 1.1 }, { x: 560, y: 660, r: 1.5 },
+  { x: 130, y: 640, r: 1.1 }, { x: 850, y: 640, r: 1.2 },
+]
 
 // Hand-picked scatter of constellation points — fixed coords so the layout
 // stays stable across renders. Format: [x, y, radius].
