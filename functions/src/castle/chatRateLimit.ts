@@ -6,11 +6,23 @@
 import { getFirestore } from 'firebase-admin/firestore'
 
 const MINUTE_MS = 60 * 1000
+const FIVE_MIN_MS = 5 * MINUTE_MS
 const DAY_MS = 24 * 60 * 60 * 1000
 
-export type RateBucket = 'chat-min' | 'chat-day' | 'host-day' | 'story-min' | 'story-day'
+export type RateBucket =
+  | 'chat-min'
+  | 'chat-5min'
+  | 'host-day'
+  | 'story-min'
+  | 'story-day'
 
-const MINUTE_BUCKETS = new Set<RateBucket>(['chat-min', 'story-min'])
+const WINDOW_MS: Record<RateBucket, number> = {
+  'chat-min': MINUTE_MS,
+  'chat-5min': FIVE_MIN_MS,
+  'host-day': DAY_MS,
+  'story-min': MINUTE_MS,
+  'story-day': DAY_MS,
+}
 
 interface CounterDoc {
   windowStart: number
@@ -25,7 +37,7 @@ export async function bumpAndCheck(
 ): Promise<{ allowed: true } | { allowed: false; retryAfterMs: number }> {
   const db = getFirestore()
   const ref = db.doc(`chat_rate_limits/${uid}_${bucket}`)
-  const windowMs = MINUTE_BUCKETS.has(bucket) ? MINUTE_MS : DAY_MS
+  const windowMs = WINDOW_MS[bucket]
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref)

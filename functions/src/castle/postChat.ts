@@ -27,11 +27,12 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     if (text.length === 0) return { status: 'empty' }
     if (text.length > CHAT_LIMITS.textMaxChars) return { status: 'too-long' }
 
-    // Rate-limit checks (minute + day buckets).
+    // Rate-limit: burst (per minute) AND sustained (per 5 minutes).
+    // Worst-case lockout is 5 minutes; we no longer day-cap.
     const min = await bumpAndCheck(uid, 'chat-min', CHAT_LIMITS.messagesPerMinute)
     if (!min.allowed) return { status: 'rate-limited', retryAfterMs: min.retryAfterMs }
-    const day = await bumpAndCheck(uid, 'chat-day', CHAT_LIMITS.messagesPerDay)
-    if (!day.allowed) return { status: 'rate-limited', retryAfterMs: day.retryAfterMs }
+    const fiveMin = await bumpAndCheck(uid, 'chat-5min', CHAT_LIMITS.messagesPer5Min)
+    if (!fiveMin.allowed) return { status: 'rate-limited', retryAfterMs: fiveMin.retryAfterMs }
 
     // Resolve identity from sessionStorage-mirrored shadow doc (chat_identity/{uid}).
     // Falls back to a basic bypass-ish identity if no shadow exists yet — the

@@ -111,6 +111,7 @@ function Bubble({ message }: { message: ChatMessage }) {
         {message.name}
         {isHost ? ' · host' : ''}
         {isSystem ? ' · system' : ''}
+        <span className="puc-chat__time">{formatChatTime(message.ts)}</span>
       </span>
       {paragraphs ? (
         paragraphs.map((p, i) => (
@@ -226,6 +227,16 @@ function ActionButton({ action }: { action: ChatMessageAction }) {
       ▸ {label}
     </button>
   )
+}
+
+/** Format a chat ts (epoch ms) as a compact "HH:MM". Messages > 24 h
+ *  are cleaned up server-side, so we never need date-level context. */
+function formatChatTime(ts: number): string {
+  if (!ts) return ''
+  const d = new Date(ts)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
 }
 
 /** Break the message into 1-2-sentence paragraphs. Respects existing

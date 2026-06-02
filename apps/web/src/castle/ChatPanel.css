@@ -193,6 +193,20 @@
   letter-spacing: 0.6px;
   color: var(--puc-text-accent);
   font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.puc-chat__time {
+  margin-left: auto;
+  font-family: var(--puc-font-display);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+  color: var(--puc-text-muted);
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .puc-chat__text {

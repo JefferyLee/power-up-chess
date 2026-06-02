@@ -7,7 +7,7 @@ import { PIECE_GLYPH } from '../board/pieceGlyphs'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { resultPartsFromStatus } from '../history/fromStatus'
-import { addCrowns } from '../storage/profile'
+import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
@@ -23,7 +23,7 @@ import { ResignDialog } from '../powerups/ResignDialog'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
-import { difficultyById, type DifficultyId } from '../ai/difficulty'
+import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
 import './LocalGameScreen.css'
 import './AiPracticeScreen.css'
 
@@ -72,7 +72,10 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
   const navigate = useNavigate()
   const { identity, setCastlePoints } = useCastle()
   const sound = useSound()
-  const preset = difficultyById(difficultyId)
+  // Difficulty is local state so the player can switch mid-screen
+  // (next game uses the new setting). Prop is just the initial value.
+  const [activeDifficultyId, setActiveDifficultyId] = useState<DifficultyId>(difficultyId)
+  const preset = difficultyById(activeDifficultyId)
   // For MVP1, player always plays white; AI always plays black. Colour choice
   // lands later if Ada asks for it.
   const playerColor: Color = 'w'
@@ -219,6 +222,16 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
     setEngineError(null)
   }, [])
 
+  const handlePickDifficulty = useCallback((id: DifficultyId) => {
+    if (id === activeDifficultyId) return
+    setActiveDifficultyId(id)
+    const profile = loadProfile()
+    saveProfile({ ...profile, aiDifficultyId: id })
+    // Start a fresh game at the new strength — finishing the current game
+    // against a different opponent mid-stream would be confusing.
+    handleRestart()
+  }, [activeDifficultyId, handleRestart])
+
   const handleResign = useCallback((resigner: Color) => {
     setResignation({ resigner })
     setResignDialogOpen(false)
@@ -316,6 +329,21 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, o
           </span>
         </div>
         <div className="puc-local__actions">
+          <div className="puc-local__difficulty" role="radiogroup" aria-label="AI strength">
+            {DIFFICULTY_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={p.id === activeDifficultyId}
+                className={`puc-local__diff-chip${p.id === activeDifficultyId ? ' puc-local__diff-chip--on' : ''}`}
+                onClick={() => handlePickDifficulty(p.id)}
+                title={`${p.label} — ${p.blurb}`}
+              >
+                {p.short}
+              </button>
+            ))}
+          </div>
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <MuteButton />
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>

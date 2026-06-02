@@ -97,8 +97,12 @@ export interface SetPresenceResponse {
 // ─── Rate limits ───────────────────────────────────────────────────────────
 
 export const CHAT_LIMITS = {
-  messagesPerMinute: 5,
-  messagesPerDay: 30,
+  // Headroom is per-minute (burst) AND per-5-minutes (sustained).
+  // The old per-day cap of 30 was too low for active days — kids hit
+  // it and then waited 24 h to chat again. Now the worst-case wait is
+  // 5 minutes.
+  messagesPerMinute: 20,
+  messagesPer5Min: 80,
   hostRepliesPerDay: 15,
   textMaxChars: 200,
 } as const

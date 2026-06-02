@@ -5,11 +5,13 @@
 // at depth 8+, so we use shallow depths to get a fair opponent for Ada.
 //
 // Rough Elo bands (anecdotal):
-//   Beginner: skill 0, depth 4, ~300 ms       — target for ~500 rating
-//   Easy:     skill 5, depth 7, ~500 ms       — ~1000 rating
-//   Medium:   skill 10, depth 10, ~800 ms     — ~1500 rating
+//   Beginner: skill 0,  depth 4,  ~300 ms   — ~500 rating
+//   Easy:     skill 5,  depth 7,  ~500 ms   — ~1000 rating
+//   Medium:   skill 10, depth 10, ~800 ms   — ~1500 rating
+//   Hard:     skill 15, depth 14, ~1500 ms  — ~1800 rating
+//   Expert:   skill 20, depth 18, ~3000 ms  — ~2200+ rating
 
-export type DifficultyId = 'beginner' | 'easy' | 'medium'
+export type DifficultyId = 'beginner' | 'easy' | 'medium' | 'hard' | 'expert'
 
 export interface AiSettings {
   /** UCI Skill Level option (0-20). */
@@ -49,6 +51,20 @@ export const DIFFICULTY_PRESETS: DifficultyPreset[] = [
     short: '★★★',
     blurb: 'Sharp — bring your best calculation.',
     settings: { skillLevel: 10, depth: 10, movetimeMs: 800 },
+  },
+  {
+    id: 'hard',
+    label: 'Hard',
+    short: '★★★★',
+    blurb: 'Punishes loose moves. Club-strength tactics.',
+    settings: { skillLevel: 15, depth: 14, movetimeMs: 1500 },
+  },
+  {
+    id: 'expert',
+    label: 'Expert',
+    short: '★★★★★',
+    blurb: 'Near full-strength Stockfish — for a real challenge.',
+    settings: { skillLevel: 20, depth: 18, movetimeMs: 3000 },
   },
 ]
 

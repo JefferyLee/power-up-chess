@@ -37,3 +37,4 @@ export {
 } from './games/wizard/wizardRoom'
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { cleanupStaleRooms } from './cleanup/cleanupRooms'
+export { cleanupOldLobbyMessages } from './cleanup/cleanupOldLobbyMessages'
