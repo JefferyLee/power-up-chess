@@ -260,11 +260,13 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // template only fires once per terminal state (not on every render).
   const endRecap = useMemo(() => {
     if (effectiveStatus.kind === 'in_progress') return ''
-    if (effectiveStatus.kind === 'checkmate') {
-      const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
-      return picker.pick(hostId, 'checkmate-win', { winnerName })
-    }
-    if (effectiveStatus.kind === 'resign') {
+    if (
+      effectiveStatus.kind === 'checkmate' ||
+      effectiveStatus.kind === 'resign' ||
+      effectiveStatus.kind === 'timeout'
+    ) {
+      // All three are decisive — share the win template so the recap
+      // reads as "X wins" not "It is a draw".
       const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
       return picker.pick(hostId, 'checkmate-win', { winnerName })
     }

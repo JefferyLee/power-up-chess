@@ -335,11 +335,11 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
 
   const endRecap = useMemo(() => {
     if (effectiveStatus.kind === 'in_progress') return ''
-    if (effectiveStatus.kind === 'checkmate') {
-      const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
-      return picker.pick(hostId, 'checkmate-win', { winnerName })
-    }
-    if (effectiveStatus.kind === 'resign') {
+    if (
+      effectiveStatus.kind === 'checkmate' ||
+      effectiveStatus.kind === 'resign' ||
+      effectiveStatus.kind === 'timeout'
+    ) {
       const winnerName = effectiveStatus.winner === 'w' ? whiteName : blackName
       return picker.pick(hostId, 'checkmate-win', { winnerName })
     }

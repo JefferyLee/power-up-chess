@@ -398,8 +398,13 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   // Game-end recap (terminal state only).
   const endRecap = useMemo(() => {
     if (room.status !== 'completed') return ''
+    const winnerName = room.result === 'white' ? room.white.displayName : room.black?.displayName ?? ''
     if (room.endReason === 'checkmate') {
-      const winnerName = room.result === 'white' ? room.white.displayName : room.black?.displayName ?? ''
+      return picker.pick(room.hostMode, 'checkmate-win', { winnerName })
+    }
+    if (room.endReason === 'resign' || room.endReason === 'timeout') {
+      // Resignation / flag-fall are decisive results, not draws. Reuse the
+      // win template so the recap reads as "X wins" not "It is a draw".
       return picker.pick(room.hostMode, 'checkmate-win', { winnerName })
     }
     if (room.endReason === 'stalemate') return picker.pick(room.hostMode, 'stalemate')
