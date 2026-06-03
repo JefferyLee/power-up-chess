@@ -21,6 +21,8 @@ import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById } from '../ai/difficulty'
+import { useCastle } from '../castle/useCastle'
+import { callSubmitEndgameClear } from '../firebase/callables'
 import { getLesson, type Lesson } from './lessons'
 import './EndgameLessonScreen.css'
 
@@ -35,12 +37,20 @@ type Phase =
   | { kind: 'failed'; reason: 'stalemate' | 'draw'; moves: number }
   | { kind: 'error'; message: string }
 
+interface Award {
+  pointsAdded: number
+  lessonMasteredNow: boolean
+}
+
 export function EndgameLessonScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const lesson = useMemo(() => getLesson(id), [id])
+  const { identity, setCastlePoints } = useCastle()
+  const [award, setAward] = useState<Award | null>(null)
+  const awardedKeyRef = useRef<string | null>(null)
 
   // Two Stockfish workers: one to drive the defender (hard tier so
   // the lone king plays best), one to answer hint requests (expert
@@ -105,6 +115,7 @@ export function EndgameLessonScreen() {
     setGame(new ChessGame(current.fen))
     setMoveCount(0)
     setHint(null)
+    setAward(null)
     setTick((t) => t + 1)
     // If the defender engine has booted already, drop straight back
     // into playing; otherwise the boot effect above flips us in.
@@ -113,6 +124,39 @@ export function EndgameLessonScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round, current])
+
+  // Submit the clear once per (lesson, position) — the server also
+  // dedupes, but we don't want to fire the callable on every render
+  // while the overlay is visible.
+  useEffect(() => {
+    if (phase.kind !== 'cleared') return
+    if (!lesson || !current) return
+    if (!identity || identity.isBypass || !identity.sessionId) return
+    const key = `${lesson.id}:${current.label}`
+    if (awardedKeyRef.current === key) return
+    awardedKeyRef.current = key
+    let cancelled = false
+    void callSubmitEndgameClear({
+      normalizedName: identity.normalizedName,
+      sessionId: identity.sessionId,
+      lessonId: lesson.id,
+      positionLabel: current.label,
+    })
+      .then((res) => {
+        if (cancelled) return
+        if (res.pointsAdded > 0) setCastlePoints(res.castlePoints)
+        setAward({
+          pointsAdded: res.pointsAdded,
+          lessonMasteredNow: res.lessonMasteredNow,
+        })
+      })
+      .catch((err) => {
+        console.warn('submitEndgameClear failed', err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [phase.kind, lesson, current, identity, setCastlePoints])
 
   const fen = game.fen()
   const pieces = useMemo(() => piecesFromFen(fen), [fen])
@@ -360,6 +404,7 @@ export function EndgameLessonScreen() {
           moves={phase.moves}
           par={current?.parMoves ?? 0}
           isFinalRound={isFinalRound}
+          award={award}
           onNext={nextPosition}
           onRestart={restartLesson}
           onExit={() => navigate('/endgame')}
@@ -418,6 +463,7 @@ function ClearedOverlay({
   moves,
   par,
   isFinalRound,
+  award,
   onNext,
   onRestart,
   onExit,
@@ -426,15 +472,17 @@ function ClearedOverlay({
   moves: number
   par: number
   isFinalRound: boolean
+  award: Award | null
   onNext: () => void
   onRestart: () => void
   onExit: () => void
 }) {
   const underPar = moves <= par
+  const showMasteredHeader = isFinalRound && (award?.lessonMasteredNow ?? true)
   return (
     <div className="puc-egl__overlay puc-egl__overlay--ok">
       <h2 className="puc-egl__overlay-title">
-        {isFinalRound ? 'Lesson mastered ✓' : 'Position cleared ✓'}
+        {showMasteredHeader ? 'Lesson mastered ✓' : 'Position cleared ✓'}
       </h2>
       <p className="puc-egl__overlay-body">
         {underPar
@@ -444,6 +492,21 @@ function ClearedOverlay({
           ? `You've cleared every ${lesson.pieceSummary.toLowerCase()} drill in this lesson.`
           : 'Next position is a slightly different starting setup.'}
       </p>
+      {award && award.pointsAdded > 0 && (
+        <div className="puc-egl__overlay-award">
+          <span className="puc-egl__overlay-award-num">
+            +{award.pointsAdded}
+          </span>
+          <span className="puc-egl__overlay-award-label">
+            castle points{award.lessonMasteredNow ? ' (mastery bonus!)' : ''}
+          </span>
+        </div>
+      )}
+      {award && award.pointsAdded === 0 && (
+        <p className="puc-egl__overlay-already">
+          Already cleared — no new points, just practice. 🏰
+        </p>
+      )}
       <div className="puc-egl__overlay-actions">
         <button type="button" className="puc-egl__btn" onClick={onExit}>
           Back to drills

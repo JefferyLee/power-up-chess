@@ -585,6 +585,25 @@ const synthesizeStoryAudioFn = httpsCallable<
   SynthesizeStoryAudioResponse
 >(functions, 'synthesizeStoryAudio')
 
+// P2.K Endgame Trainer — server-side dedupe + castle-point award.
+export interface SubmitEndgameClearRequest {
+  normalizedName: string
+  sessionId: string
+  lessonId: string
+  positionLabel: string
+}
+export interface SubmitEndgameClearResponse {
+  ok: true
+  pointsAdded: number
+  castlePoints: number
+  clearedPositions: string[]
+  lessonMasteredNow: boolean
+}
+const submitEndgameClearFn = httpsCallable<
+  SubmitEndgameClearRequest,
+  SubmitEndgameClearResponse
+>(functions, 'submitEndgameClear')
+
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
 ): Promise<GetNextPuzzleResponse> {
@@ -661,5 +680,11 @@ export async function callSynthesizeStoryAudio(
   req: SynthesizeStoryAudioRequest,
 ): Promise<SynthesizeStoryAudioResponse> {
   const { data } = await synthesizeStoryAudioFn(req)
+  return data
+}
+export async function callSubmitEndgameClear(
+  req: SubmitEndgameClearRequest,
+): Promise<SubmitEndgameClearResponse> {
+  const { data } = await submitEndgameClearFn(req)
   return data
 }

@@ -252,6 +252,14 @@ export interface GuestDoc {
   /** Legends Hall — puzzle ids the kid has solved in the 100-puzzle
    *  Legends pool. Drives the gold-badge plaques in the museum. */
   puzzleLegendsBadges?: string[]
+  /** P2.K — endgame trainer progress, per lesson id. clearedPositions
+   *  is the dedupe key for awarding POSITION_REWARD_PTS; lessonMasteredAt
+   *  is set the first time every position in the lesson is cleared
+   *  and triggers the one-time LESSON_MASTER_BONUS_PTS. */
+  endgameProgress?: Partial<Record<string, {
+    clearedPositions: string[]
+    lessonMasteredAt?: number
+  }>>
   /** Today's puzzle solve count, LA-day-scoped. Lazily reset to 1 on
    *  the first solve of a new dayKey. Used by the gate's live pulse
    *  to surface top-solvers-today. */
