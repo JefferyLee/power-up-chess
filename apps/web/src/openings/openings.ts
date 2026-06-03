@@ -86,6 +86,15 @@ export const OPENINGS: Opening[] = [
         explanation:
           'Bd2 is the quiet Möller block. After Bxd2+ Nbxd2 d6 you reach a calm, balanced middlegame. Stepping the king with Kf1 instead would lose castling and the right to develop normally.',
       },
+      {
+        fen: 'r1bqk2r/pppp1ppp/2n2n2/8/2BP4/5N2/PP1b1PPP/RN1QK2R w KQkq - 0 8',
+        context: 'After 7.Bd2 Bxd2+ — recapture without bringing the queen out early.',
+        expectedUci: 'b1d2',
+        expectedSan: 'Nbxd2',
+        hint: 'Develop the queenside knight rather than disturbing the queen.',
+        explanation:
+          'Nbxd2 finishes minor-piece development and keeps the queen home. Qxd2 also recaptures but exposes the queen — Black plays ...Nxe4! winning a pawn since the queen blocks the bishop\'s defence.',
+      },
     ],
   },
   {
@@ -140,6 +149,15 @@ export const OPENINGS: Opening[] = [
         explanation:
           'Bb3 keeps the Spanish bishop pointed at f7 and the long diagonal. Trading it with Bxc6 (dxc6) would hand Black the bishop pair and open the d-file. Strong Spanish play preserves this piece for the squeeze.',
       },
+      {
+        fen: 'r1bqk2r/2p1bppp/p1np1n2/1p2p3/4P3/1B3N2/PPPP1PPP/RNBQR1K1 w kq - 0 8',
+        context: 'After 7.Bb3 d6 — quietly prepare the central break.',
+        expectedUci: 'c2c3',
+        expectedSan: 'c3',
+        hint: 'Make room for the d-pawn so you can challenge the centre later.',
+        explanation:
+          'c3 supports a future d4 push and denies the c3-square to Black\'s knight (no jump to b4 attacking the bishop). The Closed Spanish is a long manoeuvring game — small preparations compound into a strong centre.',
+      },
     ],
   },
   {
@@ -193,6 +211,15 @@ export const OPENINGS: Opening[] = [
         hint: 'Bring out the king-side knight to its natural square.',
         explanation:
           'Nf3 finishes minor-piece development. After this you castle and start the slow squeeze on d5 with Bd3, Qc2, Rfd1 — the textbook Queen\'s Gambit Declined formation.',
+      },
+      {
+        fen: 'rnbq1rk1/pp2bppp/2p1pn2/3p2B1/2PP4/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 7',
+        context: 'After 6.Nf3 c6 — bring out the light-squared bishop.',
+        expectedUci: 'f1d3',
+        expectedSan: 'Bd3',
+        hint: 'Develop the bishop where it both attacks h7 and supports the centre.',
+        explanation:
+          'Bd3 eyes h7 (a key attacking square), supports a possible e4 break, and clears f1 for castling next move. The Carlsbad structure is forming — your pieces all aim at Black\'s queenside and the d5 pawn.',
       },
     ],
   },

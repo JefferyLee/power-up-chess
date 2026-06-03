@@ -123,6 +123,26 @@ export const LESSONS: Lesson[] = [
       },
     ],
   },
+  {
+    id: 'kbbk',
+    title: 'Two Bishops mate',
+    pieceSummary: 'K + B + B  vs  K',
+    goal: 'Drive the lone king into a corner and mate with both bishops.',
+    technique:
+      'Both bishops together cover every square of one diagonal pair — perfect for fencing a king in. Walk your king alongside, march the bishops on adjacent diagonals, and push the lone king toward any corner. This is the trickiest basic mate; don\'t worry if you need extra moves.',
+    positions: [
+      {
+        label: 'King already cornered',
+        fen: 'k7/8/8/8/3K4/8/8/2B2B2 w - - 0 1',
+        parMoves: 18,
+      },
+      {
+        label: 'Centre start (textbook)',
+        fen: '4k3/8/8/8/8/8/8/2BK1B2 w - - 0 1',
+        parMoves: 30,
+      },
+    ],
+  },
 ]
 
 export function getLesson(id: string | undefined): Lesson | null {

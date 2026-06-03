@@ -23,6 +23,9 @@ export const ENDGAME_LESSONS: Record<string, { positions: string[] }> = {
   krrk: {
     positions: ['Rooks in the corners', 'King already on the back rank'],
   },
+  kbbk: {
+    positions: ['King already cornered', 'Centre start (textbook)'],
+  },
 }
 
 export const POSITION_REWARD_PTS = 5
