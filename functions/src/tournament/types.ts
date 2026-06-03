@@ -1,9 +1,8 @@
-// Weekly Tournament Firestore shape (P2.H Slice 1).
+// Weekly Tournament Firestore shape (P2.H Slice 2).
 //
-// Only registration this slice — rounds, pairings, results, and the
-// winner crown land in later slices. The doc shape is intentionally
-// forward-compatible: future fields slot in without migrating the
-// existing registration rows.
+// Forward-compatible from Slice 1: rounds + result-reporting fields
+// are now populated. The winner-crown cosmetic + automatic
+// online-chess-room generation land in Slice 3.
 
 export interface TournamentParticipant {
   normalizedName: string
@@ -11,23 +10,54 @@ export interface TournamentParticipant {
   registeredAt: number
 }
 
+/** A bye slot uses this synthetic opponent name. */
+export const BYE_OPPONENT = '__bye__'
+
+export type PairingResult =
+  | 'white-wins'
+  | 'black-wins'
+  | 'draw'
+  | 'bye-white'
+
+export interface Pairing {
+  /** Index within the round, 0-based. */
+  index: number
+  /** Both are normalizedName. `black` is BYE_OPPONENT for a free
+   *  point. */
+  white: string
+  black: string
+  result?: PairingResult
+  /** normalizedName of whichever player reported the result. */
+  reportedBy?: string
+  reportedAt?: number
+}
+
+export interface TournamentRound {
+  index: number
+  startedAt: number
+  pairings: Pairing[]
+}
+
 export interface TournamentDoc {
-  /** ISO week key, e.g. 2026-W23. */
   weekKey: string
-  /** 'registration' until pairings start, 'active' during play, 'closed'
-   *  after the final result. Slice 1 keeps everything 'registration'. */
   status: 'registration' | 'active' | 'closed'
   openedAt: number
-  /** Soft close time. Slice 1 uses openedAt + 7 days; slice 2 will
-   *  tighten to "Sunday 23:59 LA of the same week". */
   closesAt: number
   participants: TournamentParticipant[]
+  rounds: TournamentRound[]
+  /** displayName stamped on close (highest score wins). */
+  winnerName?: string
+  closedAt?: number
 }
 
 /** Beta entry gate — must have solved at least this many puzzles
- *  total. Slice 2 will replace with the spec's "50 puzzles solved
+ *  total. Slice 3 will replace with the spec's "50 puzzles solved
  *  THIS WEEK" rule once weekly counters are in place. */
 export const TOURNAMENT_ENTRY_MIN_SOLVES = 5
 
-/** Soft close horizon for Slice 1 — one week from open. */
+/** Soft close horizon — one week from open. */
 export const TOURNAMENT_WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+/** Hard ceiling on round count so a pairing loop can never run
+ *  forever even if generators degenerate. */
+export const TOURNAMENT_MAX_ROUNDS = 7

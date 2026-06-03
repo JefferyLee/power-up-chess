@@ -88,6 +88,7 @@ export const registerForTournament = onCall<
         openedAt: now,
         closesAt: now + TOURNAMENT_WEEK_MS,
         participants: [],
+        rounds: [],
       }
     }
     if (tournament.status !== 'registration') {

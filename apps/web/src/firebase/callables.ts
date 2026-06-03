@@ -623,11 +623,29 @@ const submitOpeningClearFn = httpsCallable<
   SubmitOpeningClearResponse
 >(functions, 'submitOpeningClear')
 
-// P2.H Weekly Tournament — Slice 1: registration only.
+// P2.H Weekly Tournament — Slice 2: pairing + result reporting.
 export interface TournamentParticipant {
   normalizedName: string
   displayName: string
   registeredAt: number
+}
+export type PairingResult =
+  | 'white-wins'
+  | 'black-wins'
+  | 'draw'
+  | 'bye-white'
+export interface Pairing {
+  index: number
+  white: string
+  black: string
+  result?: PairingResult
+  reportedBy?: string
+  reportedAt?: number
+}
+export interface TournamentRound {
+  index: number
+  startedAt: number
+  pairings: Pairing[]
 }
 export interface TournamentDoc {
   weekKey: string
@@ -635,7 +653,11 @@ export interface TournamentDoc {
   openedAt: number
   closesAt: number
   participants: TournamentParticipant[]
+  rounds: TournamentRound[]
+  winnerName?: string
+  closedAt?: number
 }
+export const BYE_OPPONENT = '__bye__'
 export interface GetCurrentTournamentResponse {
   ok: true
   tournament: TournamentDoc
@@ -649,6 +671,34 @@ export interface RegisterForTournamentResponse {
   tournament: TournamentDoc
   alreadyRegistered: boolean
 }
+export interface StartNextRoundRequest {
+  normalizedName: string
+  sessionId: string
+}
+export interface StartNextRoundResponse {
+  ok: true
+  tournament: TournamentDoc
+}
+export interface ReportTournamentResultRequest {
+  normalizedName: string
+  sessionId: string
+  roundIndex: number
+  pairingIndex: number
+  result: Exclude<PairingResult, 'bye-white'>
+}
+export interface ReportTournamentResultResponse {
+  ok: true
+  tournament: TournamentDoc
+}
+export interface CloseTournamentRequest {
+  normalizedName: string
+  sessionId: string
+}
+export interface CloseTournamentResponse {
+  ok: true
+  tournament: TournamentDoc
+  winnerName?: string
+}
 const getCurrentTournamentFn = httpsCallable<
   Record<string, never>,
   GetCurrentTournamentResponse
@@ -657,6 +707,18 @@ const registerForTournamentFn = httpsCallable<
   RegisterForTournamentRequest,
   RegisterForTournamentResponse
 >(functions, 'registerForTournament')
+const startNextRoundFn = httpsCallable<
+  StartNextRoundRequest,
+  StartNextRoundResponse
+>(functions, 'startNextRound')
+const reportTournamentResultFn = httpsCallable<
+  ReportTournamentResultRequest,
+  ReportTournamentResultResponse
+>(functions, 'reportTournamentResult')
+const closeTournamentFn = httpsCallable<
+  CloseTournamentRequest,
+  CloseTournamentResponse
+>(functions, 'closeTournament')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -756,5 +818,23 @@ export async function callRegisterForTournament(
   req: RegisterForTournamentRequest,
 ): Promise<RegisterForTournamentResponse> {
   const { data } = await registerForTournamentFn(req)
+  return data
+}
+export async function callStartNextRound(
+  req: StartNextRoundRequest,
+): Promise<StartNextRoundResponse> {
+  const { data } = await startNextRoundFn(req)
+  return data
+}
+export async function callReportTournamentResult(
+  req: ReportTournamentResultRequest,
+): Promise<ReportTournamentResultResponse> {
+  const { data } = await reportTournamentResultFn(req)
+  return data
+}
+export async function callCloseTournament(
+  req: CloseTournamentRequest,
+): Promise<CloseTournamentResponse> {
+  const { data } = await closeTournamentFn(req)
   return data
 }

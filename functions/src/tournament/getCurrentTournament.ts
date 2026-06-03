@@ -40,6 +40,7 @@ export const getCurrentTournament = onCall<
     openedAt: now,
     closesAt: now + TOURNAMENT_WEEK_MS,
     participants: [],
+    rounds: [],
   }
   try {
     await ref.create(fresh)
