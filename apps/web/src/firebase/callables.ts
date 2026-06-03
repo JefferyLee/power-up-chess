@@ -570,6 +570,21 @@ const equipCosmeticFn = httpsCallable<
   EquipCosmeticResponse
 >(functions, 'equipCosmetic')
 
+// P1.F Story Library — Edge-TTS proxy callable.
+export interface SynthesizeStoryAudioRequest {
+  voice: 'lucy' | 'luca'
+  text: string
+}
+export interface SynthesizeStoryAudioResponse {
+  ok: true
+  audioBase64: string
+  mimeType: 'audio/mpeg'
+}
+const synthesizeStoryAudioFn = httpsCallable<
+  SynthesizeStoryAudioRequest,
+  SynthesizeStoryAudioResponse
+>(functions, 'synthesizeStoryAudio')
+
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
 ): Promise<GetNextPuzzleResponse> {
@@ -640,5 +655,11 @@ export async function callEquipCosmetic(
   req: EquipCosmeticRequest,
 ): Promise<EquipCosmeticResponse> {
   const { data } = await equipCosmeticFn(req)
+  return data
+}
+export async function callSynthesizeStoryAudio(
+  req: SynthesizeStoryAudioRequest,
+): Promise<SynthesizeStoryAudioResponse> {
+  const { data } = await synthesizeStoryAudioFn(req)
   return data
 }

@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../castle/useCastle'
+import { callSynthesizeStoryAudio } from '../firebase/callables'
 import './LibraryRoute.css'
 
 interface BundledStory {
@@ -41,7 +42,14 @@ export function LibraryRoute() {
   const [voice, setVoice] = useState<HostVoice>(hostId)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [speakingId, setSpeakingId] = useState<string | null>(null)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
   const speakingRef = useRef<string | null>(null)
+
+  // Edge-TTS audio cache + active <Audio> handle. URLs are blob URLs
+  // (created via URL.createObjectURL); we revoke them on unmount so
+  // the browser releases the underlying memory.
+  const audioCacheRef = useRef<Map<string, string>>(new Map())
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -61,39 +69,58 @@ export function LibraryRoute() {
     }
   }, [])
 
-  // Stop any in-flight speech when the kid navigates away.
+  // Stop any in-flight speech when the kid navigates away + release
+  // every cached blob URL so we don't leak memory.
   useEffect(() => {
+    const cache = audioCacheRef.current
     return () => {
+      audioRef.current?.pause()
+      audioRef.current = null
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel()
       }
+      for (const url of cache.values()) {
+        URL.revokeObjectURL(url)
+      }
+      cache.clear()
     }
   }, [])
 
   const groups = useMemo(() => groupByBook(bundle?.stories ?? []), [bundle])
 
-  const speak = (story: BundledStory) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      // Browser without speechSynthesis support — just no-op; the read
-      // button is still useful as visual feedback that the feature
-      // exists, and the text is shown on the page already.
-      return
+  // Switching reader voice mid-listen should stop whatever was
+  // playing — the cached audio is per (story, voice), so the kid
+  // would hear two voices interleave otherwise.
+  useEffect(() => {
+    audioRef.current?.pause()
+    audioRef.current = null
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
     }
+    speakingRef.current = null
+    setSpeakingId(null)
+    setLoadingId(null)
+  }, [voice])
+
+  const stopAll = () => {
+    audioRef.current?.pause()
+    audioRef.current = null
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    speakingRef.current = null
+    setSpeakingId(null)
+  }
+
+  // Browser-native fallback (Web Speech API) — used when Edge-TTS is
+  // unreachable. Less natural than Aria/Guy but always available.
+  const speakViaBrowser = (story: BundledStory) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
     const synth = window.speechSynthesis
-    // Toggle off if already speaking this story.
-    if (speakingRef.current === story.id) {
-      synth.cancel()
-      speakingRef.current = null
-      setSpeakingId(null)
-      return
-    }
     synth.cancel()
     const utterance = new SpeechSynthesisUtterance(story.variants[voice])
     utterance.lang = 'en-US'
     utterance.rate = 0.95
-    // Try to pick a voice that loosely matches each host (female for
-    // Lucy, male for Luca). The Web Speech API exposes a noisy voice
-    // list; we just take the first match by name pattern.
     const allVoices = synth.getVoices()
     const wantedMatch = voice === 'lucy'
       ? /female|samantha|victoria|karen|moira|tessa|kathy|allison|ava/i
@@ -110,6 +137,65 @@ export function LibraryRoute() {
     speakingRef.current = story.id
     setSpeakingId(story.id)
     synth.speak(utterance)
+  }
+
+  const playFromUrl = (story: BundledStory, url: string) => {
+    const audio = new Audio(url)
+    audioRef.current = audio
+    speakingRef.current = story.id
+    setSpeakingId(story.id)
+    const finish = () => {
+      if (audioRef.current === audio) {
+        audioRef.current = null
+        if (speakingRef.current === story.id) {
+          speakingRef.current = null
+          setSpeakingId(null)
+        }
+      }
+    }
+    audio.onended = finish
+    audio.onerror = finish
+    audio.play().catch(() => {
+      // Autoplay blocked or other media error — clear state silently.
+      finish()
+    })
+  }
+
+  const speak = async (story: BundledStory) => {
+    // Toggle off if this story is already speaking (or loading).
+    if (speakingRef.current === story.id || loadingId === story.id) {
+      stopAll()
+      setLoadingId(null)
+      return
+    }
+    // Stop whatever else might be running first.
+    stopAll()
+
+    const cacheKey = `${story.id}:${voice}`
+    const cached = audioCacheRef.current.get(cacheKey)
+    if (cached) {
+      playFromUrl(story, cached)
+      return
+    }
+
+    setLoadingId(story.id)
+    try {
+      const res = await callSynthesizeStoryAudio({
+        voice,
+        text: story.variants[voice],
+      })
+      // Aborted while in flight — user pressed stop or switched stories.
+      if (loadingId !== null && loadingId !== story.id) return
+      const blob = base64ToBlob(res.audioBase64, res.mimeType)
+      const url = URL.createObjectURL(blob)
+      audioCacheRef.current.set(cacheKey, url)
+      setLoadingId(null)
+      playFromUrl(story, url)
+    } catch (err) {
+      console.warn('Edge-TTS failed, falling back to browser speech', err)
+      setLoadingId(null)
+      speakViaBrowser(story)
+    }
   }
 
   return (
@@ -174,6 +260,7 @@ export function LibraryRoute() {
               {group.stories.map((story) => {
                 const expanded = expandedId === story.id
                 const speaking = speakingId === story.id
+                const loading = loadingId === story.id
                 return (
                   <li
                     key={story.id}
@@ -211,11 +298,17 @@ export function LibraryRoute() {
                             type="button"
                             className={
                               'puc-library__story-tts ' +
-                              (speaking ? 'puc-library__story-tts--on' : '')
+                              (speaking ? 'puc-library__story-tts--on ' : '') +
+                              (loading ? 'puc-library__story-tts--loading' : '')
                             }
                             onClick={() => speak(story)}
+                            disabled={loading}
                           >
-                            {speaking ? '⏹ Stop' : '🔊 Read aloud'}
+                            {loading
+                              ? `⏳ Loading ${voice === 'lucy' ? 'Lucy' : 'Luca'}…`
+                              : speaking
+                                ? '⏹ Stop'
+                                : '🔊 Read aloud'}
                           </button>
                           <span className="puc-library__story-meta">
                             {story.motif}
@@ -238,6 +331,13 @@ interface Group {
   book: string
   author?: string
   stories: BundledStory[]
+}
+
+function base64ToBlob(base64: string, mimeType: string): Blob {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return new Blob([bytes], { type: mimeType })
 }
 
 function groupByBook(stories: BundledStory[]): Group[] {

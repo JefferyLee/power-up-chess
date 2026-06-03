@@ -214,6 +214,15 @@
   color: #1a1a1f;
   border-color: rgba(0, 0, 0, 0.15);
 }
+.puc-library__story-tts--loading {
+  cursor: wait;
+  opacity: 0.8;
+  animation: puc-library-pulse 1.4s ease-in-out infinite;
+}
+@keyframes puc-library-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1;   }
+}
 .puc-library__story-meta {
   font-size: 11px;
   text-transform: uppercase;
