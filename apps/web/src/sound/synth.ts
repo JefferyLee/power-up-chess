@@ -12,6 +12,7 @@ export type SoundName =
   | 'move' | 'capture' | 'check' | 'mate-win' | 'mate-loss' | 'draw'
   | 'knock' | 'wicket-creak'
   | 'powerup-classic' | 'powerup-lightning' | 'powerup-comet'
+  | 'knight-jump' | 'knight-coin' | 'knight-hit' | 'knight-newbest'
 
 /** Sounds backed by a real audio file (vs. one of the RECIPES synths).
  *  When a name is in this map, playSound() routes to an Audio element
@@ -326,6 +327,35 @@ function powerupComet(): void {
   })
 }
 
+// Knight's Run sounds — short inline-synth shots, tuned to feel like an
+// arcade dino-runner without clashing with the castle's warmer chess SFX.
+
+function knightJump(): void {
+  // Quick upward "boing" — frequency sweep up then down.
+  tone({ freq: [320, 540], type: 'square', duration: 0.10, peakGain: 0.18, release: 0.05 })
+  tone({ freq: [540, 400], type: 'triangle', duration: 0.07, peakGain: 0.10, release: 0.05, startOffset: 0.06 })
+}
+
+function knightCoin(): void {
+  // Bright two-note ping — classic coin chime.
+  tone({ freq: 880,  type: 'sine', duration: 0.06, peakGain: 0.22, release: 0.08 })
+  tone({ freq: 1320, type: 'sine', duration: 0.10, peakGain: 0.22, release: 0.14, startOffset: 0.05 })
+}
+
+function knightHit(): void {
+  // Dull thud + slight pitch drop — game-over impact, NOT harsh.
+  tone({ freq: [240, 120], type: 'triangle', duration: 0.18, peakGain: 0.32, release: 0.20 })
+  tone({ freq: 90, type: 'sine', duration: 0.22, peakGain: 0.22, release: 0.20, startOffset: 0.02 })
+}
+
+function knightNewBest(): void {
+  // Triumphant 4-note ascending arpeggio — fires on a fresh personal best.
+  tone({ freq: 523, type: 'sine', duration: 0.10, peakGain: 0.20, release: 0.12 })
+  tone({ freq: 659, type: 'sine', duration: 0.10, peakGain: 0.22, release: 0.12, startOffset: 0.10 })
+  tone({ freq: 784, type: 'sine', duration: 0.10, peakGain: 0.22, release: 0.14, startOffset: 0.20 })
+  tone({ freq: 1046, type: 'sine', duration: 0.22, peakGain: 0.26, release: 0.26, startOffset: 0.32 })
+}
+
 const RECIPES: Record<SoundName, () => void> = {
   move,
   capture,
@@ -338,9 +368,22 @@ const RECIPES: Record<SoundName, () => void> = {
   'powerup-classic': powerupClassic,
   'powerup-lightning': powerupLightning,
   'powerup-comet': powerupComet,
+  'knight-jump': knightJump,
+  'knight-coin': knightCoin,
+  'knight-hit': knightHit,
+  'knight-newbest': knightNewBest,
+}
+
+/** Module-level mute flag for one-shot SFX. Mirrors the React useSound
+ *  state so callers that talk to synth directly (e.g. Phaser scenes,
+ *  which can't use React hooks) still honour the global mute. */
+let sfxMuted = false
+export function setSfxMuted(muted: boolean): void {
+  sfxMuted = muted
 }
 
 export function playSound(name: SoundName): void {
+  if (sfxMuted) return
   const c = ensureContext()
   if (!c) return
   if (c.state === 'suspended') {

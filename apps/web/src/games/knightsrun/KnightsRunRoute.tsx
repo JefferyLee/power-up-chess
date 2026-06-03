@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCastle } from '../../castle/useCastle'
 import { track } from '../../firebase/analytics'
 import { WORLD_HEIGHT, WORLD_WIDTH } from './config'
 import './KnightsRunRoute.css'
@@ -16,6 +17,7 @@ export function KnightsRunRoute() {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const { identity } = useCastle()
 
   useEffect(() => {
     track('screen_view', { screen_name: 'knights_run' })
@@ -60,6 +62,11 @@ export function KnightsRunRoute() {
           render: { antialias: true, pixelArt: false },
         })
         instance.registry.set('exitCallback', exitCallback)
+        // Make the player's name available to GameOverScene so saved runs
+        // get tagged with who played them (for a future cloud leaderboard).
+        if (identity?.displayName) {
+          instance.registry.set('displayName', identity.displayName)
+        }
         game = instance as unknown as typeof game
         setStatus('ready')
       } catch (err) {

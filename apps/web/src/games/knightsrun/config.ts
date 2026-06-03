@@ -29,3 +29,13 @@ export const SPAWN_MAX_MS = 1600
 
 /** Score = distance, in px/100 → "metres". Display only; not gameplay. */
 export const SCORE_PER_PX = 0.01
+
+/** Coin pickup — bright yellow disc. One coin = +25 points. */
+export const COIN_VALUE = 25
+/** Spawn cadence is independent of obstacles so they don't synchronise into
+ *  unfair patterns. Same speed-scaled tightening as obstacles. */
+export const COIN_SPAWN_MIN_MS = 900
+export const COIN_SPAWN_MAX_MS = 2200
+/** Coins float at "easy jump height" most of the time + sometimes at
+ *  ground level so casual running picks them up. */
+export const COIN_FLOAT_HEIGHTS = [-60, -90, -120, 0] // negative = above ground

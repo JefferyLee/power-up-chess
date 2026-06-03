@@ -50,6 +50,16 @@ export interface ForestRun {
   finishedAt: number
 }
 
+export interface KnightsRun {
+  runId: string
+  displayName: string
+  /** Total score (distance + coin bonus). */
+  score: number
+  distance: number
+  coins: number
+  finishedAt: number
+}
+
 interface HistoryDB extends DBSchema {
   games: {
     key: string
@@ -66,10 +76,15 @@ interface HistoryDB extends DBSchema {
     value: ForestRun
     indexes: { 'by-finishedAt': number; 'by-score': number }
   }
+  knights_runs: {
+    key: string
+    value: KnightsRun
+    indexes: { 'by-finishedAt': number; 'by-score': number }
+  }
 }
 
 const DB_NAME = 'puc-history'
-const DB_VERSION = 3
+const DB_VERSION = 4
 
 let dbPromise: Promise<IDBPDatabase<HistoryDB>> | null = null
 
@@ -90,6 +105,11 @@ export function getDb(): Promise<IDBPDatabase<HistoryDB>> {
           const runs = db.createObjectStore('forest_runs', { keyPath: 'runId' })
           runs.createIndex('by-finishedAt', 'finishedAt')
           runs.createIndex('by-score', 'score')
+        }
+        if (oldVersion < 4) {
+          const knr = db.createObjectStore('knights_runs', { keyPath: 'runId' })
+          knr.createIndex('by-finishedAt', 'finishedAt')
+          knr.createIndex('by-score', 'score')
         }
       },
     })

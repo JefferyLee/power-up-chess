@@ -1,22 +1,37 @@
-// GameOverScene — overlay shown after a run ends. Score + Restart + Back.
+// GameOverScene — overlay shown after a run ends.
 //
-// "Back" is wired up by the React route: it listens for the 'exit' event the
-// scene emits via the global registry. The scene itself just calls into the
-// Game's registered exitCallback.
+// Shows the score breakdown (distance + coin bonus = total), the player's
+// personal best from local IDB, and Run-again / Back buttons. If the run
+// just broke the best, the row gets a "NEW BEST!" tag + a fanfare sound.
 
 import Phaser from 'phaser'
+import { playSound } from '../../../sound/synth'
+import { loadBestRun, saveKnightsRun } from '../history'
 import { WORLD_HEIGHT, WORLD_WIDTH } from '../config'
 
-interface InitData { score: number }
+interface InitData {
+  distanceScore: number
+  coins: number
+  coinBonus: number
+  score: number
+}
 
 export class GameOverScene extends Phaser.Scene {
+  private distanceScore = 0
+  private coins = 0
+  private coinBonus = 0
   private score = 0
+  private bestRowText: Phaser.GameObjects.Text | null = null
+  private newBestTag: Phaser.GameObjects.Text | null = null
 
   constructor() {
     super('GameOver')
   }
 
   init(data: InitData): void {
+    this.distanceScore = data.distanceScore
+    this.coins = data.coins
+    this.coinBonus = data.coinBonus
     this.score = data.score
   }
 
@@ -25,41 +40,99 @@ export class GameOverScene extends Phaser.Scene {
     overlay.setInteractive() // swallow clicks so they don't trigger jump
 
     this.add
-      .text(WORLD_WIDTH / 2, 110, 'The Knight Fell', {
+      .text(WORLD_WIDTH / 2, 56, 'The Knight Fell', {
         fontFamily: '"Cinzel", Georgia, serif',
-        fontSize: '38px',
+        fontSize: '34px',
         color: '#f4c266',
       })
       .setOrigin(0.5)
 
     this.add
-      .text(WORLD_WIDTH / 2, 165, `${this.score}`, {
+      .text(WORLD_WIDTH / 2, 110, `${this.score}`, {
         fontFamily: '"Cinzel", Georgia, serif',
-        fontSize: '64px',
+        fontSize: '56px',
         color: '#ffffff',
       })
       .setOrigin(0.5)
 
+    // Breakdown row.
+    const breakdown = `Distance ${this.distanceScore}   +   🪙 ${this.coins} × 25 = ${this.coinBonus}`
     this.add
-      .text(WORLD_WIDTH / 2, 215, 'distance run', {
+      .text(WORLD_WIDTH / 2, 156, breakdown, {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '14px',
-        color: '#9892a8',
+        color: '#bcb4d0',
       })
       .setOrigin(0.5)
 
-    const restart = this.makeButton(WORLD_WIDTH / 2 - 90, 275, 'Run again', () => {
+    // Best score row — populated async from IDB.
+    this.bestRowText = this.add
+      .text(WORLD_WIDTH / 2, 192, 'Best: …', {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '14px',
+        color: '#bcb4d0',
+      })
+      .setOrigin(0.5)
+
+    void this.recordAndShowBest()
+
+    const restart = this.makeButton(WORLD_WIDTH / 2 - 95, 248, 'Run again', () => {
       this.scene.start('Game')
     })
-    const back = this.makeButton(WORLD_WIDTH / 2 + 90, 275, 'Back', () => {
+    const back = this.makeButton(WORLD_WIDTH / 2 + 95, 248, 'Back', () => {
       const exit = this.game.registry.get('exitCallback') as (() => void) | undefined
       exit?.()
     })
     void restart; void back
   }
 
+  private async recordAndShowBest(): Promise<void> {
+    // Read the previous best BEFORE writing, so we can compare and tag.
+    let prevBest = 0
+    try {
+      const prev = await loadBestRun()
+      prevBest = prev?.score ?? 0
+    } catch {
+      // IDB unavailable (private mode etc.) — skip persistence, just show "—".
+    }
+    const isNewBest = this.score > prevBest
+
+    try {
+      const displayName = (this.game.registry.get('displayName') as string | undefined) ?? ''
+      await saveKnightsRun({
+        runId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        displayName,
+        score: this.score,
+        distance: this.distanceScore,
+        coins: this.coins,
+        finishedAt: Date.now(),
+      })
+    } catch {
+      // Same — non-fatal.
+    }
+
+    const newBest = Math.max(prevBest, this.score)
+    this.bestRowText?.setText(`Best: ${newBest}`)
+    if (isNewBest && this.score > 0) {
+      this.newBestTag = this.add
+        .text(WORLD_WIDTH / 2, 216, '✨ NEW BEST!', {
+          fontFamily: '"Cinzel", Georgia, serif',
+          fontSize: '16px',
+          color: '#ffd860',
+        })
+        .setOrigin(0.5)
+      this.tweens.add({
+        targets: this.newBestTag,
+        scale: { from: 0.6, to: 1.0 },
+        duration: 300,
+        ease: 'Back.Out',
+      })
+      playSound('knight-newbest')
+    }
+  }
+
   private makeButton(x: number, y: number, label: string, onClick: () => void): Phaser.GameObjects.Container {
-    const w = 160
+    const w = 170
     const h = 40
     const bg = this.add.rectangle(0, 0, w, h, 0xf4c266).setStrokeStyle(1, 0xb78938)
     const txt = this.add

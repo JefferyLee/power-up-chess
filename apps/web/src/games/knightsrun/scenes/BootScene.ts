@@ -25,6 +25,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('pawn-b', pawnBlackUrl)
     this.load.image('rook-b', rookBlackUrl)
     this.load.image('queen-b', queenBlackUrl)
+    // Coin texture is generated procedurally so we don't need an asset —
+    // see GameScene.makeCoinTexture(). Nothing to preload for coins.
   }
 
   create(): void {

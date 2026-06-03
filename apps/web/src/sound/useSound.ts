@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   playSound,
   setAmbientMuted,
+  setSfxMuted,
   startAmbient,
   stopAmbient,
   unlockAudio,
@@ -34,14 +35,19 @@ function persistMuted(muted: boolean): void {
 /** Shared state across all hook callers — react via a poor-man's pub/sub. */
 const listeners = new Set<(m: boolean) => void>()
 let currentMuted = readInitialMuted()
+// Mirror the initial flag into synth so direct playSound() callers (Phaser
+// scenes etc.) start in the right state even before any hook mounts.
+setSfxMuted(currentMuted)
 
 function setMutedGlobal(m: boolean): void {
   if (m === currentMuted) return
   currentMuted = m
   persistMuted(m)
   // Duck the ambient bed without tearing it down so unmuting brings it
-  // straight back. One-shot SFX are gated separately via the play() guard.
+  // straight back. One-shot SFX are gated via the playSound() guard,
+  // mirrored into the synth module so non-hook callers see it too.
   setAmbientMuted(m)
+  setSfxMuted(m)
   for (const l of listeners) l(m)
 }
 
