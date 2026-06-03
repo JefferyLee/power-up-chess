@@ -13,7 +13,7 @@
 //   5. eval(fenBefore) is not already overwhelming (|eval| < 500 cp).
 //   6. Non-trivial position: ≥10 plies into the game, total material ≥ 20.
 
-import { Chess } from 'chess.js'
+import { Chess, type Square } from 'chess.js'
 import type { AnalyzedMove } from './analyzeGame'
 import type { Color, PieceSymbol } from '../chess/types'
 
@@ -96,24 +96,28 @@ function detectSacrifice(m: AnalyzedMove): boolean {
 
 /** Piece values of attackers (opponent pieces that can move to `square` next). */
 function listAttackers(fen: string, square: string, attackerColor: Color): number[] {
-  const probe = withSideToMove(fen, attackerColor)
-  return probe
-    .moves({ verbose: true })
-    .filter((mv) => mv.to === square && mv.captured)
-    .map((mv) => PIECE_VALUE[mv.piece as PieceSymbol])
+  return piecesAttacking(fen, square, attackerColor)
 }
 
 /** Piece values of defenders (own pieces that would recapture on `square`).
- *  We probe by replacing the square's contents with an opponent piece and
- *  asking which of our pieces could capture it. */
+ *  Same geometric query as attackers — chess.attackers() considers only the
+ *  piece's reach, not whether it's our turn. */
 function listDefenders(fen: string, square: string, defenderColor: Color): number[] {
-  const probe = withSideToMove(fen, defenderColor)
-  probe.remove(square as Parameters<typeof probe.remove>[0])
-  probe.put({ type: 'p', color: opposite(defenderColor) }, square as Parameters<typeof probe.put>[1])
-  return probe
-    .moves({ verbose: true })
-    .filter((mv) => mv.to === square && mv.captured)
-    .map((mv) => PIECE_VALUE[mv.piece as PieceSymbol])
+  return piecesAttacking(fen, square, defenderColor)
+}
+
+/** Pieces of `color` that attack `square` in `fen`, returned as PIECE_VALUE
+ *  ints. Uses chess.attackers() — purely geometric, ignores pins/turn (which
+ *  is what SEE wants), and crucially avoids chess.js v1.4.0's broken put/move
+ *  hash maintenance that crashed the previous remove+put trick with
+ *  "Cannot mix BigInt and other types". */
+function piecesAttacking(fen: string, square: string, color: Color): number[] {
+  const chess = new Chess(fen)
+  return chess
+    .attackers(square as Square, color)
+    .map((sq) => chess.get(sq))
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .map((p) => PIECE_VALUE[p.type as PieceSymbol])
 }
 
 /** True if the engine's predicted opponent response captures our piece on the
@@ -127,17 +131,6 @@ function isRecoveryMove(m: AnalyzedMove): boolean {
 
 function opposite(c: Color): Color {
   return c === 'w' ? 'b' : 'w'
-}
-
-/** Returns a chess.js Chess instance for `fen` but with side-to-move forced
- *  to `side` (so we can ask for the opponent's pseudo-legal moves). */
-function withSideToMove(fen: string, side: Color): Chess {
-  const parts = fen.split(' ')
-  parts[1] = side
-  // Clear en-passant + counters to keep the position legal-enough for
-  // pseudo-legal move generation.
-  parts[3] = '-'
-  return new Chess(parts.join(' '))
 }
 
 /** Sum of piece values on the board (both colors combined, excluding kings). */

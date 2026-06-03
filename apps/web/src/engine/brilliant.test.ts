@@ -92,6 +92,34 @@ describe('isBrilliant', () => {
     expect(r.brilliant).toBe(true)
   })
 
+  it('does not crash on rank-1 destination (regression: chess.js BigInt mix)', () => {
+    // Pre-fix, listDefenders probed defenders by remove(destSquare) +
+    // put({type:'p',color:opp}, destSquare) + moves({verbose:true}). When
+    // destSquare was on rank 1 (or rank 8), the put placed a pawn on a rank
+    // pawns can't legally occupy. chess.js v1.4.0's _movePiece tries to
+    // maintain a Zobrist BigInt hash and crashes during legal-move
+    // enumeration with:
+    //   "Cannot mix BigInt and other types, use explicit conversions"
+    // Symptom: clicking Review on any saved game crashed during the
+    // analyzeGame post-pass that runs isBrilliant() on every candidate move.
+    // The fix replaces remove+put+moves with chess.attackers() — geometric,
+    // no board mutation, no hash maintenance.
+    //
+    // The trigger needs (a) STM has many pieces (deepens move-gen recursion)
+    // and (b) destSquare on rank 1 with at least one attacker. Italian/Ruy
+    // positions after castling are the smallest reliable trigger.
+    const moveData = move({
+      index: 22,
+      uci: 'h1e1', // white rook to e1, attacked by black rook on a1
+      fenBefore: '4k3/8/8/8/8/7K/PPPPPPPP/r6R w - - 0 20',
+      fenAfter: '4k3/8/8/8/8/7K/PPPPPPPP/r3R3 b - - 1 20',
+      color: 'w',
+      cpLoss: 0,
+      pvAfter: [],
+    })
+    expect(() => isBrilliant(moveData)).not.toThrow()
+  })
+
   it('queen sacrifice that IS recaptured next move: not brilliant', () => {
     const moveData = move({
       index: 22,
