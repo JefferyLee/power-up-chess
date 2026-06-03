@@ -1,37 +1,46 @@
-// Knight's Hop — turn-based piece-movement game (P1.G Slice 1).
+// Knight's Hop — turn-based piece-movement game.
 //
-// Slice 1 ships pawn-only: 5 columns × 8 rows, player at the bottom
-// row, taps a legal pawn destination one rank ahead. Forward to an
-// empty cell, or diagonal-forward to "capture" an obstacle. Each
-// move scrolls a fresh obstacle row in at the top; score = rows
-// traveled. Game ends when no legal move is available.
+// Two levels ship today: PAWN (one-step forward / diagonal capture)
+// and KNIGHT (four forward L-shapes). Each level constrains the
+// player to a single piece's chess-legal movement, so the kid
+// internalises piece motion by playing with the actual rules.
 //
-// Later slices add knight (L-jumps), bishop (diag slide), rook
-// (rank/file slide), and queen (combo) — each on its own level with
-// obstacles tuned to that piece's movement constraint. The whole
-// idea is to teach piece movement viscerally rather than via text.
+// Board is 5 columns × 8 visible rows. The player is always rendered
+// at the bottom row; after every move the board "scrolls" down by the
+// move's row delta (1 for pawn / pawn-capture / short-knight; 2 for
+// long-knight) and that many fresh obstacle rows spawn at the top.
+// Score = total rows scrolled — knight clears the level faster
+// because each L-jump covers more ground.
 //
-// The existing Forest Adventure (/forest) coexists for now; we'll
-// retire or replace it once the full piece ladder is shipped.
+// Future slices: bishop (diagonal slide), rook (rank slide), queen
+// (combo), level transitions, retire /forest once the ladder feels
+// complete.
 
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../../castle/useCastle'
 import pawnWhite from '../../cosmetics/assets/cburnett/wP.svg'
 import pawnBlack from '../../cosmetics/assets/cburnett/bP.svg'
+import knightWhite from '../../cosmetics/assets/cburnett/wN.svg'
 import './KnightsHopRoute.css'
 
 const COLS = 5
-const VISIBLE_ROWS = 8 // visual height of the board
-const OBSTACLE_DENSITY = 0.32 // chance each cell in a fresh row gets an obstacle
-const LEVEL_GOAL = 25 // rows-traveled target for level complete
+const VISIBLE_ROWS = 8
+const OBSTACLE_DENSITY = 0.32
+const LEVEL_GOAL = 25 // rows-of-progress target
+
+type Piece = 'pawn' | 'knight'
+
+interface Move {
+  col: number
+  rowDelta: 1 | 2
+}
 
 interface BoardState {
-  /** Player column (always rendered at the bottom row). */
+  /** Player column (always rendered at the bottom row, rowFromBottom=0). */
   col: number
-  /** Obstacle rows — index 0 is the row just above the player, the
-   *  rest stretch upward. Lengths == VISIBLE_ROWS - 1. Each row is a
-   *  5-bit mask: bit `c` set ↔ obstacle at column c. */
+  /** Obstacle rows. Index 0 is rowFromBottom=1 (just above the player),
+   *  index N-1 is the topmost visible row. Each row is a 5-bit mask. */
   rows: number[]
 }
 
@@ -50,66 +59,124 @@ function makeRowMask(): number {
 }
 
 function makeInitialBoard(): BoardState {
-  // Seed the visible-above-player rows with random obstacles.
   const rows: number[] = []
   for (let r = 0; r < VISIBLE_ROWS - 1; r++) rows.push(makeRowMask())
   return { col: Math.floor(COLS / 2), rows }
 }
 
-function legalTargets(board: BoardState): number[] {
-  // Targets live in the ROW directly above the player (board.rows[0]).
-  // Forward: same column, cell must be empty.
-  // Diagonal capture: ±1 column, cell must have an obstacle.
-  const targets: number[] = []
-  const ahead = board.rows[0] ?? 0
-  const left = board.col - 1
-  const fwd = board.col
-  const right = board.col + 1
-  if (fwd >= 0 && fwd < COLS && !(ahead & (1 << fwd))) targets.push(fwd)
-  if (left >= 0 && (ahead & (1 << left)) !== 0) targets.push(left)
-  if (right < COLS && (ahead & (1 << right)) !== 0) targets.push(right)
-  return targets
+function cellAt(board: BoardState, col: number, rowFromBottom: number): 'oob' | 'empty' | 'obstacle' {
+  if (col < 0 || col >= COLS) return 'oob'
+  if (rowFromBottom <= 0) return 'oob'
+  const row = board.rows[rowFromBottom - 1]
+  if (row === undefined) return 'oob'
+  return (row & (1 << col)) !== 0 ? 'obstacle' : 'empty'
 }
 
-function step(board: BoardState, toCol: number, ensureWinnable: boolean): BoardState {
-  // Pop the row the player just moved through (clear any captured
-  // obstacle implicitly — that obstacle moved off-board with the
-  // popped row).
-  const remaining = board.rows.slice(1)
-  // Generate a new top row; if ensureWinnable, retry a few times until
-  // the player has at least one legal next move.
-  let topRow = 0
+function legalMoves(board: BoardState, piece: Piece): Move[] {
+  const moves: Move[] = []
+  if (piece === 'pawn') {
+    // Forward one to empty; diagonal one to obstacle (capture).
+    const ahead = cellAt(board, board.col, 1)
+    if (ahead === 'empty') moves.push({ col: board.col, rowDelta: 1 })
+    for (const dc of [-1, +1]) {
+      if (cellAt(board, board.col + dc, 1) === 'obstacle') {
+        moves.push({ col: board.col + dc, rowDelta: 1 })
+      }
+    }
+    return moves
+  }
+  // Knight: four forward L-shapes. Empty OR obstacle both legal
+  // (knight either jumps onto safe square or captures).
+  const offsets: Array<[dc: number, dr: 1 | 2]> = [
+    [-1, 2], [+1, 2], [-2, 1], [+2, 1],
+  ]
+  for (const [dc, dr] of offsets) {
+    const c = board.col + dc
+    const cell = cellAt(board, c, dr)
+    if (cell === 'empty' || cell === 'obstacle') {
+      moves.push({ col: c, rowDelta: dr })
+    }
+  }
+  return moves
+}
+
+function step(
+  board: BoardState,
+  move: Move,
+  piece: Piece,
+  ensureWinnable: boolean,
+): BoardState {
+  // Drop the rows the player just traversed; spawn new rows at the
+  // top (which is the back of the array — closest-to-player = front).
+  const remaining = board.rows.slice(move.rowDelta)
+  let topRows: number[] = []
   let tries = 0
   while (true) {
-    topRow = makeRowMask()
-    if (!ensureWinnable) break
-    // What would the next-turn "ahead" row look like? remaining[0]
-    // (still the row immediately above the new player position).
-    const nextAhead = remaining[0] ?? topRow
+    topRows = []
+    for (let i = 0; i < move.rowDelta; i++) topRows.push(makeRowMask())
     const provisional: BoardState = {
-      col: toCol,
-      rows: [nextAhead, ...remaining.slice(1), topRow],
+      col: move.col,
+      rows: [...remaining, ...topRows],
     }
-    if (legalTargets(provisional).length > 0) break
-    if (++tries > 6) break // give up — the player will hit a stuck end
+    if (!ensureWinnable || legalMoves(provisional, piece).length > 0) break
+    if (++tries > 6) break
   }
-  return { col: toCol, rows: [...remaining, topRow] }
+  return { col: move.col, rows: [...remaining, ...topRows] }
+}
+
+function moveKey(m: Move): string {
+  return `${m.col},${m.rowDelta}`
+}
+
+interface LevelMeta {
+  piece: Piece
+  label: string
+  sub: string
+  legendKeys: { key: string; meaning: string }[]
+}
+
+const LEVELS: Record<Piece, LevelMeta> = {
+  pawn: {
+    piece: 'pawn',
+    label: 'Pawn',
+    sub: 'One step forward, diagonal to capture.',
+    legendKeys: [
+      { key: '↑', meaning: 'forward' },
+      { key: '←', meaning: 'capture left' },
+      { key: '→', meaning: 'capture right' },
+    ],
+  },
+  knight: {
+    piece: 'knight',
+    label: 'Knight',
+    sub: 'Four forward L-shapes — jumps over anything in the way.',
+    legendKeys: [
+      { key: 'Q', meaning: '−2 col +1 row' },
+      { key: 'W', meaning: '−1 col +2 row' },
+      { key: 'E', meaning: '+1 col +2 row' },
+      { key: 'R', meaning: '+2 col +1 row' },
+    ],
+  },
 }
 
 export function KnightsHopRoute() {
   const navigate = useNavigate()
   const { hostId } = useCastle()
+  const [piece, setPiece] = useState<Piece>('pawn')
   const [board, setBoard] = useState<BoardState>(() => makeInitialBoard())
   const [score, setScore] = useState(0)
   const [status, setStatus] = useState<GameStatus>({ kind: 'idle' })
 
-  const targets = useMemo(
-    () => (status.kind === 'playing' ? new Set(legalTargets(board)) : new Set<number>()),
-    [board, status.kind],
+  const moves = useMemo(
+    () => (status.kind === 'playing' ? legalMoves(board, piece) : []),
+    [board, piece, status.kind],
   )
+  const moveLookup = useMemo(() => {
+    const m = new Map<string, Move>()
+    for (const mv of moves) m.set(moveKey(mv), mv)
+    return m
+  }, [moves])
 
-  // After each successful move, check whether the next turn has any
-  // legal options. If not the game is over.
   useEffect(() => {
     if (status.kind !== 'playing') return
     if (score >= LEVEL_GOAL) {
@@ -117,11 +184,11 @@ export function KnightsHopRoute() {
       setStatus({ kind: 'cleared', score })
       return
     }
-    if (legalTargets(board).length === 0) {
+    if (moves.length === 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus({ kind: 'stuck', score })
     }
-  }, [board, score, status.kind])
+  }, [moves, score, status.kind])
 
   const start = useCallback(() => {
     setBoard(makeInitialBoard())
@@ -129,37 +196,57 @@ export function KnightsHopRoute() {
     setStatus({ kind: 'playing' })
   }, [])
 
-  const handleCellClick = useCallback(
-    (col: number, rowFromBottom: number) => {
+  const handleMove = useCallback(
+    (mv: Move) => {
       if (status.kind !== 'playing') return
-      // Only the row directly above the player (rowFromBottom === 1) is
-      // a candidate; other cells are not interactive.
-      if (rowFromBottom !== 1) return
-      if (!targets.has(col)) return
-      setBoard((prev) => step(prev, col, true))
-      setScore((s) => s + 1)
+      const allowed = moveLookup.get(moveKey(mv))
+      if (!allowed) return
+      setBoard((prev) => step(prev, allowed, piece, true))
+      setScore((s) => s + allowed.rowDelta)
     },
-    [status.kind, targets],
+    [status.kind, moveLookup, piece],
   )
 
-  // Keyboard input: ←/→ for diagonal captures, ↑ for forward.
+  const handleCellClick = useCallback(
+    (col: number, rowFromBottom: number) => {
+      if (rowFromBottom < 1 || rowFromBottom > 2) return
+      handleMove({ col, rowDelta: rowFromBottom as 1 | 2 })
+    },
+    [handleMove],
+  )
+
+  // Keyboard input. Pawn uses arrow keys; knight uses Q/W/E/R since
+  // four L-jumps don't map to a 4-direction pad cleanly.
   useEffect(() => {
     if (status.kind !== 'playing') return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' && targets.has(board.col)) {
+      if (piece === 'pawn') {
+        if (e.key === 'ArrowUp') {
+          handleMove({ col: board.col, rowDelta: 1 })
+          e.preventDefault()
+        } else if (e.key === 'ArrowLeft') {
+          handleMove({ col: board.col - 1, rowDelta: 1 })
+          e.preventDefault()
+        } else if (e.key === 'ArrowRight') {
+          handleMove({ col: board.col + 1, rowDelta: 1 })
+          e.preventDefault()
+        }
+      } else {
+        // Knight: Q W E R → the four forward L-jumps left-to-right.
+        const k = e.key.toLowerCase()
+        if (k === 'q') handleMove({ col: board.col - 2, rowDelta: 1 })
+        else if (k === 'w') handleMove({ col: board.col - 1, rowDelta: 2 })
+        else if (k === 'e') handleMove({ col: board.col + 1, rowDelta: 2 })
+        else if (k === 'r') handleMove({ col: board.col + 2, rowDelta: 1 })
+        else return
         e.preventDefault()
-        handleCellClick(board.col, 1)
-      } else if (e.key === 'ArrowLeft' && targets.has(board.col - 1)) {
-        e.preventDefault()
-        handleCellClick(board.col - 1, 1)
-      } else if (e.key === 'ArrowRight' && targets.has(board.col + 1)) {
-        e.preventDefault()
-        handleCellClick(board.col + 1, 1)
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [board.col, targets, status.kind, handleCellClick])
+  }, [piece, board.col, handleMove, status.kind])
+
+  const meta = LEVELS[piece]
 
   return (
     <div className="puc-khop">
@@ -174,9 +261,30 @@ export function KnightsHopRoute() {
         </button>
         <div className="puc-khop__title-wrap">
           <h1 className="puc-khop__title">Knight's Hop</h1>
-          <p className="puc-khop__sub">
-            Pawn level · move forward to an empty square, diagonally to capture.
-          </p>
+          <p className="puc-khop__sub">{meta.label} level · {meta.sub}</p>
+        </div>
+        <div className="puc-khop__levels" role="radiogroup" aria-label="Piece level">
+          {(['pawn', 'knight'] as Piece[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="radio"
+              aria-checked={p === piece}
+              className={
+                'puc-khop__level-btn ' +
+                (p === piece ? 'puc-khop__level-btn--on' : '')
+              }
+              onClick={() => {
+                if (p === piece) return
+                setPiece(p)
+                setBoard(makeInitialBoard())
+                setScore(0)
+                setStatus({ kind: 'idle' })
+              }}
+            >
+              {LEVELS[p].label}
+            </button>
+          ))}
         </div>
         <div className="puc-khop__score" aria-label="Score">
           <span className="puc-khop__score-label">Hops</span>
@@ -195,16 +303,17 @@ export function KnightsHopRoute() {
             } as React.CSSProperties
           }
         >
-          {renderBoard(board, targets, status, handleCellClick)}
+          {renderBoard(board, piece, moveLookup, status, handleCellClick)}
         </div>
 
         {status.kind === 'idle' && (
           <div className="puc-khop__overlay">
-            <h2 className="puc-khop__overlay-title">Pawn level</h2>
+            <h2 className="puc-khop__overlay-title">{meta.label} level</h2>
             <p className="puc-khop__overlay-body">
-              Hop your pawn forward {LEVEL_GOAL} times. Empty squares ahead, or
-              capture an obstacle on a diagonal. {hostId === 'lucy' ? 'Lucy' : 'Luca'}'s
-              cheering for you.
+              {piece === 'pawn'
+                ? `Hop forward ${LEVEL_GOAL} rows. Empty squares ahead, or capture diagonally.`
+                : `Cover ${LEVEL_GOAL} rows in L-jumps. Knights leap over anything in between.`}{' '}
+              {hostId === 'lucy' ? 'Lucy' : 'Luca'}'s cheering for you.
             </p>
             <button
               type="button"
@@ -220,8 +329,10 @@ export function KnightsHopRoute() {
           <div className="puc-khop__overlay puc-khop__overlay--ok">
             <h2 className="puc-khop__overlay-title">Level cleared!</h2>
             <p className="puc-khop__overlay-body">
-              {status.score} hops without getting stuck. Knight piece arrives in a
-              later level.
+              {status.score} rows covered.{' '}
+              {piece === 'pawn'
+                ? 'Try the Knight level next — four L-jumps per move.'
+                : 'Bishop, rook, and queen levels arrive in the next slice.'}
             </p>
             <button
               type="button"
@@ -237,8 +348,8 @@ export function KnightsHopRoute() {
           <div className="puc-khop__overlay puc-khop__overlay--fail">
             <h2 className="puc-khop__overlay-title">Stuck!</h2>
             <p className="puc-khop__overlay-body">
-              No legal pawn move — the row above was empty and the cell ahead is
-              blocked. You made it {status.score} hops.
+              No legal {meta.label.toLowerCase()} move from here. You covered{' '}
+              {status.score} rows.
             </p>
             <button
               type="button"
@@ -252,9 +363,9 @@ export function KnightsHopRoute() {
       </main>
 
       <footer className="puc-khop__legend">
-        <span><kbd>↑</kbd> forward</span>
-        <span><kbd>←</kbd> capture left</span>
-        <span><kbd>→</kbd> capture right</span>
+        {meta.legendKeys.map((l) => (
+          <span key={l.key}><kbd>{l.key}</kbd> {l.meaning}</span>
+        ))}
         <span>or tap a glowing square</span>
       </footer>
     </div>
@@ -263,14 +374,13 @@ export function KnightsHopRoute() {
 
 function renderBoard(
   board: BoardState,
-  targets: Set<number>,
+  piece: Piece,
+  moveLookup: Map<string, Move>,
   status: GameStatus,
   onClick: (col: number, rowFromBottom: number) => void,
 ) {
-  // We render top-to-bottom so DOM order matches visual order. The
-  // board has VISIBLE_ROWS total rows; the bottom row (rowFromBottom=0)
-  // is the player, the rows above (1 … VISIBLE_ROWS-1) come from
-  // board.rows where index 0 is rowFromBottom=1, etc.
+  const playerSvg = piece === 'pawn' ? pawnWhite : knightWhite
+  const playerLabel = piece === 'pawn' ? 'Your pawn' : 'Your knight'
   const cells: ReactElement[] = []
   for (let visualRow = 0; visualRow < VISIBLE_ROWS; visualRow++) {
     const rowFromBottom = VISIBLE_ROWS - 1 - visualRow
@@ -279,7 +389,8 @@ function renderBoard(
       const isPlayer = rowFromBottom === 0 && col === board.col
       const isObstacle = (rowMask & (1 << col)) !== 0
       const isTarget =
-        status.kind === 'playing' && rowFromBottom === 1 && targets.has(col)
+        status.kind === 'playing' &&
+        moveLookup.has(`${col},${rowFromBottom}`)
       const cellClass =
         'puc-khop__cell ' +
         ((visualRow + col) % 2 === 0
@@ -295,14 +406,14 @@ function renderBoard(
           onClick={() => onClick(col, rowFromBottom)}
           aria-label={
             isPlayer
-              ? 'Your pawn'
+              ? playerLabel
               : isObstacle
                 ? `Obstacle column ${col + 1}`
                 : `Empty cell column ${col + 1}`
           }
         >
           {isPlayer && (
-            <img src={pawnWhite} alt="" className="puc-khop__piece" />
+            <img src={playerSvg} alt="" className="puc-khop__piece" />
           )}
           {!isPlayer && isObstacle && (
             <img src={pawnBlack} alt="" className="puc-khop__piece puc-khop__piece--obstacle" />
