@@ -159,10 +159,10 @@ export function HallScreen() {
 
       {/* Learning + serious chess — above the chat. Hero CTA so a new
        *  visitor sees the path to learning + playing before the social
-       *  layer pulls focus. */}
+       *  layer pulls focus. Two visual rows of four on desktop. */}
       <section className="puc-hall__doors puc-hall__doors--learn">
         <h2 className="puc-hall__doors-title">Learn and play chess</h2>
-        <div className="puc-hall__doors-grid puc-hall__doors-grid--five">
+        <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
           <RoomDoor
             icon="📖"
             label="Learn chess"
@@ -208,16 +208,6 @@ export function HallScreen() {
             disabled={!isUnlocked}
             title={!isUnlocked ? lockedTitle : undefined}
           />
-        </div>
-        {error && <p className="puc-hall__error">{error}</p>}
-      </section>
-
-      {/* Sharpen-your-chess row — drills that need a quiet table.
-       *  Sits above the chat so kids see the learning path before
-       *  the social layer pulls focus. */}
-      <section className="puc-hall__doors puc-hall__doors--sharpen">
-        <h2 className="puc-hall__doors-title">Sharpen your chess</h2>
-        <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
           <RoomDoor
             icon="♞"
             label="Knight's Hop"
@@ -228,18 +218,19 @@ export function HallScreen() {
           <RoomDoor
             icon="♔"
             label="Endgame Drills"
-            blurb="Practise the classic checkmates against a stubborn defender."
+            blurb="Classic checkmates against a stubborn defender."
             variant="oak"
             onClick={() => navigate('/endgame')}
           />
           <RoomDoor
             icon="♕"
             label="Opening Trainer"
-            blurb="Italian, Spanish, Queen's Gambit — find the principled move."
+            blurb="Italian, Spanish, Queen's Gambit — principled moves."
             variant="starry"
             onClick={() => navigate('/openings')}
           />
         </div>
+        {error && <p className="puc-hall__error">{error}</p>}
       </section>
 
       {/* Social row below the doors — host on the left, chat in the

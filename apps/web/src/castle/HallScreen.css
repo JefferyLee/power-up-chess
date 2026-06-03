@@ -233,9 +233,9 @@
   gap: 22px;
   justify-content: center;
 }
-.puc-hall__doors-grid--five {
-  /* 5 doors above the chat. 5 × 110 + 4 × 22 = 638 px. */
-  grid-template-columns: repeat(5, max-content);
+.puc-hall__doors-grid--learn {
+  /* 8 doors above the chat — 4 across × 2 rows on desktop. */
+  grid-template-columns: repeat(4, max-content);
 }
 .puc-hall__doors-grid--fun {
   /* 2-4 doors below the chat — always horizontal on desktop.
@@ -245,16 +245,6 @@
   grid-auto-flow: column;
   grid-auto-columns: max-content;
   grid-template-columns: none;
-}
-
-.puc-hall__doors--sharpen {
-  /* Sharpen-your-chess sits between the hero row and the chat.
-   * Slightly tighter top margin than the leisure row so it groups
-   * with the learning content above. */
-  margin-top: 28px;
-}
-.puc-hall__doors--sharpen .puc-hall__doors-title {
-  opacity: 0.65;
 }
 
 .puc-hall__doors--fun {
@@ -267,7 +257,7 @@
 
 /* Phones — door grids wrap rather than clip. */
 @media (max-width: 720px) {
-  .puc-hall__doors-grid--five {
+  .puc-hall__doors-grid--learn {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px 14px;
     justify-content: stretch;
@@ -285,7 +275,7 @@
   }
 }
 @media (max-width: 420px) {
-  .puc-hall__doors-grid--five {
+  .puc-hall__doors-grid--learn {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
   }
