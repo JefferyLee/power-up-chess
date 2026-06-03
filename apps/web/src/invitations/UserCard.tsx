@@ -19,8 +19,7 @@ import {
   type GetPublicProfileResponse,
   type LocationTag,
 } from '../firebase/callables'
-import { HOSTS } from '../hosts/hosts'
-import { HostPortrait } from '../castle/HostPortrait'
+import { PlaqueCard } from '../me/PlaqueCard'
 import { INVITE_COST_CP } from './types'
 import { InviteDialog } from './InviteDialog'
 import './UserCard.css'
@@ -90,7 +89,6 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
 
         {state.kind === 'ready' && (() => {
           const p = state.profile
-          const badges = deriveBadges(p)
           const locView = locationView(p.currentLocation)
           const inviteDisabled =
             isSelf || p.inGame || selfCastlePoints < INVITE_COST_CP
@@ -104,46 +102,7 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
 
           return (
             <>
-              <header className="puc-user-card__head">
-                <div className={
-                  'puc-user-card__avatar'
-                  + (p.hasTournamentCrown ? ' puc-user-card__avatar--tcrown' : '')
-                  + (p.hasCrown ? ' puc-user-card__avatar--crown' : '')
-                  + (p.hasHalo ? ' puc-user-card__avatar--halo' : '')
-                }>
-                  <HostPortrait hostId={p.hostId} variant="lobby" />
-                </div>
-                <div className="puc-user-card__id">
-                  <h2 className="puc-user-card__name">{p.displayName}</h2>
-                  {p.title ? (
-                    <span className="puc-user-card__title">{p.title.label}</span>
-                  ) : (
-                    <span className="puc-user-card__title puc-user-card__title--none">
-                      Earn 100 castle points to earn a title
-                    </span>
-                  )}
-                  <span className="puc-user-card__partner">
-                    Plays with {HOSTS[p.hostId].name}
-                  </span>
-                </div>
-              </header>
-
-              <div className="puc-user-card__stats">
-                <StatTile label="Castle points" value={p.castlePoints.toString()} />
-                <StatTile label="Lifetime earned" value={p.lifetimeEarned.toString()} />
-                <StatTile label="Puzzles solved" value={p.puzzlesSolved.toString()} />
-              </div>
-
-              {badges.length > 0 && (
-                <div className="puc-user-card__badges">
-                  {badges.map((b) => (
-                    <span key={b.id} className="puc-user-card__badge" title={b.title}>
-                      <span className="puc-user-card__badge-icon">{b.icon}</span>
-                      <span className="puc-user-card__badge-label">{b.label}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
+              <PlaqueCard profile={p} />
 
               <p className="puc-user-card__location">
                 {p.currentLocation
@@ -192,44 +151,6 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
     </div>,
     document.body,
   )
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="puc-user-card__stat">
-      <span className="puc-user-card__stat-value">{value}</span>
-      <span className="puc-user-card__stat-label">{label}</span>
-    </div>
-  )
-}
-
-interface Badge {
-  id: string
-  icon: string
-  label: string
-  title: string
-}
-
-function deriveBadges(p: GetPublicProfileResponse): Badge[] {
-  const out: Badge[] = []
-  if (p.hasTournamentCrown) {
-    out.push({ id: 'tcrown', icon: '🏆', label: 'Tournament', title: 'Weekly Tournament champion (last 7 days)' })
-  }
-  if (p.hasCrown) {
-    out.push({ id: 'crown', icon: '🔥', label: 'Streak', title: '3+ duel wins in a row (last 72h)' })
-  }
-  if (p.hasHalo) {
-    out.push({ id: 'halo', icon: '✨', label: 'Duel winner', title: 'Won a Wizard\'s Duel (last 24h)' })
-  }
-  if (p.puzzlesSolved >= 100) {
-    out.push({ id: 'puzzler-100', icon: '🧩', label: 'Puzzler', title: '100+ puzzles solved' })
-  } else if (p.puzzlesSolved >= 25) {
-    out.push({ id: 'puzzler-25', icon: '🎯', label: 'Tactician', title: '25+ puzzles solved' })
-  }
-  if (p.lifetimeEarned >= 5000) {
-    out.push({ id: 'veteran', icon: '👑', label: 'Veteran', title: '5000+ lifetime castle points' })
-  }
-  return out
 }
 
 interface LocationView {

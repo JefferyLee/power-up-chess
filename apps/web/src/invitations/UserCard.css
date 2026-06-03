@@ -14,29 +14,33 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+/* The card is now a thin transparent wrapper around <PlaqueCard>; the
+ * brass chrome lives on the plaque itself. Keep only enough wrapper
+ * structure to anchor the close button + the footer actions. */
 .puc-user-card {
   position: relative;
   width: min(440px, 100%);
-  background: linear-gradient(180deg, rgba(40, 32, 70, 0.96), rgba(20, 16, 38, 0.96));
-  border: 1px solid rgba(241, 195, 76, 0.45);
-  border-radius: 14px;
-  padding: 22px 22px 18px;
-  color: var(--puc-text);
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #2a1c08;
   font-family: var(--puc-font-body);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
 }
 .puc-user-card__close {
   position: absolute;
-  top: 10px; right: 10px;
-  width: 28px; height: 28px;
+  top: 8px; right: 8px;
+  z-index: 2;
+  width: 26px; height: 26px;
   border-radius: 999px;
-  background: transparent;
-  border: 1px solid rgba(241, 195, 76, 0.35);
-  color: var(--puc-text);
+  background: rgba(255, 240, 200, 0.4);
+  border: 1px solid rgba(60, 38, 10, 0.5);
+  color: #2a1c08;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
 }
-.puc-user-card__close:hover { background: rgba(255, 255, 255, 0.05); }
+.puc-user-card__close:hover { background: rgba(255, 240, 200, 0.7); }
 
 .puc-user-card__loading,
 .puc-user-card__error {
@@ -139,13 +143,20 @@
 }
 .puc-user-card__badge-icon { font-size: 13px; }
 
+/* Location strip sits below the plaque on a darker band so it reads
+ * as a footer rather than part of the brass plate. */
 .puc-user-card__location {
-  margin: 0 0 14px;
+  margin: 0;
+  padding: 10px 14px;
   font-size: 12px;
-  color: var(--puc-text-muted);
+  background: rgba(20, 16, 36, 0.85);
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  border-radius: 10px;
+  color: #d8d0f5;
+  text-align: center;
 }
 .puc-user-card__location b {
-  color: var(--puc-text);
+  color: #f7e8b6;
   font-weight: 600;
 }
 .puc-user-card__watch {
@@ -155,7 +166,7 @@
   background: transparent;
   border: 1px solid rgba(241, 195, 76, 0.5);
   border-radius: 999px;
-  color: var(--puc-text-accent);
+  color: #f1c34c;
   cursor: pointer;
   font-family: inherit;
 }
