@@ -324,7 +324,7 @@ function ChampionsPanel({
   const top1 = top[0]
   return (
     <div
-      className="puc-gate__panel puc-gate__panel--leaderboard puc-gate__scroll"
+      className="puc-gate__panel puc-gate__panel--leaderboard"
       role="button"
       tabIndex={0}
       aria-label="Open Hall of Champions"
@@ -336,7 +336,6 @@ function ChampionsPanel({
         }
       }}
     >
-      <div className="puc-gate__scroll-handle puc-gate__scroll-handle--top" aria-hidden="true" />
       <h2 className="puc-gate__panel-title">Hall of Champions</h2>
       <div className="puc-gate__champions-full">
         <ChampionsList stats={stats} />
@@ -355,7 +354,6 @@ function ChampionsPanel({
       <p className="puc-gate__panel-note">
         {top.length > 0 ? 'tap for the full hall →' : 'be the first to set the bar'}
       </p>
-      <div className="puc-gate__scroll-handle puc-gate__scroll-handle--bottom" aria-hidden="true" />
     </div>
   )
 }

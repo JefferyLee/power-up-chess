@@ -237,17 +237,44 @@
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
+/* Brass plaque — warm metallic gradient with a bevelled top highlight
+ * and a darker bottom rim. Replaces the old semi-transparent panels +
+ * the parchment scroll the leaderboard used to wear. */
 .puc-gate__panel {
   position: absolute;
   top: 28px;
-  background: rgba(20, 16, 36, 0.78);
-  border: 1px solid rgba(247, 232, 182, 0.25);
+  background:
+    linear-gradient(180deg,
+      #e2b770 0%,
+      #c9994a 36%,
+      #9a6f28 72%,
+      #6f4d18 100%);
+  border: 1px solid #3d2810;
   border-radius: 10px;
-  padding: 12px 14px;
-  min-width: 170px;
-  max-width: 220px;
-  backdrop-filter: blur(3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  padding: 12px 16px;
+  min-width: 180px;
+  max-width: 240px;
+  color: #2a1c08;
+  font-family: 'Cinzel', Georgia, serif;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),     /* top catchlight */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),         /* bottom rim */
+    inset 0 0 24px rgba(140, 95, 30, 0.25),     /* inner glow */
+    0 6px 16px rgba(0, 0, 0, 0.55);             /* drop */
+}
+/* Four corner rivets — composited as a single pseudo-element with four
+ * radial gradients so each corner gets a dark stud with a tiny highlight. */
+.puc-gate__panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 9px 9px, #1a0e02 0 2px, rgba(0,0,0,0) 2.5px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #1a0e02 0 2px, rgba(0,0,0,0) 2.5px),
+    radial-gradient(circle at 9px calc(100% - 9px), #1a0e02 0 2px, rgba(0,0,0,0) 2.5px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #1a0e02 0 2px, rgba(0,0,0,0) 2.5px);
 }
 
 .puc-gate__panel--activity {
@@ -282,7 +309,8 @@
   flex-direction: column;
   gap: 6px;
   font-size: 12.5px;
-  color: #ece9ff;
+  color: #2a1c08;
+  font-family: 'IM Fell English', Georgia, serif;
 }
 .puc-gate__activity li {
   display: grid;
@@ -293,7 +321,7 @@
 .puc-gate__activity-icon {
   font-size: 13px;
   text-align: center;
-  filter: drop-shadow(0 0 3px rgba(241, 195, 76, 0.4));
+  filter: drop-shadow(0 1px 1px rgba(255, 230, 160, 0.7));
 }
 .puc-gate__activity-text {
   overflow: hidden;
@@ -315,83 +343,28 @@
   display: none;
 }
 
-/* Parchment-scroll treatment for the leaderboard — overrides the
- * default panel chrome with a warmer, taller, more "Hall of Champions"
- * presentation. Two darker bands at top + bottom suggest rolled ends. */
-.puc-gate__scroll {
-  background:
-    radial-gradient(ellipse at 50% 50%, #fbf3da 0%, #efe1bb 70%, #d8c294 100%);
-  border: 1px solid rgba(150, 110, 55, 0.55);
-  color: #3a2914;
-  font-family: 'IM Fell English', Georgia, serif;
-  min-width: 220px;
-  max-width: 260px;
-  padding: 22px 18px 18px;
-  box-shadow:
-    0 14px 38px rgba(0, 0, 0, 0.6),
-    inset 0 0 28px rgba(120, 85, 35, 0.32),
-    inset 0 0 0 1px rgba(150, 110, 55, 0.35);
-  /* Subtle deckle edge */
-  clip-path: polygon(
-    0% 5%, 8% 2%, 22% 4%, 38% 1%, 54% 3%, 70% 0%, 86% 2%, 96% 0%,
-    100% 8%, 99% 22%, 100% 38%, 98% 54%, 100% 70%, 99% 86%, 100% 96%,
-    92% 100%, 78% 98%, 62% 100%, 46% 98%, 30% 100%, 14% 98%, 0% 95%,
-    1% 80%, 0% 62%, 2% 44%, 0% 26%
-  );
-}
-
-.puc-gate__scroll-handle {
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  height: 8px;
-  background: linear-gradient(180deg, #b08a4a 0%, #6e5022 100%);
-  border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.puc-gate__scroll-handle--top    { top: 4px; }
-.puc-gate__scroll-handle--bottom { bottom: 4px; }
-
-.puc-gate__scroll .puc-gate__panel-title {
-  color: #6a3e10;
-  letter-spacing: 1.8px;
-  text-align: center;
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 11px;
-}
-
-.puc-gate__scroll .puc-gate__panel-note {
-  color: #6e5022;
-  font-style: italic;
-  text-align: center;
-  font-size: 10.5px;
-  margin-top: 4px;
-}
-
 .puc-gate__panel-title {
   margin: 0 0 6px;
   font-family: 'Cinzel', Georgia, serif;
-  font-size: 10.5px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.6px;
-  color: #f1c34c;
-  font-weight: 600;
-}
-
-.puc-gate__panel-big {
-  margin: 0 0 2px;
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 26px;
-  color: #f7e8b6;
-  font-weight: 600;
-  line-height: 1;
+  letter-spacing: 1.8px;
+  color: #3a230c;
+  font-weight: 700;
+  text-align: center;
+  /* Engraved look: soft top-light + harder bottom-dark text-shadow. */
+  text-shadow:
+    0 1px 0 rgba(255, 230, 160, 0.55),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .puc-gate__panel-note {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: 10.5px;
-  color: #9b97c1;
+  color: #4a3318;
   font-style: italic;
+  text-align: center;
+  font-family: 'IM Fell English', Georgia, serif;
 }
 
 .puc-gate__leaderboard {
@@ -477,33 +450,22 @@
   .puc-gate__tagline { font-size: 12px; }
   .puc-gate__header { top: 16px; }
 
-  /* Collapse both top-corner panels into pill-shaped badges that sit
-   * on the tower shoulders. Full content is only available via the
-   * tap-to-overlay modal. */
+  /* Collapse both top-corner panels into brass-plaque badges sitting on
+   * the tower shoulders. Full content is only available via the
+   * tap-to-overlay modal. Both pills share the brass palette inherited
+   * from the desktop .puc-gate__panel base — we only adjust geometry. */
   .puc-gate__panel {
     position: absolute;
     top: 76px;
     min-width: 90px;
     max-width: 44vw;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
-    background: rgba(20, 16, 36, 0.82);
-    border: 1px solid rgba(247, 232, 182, 0.35);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
   }
+  /* Hide the corner rivets on the pill — they look cluttered at this size. */
+  .puc-gate__panel::before { display: none; }
   .puc-gate__panel--activity { left: 10px; }
-  .puc-gate__panel--leaderboard {
-    right: 10px;
-    /* Strip the parchment chrome on mobile — too noisy at badge size. */
-    clip-path: none;
-    background: rgba(36, 26, 12, 0.85);
-    border-color: rgba(247, 232, 182, 0.4);
-    color: #f7e8b6;
-    font-family: inherit;
-    padding: 6px 10px;
-  }
-  .puc-gate__scroll-handle { display: none; }
+  .puc-gate__panel--leaderboard { right: 10px; }
 
   /* The full panel-title/list/note rendering is hidden — only the compact
    * preview (one line) shows on mobile. */
@@ -521,18 +483,20 @@
     gap: 6px;
     margin: 0;
     font-size: 12px;
-    color: #f7e8b6;
+    color: #2a1c08;
+    font-family: 'IM Fell English', Georgia, serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .puc-gate__champions-compact .puc-gate__lb-name {
-    color: #f7e8b6;
+    color: #2a1c08;
     font-family: inherit;
   }
   .puc-gate__champions-compact .puc-gate__lb-points {
-    color: #f1c34c;
-    font-family: inherit;
+    color: #5a3d10;
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
     font-size: 12px;
     margin-left: auto;
   }
@@ -555,76 +519,90 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+/* Brass plaque card — same metallic gradient as the corner panels, scaled up. */
 .puc-gate-overlay__card {
-  width: min(520px, 100%);
-  max-height: min(80vh, 720px);
-  background: linear-gradient(
-    180deg,
-    rgba(40, 32, 70, 0.96),
-    rgba(20, 16, 38, 0.96)
-  );
-  border: 1px solid rgba(241, 195, 76, 0.45);
-  border-radius: 14px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  position: relative;
+  width: min(440px, 100%);
+  max-height: min(80vh, 640px);
+  background:
+    linear-gradient(180deg,
+      #e2b770 0%,
+      #c9994a 30%,
+      #9a6f28 70%,
+      #6f4d18 100%);
+  border: 1px solid #3d2810;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    inset 0 0 60px rgba(140, 95, 30, 0.25),
+    0 24px 64px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: #ece9ff;
+  color: #2a1c08;
+  font-family: 'IM Fell English', Georgia, serif;
+}
+/* Four corner rivets, same trick as the small plaque. */
+.puc-gate-overlay__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 11px 11px, #1a0e02 0 2.5px, rgba(0,0,0,0) 3px),
+    radial-gradient(circle at calc(100% - 11px) 11px, #1a0e02 0 2.5px, rgba(0,0,0,0) 3px),
+    radial-gradient(circle at 11px calc(100% - 11px), #1a0e02 0 2.5px, rgba(0,0,0,0) 3px),
+    radial-gradient(circle at calc(100% - 11px) calc(100% - 11px), #1a0e02 0 2.5px, rgba(0,0,0,0) 3px);
 }
 .puc-gate-overlay__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(241, 195, 76, 0.2);
-  background: rgba(0, 0, 0, 0.2);
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(60, 38, 10, 0.45);
+  background: rgba(0, 0, 0, 0.08);
 }
 .puc-gate-overlay__title {
   font-family: 'Cinzel', Georgia, serif;
   font-size: 15px;
-  letter-spacing: 0.6px;
-  color: #f1c34c;
+  letter-spacing: 1.2px;
+  color: #3a230c;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-shadow:
+    0 1px 0 rgba(255, 230, 160, 0.6),
+    0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 .puc-gate-overlay__close {
-  background: transparent;
-  color: #ece9ff;
-  border: 1px solid rgba(241, 195, 76, 0.35);
+  background: rgba(255, 240, 200, 0.25);
+  color: #2a1c08;
+  border: 1px solid rgba(60, 38, 10, 0.5);
   border-radius: 999px;
-  width: 30px;
-  height: 30px;
-  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
   cursor: pointer;
 }
 .puc-gate-overlay__close:hover {
-  border-color: rgba(241, 195, 76, 0.7);
-  color: #f1c34c;
+  background: rgba(255, 240, 200, 0.5);
 }
 .puc-gate-overlay__body {
-  padding: 18px 22px 22px;
+  padding: 16px 22px 20px;
   overflow-y: auto;
 }
 .puc-gate__overlay-empty {
   margin: 0;
   font-style: italic;
-  color: #9b97c1;
+  color: #4a3318;
   text-align: center;
 }
-/* Inside the overlay the parchment leaderboard chrome would look out of
- * place — neutralise the inherited .puc-gate__scroll styling on the
- * embedded list. */
-.puc-gate-overlay__body .puc-gate__leaderboard {
-  font-size: 14px;
-}
+/* Inherit dark warm rows from the base leaderboard rules — they already
+ * read well on brass since they were originally tuned for parchment. */
+.puc-gate-overlay__body .puc-gate__leaderboard { font-size: 14px; }
 .puc-gate-overlay__body .puc-gate__lb-row {
-  color: #ece9ff;
-  border-bottom-color: rgba(241, 195, 76, 0.18);
-}
-.puc-gate-overlay__body .puc-gate__lb-rank,
-.puc-gate-overlay__body .puc-gate__lb-points {
-  color: #f1c34c;
-}
-.puc-gate-overlay__body .puc-gate__lb-title {
-  color: #b6aee0;
+  border-bottom-color: rgba(60, 38, 10, 0.25);
 }
 @media (max-width: 540px) {
   .puc-gate-overlay { padding: 14px; }
