@@ -12,10 +12,14 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const STORIES_SRC = resolve(here, '../../data/stories')
-const STORIES_OUT = resolve(here, '../lib/stories.bundle.json')
+const STORIES_OUT_FUNCTIONS = resolve(here, '../lib/stories.bundle.json')
+// Mirrored copy served as a static asset for the web Story Library
+// (apps/web/public/ is served from /). Committed alongside the
+// source stories so the web build doesn't depend on functions
+// having been built first.
+const STORIES_OUT_WEB = resolve(here, '../../apps/web/public/stories.bundle.json')
 
 async function main() {
-  await mkdir(dirname(STORIES_OUT), { recursive: true })
   const entries = await readdir(STORIES_SRC)
   const files = entries.filter((f) => f.endsWith('.json') && f !== 'manifest.json')
 
@@ -23,7 +27,8 @@ async function main() {
   for (const f of files) {
     const raw = await readFile(`${STORIES_SRC}/${f}`, 'utf8')
     const story = JSON.parse(raw)
-    // Strip fields the function doesn't need — keeps the bundle tight.
+    // Strip fields the function + library don't need — keeps the
+    // bundle tight while still surfacing book/author for attribution.
     stories.push({
       id: story.id,
       title: story.title,
@@ -37,8 +42,12 @@ async function main() {
     })
   }
 
-  await writeFile(STORIES_OUT, JSON.stringify({ count: stories.length, stories }))
-  console.log(`bundled ${stories.length} stories → ${STORIES_OUT}`)
+  const payload = JSON.stringify({ count: stories.length, stories })
+  for (const out of [STORIES_OUT_FUNCTIONS, STORIES_OUT_WEB]) {
+    await mkdir(dirname(out), { recursive: true })
+    await writeFile(out, payload)
+    console.log(`bundled ${stories.length} stories → ${out}`)
+  }
 }
 
 main().catch((err) => {

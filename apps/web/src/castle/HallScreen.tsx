@@ -282,6 +282,13 @@ export function HallScreen() {
             variant="parchment"
             onClick={() => navigate('/shop')}
           />
+          <RoomDoor
+            icon="📚"
+            label="Story Library"
+            blurb="108 chess stories — read with Lucy or Luca."
+            variant="parchment"
+            onClick={() => navigate('/library')}
+          />
         </div>
       </section>
 
