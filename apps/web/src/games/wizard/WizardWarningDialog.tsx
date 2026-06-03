@@ -2,6 +2,7 @@
 // explicit that this is NOT real chess so kids don't carry weird habits
 // (pieces freezing, summoning extra pawns) back into actual chess.
 
+import { createPortal } from 'react-dom'
 import './WizardWarningDialog.css'
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export function WizardWarningDialog({ onConfirm, onCancel }: Props) {
-  return (
+  return createPortal(
     <div className="puc-wizardwarn" role="dialog" aria-modal="true" aria-labelledby="puc-wizardwarn-title">
       <div className="puc-wizardwarn__backdrop" onClick={onCancel} />
       <div className="puc-wizardwarn__panel">
@@ -40,6 +41,7 @@ export function WizardWarningDialog({ onConfirm, onCancel }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
