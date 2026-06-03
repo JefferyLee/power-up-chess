@@ -116,19 +116,26 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Chess invitations — READ allowed for the sender + recipient so each
-    // side's onSnapshot listener can react to status transitions live.
-    // toUids is the array of every known uid for the recipient (Anonymous
-    // Auth mints a fresh uid per device, so one magic-word account can
-    // hold several); any one of them being the caller is sufficient.
-    // WRITES are always function-only (sendInvite / respondInvite /
-    // cancelInvite hold the only legitimate write paths; they enforce
-    // the 5 CP debit + race-safe status transitions).
+    // Chess invitations — READ is open to any signed-in user.
+    //
+    // Why not gate per-recipient: Firestore rules can't reference
+    // `resource.data` inside a LIST query — the rule engine refuses
+    // because it can't statically prove every doc the query could
+    // return satisfies the rule. We use a list query (onSnapshot with
+    // a where filter) for the inbox listener, so any
+    // resource-data-dependent rule blocks it with permission-denied.
+    //
+    // Same trade-off as `/rooms` already uses: low-stakes data (sender
+    // + recipient names + time control), 60 s TTL, no sensitive
+    // fields. A curious kid could enumerate the invitations collection
+    // but there's nothing in it worth enumerating.
+    //
+    // WRITES are still function-only (sendInvite / respondInvite /
+    // cancelInvite). The actual security boundary on the invite
+    // economy — the 5 CP debit + race-safe status transitions — lives
+    // in those callables.
     match /invitations/{inviteId} {
-      allow read: if request.auth != null
-        && (resource.data.fromUid == request.auth.uid
-            || (resource.data.toUids is list
-                && resource.data.toUids.hasAny([request.auth.uid])));
+      allow read: if request.auth != null;
       allow write: if false;
     }
     // Per-uid invite send-rate counter (mirrors feedback_attempts).
