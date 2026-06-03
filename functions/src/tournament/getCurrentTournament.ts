@@ -28,7 +28,22 @@ export const getCurrentTournament = onCall<
   const ref = db.doc(`tournaments/${weekKey}`)
   const snap = await ref.get()
   if (snap.exists) {
-    return { ok: true, tournament: snap.data() as TournamentDoc }
+    // Normalize defensively — Slice 1 docs were created before
+    // `rounds` existed on the type, so old docs may be missing it.
+    const raw = snap.data() as Partial<TournamentDoc>
+    return {
+      ok: true,
+      tournament: {
+        weekKey,
+        status: raw.status ?? 'registration',
+        openedAt: raw.openedAt ?? Date.now(),
+        closesAt: raw.closesAt ?? Date.now() + TOURNAMENT_WEEK_MS,
+        participants: raw.participants ?? [],
+        rounds: raw.rounds ?? [],
+        ...(raw.winnerName !== undefined ? { winnerName: raw.winnerName } : {}),
+        ...(raw.closedAt !== undefined ? { closedAt: raw.closedAt } : {}),
+      },
+    }
   }
   // Race-safe create: a concurrent caller might also be here. Use
   // create() so only one wins; the loser falls through to read the

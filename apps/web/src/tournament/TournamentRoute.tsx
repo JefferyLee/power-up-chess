@@ -46,12 +46,12 @@ export function TournamentRoute() {
     void callGetCurrentTournament()
       .then((res) => {
         if (cancelled) return
-        setTournament(res.tournament)
+        setTournament(normalizeTournament(res.tournament))
         setLoading(false)
         const ref = doc(db, 'tournaments', res.tournament.weekKey)
         unsub = onSnapshot(ref, (snap) => {
           const data = snap.data() as TournamentDoc | undefined
-          if (data) setTournament(data)
+          if (data) setTournament(normalizeTournament(data))
         })
       })
       .catch((err) => {
@@ -86,7 +86,7 @@ export function TournamentRoute() {
         normalizedName: identity.normalizedName,
         sessionId: identity.sessionId,
       })
-      setTournament(res.tournament)
+      setTournament(normalizeTournament(res.tournament))
     } catch (err) {
       setActionError(messageFor(err))
     } finally {
@@ -103,7 +103,7 @@ export function TournamentRoute() {
         normalizedName: identity.normalizedName,
         sessionId: identity.sessionId,
       })
-      setTournament(res.tournament)
+      setTournament(normalizeTournament(res.tournament))
     } catch (err) {
       setActionError(messageFor(err))
     } finally {
@@ -124,7 +124,7 @@ export function TournamentRoute() {
           pairingIndex,
           result,
         })
-        setTournament(res.tournament)
+        setTournament(normalizeTournament(res.tournament))
       } catch (err) {
         setActionError(messageFor(err))
       } finally {
@@ -146,7 +146,7 @@ export function TournamentRoute() {
         normalizedName: identity.normalizedName,
         sessionId: identity.sessionId,
       })
-      setTournament(res.tournament)
+      setTournament(normalizeTournament(res.tournament))
     } catch (err) {
       setActionError(messageFor(err))
     } finally {
@@ -588,6 +588,18 @@ function ParticipantList({
       </ul>
     </section>
   )
+}
+
+/** Guards against missing array fields on docs created by an
+ *  earlier slice (Slice 1 wrote tournament docs without `rounds`).
+ *  Without this, the render path explodes on `.rounds.length` and
+ *  the page blanks. */
+function normalizeTournament(t: TournamentDoc): TournamentDoc {
+  return {
+    ...t,
+    participants: t.participants ?? [],
+    rounds: t.rounds ?? [],
+  }
 }
 
 function computeScores(tournament: TournamentDoc): Map<string, number> {
