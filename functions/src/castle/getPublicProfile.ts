@@ -80,6 +80,11 @@ export interface GetPublicProfileResponse {
   /** True when the guest finished all 5 of today's puzzles (any combo
    *  of correct/wrong, mirroring the completion-bonus gate). */
   todaysFiveDone: boolean
+  /** Full results array — length 5 when today's set exists, null when
+   *  it hasn't been generated yet. true = solved, false = failed,
+   *  null = not yet attempted. Drives the HP-bar segments + brightness
+   *  mask on the plaque. */
+  todaysFiveResults: Array<boolean | null> | null
 }
 
 export const getPublicProfile = onCall<
@@ -135,12 +140,16 @@ export const getPublicProfile = onCall<
   let todaysFiveSolved: number | null = null
   let todaysFiveTotal: number | null = null
   let todaysFiveDone = false
+  let todaysFiveResults: Array<boolean | null> | null = null
   const todayKey = laDayKey(Date.now())
   const td = guest.puzzleDaily
   if (td && td.dayKey === todayKey && Array.isArray(td.results)) {
     todaysFiveTotal = td.results.length
     todaysFiveSolved = td.results.filter((r) => r === true).length
     todaysFiveDone = td.results.every((r) => r !== null)
+    todaysFiveResults = td.results.map((r) =>
+      r === true ? true : r === false ? false : null,
+    )
   }
 
   const puzzleRatings: Record<string, number> = {}
@@ -183,5 +192,6 @@ export const getPublicProfile = onCall<
     todaysFiveSolved,
     todaysFiveTotal,
     todaysFiveDone,
+    todaysFiveResults,
   }
 })

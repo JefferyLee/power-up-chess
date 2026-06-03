@@ -1011,6 +1011,7 @@ export interface GetPublicProfileResponse {
   todaysFiveSolved: number | null
   todaysFiveTotal: number | null
   todaysFiveDone: boolean
+  todaysFiveResults: Array<boolean | null> | null
 }
 
 const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfileResponse>(

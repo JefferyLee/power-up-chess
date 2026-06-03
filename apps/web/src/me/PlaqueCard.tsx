@@ -29,6 +29,16 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
+  // Equipment brightness ramp — 50% when no Today's Five attempts yet,
+  // +10% per attempted slot up to full brightness at 5/5. Encourages
+  // the kid to clear today's set: their piece literally lights up as
+  // they go. Mirrors the HP-bar segments inside the Puzzles section.
+  const todaysResults = profile.todaysFiveResults
+  const attempted = todaysResults
+    ? todaysResults.filter((r) => r !== null).length
+    : 0
+  const brightnessPct = 50 + attempted * 10  // 50, 60, 70, 80, 90, 100
+  const allDone = attempted === 5
   const tournamentBest = profile.tournamentsBestPlacement
   const tournamentBestLabel =
     tournamentBest === null || tournamentBest === undefined
@@ -56,7 +66,18 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
       </header>
 
       <aside className="puc-plaque-card__equipment" aria-label="Equipment">
-        <span className="puc-plaque-equipment__hero">
+        <span
+          className={
+            'puc-plaque-equipment__hero' +
+            (allDone ? ' puc-plaque-equipment__hero--lit' : '')
+          }
+          style={{ ['--hero-brightness' as string]: `${brightnessPct}%` }}
+          title={
+            todaysResults
+              ? `Today's Five: ${attempted}/5 attempted`
+              : "Today's Five not started — finish it to brighten your gear"
+          }
+        >
           <Piece piece={{ type: showcasePiece, color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
         </span>
         <p className="puc-plaque-equipment__label">{set.label}</p>
@@ -107,11 +128,7 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
             )}
           </Row>
           <Row label="Today's Five">
-            <TodaysFive
-              solved={profile.todaysFiveSolved}
-              total={profile.todaysFiveTotal}
-              done={profile.todaysFiveDone}
-            />
+            <TodaysFiveBar results={todaysResults} />
           </Row>
           <Row label="Plots">
             <PlotsRow ratings={profile.puzzleRatings} />
@@ -154,18 +171,52 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-function TodaysFive({
-  solved,
-  total,
-  done,
-}: {
-  solved: number | null
-  total: number | null
-  done: boolean
-}) {
-  if (total === null) return <>not started</>
-  if (done) return <>✅ <b>{solved ?? 0}</b> / {total}</>
-  return <><b>{solved ?? 0}</b> / {total} attempted</>
+function TodaysFiveBar({ results }: { results: Array<boolean | null> | null }) {
+  // No set generated yet today — empty bar + "not started" hint.
+  if (!results) {
+    return (
+      <span className="puc-plaque-tfbar puc-plaque-tfbar--idle">
+        <span className="puc-plaque-tfbar__segments" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i} className="puc-plaque-tfbar__seg" />
+          ))}
+        </span>
+        <span className="puc-plaque-tfbar__caption">not started</span>
+      </span>
+    )
+  }
+  const solved = results.filter((r) => r === true).length
+  const attempted = results.filter((r) => r !== null).length
+  const allDone = attempted === 5
+  return (
+    <span
+      className={
+        'puc-plaque-tfbar' +
+        (allDone ? ' puc-plaque-tfbar--full' : '')
+      }
+    >
+      <span className="puc-plaque-tfbar__segments" aria-hidden="true">
+        {results.map((r, i) => (
+          <span
+            key={i}
+            className={
+              'puc-plaque-tfbar__seg ' +
+              (r === true
+                ? 'puc-plaque-tfbar__seg--hit'
+                : r === false
+                  ? 'puc-plaque-tfbar__seg--miss'
+                  : 'puc-plaque-tfbar__seg--pending')
+            }
+          />
+        ))}
+      </span>
+      <span className="puc-plaque-tfbar__caption">
+        {allDone
+          ? <>✅ <b>{solved}</b>/5 done</>
+          : <><b>{solved}</b>/{attempted} of 5</>}
+      </span>
+    </span>
+  )
 }
 
 function PlotsRow({ ratings }: { ratings: Record<string, number> }) {
