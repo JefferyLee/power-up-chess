@@ -1,14 +1,31 @@
 // Castle identity — the name+magic-word layer on top of Anonymous Auth.
 //
-// Persisted in sessionStorage so a refresh keeps the guest signed in, but
-// opening a new tab re-rolls the host and re-asks for name. Three concerns
-// live here:
-//   1. The session host (Lucy or Luca), rolled once and sticky.
-//   2. The castle identity (displayName, normalizedName, castlePoints,
-//      isBypass) — written after a successful castleEnter or castleBypass.
-//   3. The client-side magic-word hash, so the network never sees plaintext.
+// Persisted in localStorage with a 5-day sliding TTL so a returning guest
+// on the same device doesn't have to re-type their magic word. The wicket
+// uses the stored credential to re-call castleEnter behind a "Welcome back"
+// confirmation. Threat model unchanged: the magic word is sha256-only by
+// spec (see MVP2_PLAN.md §5.1), the Firebase anon UID is already in
+// localStorage, and the server-side sessionId still evicts older devices
+// when the account signs in elsewhere.
 
-const IDENTITY_KEY = 'puc:castle-identity:v1'
+const IDENTITY_KEY = 'puc:castle-identity:v2'
+const TTL_MS = 5 * 24 * 60 * 60 * 1000  // 5 days
+
+interface StoredAccount {
+  savedAt: number
+  identity: CastleIdentity
+  /** Cached magic-word credential for "quick re-enter" on the wicket.
+   *  Absent for bypass guests (no Firestore record, no quick-enter). */
+  credential?: CastleCredential
+}
+
+export interface CastleCredential {
+  /** The exact displayName as accepted by the server (case + trimming). */
+  displayName: string
+  /** sha256(`${normalizedName}:${magicWord}`), same value we send to
+   *  castleEnter on first sign-in. */
+  hash: string
+}
 
 export interface CastleIdentity {
   displayName: string
@@ -64,17 +81,22 @@ export async function hashMagicWord(name: string, magicWord: string): Promise<st
     .join('')
 }
 
-export function loadIdentity(): CastleIdentity | null {
+function readStored(): StoredAccount | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = window.sessionStorage.getItem(IDENTITY_KEY)
+    const raw = window.localStorage.getItem(IDENTITY_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<CastleIdentity>
-    if (typeof parsed.displayName !== 'string' || parsed.displayName.length === 0) return null
+    const wrapper = JSON.parse(raw) as Partial<StoredAccount>
+    if (typeof wrapper.savedAt !== 'number' || Date.now() - wrapper.savedAt > TTL_MS) {
+      window.localStorage.removeItem(IDENTITY_KEY)
+      return null
+    }
+    const parsed = wrapper.identity as Partial<CastleIdentity> | undefined
+    if (!parsed || typeof parsed.displayName !== 'string' || parsed.displayName.length === 0) return null
     if (typeof parsed.normalizedName !== 'string' || parsed.normalizedName.length === 0) return null
     const lastDecay = parsed.lastDecay
     const lastBonus = parsed.lastBonus
-    return {
+    const identity: CastleIdentity = {
       displayName: parsed.displayName,
       normalizedName: parsed.normalizedName,
       castlePoints: typeof parsed.castlePoints === 'number' && parsed.castlePoints >= 0 ? parsed.castlePoints : 0,
@@ -95,24 +117,58 @@ export function loadIdentity(): CastleIdentity | null {
         ? { cosmetics: { pieceSet: parsed.cosmetics.pieceSet } }
         : {}),
     }
+    const cred = wrapper.credential
+    const credential: CastleCredential | undefined =
+      cred && typeof cred.displayName === 'string' && typeof cred.hash === 'string' && cred.hash.length > 0
+        ? { displayName: cred.displayName, hash: cred.hash }
+        : undefined
+    return { savedAt: wrapper.savedAt, identity, ...(credential ? { credential } : {}) }
   } catch {
     return null
   }
 }
 
-export function saveIdentity(identity: CastleIdentity): void {
+function writeStored(account: StoredAccount): void {
   if (typeof window === 'undefined') return
   try {
-    window.sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(identity))
+    window.localStorage.setItem(IDENTITY_KEY, JSON.stringify(account))
   } catch {
     // Quota / privacy mode — ignore.
   }
 }
 
+export function loadIdentity(): CastleIdentity | null {
+  return readStored()?.identity ?? null
+}
+
+/** Returns the cached credential if it's still within TTL. Used by the
+ *  wicket to render the "Welcome back, X" path. */
+export function loadCredential(): CastleCredential | null {
+  return readStored()?.credential ?? null
+}
+
+/** Save identity, refreshing the TTL window. Preserves any existing
+ *  cached credential (so identity tweaks like point updates don't wipe
+ *  the quick-enter ability). */
+export function saveIdentity(identity: CastleIdentity): void {
+  const existing = readStored()
+  writeStored({
+    savedAt: Date.now(),
+    identity,
+    ...(existing?.credential ? { credential: existing.credential } : {}),
+  })
+}
+
+/** Save identity + a fresh credential. Called by the wicket on a
+ *  successful castleEnter so future visits can quick-enter. */
+export function saveIdentityWithCredential(identity: CastleIdentity, credential: CastleCredential): void {
+  writeStored({ savedAt: Date.now(), identity, credential })
+}
+
 export function clearIdentity(): void {
   if (typeof window === 'undefined') return
   try {
-    window.sessionStorage.removeItem(IDENTITY_KEY)
+    window.localStorage.removeItem(IDENTITY_KEY)
   } catch {
     // Ignore.
   }

@@ -3,12 +3,15 @@
 
 import { createContext } from 'react'
 import type { HostId } from '../hosts/hosts'
-import type { CastleIdentity } from './identity'
+import type { CastleCredential, CastleIdentity } from './identity'
 
 export interface CastleContextValue {
   identity: CastleIdentity | null
   hostId: HostId
-  signIn: (identity: CastleIdentity) => void
+  /** Sign in the guest. Pass `credential` when the user just typed
+   *  name + magic word — that enables the wicket's quick-enter on the
+   *  next visit within the TTL. Omit it on bypass / quick-enter paths. */
+  signIn: (identity: CastleIdentity, credential?: CastleCredential) => void
   signOut: () => void
   /** Update castlePoints (after a points-earning event). */
   setCastlePoints: (next: number) => void

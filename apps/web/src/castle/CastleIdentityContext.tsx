@@ -14,6 +14,8 @@ import {
   clearIdentity,
   loadIdentity,
   saveIdentity,
+  saveIdentityWithCredential,
+  type CastleCredential,
   type CastleIdentity,
 } from './identity'
 
@@ -48,8 +50,12 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
     applyTheme(themeForHost(hostId))
   }, [hostId])
 
-  const signIn = useCallback((next: CastleIdentity) => {
-    saveIdentity(next)
+  const signIn = useCallback((next: CastleIdentity, credential?: CastleCredential) => {
+    if (credential) {
+      saveIdentityWithCredential(next, credential)
+    } else {
+      saveIdentity(next)
+    }
     setIdentity(next)
   }, [])
 
