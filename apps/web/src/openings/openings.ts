@@ -122,6 +122,33 @@ export const OPENINGS: Opening[] = [
         explanation:
           'd3 leads to the Giuoco Pianissimo (the quietest game) — a positional setup that avoids the sharp 4.Ng5 Fried Liver Attack. Solid, slow, perfect for kids learning structure over tactics.',
       },
+      {
+        fen: 'r1bq1rk1/ppp2ppp/2np1n2/8/2BP4/5N2/PP1N1PPP/R2Q1RK1 w - - 2 10',
+        context: 'After 9.O-O O-O — anti-pin prophylaxis.',
+        expectedUci: 'h2h3',
+        expectedSan: 'h3',
+        hint: 'Stop Black\'s bishop from coming to g4.',
+        explanation:
+          'h3 denies the g4 square. Without it, Black\'s ...Bg4 pins your knight against the queen — a classic positional bind. Spend the tempo; you\'ll get long-term comfort.',
+      },
+      {
+        fen: 'r1bqkb1r/ppp2ppp/2n2n2/3pp1N1/2B1P3/8/PPPP1PPP/RNBQK2R w KQkq - 0 5',
+        context: 'After 4.Ng5 d5 (Two Knights, sharp line) — take the pawn.',
+        expectedUci: 'e4d5',
+        expectedSan: 'exd5',
+        hint: 'Capture and remove a defender of f7.',
+        explanation:
+          'exd5 grabs Black\'s defender of f7. The famous Fried Liver continues 5...Nxd5? 6.Nxf7! Kxf7 7.Qf3+ — but Black\'s best is 5...Na5! hitting your bishop. Either way, you\'re fine.',
+      },
+      {
+        fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5',
+        context: 'After 4.d3 Bc5 (Pianissimo main line) — prepare the d-break.',
+        expectedUci: 'c2c3',
+        expectedSan: 'c3',
+        hint: 'Make space for a future d3-d4 push.',
+        explanation:
+          'c3 supports the future d3-d4 break — the Pianissimo\'s slow-motion centre breakthrough. Carlsen, Caruana and Nepomniachtchi all use this in critical games. Patience builds the bind.',
+      },
     ],
   },
   {
@@ -212,6 +239,33 @@ export const OPENINGS: Opening[] = [
         explanation:
           'The Open Spanish gives White a long-term initiative. 6.d4 opens the e-file and threatens to win the knight back. After 6...b5 7.Bb3 d5 the position becomes sharp but principled play favours White\'s centre.',
       },
+      {
+        fen: 'r1bq1rk1/2p1bppp/p2p1n2/np2p3/4P3/1BP2N1P/PP1P1PP1/RNBQR1K1 w - - 1 10',
+        context: 'After 9.h3 Na5 — Black attacks your bishop. Save it well.',
+        expectedUci: 'b3c2',
+        expectedSan: 'Bc2',
+        hint: 'Don\'t trade — drop the bishop to a square where it still bites.',
+        explanation:
+          'Bc2 is THE Closed Spanish bishop manoeuvre. The bishop now eyes h7 and supports a future kingside attack via b1-h7 diagonal. Trading with Bxa6 or letting it die on b3 would surrender your best attacker.',
+      },
+      {
+        fen: 'r1bqkbnr/pppp2pp/2n5/1B2pp2/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq f6 0 4',
+        context: 'After 3.Bb5 f5 (Schliemann/Jaenisch Gambit) — defend the centre.',
+        expectedUci: 'b1c3',
+        expectedSan: 'Nc3',
+        hint: 'Develop a knight that also defends e4.',
+        explanation:
+          'The Schliemann is sharp and tactical. 4.Nc3 develops AND defends e4 — two principles in one move. Don\'t grab with 4.exf5? — Black plays 4...e4! kicking your knight with strong initiative.',
+      },
+      {
+        fen: 'r1bq1rk1/2p1bppp/p1n2n2/1p1pp3/4P3/1BP2N2/PP1P1PPP/RNBQR1K1 w - - 0 9',
+        context: 'After 8.c3 d5 (Marshall Attack!) — Black gambits a pawn.',
+        expectedUci: 'e4d5',
+        expectedSan: 'exd5',
+        hint: 'Take the pawn — you can defend the attack with calm play.',
+        explanation:
+          'The Marshall Attack is Black\'s most ambitious Closed Spanish answer — sacrifices a pawn for a strong kingside attack. 9.exd5 accepts the challenge. Theory continues 9...Nxd5 10.Nxe5 — keep grabbing material and defend carefully. Many top players play "Anti-Marshall" 8.a4 to avoid it.',
+      },
     ],
   },
   {
@@ -301,6 +355,33 @@ export const OPENINGS: Opening[] = [
         hint: 'Black gave up the centre — claim it all.',
         explanation:
           'e4 builds a massive pawn centre. Black can\'t easily hold the extra pawn (3...b5 4.a4 c6 5.axb5 cxb5 6.Nc3 attacks the pawn chain). Modern theory prefers this aggressive 3.e4 over the calm 3.Nf3.',
+      },
+      {
+        fen: 'r1bq1rk1/pp1nbppp/2p1pn2/6B1/2BP4/2N1PN2/PP3PPP/R2QK2R w KQ - 1 9',
+        context: 'After 8.Bxc4 Nbd7 — minor pieces developed, king to safety.',
+        expectedUci: 'e1g1',
+        expectedSan: 'O-O',
+        hint: 'All pieces are out — castle.',
+        explanation:
+          'O-O finishes development. Next come Qe2 and Rad1, building pressure on the d-file. This is the classic Carlsbad piece-up: every minor piece on a useful square, queen and rooks coordinating against d5.',
+      },
+      {
+        fen: 'rnbqkbnr/pp3ppp/4p3/2pp4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq c6 0 4',
+        context: 'After 3.Nc3 c5 (Tarrasch Defense) — give Black an isolated pawn.',
+        expectedUci: 'c4d5',
+        expectedSan: 'cxd5',
+        hint: 'Trade pawns to create a long-term structural target.',
+        explanation:
+          'Tarrasch\'s aggressive 3...c5 commits to an isolated d-pawn after 4.cxd5 exd5. The IQP gives Black active piece play but is a permanent structural weakness for the endgame. Famous main line: 5.Nf3 Nc6 6.g3 (Rubinstein) — fianchetto squeezes the d5 pawn.',
+      },
+      {
+        fen: 'rnbqkbnr/ppp2ppp/8/3pp3/2PP4/8/PP2PPPP/RNBQKBNR w KQkq e6 0 3',
+        context: 'After 1.d4 d5 2.c4 e5 (Albin Counter-Gambit) — take the pawn.',
+        expectedUci: 'd4e5',
+        expectedSan: 'dxe5',
+        hint: 'Black gambled a pawn — accept.',
+        explanation:
+          'The Albin Counter-Gambit is Black\'s most aggressive answer. 3.dxe5 accepts. Black plays 3...d4 next, locking the centre — but with careful play (4.Nf3 Nc6 5.g3) White preserves the extra pawn into the endgame. Don\'t be intimidated by Black\'s temporary space.',
       },
     ],
   },
