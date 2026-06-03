@@ -289,6 +289,13 @@ export function HallScreen() {
             variant="parchment"
             onClick={() => navigate('/library')}
           />
+          <RoomDoor
+            icon="♞"
+            label="Knight's Hop"
+            blurb="Move like a real chess piece. Pawn level open."
+            variant="mossy"
+            onClick={() => navigate('/knights-hop')}
+          />
         </div>
       </section>
 

@@ -20,6 +20,7 @@ import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
 import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
+import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 
@@ -59,6 +60,7 @@ export function App() {
           <Route path="/wizard/:roomId" element={<WizardRoomRoute />} />
           <Route path="/shop" element={<ShopScreen />} />
           <Route path="/library" element={<LibraryRoute />} />
+          <Route path="/knights-hop" element={<KnightsHopRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>
