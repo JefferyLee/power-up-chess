@@ -23,6 +23,8 @@ import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
 import { EndgameRoute } from './endgame/EndgameRoute'
 import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
+import { OpeningsRoute } from './openings/OpeningsRoute'
+import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 
@@ -65,6 +67,8 @@ export function App() {
           <Route path="/knights-hop" element={<KnightsHopRoute />} />
           <Route path="/endgame" element={<EndgameRoute />} />
           <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
+          <Route path="/openings" element={<OpeningsRoute />} />
+          <Route path="/openings/:id" element={<OpeningLessonScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>

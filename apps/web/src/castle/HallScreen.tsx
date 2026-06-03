@@ -303,6 +303,13 @@ export function HallScreen() {
             variant="oak"
             onClick={() => navigate('/endgame')}
           />
+          <RoomDoor
+            icon="♕"
+            label="Opening Trainer"
+            blurb="Italian, Spanish, Queen's Gambit — find the principled move."
+            variant="starry"
+            onClick={() => navigate('/openings')}
+          />
         </div>
       </section>
 
