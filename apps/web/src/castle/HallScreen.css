@@ -247,6 +247,16 @@
   grid-template-columns: none;
 }
 
+.puc-hall__doors--sharpen {
+  /* Sharpen-your-chess sits between the hero row and the chat.
+   * Slightly tighter top margin than the leisure row so it groups
+   * with the learning content above. */
+  margin-top: 28px;
+}
+.puc-hall__doors--sharpen .puc-hall__doors-title {
+  opacity: 0.65;
+}
+
 .puc-hall__doors--fun {
   /* Slightly muted heading for the leisure row. */
   margin-top: 16px;

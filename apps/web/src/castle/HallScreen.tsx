@@ -212,6 +212,36 @@ export function HallScreen() {
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
 
+      {/* Sharpen-your-chess row — drills that need a quiet table.
+       *  Sits above the chat so kids see the learning path before
+       *  the social layer pulls focus. */}
+      <section className="puc-hall__doors puc-hall__doors--sharpen">
+        <h2 className="puc-hall__doors-title">Sharpen your chess</h2>
+        <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
+          <RoomDoor
+            icon="♞"
+            label="Knight's Hop"
+            blurb="Move like a real chess piece. Pawn + Knight levels."
+            variant="mossy"
+            onClick={() => navigate('/knights-hop')}
+          />
+          <RoomDoor
+            icon="♔"
+            label="Endgame Drills"
+            blurb="Practise the classic checkmates against a stubborn defender."
+            variant="oak"
+            onClick={() => navigate('/endgame')}
+          />
+          <RoomDoor
+            icon="♕"
+            label="Opening Trainer"
+            blurb="Italian, Spanish, Queen's Gambit — find the principled move."
+            variant="starry"
+            onClick={() => navigate('/openings')}
+          />
+        </div>
+      </section>
+
       {/* Social row below the doors — host on the left, chat in the
        *  middle (the most vertical real-estate), passive info on the
        *  right. */}
@@ -288,27 +318,6 @@ export function HallScreen() {
             blurb="108 chess stories — read with Lucy or Luca."
             variant="parchment"
             onClick={() => navigate('/library')}
-          />
-          <RoomDoor
-            icon="♞"
-            label="Knight's Hop"
-            blurb="Move like a real chess piece. Pawn level open."
-            variant="mossy"
-            onClick={() => navigate('/knights-hop')}
-          />
-          <RoomDoor
-            icon="♔"
-            label="Endgame Drills"
-            blurb="Practise the classic checkmates against a stubborn defender."
-            variant="oak"
-            onClick={() => navigate('/endgame')}
-          />
-          <RoomDoor
-            icon="♕"
-            label="Opening Trainer"
-            blurb="Italian, Spanish, Queen's Gambit — find the principled move."
-            variant="starry"
-            onClick={() => navigate('/openings')}
           />
         </div>
       </section>
