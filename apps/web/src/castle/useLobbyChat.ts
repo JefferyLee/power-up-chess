@@ -74,6 +74,10 @@ export interface PresenceRow {
   hasTournamentCrown?: boolean
   /** Live lifetime-earn title label. */
   title?: string
+  /** Today's Five HP — five-slot results for the current LA day.
+   *  true=solved, false=failed, null=pending. Absent when the guest
+   *  hasn't started today's set. Refreshed every heartbeat (~20s). */
+  todaysFive?: Array<boolean | null>
 }
 
 const MAX_VISIBLE = 80

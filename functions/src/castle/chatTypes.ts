@@ -106,6 +106,11 @@ export interface PresenceDoc {
   hasTournamentCrown?: boolean
   /** Live lifetime-earn title label, refreshed each heartbeat. */
   title?: string
+  /** Today's Five HP — five-slot results array for the current LA day.
+   *  true = solved, false = failed/skipped, null = not yet attempted.
+   *  Absent when the guest hasn't started today's set yet (or for
+   *  bypass guests). Drives the inline HP-bar in the OnlineList. */
+  todaysFive?: Array<boolean | null>
 }
 
 // ─── Callables ─────────────────────────────────────────────────────────────

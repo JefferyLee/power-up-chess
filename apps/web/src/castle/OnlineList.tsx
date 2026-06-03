@@ -226,6 +226,7 @@ function OnlineRow({
         {row.displayName}
         {row.title && <span className="puc-online__rank"> · {row.title}</span>}
         {isYou ? ' (you)' : ''}
+        {row.todaysFive && <MiniTodaysFive results={row.todaysFive} />}
       </button>
       <span
         className={`puc-online__loc puc-online__loc--${view.variant}`}
@@ -266,5 +267,36 @@ function OnlineRow({
         </button>
       )}
     </li>
+  )
+}
+
+/** Inline 5-segment HP bar — same semantics as the Adventurer's
+ *  Plaque, just denser. Green=solved, red=failed, dim=pending.
+ *  Tooltip surfaces the exact tally. */
+function MiniTodaysFive({ results }: { results: Array<boolean | null> }) {
+  const slots = results.length === 5 ? results : [null, null, null, null, null]
+  const solved = slots.filter((r) => r === true).length
+  const attempted = slots.filter((r) => r !== null).length
+  const allDone = attempted === 5
+  return (
+    <span
+      className={'puc-online__tfbar' + (allDone ? ' puc-online__tfbar--full' : '')}
+      title={`Today's Five: ${solved} solved, ${attempted}/5 attempted`}
+      aria-label={`Today's Five: ${solved} of ${attempted} attempted`}
+    >
+      {slots.map((r, i) => (
+        <span
+          key={i}
+          className={
+            'puc-online__tfseg ' +
+            (r === true
+              ? 'puc-online__tfseg--hit'
+              : r === false
+                ? 'puc-online__tfseg--miss'
+                : 'puc-online__tfseg--pending')
+          }
+        />
+      ))}
+    </span>
   )
 }

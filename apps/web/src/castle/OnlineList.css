@@ -59,6 +59,36 @@
   color: rgba(231, 184, 65, 0.85);
 }
 
+/* Mini Today's Five HP bar — sits inline next to the name. Same
+ * colour semantics as the plaque bar, half the size. */
+.puc-online__tfbar {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  padding: 1px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.28);
+  vertical-align: middle;
+}
+.puc-online__tfseg {
+  display: inline-block;
+  width: 6px;
+  height: 7px;
+  border-radius: 1px;
+  background: rgba(160, 150, 180, 0.3);
+}
+.puc-online__tfseg--pending { background: rgba(160, 150, 180, 0.3); }
+.puc-online__tfseg--hit {
+  background: linear-gradient(180deg, #6fcf97, #3da76a);
+  box-shadow: 0 0 2px rgba(72, 200, 120, 0.7);
+}
+.puc-online__tfseg--miss {
+  background: linear-gradient(180deg, #d97a73, #a14238);
+}
+.puc-online__tfbar--full {
+  box-shadow: 0 0 4px rgba(255, 200, 90, 0.55);
+}
+
 /* Location chip — variant per kind. */
 .puc-online__loc {
   font-size: 10.5px;

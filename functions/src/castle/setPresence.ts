@@ -10,6 +10,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { LocationTag, SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
 import { titleFor, type GuestDoc } from './types'
 import { hostOnDuty } from '../shared/hostOnDuty'
+import { laDayKey } from '../puzzles/dailyFive'
 
 interface FullPresenceRequest extends SetPresenceRequest {
   displayName: string
@@ -38,6 +39,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     let hasCrown = false
     let hasTournamentCrown = false
     let title: string | null = null
+    let todaysFive: Array<boolean | null> | null = null
     // Verify non-bypass identity against the guest doc + read cosmetic state.
     if (!isBypass) {
       if (!normalizedName) throw new HttpsError('invalid-argument', 'normalizedName required for non-bypass guests.')
@@ -68,6 +70,16 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       hasTournamentCrown = typeof tCrown === 'number' && tCrown > now
       const lifetime = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
       title = titleFor(lifetime)?.label ?? null
+      // Today's Five for the LA day — projected onto the presence doc
+      // so the OnlineList can show each guest's mini HP bar without
+      // calling getPublicProfile per row. Stale (yesterday's) entries
+      // are not surfaced.
+      const td = guest.puzzleDaily
+      if (td && td.dayKey === laDayKey(Date.now()) && Array.isArray(td.results)) {
+        todaysFive = td.results.map((r) =>
+          r === true ? true : r === false ? false : null,
+        )
+      }
     }
 
     const now = Date.now()
@@ -85,6 +97,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       ...(hasCrown ? { hasCrown: true } : {}),
       ...(hasTournamentCrown ? { hasTournamentCrown: true } : {}),
       ...(title ? { title } : {}),
+      ...(todaysFive ? { todaysFive } : {}),
     }
     await db.doc(`lobby/presence/items/${sessionId}`).set(presence)
 
