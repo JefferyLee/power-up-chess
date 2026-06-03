@@ -38,73 +38,84 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
         </div>
       </header>
 
-      <Section title="Chess">
-        <Row label="Rating">
-          {profile.chessRating === null ? (
-            DASH
-          ) : (
-            <>
-              {profile.chessRating}
-              {ratingDelta !== null && ratingDelta !== 0 && (
-                <span
-                  className={
-                    'puc-plaque-delta ' +
-                    (ratingDelta > 0 ? 'puc-plaque-delta--up' : 'puc-plaque-delta--down')
-                  }
-                >
-                  {ratingDelta > 0 ? '↑' : '↓'}{Math.abs(ratingDelta)}
-                </span>
-              )}
-            </>
-          )}
-        </Row>
-        <Row label="Matches">
-          <span className="puc-plaque-trio">
-            <span><b>{profile.chessGames}</b> online</span>
-            <span><b>{nullable(profile.matchesAi)}</b> AI</span>
-            <span><b>{nullable(profile.matchesLocal)}</b> local</span>
+      <aside className="puc-plaque-card__equipment" aria-label="Equipment">
+        <div className="puc-plaque-equipment__pieces">
+          <span className="puc-plaque-equipment__piece">
+            <Piece piece={{ type: 'k', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
           </span>
-        </Row>
-      </Section>
+          <span className="puc-plaque-equipment__piece">
+            <Piece piece={{ type: 'n', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
+          </span>
+          <span className="puc-plaque-equipment__piece">
+            <Piece piece={{ type: 'p', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
+          </span>
+        </div>
+        <p className="puc-plaque-equipment__label">{set.label}</p>
+      </aside>
 
-      <Section title="Puzzles">
-        <Row label="Solved">
-          <b>{profile.puzzlesSolved}</b>
-          {profile.bestPuzzleRating !== null && (
-            <span className="puc-plaque-aside"> · best rating <b>{profile.bestPuzzleRating}</b></span>
-          )}
-        </Row>
-        <Row label="Plots">
-          <PlotsRow ratings={profile.puzzleRatings} />
-        </Row>
-      </Section>
-
-      <Section title="Library">
-        <Row label="Books read"><b>{nullable(profile.booksRead)}</b></Row>
-        <Row label="Quiz correct">
-          {profile.quizCorrect === null && profile.quizAttempted === null
-            ? DASH
-            : <b>{profile.quizCorrect ?? 0} / {profile.quizAttempted ?? 0}</b>}
-        </Row>
-      </Section>
-
-      <Section title="Tournaments">
-        <Row label="Entered"><b>{nullable(profile.tournamentsEntered)}</b></Row>
-        <Row label="Best">{tournamentBestLabel}</Row>
-      </Section>
-
-      <Section title="Equipment">
-        <Row label="Pieces">
-          <span className="puc-plaque-pieces">
-            <span className="puc-plaque-pieces__row">
-              <Piece piece={{ type: 'k', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
-              <Piece piece={{ type: 'n', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
-              <Piece piece={{ type: 'p', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
+      <div className="puc-plaque-card__stats">
+        <Section title="Chess">
+          <Row label="Rating">
+            {profile.chessRating === null ? (
+              DASH
+            ) : (
+              <>
+                {profile.chessRating}
+                {ratingDelta !== null && ratingDelta !== 0 && (
+                  <span
+                    className={
+                      'puc-plaque-delta ' +
+                      (ratingDelta > 0 ? 'puc-plaque-delta--up' : 'puc-plaque-delta--down')
+                    }
+                  >
+                    {ratingDelta > 0 ? '↑' : '↓'}{Math.abs(ratingDelta)}
+                  </span>
+                )}
+              </>
+            )}
+          </Row>
+          <Row label="Matches">
+            <span className="puc-plaque-trio">
+              <span><b>{profile.chessGames}</b> online</span>
+              <span><b>{nullable(profile.matchesAi)}</b> AI</span>
+              <span><b>{nullable(profile.matchesLocal)}</b> local</span>
             </span>
-            <span className="puc-plaque-pieces__label">{set.label}</span>
-          </span>
-        </Row>
-      </Section>
+          </Row>
+        </Section>
+
+        <Section title="Puzzles">
+          <Row label="Solved">
+            <b>{profile.puzzlesSolved}</b>
+            {profile.bestPuzzleRating !== null && (
+              <span className="puc-plaque-aside"> · best rating <b>{profile.bestPuzzleRating}</b></span>
+            )}
+          </Row>
+          <Row label="Today's Five">
+            <TodaysFive
+              solved={profile.todaysFiveSolved}
+              total={profile.todaysFiveTotal}
+              done={profile.todaysFiveDone}
+            />
+          </Row>
+          <Row label="Plots">
+            <PlotsRow ratings={profile.puzzleRatings} />
+          </Row>
+        </Section>
+
+        <Section title="Library">
+          <Row label="Books read"><b>{nullable(profile.booksRead)}</b></Row>
+          <Row label="Quiz correct">
+            {profile.quizCorrect === null && profile.quizAttempted === null
+              ? DASH
+              : <b>{profile.quizCorrect ?? 0} / {profile.quizAttempted ?? 0}</b>}
+          </Row>
+        </Section>
+
+        <Section title="Tournaments">
+          <Row label="Entered"><b>{nullable(profile.tournamentsEntered)}</b></Row>
+          <Row label="Best">{tournamentBestLabel}</Row>
+        </Section>
+      </div>
     </div>
   )
 }
@@ -125,6 +136,20 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="puc-plaque-row__value">{children}</span>
     </div>
   )
+}
+
+function TodaysFive({
+  solved,
+  total,
+  done,
+}: {
+  solved: number | null
+  total: number | null
+  done: boolean
+}) {
+  if (total === null) return <>not started</>
+  if (done) return <>✅ <b>{solved ?? 0}</b> / {total}</>
+  return <><b>{solved ?? 0}</b> / {total} attempted</>
 }
 
 function PlotsRow({ ratings }: { ratings: Record<string, number> }) {

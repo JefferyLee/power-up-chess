@@ -17,6 +17,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc, TitleRank } from './types'
 import { titleFor } from './types'
 import type { LocationTag, PresenceDoc } from './chatTypes'
+import { laDayKey } from '../puzzles/dailyFive'
 
 const PRESENCE_FRESH_MS = 45_000 // matches the heartbeat cadence + a little slack
 
@@ -69,6 +70,16 @@ export interface GetPublicProfileResponse {
   quizAttempted: number | null
   /** Currently-equipped piece-set id (used to render mini-pieces on the plaque). */
   equippedPieceSet: string | null
+  /** Today's Five — solved count for the current LA day (0-5). null
+   *  when the guest hasn't started today's set. */
+  todaysFiveSolved: number | null
+  /** Total Today's Five puzzles for today. Always 5 when the set
+   *  exists; null when it doesn't (ie hasn't been generated for this
+   *  guest today yet). */
+  todaysFiveTotal: number | null
+  /** True when the guest finished all 5 of today's puzzles (any combo
+   *  of correct/wrong, mirroring the completion-bonus gate). */
+  todaysFiveDone: boolean
 }
 
 export const getPublicProfile = onCall<
@@ -119,6 +130,19 @@ export const getPublicProfile = onCall<
   const hasTournamentCrown = freshest?.hasTournamentCrown
     ?? ((cosmetics.tournamentCrownExpiresAt ?? 0) > now2)
 
+  // Today's Five — only relevant if the stored set is for the
+  // current LA day. Stale entries (yesterday) read as "not started".
+  let todaysFiveSolved: number | null = null
+  let todaysFiveTotal: number | null = null
+  let todaysFiveDone = false
+  const todayKey = laDayKey(Date.now())
+  const td = guest.puzzleDaily
+  if (td && td.dayKey === todayKey && Array.isArray(td.results)) {
+    todaysFiveTotal = td.results.length
+    todaysFiveSolved = td.results.filter((r) => r === true).length
+    todaysFiveDone = td.results.every((r) => r !== null)
+  }
+
   const puzzleRatings: Record<string, number> = {}
   let bestPuzzleRating: number | null = null
   if (guest.puzzleRatings) {
@@ -156,5 +180,8 @@ export const getPublicProfile = onCall<
     quizCorrect: typeof guest.quizCorrect === 'number' ? guest.quizCorrect : null,
     quizAttempted: typeof guest.quizAttempted === 'number' ? guest.quizAttempted : null,
     equippedPieceSet: guest.cosmetics?.pieceSet ?? null,
+    todaysFiveSolved,
+    todaysFiveTotal,
+    todaysFiveDone,
   }
 })

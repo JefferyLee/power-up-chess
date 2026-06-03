@@ -596,6 +596,17 @@ const synthesizeStoryAudioFn = httpsCallable<
   SynthesizeStoryAudioResponse
 >(functions, 'synthesizeStoryAudio')
 
+export interface MarkStoryReadRequest { storyId: string }
+export interface MarkStoryReadResponse { added: boolean; booksRead: number }
+const markStoryReadFn = httpsCallable<MarkStoryReadRequest, MarkStoryReadResponse>(
+  functions,
+  'markStoryRead',
+)
+export async function callMarkStoryRead(req: MarkStoryReadRequest): Promise<MarkStoryReadResponse> {
+  const { data } = await markStoryReadFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string
@@ -975,6 +986,9 @@ export interface GetPublicProfileResponse {
   quizCorrect: number | null
   quizAttempted: number | null
   equippedPieceSet: string | null
+  todaysFiveSolved: number | null
+  todaysFiveTotal: number | null
+  todaysFiveDone: boolean
 }
 
 const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfileResponse>(

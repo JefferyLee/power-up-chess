@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../castle/useCastle'
-import { callSynthesizeStoryAudio } from '../firebase/callables'
+import { callMarkStoryRead, callSynthesizeStoryAudio } from '../firebase/callables'
 import './LibraryRoute.css'
 
 interface BundledStory {
@@ -42,6 +42,11 @@ export function LibraryRoute() {
   const [voice, setVoice] = useState<HostVoice>(hostId)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [speakingId, setSpeakingId] = useState<string | null>(null)
+  // Dedupe markStoryRead calls inside this tab — once the kid opens a
+  // story we don't fire again for the same id. The server also dedupes
+  // (booksReadIds is a set), so this is a cheap optimisation, not a
+  // correctness gate.
+  const readMarkedRef = useRef<Set<string>>(new Set())
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const speakingRef = useRef<string | null>(null)
 
@@ -87,6 +92,17 @@ export function LibraryRoute() {
   }, [])
 
   const groups = useMemo(() => groupByBook(bundle?.stories ?? []), [bundle])
+
+  // Fire-and-forget: report the kid opened/heard this story. Bypass
+  // guests no-op server-side. Network failures are logged but never
+  // surface — this is library bookkeeping, not a user-facing action.
+  const markRead = (storyId: string) => {
+    if (readMarkedRef.current.has(storyId)) return
+    readMarkedRef.current.add(storyId)
+    callMarkStoryRead({ storyId }).catch((err) => {
+      console.warn('markStoryRead failed', err)
+    })
+  }
 
   // Switching reader voice mid-listen should stop whatever was
   // playing — the cached audio is per (story, voice), so the kid
@@ -170,6 +186,10 @@ export function LibraryRoute() {
     }
     // Stop whatever else might be running first.
     stopAll()
+
+    // Tapping Read-aloud also counts as reading the story — covers the
+    // case where the kid taps Play without opening the inline body.
+    markRead(story.id)
 
     // Tier 1: pre-generated static asset under /audio/. Instant on
     // repeat plays via the browser's HTTP cache; ~30-60 KB first hit.
@@ -306,9 +326,13 @@ export function LibraryRoute() {
                     <button
                       type="button"
                       className="puc-library__story-head"
-                      onClick={() =>
+                      onClick={() => {
                         setExpandedId((prev) => (prev === story.id ? null : story.id))
-                      }
+                        // Mark on EXPAND (not collapse) — opening the
+                        // story counts as a read regardless of whether
+                        // the kid then taps Read-aloud.
+                        if (expandedId !== story.id) markRead(story.id)
+                      }}
                       aria-expanded={expanded}
                     >
                       <span className="puc-library__story-title">{story.title}</span>

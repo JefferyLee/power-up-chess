@@ -309,8 +309,12 @@ export interface GuestDoc {
   /** Best (numerically smallest) podium finish ever — 1 = first place,
    *  2 = runner-up, etc. Missing = never placed. (Write side TODO.) */
   tournamentsBestPlacement?: number
-  /** Library books read to completion (write side TODO). */
+  /** Library books read to completion. Mirrors booksReadIds.length so
+   *  reads on the Adventurer's Plaque don't need to compute it. */
   booksRead?: number
+  /** Distinct story ids the guest has opened or listened to. Dedupe key
+   *  for booksRead — re-opening the same story doesn't double-count. */
+  booksReadIds?: string[]
   /** Correct story-quiz answers all-time (write side TODO). */
   quizCorrect?: number
   /** Total story-quiz attempts (write side TODO). */
