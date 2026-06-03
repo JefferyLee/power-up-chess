@@ -607,6 +607,28 @@ export async function callMarkStoryRead(req: MarkStoryReadRequest): Promise<Mark
   return data
 }
 
+export interface LibraryShelfEntry {
+  bookKey: string
+  author?: string
+  storyIds: string[]
+  totalStories: number
+  reads: number
+  kidReadCount: number
+}
+export interface GetLibraryShelvesResponse {
+  shelves: LibraryShelfEntry[]
+  totalKidReads: number
+  totalLibraryReads: number
+}
+const getLibraryShelvesFn = httpsCallable<unknown, GetLibraryShelvesResponse>(
+  functions,
+  'getLibraryShelves',
+)
+export async function callGetLibraryShelves(): Promise<GetLibraryShelvesResponse> {
+  const { data } = await getLibraryShelvesFn(undefined)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string

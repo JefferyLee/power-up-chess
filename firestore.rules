@@ -38,6 +38,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Library book-heat counters — aggregate read counts per source
+    // book. Public so any guest can render the bookshelf heat without
+    // a callable round-trip; writes only happen server-side via the
+    // markStoryRead callable.
+    match /library_stats/{bookKey} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // MVP2 G.2 — castle gate "live pulse": duel count, recent duel
     // results, last host-story snippet. PUBLIC read for the gate page;
     // rebuilt every 2 min by refreshCastleLivePulse.

@@ -3,16 +3,21 @@
 // stats whether they're looking at themselves or someone else.
 
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { GetPublicProfileResponse } from '../firebase/callables'
 import { Piece } from '../board/Piece'
 import { getPieceSet, isPieceSetId } from '../cosmetics/pieceSets'
 import type { PieceSymbol } from '../chess/types'
+import { useCastle } from '../castle/useCastle'
 import './AdventurerPlaqueScreen.css'
 
 const DASH = '—'
 const PIECE_TYPES: PieceSymbol[] = ['k', 'q', 'r', 'b', 'n', 'p']
 
 export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
+  const navigate = useNavigate()
+  const { identity } = useCastle()
+  const isSelf = !!identity && identity.normalizedName === profile.normalizedName
   const pieceSetId = profile.equippedPieceSet
   const set = isPieceSetId(pieceSetId ?? '') ? getPieceSet(pieceSetId!) : getPieceSet(undefined)
   // Pick a random piece type once per mount so the showcase changes
@@ -55,6 +60,13 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
           <Piece piece={{ type: showcasePiece, color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
         </span>
         <p className="puc-plaque-equipment__label">{set.label}</p>
+        <button
+          type="button"
+          className="puc-plaque-equipment__btn"
+          onClick={() => navigate('/shop')}
+        >
+          {isSelf ? '换装备' : 'Want this →'}
+        </button>
       </aside>
 
       <div className="puc-plaque-card__stats">

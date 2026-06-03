@@ -79,209 +79,377 @@
   text-align: center;
 }
 
-.puc-library__main {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.puc-library__group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.puc-library__group-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed rgba(231, 184, 65, 0.25);
-}
-.puc-library__group-cover {
-  flex-shrink: 0;
-  width: 52px;
-  height: 64px;
-  border-radius: 4px 8px 8px 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--puc-font-display);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  /* Book-spine feel: tall, with a subtle inner highlight on the
-   * "binding" edge and a soft shadow underneath. */
-  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.18),
-              inset -1px 0 0 rgba(0, 0, 0, 0.25),
-              0 3px 8px rgba(0, 0, 0, 0.35);
-}
-.puc-library__group-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.puc-library__group-title {
-  margin: 0;
-  font-family: var(--puc-font-display);
-  font-size: 18px;
-  color: var(--puc-text-accent);
-  letter-spacing: 0.5px;
-}
-.puc-library__group-author {
-  margin: 0;
-  font-size: 12px;
+.puc-library__loading {
+  text-align: center;
+  padding: 40px 0;
   color: var(--puc-text-muted);
   font-style: italic;
 }
-.puc-library__group-count {
-  margin: 2px 0 0;
-  font-family: var(--puc-font-display);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(216, 200, 255, 0.55);
-}
 
-.puc-library__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ── Bookshelf ──────────────────────────────────────────────────────
+ * Wooden plank background, books standing as vertical spines. The
+ * wood texture is built from a stacked linear-gradient so we don't
+ * ship a bitmap; the planks separate visually by tonal step. */
+.puc-library__bookshelf {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+.puc-library__shelf {
+  position: relative;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 6px;
-}
-
-.puc-library__story {
-  background: var(--puc-surface);
-  border: 1px solid var(--puc-surface-edge);
+  padding: 18px 18px 0;
   border-radius: 10px;
-  overflow: hidden;
-  transition: border-color 180ms ease;
-}
-.puc-library__story--open {
-  border-color: rgba(231, 184, 65, 0.45);
+  background:
+    /* Two thin horizontal "shelf boards" suggested by darker bands
+     * every ~196px (180 spine + 16px padding). The repeating
+     * gradient keeps tiling vertically as more shelves stack. */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 184px,
+      #3a2510 184px,
+      #281708 196px
+    ),
+    /* Wood-plank vertical streaks. */
+    repeating-linear-gradient(
+      to right,
+      #6b4a23 0,
+      #5b3e1c 22px,
+      #6b4a23 44px,
+      #7a5628 70px,
+      #623f1a 96px,
+      #6b4a23 120px
+    ),
+    linear-gradient(180deg, #6e4a22, #4d3315);
+  border: 1px solid #2a1808;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 160, 0.18),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45),
+    0 20px 50px rgba(0, 0, 0, 0.55);
+  /* "Floor" plank under the spines — slightly darker bottom band. */
 }
 
-.puc-library__story-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 14px;
-  background: transparent;
-  border: none;
-  color: inherit;
+/* Each spine is a tap-target with a coloured rectangle. Width by heat
+ * bucket (--spine-w), colour deterministic per book (--spine-color). */
+.puc-spine {
+  position: relative;
+  width: var(--spine-w, 50px);
+  height: 180px;
+  flex: 0 0 auto;
+  padding: 12px 0 14px;
+  border-radius: 3px 3px 5px 5px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.35) 0,
+      rgba(0, 0, 0, 0) 14%,
+      rgba(0, 0, 0, 0) 86%,
+      rgba(0, 0, 0, 0.35) 100%
+    ),
+    linear-gradient(
+      180deg,
+      var(--spine-color, #7a4a90) 0%,
+      var(--spine-color-deep, #3a1d50) 100%
+    );
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45),
+    2px 4px 8px rgba(0, 0, 0, 0.4);
+  color: #fbf3da;
   cursor: pointer;
-  font-family: inherit;
-  text-align: left;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  /* Top + bottom decorative gold bands. */
+  border-top: 4px solid rgba(255, 220, 140, 0.4);
 }
-.puc-library__story-head:hover {
-  background: rgba(255, 255, 255, 0.03);
+.puc-spine:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.5),
+    3px 8px 14px rgba(0, 0, 0, 0.5);
 }
-.puc-library__story-title {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--puc-text);
-  min-width: 0;
+.puc-spine--hot {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 140, 0.6),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.5),
+    0 0 14px rgba(255, 180, 80, 0.55),
+    2px 4px 8px rgba(0, 0, 0, 0.4);
+}
+.puc-spine--finished {
+  border-top-color: #f5d570;
+}
+/* Spine title — vertical text, centred. writing-mode: vertical-rl
+ * rotates the glyphs so the book reads bottom-to-top like a real
+ * book on a shelf. */
+.puc-spine__title {
+  display: block;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  line-height: 1.15;
+  text-align: center;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0 auto;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  max-height: 138px;
+  color: #fbf3da;
 }
-.puc-library__story-era {
-  font-family: var(--puc-font-display);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--puc-text-muted);
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(120, 120, 140, 0.18);
+/* Golden progress fill — sits at the bottom of the spine, height
+ * matches the kid's read ratio. Sealed top-edge for a satisfying
+ * "fill level" feel. */
+.puc-spine__progress {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  height: var(--spine-progress, 0%);
+  background: linear-gradient(180deg, #f8d873 0%, #b9851a 100%);
+  border-top: 1px solid rgba(255, 230, 160, 0.85);
+  border-radius: 1px 1px 3px 3px;
+  pointer-events: none;
+  transition: height 280ms ease;
+  opacity: 0.78;
 }
-.puc-library__story-chevron {
-  color: var(--puc-text-muted);
-  font-size: 14px;
-  width: 16px;
-  text-align: center;
-}
-
-.puc-library__story-body {
-  padding: 4px 18px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: puc-library-expand 200ms ease-out;
-}
-@keyframes puc-library-expand {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.puc-library__story-text {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--puc-text);
-}
-
-.puc-library__story-actions {
+.puc-spine__seal {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe28b, #b9851a 70%, #6a4818);
+  color: #2a1c08;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 12px;
-  justify-content: space-between;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 2;
 }
-.puc-library__story-tts {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(231, 184, 65, 0.4);
-  background: rgba(231, 184, 65, 0.08);
-  color: var(--puc-text-accent);
-  font-family: var(--puc-font-display);
-  font-size: 12px;
-  letter-spacing: 0.4px;
-  cursor: pointer;
-}
-.puc-library__story-tts:hover { background: rgba(231, 184, 65, 0.18); }
-.puc-library__story-tts--on {
-  background: linear-gradient(135deg, #f4c266, #ef9a3f);
-  color: #1a1a1f;
-  border-color: rgba(0, 0, 0, 0.15);
-}
-.puc-library__story-tts--loading {
-  cursor: wait;
-  opacity: 0.8;
-  animation: puc-library-pulse 1.4s ease-in-out infinite;
-}
-@keyframes puc-library-pulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1;   }
-}
-.puc-library__story-meta {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--puc-text-muted);
+.puc-spine__hot {
+  position: absolute;
+  top: 4px;
+  right: -8px;
+  font-size: 16px;
+  filter: drop-shadow(0 0 3px rgba(255, 140, 50, 0.85));
+  z-index: 2;
 }
 
 @media (max-width: 540px) {
-  .puc-library__header { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
-  .puc-library__back { width: 44px; height: 44px; font-size: 20px; }
-  .puc-library__title { font-size: 18px; }
-  .puc-library__sub { font-size: 11px; }
-  .puc-library__voice-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
-  .puc-library__main { padding: 16px 12px; gap: 20px; }
-  .puc-library__group-head { gap: 10px; }
-  .puc-library__group-cover { width: 44px; height: 56px; font-size: 18px; }
-  .puc-library__group-title { font-size: 16px; }
-  .puc-library__story-head { padding: 12px; }
-  .puc-library__story-title { font-size: 14px; }
-  .puc-library__story-text { font-size: 14px; }
-  .puc-library__story-tts { min-height: 44px; padding: 10px 14px; }
+  .puc-library__shelf {
+    gap: 5px;
+    padding: 14px 12px 0;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 154px,
+        #3a2510 154px,
+        #281708 166px
+      ),
+      repeating-linear-gradient(
+        to right,
+        #6b4a23 0,
+        #5b3e1c 18px,
+        #6b4a23 36px,
+        #7a5628 58px
+      ),
+      linear-gradient(180deg, #6e4a22, #4d3315);
+  }
+  .puc-spine { height: 150px; padding: 10px 0 12px; }
+  .puc-spine__title { font-size: 11.5px; max-height: 116px; }
+}
+
+/* ── Drawer (when a book is tapped) ─────────────────────────────── */
+.puc-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(8, 6, 24, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: puc-drawer-fade 220ms ease-out;
+}
+@keyframes puc-drawer-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.puc-drawer {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  max-height: 86vh;
+  background: linear-gradient(180deg, #2a1f10 0%, #1a1308 100%);
+  border-top: 4px solid var(--drawer-color, #f4c266);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  color: #ece9ff;
+  animation: puc-drawer-rise 260ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+@keyframes puc-drawer-rise {
+  from { transform: translateY(50%); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+.puc-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(241, 195, 76, 0.18);
+  gap: 12px;
+}
+.puc-drawer__head-text { min-width: 0; }
+.puc-drawer__title {
+  margin: 0 0 2px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 18px;
+  color: #f7e8b6;
+  letter-spacing: 0.5px;
+}
+.puc-drawer__author {
+  margin: 0;
+  font-size: 12px;
+  color: #c9c0e8;
+  font-style: italic;
+}
+.puc-drawer__meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: #9b97c1;
+}
+.puc-drawer__close {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  color: #ece9ff;
+  cursor: pointer;
+  font-size: 14px;
+  flex: none;
+}
+.puc-drawer__close:hover { border-color: rgba(241, 195, 76, 0.7); }
+
+.puc-drawer__list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px 16px;
+  overflow-y: auto;
+}
+.puc-drawer__story {
+  border-bottom: 1px dashed rgba(241, 195, 76, 0.12);
+}
+.puc-drawer__story:last-child { border-bottom: none; }
+.puc-drawer__story-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px 1fr auto 14px;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 6px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.puc-drawer__story-head:hover {
+  background: rgba(241, 195, 76, 0.06);
+}
+.puc-drawer__story-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(120, 120, 140, 0.15);
+  border: 1px solid rgba(241, 195, 76, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: transparent;
+}
+.puc-drawer__story-check--on {
+  background: rgba(72, 200, 120, 0.85);
+  border-color: rgba(72, 200, 120, 0.85);
+  color: #0e1a12;
+}
+.puc-drawer__story-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 14px;
+  color: #f7e8b6;
+}
+.puc-drawer__story-era {
+  font-size: 11px;
+  color: #9b97c1;
+  font-style: italic;
+}
+.puc-drawer__story-chevron {
+  color: #f1c34c;
+  font-size: 14px;
+}
+
+.puc-drawer__story-body {
+  padding: 4px 6px 14px;
+}
+.puc-drawer__story-text {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d8d0f5;
+}
+.puc-drawer__story-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.puc-drawer__story-tts {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  background: rgba(241, 195, 76, 0.1);
+  color: #f7e8b6;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+.puc-drawer__story-tts--on {
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  color: #1a1a1f;
+  border-color: rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+}
+.puc-drawer__story-tts--loading {
+  opacity: 0.7;
+  cursor: progress;
+}
+.puc-drawer__story-meta {
+  font-size: 11.5px;
+  color: #9b97c1;
+}
+
+@media (max-width: 540px) {
+  .puc-drawer { max-height: 92vh; }
+  .puc-drawer__head { padding: 12px 14px 10px; }
+  .puc-drawer__title { font-size: 16px; }
+  .puc-drawer__list { padding: 6px 8px 14px; }
+  .puc-drawer__story-text { font-size: 13.5px; }
 }

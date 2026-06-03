@@ -251,6 +251,25 @@
   max-width: 200px;
   line-height: 1.2;
 }
+.puc-plaque-equipment__btn {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 38, 10, 0.55);
+  background: linear-gradient(135deg, #f4c266, #d99c3a);
+  color: #1a1408;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),
+    0 2px 4px rgba(0, 0, 0, 0.35);
+  font-weight: 600;
+}
+.puc-plaque-equipment__btn:hover {
+  filter: brightness(1.06);
+}
 
 @media (max-width: 480px) {
   .puc-plaque-page { padding: 56px 12px 28px; }
