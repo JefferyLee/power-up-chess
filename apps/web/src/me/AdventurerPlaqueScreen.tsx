@@ -3,7 +3,7 @@
 // signed-in user's own normalizedName so they see the same numbers
 // other guests would see in the UserCard popover.
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../castle/useCastle'
 import { callGetPublicProfile, type GetPublicProfileResponse } from '../firebase/callables'
@@ -20,6 +20,20 @@ export function AdventurerPlaqueScreen() {
   const navigate = useNavigate()
   const [state, setState] = useState<State>({ kind: 'loading' })
 
+  const fetchProfile = useCallback((normalizedName: string, isInitial: boolean) => {
+    if (isInitial) setState({ kind: 'loading' })
+    callGetPublicProfile({ normalizedName })
+      .then((profile) => setState({ kind: 'ready', profile }))
+      .catch((err) => {
+        // Background refetches shouldn't blow away a perfectly good
+        // snapshot — only surface as an error if we have nothing.
+        setState((prev) => prev.kind === 'ready'
+          ? prev
+          : { kind: 'error', message: err instanceof Error ? err.message : String(err) },
+        )
+      })
+  }, [])
+
   useEffect(() => {
     if (!identity) {
       navigate('/', { replace: true })
@@ -29,10 +43,24 @@ export function AdventurerPlaqueScreen() {
       setState({ kind: 'error', message: 'Sign in with a magic word to see your plaque.' })
       return
     }
-    callGetPublicProfile({ normalizedName: identity.normalizedName })
-      .then((profile) => setState({ kind: 'ready', profile }))
-      .catch((err) => setState({ kind: 'error', message: err instanceof Error ? err.message : String(err) }))
-  }, [identity, navigate])
+    fetchProfile(identity.normalizedName, true)
+  }, [identity, navigate, fetchProfile])
+
+  // Refresh on focus + on tab visibility change. Cheap (one callable
+  // round-trip), and covers the common case: kid plays a game / answers
+  // a quiz in another tab/app, comes back to the plaque expecting to
+  // see the updated number.
+  useEffect(() => {
+    if (!identity || identity.isBypass) return
+    const refresh = () => fetchProfile(identity.normalizedName, false)
+    const onVis = () => { if (document.visibilityState === 'visible') refresh() }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [identity, fetchProfile])
 
   return (
     <div className="puc-plaque-page">

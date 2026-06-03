@@ -113,7 +113,26 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
       // ── Phase 2: all writes ─────────────────────────────────────────
       tx.set(attemptRef, { count: nextAttempts, lastAt: Date.now() }, { merge: true })
 
+      // Resolve the guest once and accumulate every write to it into a
+      // single update payload. Both the quiz counters and the point award
+      // need to be coalesced or the second tx.update would clobber
+      // partial fields from the first.
+      const guest = guestRef && guestSnap?.exists ? (guestSnap.data() as GuestDoc) : null
+      const guestEligible = guest && guest.uids.includes(uid)
+      const guestUpdate: Record<string, unknown> = {}
+      let earnedPoint = false
+      let castlePoints = 0
+
+      if (guest && guestEligible) {
+        // Always bump quizAttempted (correct or wrong) — drives the
+        // Adventurer's Plaque library section.
+        guestUpdate.quizAttempted = (guest.quizAttempted ?? 0) + 1
+      }
+
       if (!correct) {
+        if (guestRef && Object.keys(guestUpdate).length > 0) {
+          tx.update(guestRef, guestUpdate)
+        }
         return {
           status: 'wrong' as const,
           attemptsUsed: nextAttempts,
@@ -121,21 +140,17 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
         }
       }
 
-      // Correct — claim the win + award the point.
-      let earnedPoint = false
-      let castlePoints = 0
-      if (guestRef && guestSnap?.exists) {
-        const guest = guestSnap.data() as GuestDoc
-        if (guest.uids.includes(uid)) {
-          castlePoints = guest.castlePoints + ANSWER_AWARD
-          // Lifetime-earn lazy migration (Phase D).
-          const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
-          tx.update(guestRef, {
-            castlePoints,
-            lifetimeEarned: lifetimePrev + ANSWER_AWARD,
-          })
-          earnedPoint = true
-        }
+      // Correct — claim the win + award the point + bump quizCorrect.
+      if (guest && guestEligible) {
+        castlePoints = guest.castlePoints + ANSWER_AWARD
+        const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
+        guestUpdate.castlePoints = castlePoints
+        guestUpdate.lifetimeEarned = lifetimePrev + ANSWER_AWARD
+        guestUpdate.quizCorrect = (guest.quizCorrect ?? 0) + 1
+        earnedPoint = true
+      }
+      if (guestRef && Object.keys(guestUpdate).length > 0) {
+        tx.update(guestRef, guestUpdate)
       }
 
       const updatedQuiz: QuizState = {
