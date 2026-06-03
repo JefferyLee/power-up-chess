@@ -34,6 +34,7 @@ interface Args {
   label: string
   prompt: string
   ratio: string
+  bgRemove?: string
 }
 
 function parseArgs(): Args {
@@ -45,8 +46,12 @@ function parseArgs(): Args {
     else if (a === '--prompt') args.prompt = argv[++i]
     else if (a === '--prompt-file') args.promptFile = argv[++i]
     else if (a === '--ratio') args.ratio = argv[++i]
+    else if (a === '--bg-remove') args.bgRemove = argv[++i]
   }
   if (!args.label) bail('--label is required')
+  if (args.bgRemove) {
+    return { label: args.label!, prompt: '', ratio: '1:1', bgRemove: args.bgRemove }
+  }
   if (!args.prompt && !args.promptFile) bail('--prompt or --prompt-file is required')
   if (args.promptFile && !args.prompt) {
     const path = args.promptFile.startsWith('/')
@@ -61,6 +66,28 @@ function parseArgs(): Args {
   }
 }
 
+async function runBgRemove(srcPath: string, label: string, token: string): Promise<void> {
+  mkdirSync(OUTPUT_DIR, { recursive: true })
+  const replicate = new Replicate({ auth: token })
+  console.error(`[bg] ${label} — calling 851-labs/background-remover for ${srcPath}`)
+  // Upload as data URL. 851-labs/background-remover accepts `image` as URI.
+  const data = readFileSync(srcPath)
+  const b64 = data.toString('base64')
+  const dataUrl = `data:image/png;base64,${b64}`
+  const output = await replicate.run('851-labs/background-remover', {
+    input: { image: dataUrl, format: 'png' },
+  })
+  const url = await resolveUrl(output)
+  if (!url) bail('bg-remover returned no URL')
+  console.error(`[bg] downloading ${url}`)
+  const buf = await fetch(url).then((r) => r.arrayBuffer())
+  const filename = `${label}-${timestamp()}.png`
+  const outPath = resolve(OUTPUT_DIR, filename)
+  writeFileSync(outPath, Buffer.from(buf))
+  console.error(`[bg] saved ${outPath} (${(buf.byteLength / 1024).toFixed(1)} KB)`)
+  process.stdout.write(JSON.stringify({ label, path: outPath }) + '\n')
+}
+
 function bail(msg: string): never {
   console.error(`error: ${msg}`)
   process.exit(2)
@@ -71,6 +98,15 @@ async function main(): Promise<void> {
   const token = process.env.REPLICATE_API_TOKEN
   if (!token) {
     bail('REPLICATE_API_TOKEN not set in tools/generate-image/.env')
+  }
+
+  // Special path: bg-removal mode runs an existing PNG through
+  // 851-labs/background-remover. Cheaper + cleaner than the SVG threshold
+  // hack. Invoke with --bg-remove <pathToPNG>; --label still controls the
+  // output filename.
+  if (args.bgRemove) {
+    await runBgRemove(args.bgRemove, args.label, token)
+    return
   }
 
   mkdirSync(OUTPUT_DIR, { recursive: true })
