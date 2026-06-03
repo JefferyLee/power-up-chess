@@ -1,0 +1,112 @@
+/* Today's Five hero strip. Used on both /puzzles and the Hall.
+ * Layout: ⭐ glyph │ [TODAY chip] title + sub + stones │ "Open →" CTA */
+.puc-daily {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  margin: 0 0 20px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(244, 194, 102, 0.16),
+    rgba(120, 80, 200, 0.08)
+  );
+  border: 1px solid rgba(244, 194, 102, 0.55);
+  box-shadow: 0 6px 22px rgba(244, 194, 102, 0.10);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--puc-text);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  width: 100%;
+}
+.puc-daily:hover {
+  transform: translateY(-2px);
+  border-color: rgba(244, 194, 102, 0.85);
+  box-shadow: 0 10px 28px rgba(244, 194, 102, 0.20);
+}
+.puc-daily--done {
+  background: linear-gradient(
+    135deg,
+    rgba(72, 200, 120, 0.14),
+    rgba(72, 200, 120, 0.04)
+  );
+  border-color: rgba(72, 200, 120, 0.55);
+  box-shadow: 0 6px 22px rgba(72, 200, 120, 0.10);
+}
+.puc-daily--done:hover {
+  border-color: rgba(72, 200, 120, 0.8);
+  box-shadow: 0 10px 28px rgba(72, 200, 120, 0.18);
+}
+.puc-daily__glyph {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(244, 194, 102, 0.55));
+}
+.puc-daily--done .puc-daily__glyph {
+  filter: drop-shadow(0 0 6px rgba(72, 200, 120, 0.55));
+}
+.puc-daily__body { min-width: 0; }
+.puc-daily__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.puc-daily__chip {
+  font-family: var(--puc-font-display);
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #1a1a1f;
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.puc-daily--done .puc-daily__chip {
+  background: linear-gradient(135deg, #6fcf97, #3da76a);
+  color: #0e1a12;
+}
+.puc-daily__title {
+  font-family: var(--puc-font-display);
+  font-size: 18px;
+  color: var(--puc-text-accent);
+}
+.puc-daily__sub {
+  font-size: 12.5px;
+  color: var(--puc-text-muted);
+  margin-top: 2px;
+}
+.puc-daily__stones {
+  display: flex;
+  gap: 7px;
+  margin-top: 8px;
+}
+.puc-daily__stone {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(120, 120, 140, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+.puc-daily__stone--pending { background: rgba(120, 120, 140, 0.3); }
+.puc-daily__stone--solved { background: rgba(72, 200, 120, 0.85); }
+.puc-daily__stone--failed { background: rgba(220, 130, 120, 0.85); }
+.puc-daily__cta {
+  font-family: var(--puc-font-display);
+  font-size: 13px;
+  color: var(--puc-text-accent);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 540px) {
+  /* Phone: drop the glyph + CTA so the body keeps its prominence and
+   * the whole card stays a tappable hero without crowding. */
+  .puc-daily { grid-template-columns: 1fr; gap: 4px; padding: 14px 16px; }
+  .puc-daily__glyph { display: none; }
+  .puc-daily__cta { display: none; }
+}

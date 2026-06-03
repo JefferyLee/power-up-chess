@@ -7,8 +7,11 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../firebase/app'
 import { useCastle } from './useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
+import { DailyStrip, type DailyStripState } from '../puzzles/DailyStrip'
 import { HostPortrait } from './HostPortrait'
 import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
@@ -38,6 +41,23 @@ export function HallScreen() {
   const cosmetics = useCosmetics()
   const profile = loadProfile()
   const host = HOSTS[hostId]
+  // Live-subscribe to puzzleDaily so the strip stays current as the kid
+  // solves puzzles in /puzzles/daily. Bypass guests don't have a doc —
+  // we just render an empty (five-pending) strip.
+  const [puzzleDaily, setPuzzleDaily] = useState<DailyStripState | null>(null)
+  useEffect(() => {
+    if (!identity || identity.isBypass) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPuzzleDaily(null)
+      return
+    }
+    const ref = doc(db, 'guests', identity.normalizedName)
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data() as { puzzleDaily?: DailyStripState } | undefined
+      setPuzzleDaily(data?.puzzleDaily ?? null)
+    })
+    return () => unsub()
+  }, [identity])
   const auth = useAuthUid()
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -239,6 +259,18 @@ export function HallScreen() {
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
+
+      {/* Today's Five — same visual strip as the Puzzle Garden. Sits
+       *  right under the chess doors so a kid in the Hall sees the
+       *  daily quest immediately without going to /puzzles first. */}
+      {!identity.isBypass && (
+        <section className="puc-hall__daily">
+          <DailyStrip
+            daily={puzzleDaily}
+            onOpen={() => navigate('/puzzles/daily')}
+          />
+        </section>
+      )}
 
       {/* Social row below the doors — host on the left, chat in the
        *  middle (the most vertical real-estate), passive info on the

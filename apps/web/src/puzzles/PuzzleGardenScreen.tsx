@@ -17,6 +17,7 @@ import pinSkewerIcon from './assets/plot-icons/pinSkewer.svg'
 import sacrificeIcon from './assets/plot-icons/sacrifice.svg'
 import endgameIcon from './assets/plot-icons/endgame.svg'
 import defenseIcon from './assets/plot-icons/defense.svg'
+import { DailyStrip } from './DailyStrip'
 import './PuzzleGardenScreen.css'
 
 interface PlotMeta {
@@ -198,63 +199,6 @@ export function PuzzleGardenScreen() {
         )}
       </main>
     </div>
-  )
-}
-
-function DailyStrip({
-  daily,
-  onOpen,
-}: {
-  daily: GuestPuzzleState['puzzleDaily'] | null
-  onOpen: () => void
-}) {
-  const slots: Array<boolean | null> =
-    daily && Array.isArray(daily.results) && daily.results.length === 5
-      ? daily.results
-      : [null, null, null, null, null]
-  const allDone = slots.every((r) => r !== null && r !== undefined)
-  const solved = slots.filter((r) => r === true).length
-  return (
-    <button
-      type="button"
-      className={
-        'puc-garden__daily ' + (allDone ? 'puc-garden__daily--done' : '')
-      }
-      onClick={onOpen}
-    >
-      <div className="puc-garden__daily-glyph" aria-hidden="true">⭐</div>
-      <div className="puc-garden__daily-body">
-        <div className="puc-garden__daily-head">
-          <span className="puc-garden__daily-chip">Today</span>
-          <span className="puc-garden__daily-title">
-            {allDone ? "Today's Five — done!" : "Today's Five"}
-          </span>
-        </div>
-        <div className="puc-garden__daily-sub">
-          {allDone
-            ? `${solved} of 5 solved — come back tomorrow`
-            : 'Hand-picked daily quest · +10 castle points on completion'}
-        </div>
-        <div className="puc-garden__daily-stones" aria-hidden="true">
-          {slots.map((r, i) => (
-            <span
-              key={i}
-              className={
-                'puc-garden__daily-stone ' +
-                (r === true
-                  ? 'puc-garden__daily-stone--solved'
-                  : r === false
-                    ? 'puc-garden__daily-stone--failed'
-                    : 'puc-garden__daily-stone--pending')
-              }
-            />
-          ))}
-        </div>
-      </div>
-      <div className="puc-garden__daily-cta" aria-hidden="true">
-        {allDone ? 'Review →' : 'Open →'}
-      </div>
-    </button>
   )
 }
 
