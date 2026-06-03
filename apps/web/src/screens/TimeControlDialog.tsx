@@ -2,6 +2,7 @@
 // private room. Picks the room's clock; cancel returns without creating.
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   DEFAULT_TIME_CONTROL_ID,
   TIME_CONTROL_PRESETS,
@@ -23,7 +24,7 @@ export function TimeControlDialog({
     TIME_CONTROL_PRESETS.find((p) => p.id === selectedId) ??
     TIME_CONTROL_PRESETS[0]!
 
-  return (
+  return createPortal(
     <div
       className="puc-tc"
       role="dialog"
@@ -73,6 +74,7 @@ export function TimeControlDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

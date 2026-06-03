@@ -9,7 +9,7 @@ const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
 
 const MIN_INITIAL_MS = 30 * 1000      // 30 seconds — anything shorter is unplayable
-const MAX_INITIAL_MS = 6 * 60 * 60 * 1000 // 6 hours — generous correspondence ceiling
+const MAX_INITIAL_MS = 24 * 60 * 60 * 1000 // 24 hours — the "1 day" correspondence preset
 const MAX_INCREMENT_MS = 60 * 1000
 
 function sanitiseTimeControl(tc: TimeControl | null): TimeControl | null {
