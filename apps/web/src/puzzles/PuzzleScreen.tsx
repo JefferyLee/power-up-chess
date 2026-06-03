@@ -306,7 +306,7 @@ export function PuzzleScreen() {
             <Counter label="Hints used" value={`${hintsUsed} / 3`} accent={hintsUsed > 0} />
           </div>
 
-          {hintsUsed > 0 && (
+          {hintsUsed > 0 && puzzle.hints && (
             <div className="puc-puzzle__hint">
               {puzzle.hints.slice(0, hintsUsed).map((h, i) => (
                 <p key={i} className="puc-puzzle__hint-line">
@@ -321,7 +321,7 @@ export function PuzzleScreen() {
               type="button"
               className="puc-puzzle__btn"
               onClick={onHint}
-              disabled={phase.kind !== 'playing' || hintsUsed >= 3}
+              disabled={phase.kind !== 'playing' || hintsUsed >= 3 || !puzzle.hints}
             >
               {hintsUsed === 0
                 ? 'Show hint'

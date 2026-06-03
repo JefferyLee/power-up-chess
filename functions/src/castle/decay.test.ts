@@ -3,28 +3,36 @@ import { applyDecay, computeDecay } from './decay'
 
 const DAY = 24 * 60 * 60 * 1000
 
+// Decay was retuned (functions/src/castle/decay.ts header comment):
+//   Days 0–7   : 0 / day  (grace week — never punished)
+//   Days 8–30  : 1 / day  (gentle nudge)
+//   Days 31+   : 5 / day  (real pressure)
+// Tests pinned to those constants below.
+
 describe('computeDecay', () => {
-  it('returns 0 for less than a day absent', () => {
+  it('returns 0 throughout the grace week', () => {
     expect(computeDecay(0)).toBe(0)
     expect(computeDecay(0.5)).toBe(0)
-    expect(computeDecay(0.999)).toBe(0)
+    expect(computeDecay(7)).toBe(0)
   })
 
-  it('matches the two anchor points from MVP2_PLAN §7.4', () => {
-    expect(computeDecay(1)).toBe(5)
-    expect(computeDecay(7)).toBe(50)
+  it('charges 1 / day during the gentle-nudge tier', () => {
+    // Day 8 = first day of tier 2 → 1 pt over the grace baseline.
+    expect(computeDecay(8)).toBe(1)
+    expect(computeDecay(14)).toBe(7)
+    expect(computeDecay(30)).toBe(23)
   })
 
-  it('ramps linearly between the anchors', () => {
-    // (50 - 5) / (7 - 1) = 7.5 per day after day 1.
-    expect(computeDecay(2)).toBe(13) // 5 + 7.5 = 12.5 → round to 13
-    expect(computeDecay(3)).toBe(20) // 5 + 15 = 20
-    expect(computeDecay(4)).toBe(28) // 5 + 22.5 = 27.5 → 28
+  it('jumps to 5 / day from day 31', () => {
+    // 23 pt locked in from tier 2 (days 8–30) + 5 per day past 30.
+    expect(computeDecay(31)).toBe(28)
+    expect(computeDecay(40)).toBe(73)
+    expect(computeDecay(60)).toBe(173)
   })
 
-  it('keeps climbing past day 7 (no upper cap)', () => {
-    expect(computeDecay(14)).toBeGreaterThan(50)
-    expect(computeDecay(30)).toBeGreaterThan(200)
+  it('keeps climbing past day 30 (no upper cap)', () => {
+    expect(computeDecay(60)).toBeGreaterThan(150)
+    expect(computeDecay(90)).toBeGreaterThan(300)
   })
 })
 
@@ -36,26 +44,34 @@ describe('applyDecay', () => {
     expect(r.castlePoints).toBe(250)
   })
 
-  it('applies the day-7 anchor loss', () => {
+  it('takes nothing within the grace week', () => {
     const now = Date.now()
     const r = applyDecay(250, now - 7 * DAY, now)
-    expect(r.decayedBy).toBe(50)
-    expect(r.castlePoints).toBe(200)
+    expect(r.decayedBy).toBe(0)
+    expect(r.castlePoints).toBe(250)
+  })
+
+  it('applies the gentle-nudge tier rate (1 / day)', () => {
+    const now = Date.now()
+    // 14 days absent → 7 pts taken (days 8–14).
+    const r = applyDecay(250, now - 14 * DAY, now)
+    expect(r.decayedBy).toBe(7)
+    expect(r.castlePoints).toBe(243)
   })
 
   it('floors at 0 — never goes negative', () => {
     const now = Date.now()
-    const r = applyDecay(10, now - 30 * DAY, now)
+    const r = applyDecay(10, now - 60 * DAY, now)
     expect(r.castlePoints).toBe(0)
-    expect(r.decayedBy).toBe(10) // capped
+    expect(r.decayedBy).toBe(10) // capped at the available balance
   })
 
-  it('re-locks when decay drops a guest below 200', () => {
-    // Was at 210, gone 2 days → lose 13 → 197 (re-locked).
+  it('can drop a guest below the 200-pt unlock with sustained absence', () => {
+    // Was at 210, gone 30 days → lose 23 → 187 (re-locked).
     const now = Date.now()
-    const r = applyDecay(210, now - 2 * DAY, now)
-    expect(r.decayedBy).toBe(13)
-    expect(r.castlePoints).toBe(197)
+    const r = applyDecay(210, now - 30 * DAY, now)
+    expect(r.decayedBy).toBe(23)
+    expect(r.castlePoints).toBe(187)
     expect(r.castlePoints).toBeLessThan(200)
   })
 })
