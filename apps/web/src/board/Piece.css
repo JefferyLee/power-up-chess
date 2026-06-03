@@ -43,6 +43,28 @@
   -webkit-user-drag: none;
 }
 
+/* Master-tier "Glowing Crystal" treatment — applied on top of any
+ * SVG artwork. Subtle violet halo that pulses gently. Disabled
+ * under prefers-reduced-motion. */
+.puc-piece-svg--animated {
+  filter: drop-shadow(0 0 5px rgba(180, 130, 255, 0.55))
+          drop-shadow(0 0 12px rgba(180, 130, 255, 0.35));
+  animation: puc-piece-crystal 2.6s ease-in-out infinite;
+}
+@keyframes puc-piece-crystal {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(180, 130, 255, 0.40))
+            drop-shadow(0 0 10px rgba(180, 130, 255, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(216, 180, 255, 0.85))
+            drop-shadow(0 0 18px rgba(180, 130, 255, 0.55));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .puc-piece-svg--animated { animation: none; }
+}
+
 @keyframes puc-piece-settle {
   0%   { transform: scale(1.18); }
   60%  { transform: scale(0.96); }

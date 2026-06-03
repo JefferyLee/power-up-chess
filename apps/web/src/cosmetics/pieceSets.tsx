@@ -1,11 +1,11 @@
 // Piece-set registry — the inventory the Theme Shop draws from.
 //
-// MVP3 P1.D current state:
-//   classic   free, Unicode solid       — default
+// MVP3 P1.D current state (Slice 3):
+//   classic   free, Unicode solid    — default
 //   outline   free, Unicode hollow
-//   cburnett  common (200 pts), SVG     — vendored lichess set
-//   fantasy   rare   (500 pts), placeholder — locked, awaiting assets
-//   animated  master (1000 pts), placeholder — locked, awaiting assets
+//   cburnett  common (200 pts), SVG  — vendored lichess set
+//   fantasy   rare   (500 pts), SVG  — vendored lichess "fantasy" set
+//   animated  master (1000 pts), SVG + CSS glow on top of cburnett
 //
 // glyphFor returns ReactNode so SVG sets can render an <img>; Unicode
 // sets return a string. Server-side prices live in
@@ -33,6 +33,25 @@ import cburnettBP from './assets/cburnett/bP.svg'
 const CBURNETT: Record<Color, Record<PieceSymbol, string>> = {
   w: { k: cburnettWK, q: cburnettWQ, r: cburnettWR, b: cburnettWB, n: cburnettWN, p: cburnettWP },
   b: { k: cburnettBK, q: cburnettBQ, r: cburnettBR, b: cburnettBB, n: cburnettBN, p: cburnettBP },
+}
+
+// Fantasy SVGs — vendored at apps/web/src/cosmetics/assets/fantasy/
+import fantasyWK from './assets/fantasy/wK.svg'
+import fantasyWQ from './assets/fantasy/wQ.svg'
+import fantasyWR from './assets/fantasy/wR.svg'
+import fantasyWB from './assets/fantasy/wB.svg'
+import fantasyWN from './assets/fantasy/wN.svg'
+import fantasyWP from './assets/fantasy/wP.svg'
+import fantasyBK from './assets/fantasy/bK.svg'
+import fantasyBQ from './assets/fantasy/bQ.svg'
+import fantasyBR from './assets/fantasy/bR.svg'
+import fantasyBB from './assets/fantasy/bB.svg'
+import fantasyBN from './assets/fantasy/bN.svg'
+import fantasyBP from './assets/fantasy/bP.svg'
+
+const FANTASY: Record<Color, Record<PieceSymbol, string>> = {
+  w: { k: fantasyWK, q: fantasyWQ, r: fantasyWR, b: fantasyWB, n: fantasyWN, p: fantasyWP },
+  b: { k: fantasyBK, q: fantasyBQ, r: fantasyBR, b: fantasyBB, n: fantasyBN, p: fantasyBP },
 }
 
 export type PieceSetTier = 'free' | 'common' | 'rare' | 'master'
@@ -100,17 +119,34 @@ export const PIECE_SETS: Record<PieceSetId, PieceSet> = {
     blurb: 'Sword on the bishop, dragon on the knight — Ada’s pick.',
     tier: 'rare',
     priceCp: 500,
-    locked: true,
-    glyphFor: (t) => PIECE_GLYPH_SOLID[t],
+    locked: false,
+    glyphFor: (t, c) => (
+      <img
+        src={FANTASY[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg"
+      />
+    ),
   },
   animated: {
     id: 'animated',
     label: 'Glowing Crystal',
-    blurb: 'Subtle pulse on every piece — master tier showpiece.',
+    blurb: 'A magical pulse around every piece — master-tier showpiece.',
     tier: 'master',
     priceCp: 1000,
-    locked: true,
-    glyphFor: (t) => PIECE_GLYPH_SOLID[t],
+    locked: false,
+    // Uses the same cburnett artwork wrapped with an extra class so
+    // CSS keyframes can apply the master-tier glow without needing
+    // a separate SVG asset family.
+    glyphFor: (t, c) => (
+      <img
+        src={CBURNETT[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg puc-piece-svg--animated"
+      />
+    ),
   },
 }
 
