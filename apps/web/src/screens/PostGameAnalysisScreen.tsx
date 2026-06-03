@@ -8,6 +8,7 @@ import type { AnalyzedGame, AnalyzedMove } from '../engine/analyzeGame'
 import { analyzeGame } from '../engine/analyzeGame'
 import { StockfishEngine } from '../engine/stockfish'
 import { callGameRecap, callHostCommentary } from '../firebase/callables'
+import { track } from '../firebase/analytics'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
@@ -263,6 +264,10 @@ function ReviewView({
       .then((res) => {
         if (cancelled) return
         clearTimeout(timer)
+        track('host_commentary', {
+          source: res.source,
+          classification: isBrill ? 'brilliant' : selected.classification,
+        })
         setCommentaryByIdx((prev) => {
           // If the timeout already filled a template, replace it with the LLM
           // result — the LLM line is what we wanted in the first place.
@@ -273,6 +278,7 @@ function ReviewView({
       })
       .catch(() => {
         clearTimeout(timer)
+        track('host_commentary', { source: 'error' })
         fillFallback()
       })
 

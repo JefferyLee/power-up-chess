@@ -6,6 +6,7 @@ import { findKing, piecesFromFen } from '../chess/fen'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
+import { track } from '../firebase/analytics'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
@@ -353,6 +354,13 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     if (savedThisGame) return
     const parts = resultPartsFromStatus(effectiveStatus)
     if (!parts) return
+    track('game_end', {
+      mode: 'ai',
+      result: parts.result,
+      end_reason: parts.endReason,
+      move_count: snap.history.length,
+      ai_difficulty: preset.id,
+    })
     saveGame({
       id: gameId,
       playedAt: Date.now(),

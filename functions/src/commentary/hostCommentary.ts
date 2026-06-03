@@ -2,9 +2,15 @@ import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
 import { callGemini } from './gemini'
+import { consumeDailyQuota } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
+
+// Per-uid LLM cap. A full game review with all notable moves rarely
+// exceeds 20 LLM calls; 200/day = 10+ reviews/day, way above any kid
+// usage but catches a stuck client retrying in a loop.
+const DAILY_LIMIT = 200
 
 const VALID_HOSTS: ReadonlySet<HostId> = new Set<HostId>(['lucy', 'luca'])
 const VALID_CLASSIFICATIONS = new Set([
@@ -70,6 +76,15 @@ export const hostCommentary = onCall<HostCommentaryRequest, Promise<HostCommenta
     if (cached) {
       return { text: cached, source: 'cache' }
     }
+
+    // Cache miss → real LLM call ahead. Charge the daily quota first; the
+    // client already has the template fallback ready so a 'resource-
+    // exhausted' bubble-up just shows the template line for that move.
+    await consumeDailyQuota(req.auth.uid, {
+      collection: 'commentary_attempts',
+      limit: DAILY_LIMIT,
+      noun: 'commentary requests',
+    })
 
     // Build the user prompt as structured context. We keep the schema flat so
     // the model has all the info it needs to be specific without us steering

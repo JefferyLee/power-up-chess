@@ -16,6 +16,7 @@ import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useSound } from '../sound/useSound'
 import { useCastle } from '../castle/useCastle'
 import { callSubmitOpeningClear } from '../firebase/callables'
+import { track } from '../firebase/analytics'
 import { getOpening, type OpeningPosition } from './openings'
 import './OpeningLessonScreen.css'
 
@@ -80,6 +81,10 @@ export function OpeningLessonScreen() {
     if (awardedKeyRef.current === key) return
     awardedKeyRef.current = key
     let cancelled = false
+    track('opening_position_clear', {
+      opening_id: opening.id,
+      position_index: posIndex,
+    })
     void callSubmitOpeningClear({
       normalizedName: identity.normalizedName,
       sessionId: identity.sessionId,

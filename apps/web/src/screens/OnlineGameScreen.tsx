@@ -18,6 +18,7 @@ import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { callClaimTimeWin, callJoinRoom, callResignGame } from '../firebase/callables'
 import { saveGame } from '../history/api'
+import { track } from '../firebase/analytics'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
@@ -487,6 +488,13 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         ...(m.uci.length === 5 ? { promotion: m.uci[4] as 'q' | 'r' | 'b' | 'n' } : {}),
       })
     }
+    track('game_end', {
+      mode: 'online',
+      result: room.result ?? 'draw',
+      end_reason: room.endReason ?? 'other',
+      move_count: room.moves.length,
+      time_control: room.timeControl ? `${room.timeControl.initialMs}+${room.timeControl.incrementMs}` : 'untimed',
+    })
     saveGame({
       id: `online:${roomId}`,
       playedAt: room.updatedAt,

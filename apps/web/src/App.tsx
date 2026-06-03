@@ -26,8 +26,11 @@ import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { OpeningsRoute } from './openings/OpeningsRoute'
 import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
 import { TournamentRoute } from './tournament/TournamentRoute'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
+import { trackScreen } from './firebase/analytics'
 
 /** Single source of truth for presence — runs at the App root so every
  *  authenticated route auto-publishes a location to lobby/presence
@@ -38,11 +41,41 @@ function GlobalPresenceHeartbeat() {
   return null
 }
 
+/** Mirror of GlobalPresenceHeartbeat for Firebase Analytics — fires a
+ *  screen_view event on every URL change. Pathname-only (no query / hash)
+ *  so the GA4 property doesn't see room ids etc. */
+function GlobalScreenTracker() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    trackScreen(genericScreenName(pathname))
+  }, [pathname])
+  return null
+}
+
+/** Strip dynamic ids out of the URL so /r/abc and /r/xyz both report as
+ *  "chess_room" — keeps the GA event taxonomy small + privacy-friendly. */
+function genericScreenName(pathname: string): string {
+  if (pathname === '/') return 'castle_gate_or_hall'
+  if (pathname.startsWith('/r/')) return 'chess_room'
+  if (pathname.startsWith('/wizard/')) return 'wizard_room'
+  if (pathname.startsWith('/puzzles/plot/')) return 'puzzle_plot'
+  if (pathname.startsWith('/puzzles/') && pathname !== '/puzzles')
+    return pathname.replace(/\/[^/]+$/, '') + '/_'
+  if (pathname.startsWith('/learn/') && pathname !== '/learn')
+    return 'lesson'
+  if (pathname.startsWith('/openings/') && pathname !== '/openings')
+    return 'opening_lesson'
+  if (pathname.startsWith('/endgame/') && pathname !== '/endgame')
+    return 'endgame_lesson'
+  return pathname
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <CastleIdentityProvider>
         <GlobalPresenceHeartbeat />
+        <GlobalScreenTracker />
         <Routes>
           <Route path="/" element={<CastleEntry />} />
           <Route path="/local" element={<LocalGameRoute />} />

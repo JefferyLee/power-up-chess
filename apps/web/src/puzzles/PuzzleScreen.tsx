@@ -12,6 +12,7 @@ import {
 import { scorePuzzle } from './scoring'
 import { RewardPopup } from './RewardPopup'
 import { bestAttemptForPuzzle, savePuzzleAttempt, totalPuzzlePoints } from '../history/api'
+import { track } from '../firebase/analytics'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import type { PuzzleAttempt } from '../history/db'
@@ -116,6 +117,14 @@ export function PuzzleScreen() {
     const prevBest = await bestAttemptForPuzzle(puzzle.id)
     const totalBefore = await totalPuzzlePoints()
     await savePuzzleAttempt(attempt)
+    track('puzzle_attempt', {
+      puzzle_id: puzzle.id,
+      solved: true,
+      stars: score.stars,
+      wrong_moves: wrongMoves,
+      hints_used: hintsUsed,
+      solve_time_ms: time,
+    })
     const added = prevBest
       ? Math.max(0, attempt.points - prevBest.points)
       : attempt.points

@@ -2,9 +2,13 @@ import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
 import { callGemini } from './gemini'
+import { consumeDailyQuota } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
+
+// One recap per game; 30/day = absurd ceiling above any real usage.
+const DAILY_LIMIT = 30
 
 export interface GameRecapRequest {
   host: HostId
@@ -55,6 +59,13 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
     if (cached) {
       return { text: cached, source: 'cache' }
     }
+
+    // Cache miss → real LLM call. Quota first.
+    await consumeDailyQuota(req.auth.uid, {
+      collection: 'recap_attempts',
+      limit: DAILY_LIMIT,
+      noun: 'recap requests',
+    })
 
     const userPrompt = buildPrompt(data, playerName)
 

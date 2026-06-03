@@ -23,6 +23,7 @@ import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById } from '../ai/difficulty'
 import { useCastle } from '../castle/useCastle'
 import { callSubmitEndgameClear } from '../firebase/callables'
+import { track } from '../firebase/analytics'
 import { getLesson, type Lesson } from './lessons'
 import './EndgameLessonScreen.css'
 
@@ -136,6 +137,10 @@ export function EndgameLessonScreen() {
     if (awardedKeyRef.current === key) return
     awardedKeyRef.current = key
     let cancelled = false
+    track('endgame_position_clear', {
+      lesson_id: lesson.id,
+      position_label: current.label,
+    })
     void callSubmitEndgameClear({
       normalizedName: identity.normalizedName,
       sessionId: identity.sessionId,
