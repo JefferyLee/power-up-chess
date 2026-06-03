@@ -91,7 +91,41 @@
 .puc-library__group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+.puc-library__group-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(231, 184, 65, 0.25);
+}
+.puc-library__group-cover {
+  flex-shrink: 0;
+  width: 52px;
+  height: 64px;
+  border-radius: 4px 8px 8px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--puc-font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  /* Book-spine feel: tall, with a subtle inner highlight on the
+   * "binding" edge and a soft shadow underneath. */
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.18),
+              inset -1px 0 0 rgba(0, 0, 0, 0.25),
+              0 3px 8px rgba(0, 0, 0, 0.35);
+}
+.puc-library__group-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .puc-library__group-title {
   margin: 0;
@@ -99,14 +133,20 @@
   font-size: 18px;
   color: var(--puc-text-accent);
   letter-spacing: 0.5px;
-  border-bottom: 1px dashed rgba(231, 184, 65, 0.25);
-  padding-bottom: 6px;
 }
 .puc-library__group-author {
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 12px;
   color: var(--puc-text-muted);
   font-style: italic;
+}
+.puc-library__group-count {
+  margin: 2px 0 0;
+  font-family: var(--puc-font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(216, 200, 255, 0.55);
 }
 
 .puc-library__list {
@@ -237,6 +277,9 @@
   .puc-library__sub { font-size: 11px; }
   .puc-library__voice-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
   .puc-library__main { padding: 16px 12px; gap: 20px; }
+  .puc-library__group-head { gap: 10px; }
+  .puc-library__group-cover { width: 44px; height: 56px; font-size: 18px; }
+  .puc-library__group-title { font-size: 16px; }
   .puc-library__story-head { padding: 12px; }
   .puc-library__story-title { font-size: 14px; }
   .puc-library__story-text { font-size: 14px; }

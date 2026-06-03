@@ -272,10 +272,24 @@ export function LibraryRoute() {
       <main className="puc-library__main">
         {groups.map((group) => (
           <section key={group.book} className="puc-library__group">
-            <h2 className="puc-library__group-title">{group.book}</h2>
-            {group.author && (
-              <p className="puc-library__group-author">by {group.author}</p>
-            )}
+            <header className="puc-library__group-head">
+              <div
+                className="puc-library__group-cover"
+                style={{ background: hslForBook(group.book) }}
+                aria-hidden="true"
+              >
+                {initialsForBook(group.book)}
+              </div>
+              <div className="puc-library__group-text">
+                <h2 className="puc-library__group-title">{group.book}</h2>
+                {group.author && (
+                  <p className="puc-library__group-author">by {group.author}</p>
+                )}
+                <p className="puc-library__group-count">
+                  {group.stories.length} {group.stories.length === 1 ? 'story' : 'stories'}
+                </p>
+              </div>
+            </header>
             <ul className="puc-library__list">
               {group.stories.map((story) => {
                 const expanded = expandedId === story.id
@@ -351,6 +365,30 @@ interface Group {
   book: string
   author?: string
   stories: BundledStory[]
+}
+
+function initialsForBook(book: string): string {
+  // Prefer first letter of each capitalised word; fall back to first
+  // two letters when titles are lowercased (Spanish "Libro de los…").
+  const caps = book
+    .split(/\s+/)
+    .filter((w) => w.length > 0 && /^[A-Z]/.test(w))
+  const first = caps[0]
+  const second = caps[1]
+  if (first && second) return (first[0]! + second[0]!).toUpperCase()
+  if (first && first.length >= 2) return first.slice(0, 2).toUpperCase()
+  const fallback = book.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase()
+  return fallback || '??'
+}
+
+function hslForBook(book: string): string {
+  // Deterministic per book — same title always gets the same hue, so
+  // the kid sees a stable colour identity for each shelf.
+  let h = 0
+  for (let i = 0; i < book.length; i++) {
+    h = (h * 31 + book.charCodeAt(i)) % 360
+  }
+  return `linear-gradient(135deg, hsl(${h}, 55%, 42%), hsl(${(h + 25) % 360}, 60%, 32%))`
 }
 
 function base64ToBlob(base64: string, mimeType: string): Blob {
