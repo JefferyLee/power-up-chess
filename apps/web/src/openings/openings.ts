@@ -95,6 +95,33 @@ export const OPENINGS: Opening[] = [
         explanation:
           'Nbxd2 finishes minor-piece development and keeps the queen home. Qxd2 also recaptures but exposes the queen — Black plays ...Nxe4! winning a pawn since the queen blocks the bishop\'s defence.',
       },
+      {
+        fen: 'r1bqk2r/ppp2ppp/2np1n2/8/2BP4/5N2/PP1N1PPP/R2QK2R w KQkq - 0 9',
+        context: 'After 8.Nbxd2 d6 — get the king to safety.',
+        expectedUci: 'e1g1',
+        expectedSan: 'O-O',
+        hint: 'Tuck the king behind the kingside pawns before the centre opens.',
+        explanation:
+          'O-O connects the rooks and tucks the king away. Italian games can sharpen quickly — castle first, attack second. With the king safe, you can start pushing d5 or using the e-file.',
+      },
+      {
+        fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
+        context: 'After 1.e4 e5 2.Nf3 Nf6 — Black plays the Petroff. Take the pawn!',
+        expectedUci: 'f3e5',
+        expectedSan: 'Nxe5',
+        hint: 'Black ignored the e5 pawn — claim it.',
+        explanation:
+          'The Petroff Defense gives up a pawn temporarily to counter-attack. 3.Nxe5 is the principled grab. Black wins it back after 3...d6 4.Nf3 Nxe4, but you can never go wrong by accepting a free pawn first.',
+      },
+      {
+        fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
+        context: 'After 3.Bc4 Nf6 (Italian Knight Game) — go slow and solid.',
+        expectedUci: 'd2d3',
+        expectedSan: 'd3',
+        hint: 'A quiet pawn move that supports the bishop and the e-pawn.',
+        explanation:
+          'd3 leads to the Giuoco Pianissimo (the quietest game) — a positional setup that avoids the sharp 4.Ng5 Fried Liver Attack. Solid, slow, perfect for kids learning structure over tactics.',
+      },
     ],
   },
   {
@@ -158,6 +185,33 @@ export const OPENINGS: Opening[] = [
         explanation:
           'c3 supports a future d4 push and denies the c3-square to Black\'s knight (no jump to b4 attacking the bishop). The Closed Spanish is a long manoeuvring game — small preparations compound into a strong centre.',
       },
+      {
+        fen: 'r1bq1rk1/2p1bppp/p1np1n2/1p2p3/4P3/1BP2N2/PP1P1PPP/RNBQR1K1 w - - 1 9',
+        context: 'After 8.c3 O-O — quiet prophylaxis before d4.',
+        expectedUci: 'h2h3',
+        expectedSan: 'h3',
+        hint: 'Stop Black\'s bishop from coming to g4 and pinning your knight.',
+        explanation:
+          'h3 denies the g4 square to Black\'s bishop. If you skip it, ...Bg4 pins the f3 knight against the queen, freezing your kingside. Spending one tempo on h3 lets you safely play 10.d4 next.',
+      },
+      {
+        fen: 'r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
+        context: 'After 3.Bb5 Nf6 — Black plays the Berlin Defense. Castle first.',
+        expectedUci: 'e1g1',
+        expectedSan: 'O-O',
+        hint: 'Don\'t commit the bishop yet — castle and let Black show his plan.',
+        explanation:
+          'The Berlin Defense is famously solid (Kramnik used it to deny Kasparov wins in 2000). 4.O-O is the main reply. If Black grabs with 4...Nxe4, then 5.d4 leads to the famous Berlin Endgame.',
+      },
+      {
+        fen: 'r1bqkb1r/1ppp1ppp/p1n5/4p3/B3n3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 0 6',
+        context: 'After 5.O-O Nxe4 (Open Spanish) — open the centre.',
+        expectedUci: 'd2d4',
+        expectedSan: 'd4',
+        hint: 'Black grabbed a pawn — punish him by ripping open the centre.',
+        explanation:
+          'The Open Spanish gives White a long-term initiative. 6.d4 opens the e-file and threatens to win the knight back. After 6...b5 7.Bb3 d5 the position becomes sharp but principled play favours White\'s centre.',
+      },
     ],
   },
   {
@@ -220,6 +274,33 @@ export const OPENINGS: Opening[] = [
         hint: 'Develop the bishop where it both attacks h7 and supports the centre.',
         explanation:
           'Bd3 eyes h7 (a key attacking square), supports a possible e4 break, and clears f1 for castling next move. The Carlsbad structure is forming — your pieces all aim at Black\'s queenside and the d5 pawn.',
+      },
+      {
+        fen: 'rnbq1rk1/pp2bppp/2p1pn2/6B1/2pP4/2NBPN2/PP3PPP/R2QK2R w KQ - 0 8',
+        context: 'After 7.Bd3 dxc4 — Black snaps off your pawn. Take it back.',
+        expectedUci: 'd3c4',
+        expectedSan: 'Bxc4',
+        hint: 'Recapture with the bishop — keep the same active piece on the diagonal.',
+        explanation:
+          'Bxc4 keeps your bishop on the a2-g8 diagonal eyeing f7. Black has given up the centre fight in exchange for a slight loss of tempo. Your plan stays the same: O-O, Qe2, Rfd1 and slow pressure.',
+      },
+      {
+        fen: 'rnbqkbnr/pp2pppp/2p5/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
+        context: 'After 1.d4 d5 2.c4 c6 (Slav Defense) — natural development.',
+        expectedUci: 'g1f3',
+        expectedSan: 'Nf3',
+        hint: 'Develop a knight and don\'t trade pawns yet.',
+        explanation:
+          'Nf3 is the main-line Slav response. Black\'s c6 supports d5 with the c-pawn instead of e6 (the QGD), keeping the c8 bishop free. Avoid 3.cxd5 (Exchange Slav — drawish). The game becomes a long manoeuvring battle around the d5 pawn.',
+      },
+      {
+        fen: 'rnbqkbnr/ppp1pppp/8/8/2pP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
+        context: 'After 1.d4 d5 2.c4 dxc4 (Queen\'s Gambit Accepted) — grab the centre.',
+        expectedUci: 'e2e4',
+        expectedSan: 'e4',
+        hint: 'Black gave up the centre — claim it all.',
+        explanation:
+          'e4 builds a massive pawn centre. Black can\'t easily hold the extra pawn (3...b5 4.a4 c6 5.axb5 cxb5 6.Nc3 attacks the pawn chain). Modern theory prefers this aggressive 3.e4 over the calm 3.Nf3.',
       },
     ],
   },
