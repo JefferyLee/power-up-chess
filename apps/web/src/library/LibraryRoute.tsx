@@ -171,6 +171,17 @@ export function LibraryRoute() {
     // Stop whatever else might be running first.
     stopAll()
 
+    // Tier 1: pre-generated static asset under /audio/. Instant on
+    // repeat plays via the browser's HTTP cache; ~30-60 KB first hit.
+    const staticUrl = `/audio/${story.id}-${voice}.mp3`
+    if (await staticExists(staticUrl)) {
+      playFromUrl(story, staticUrl)
+      return
+    }
+
+    // Tier 2: Edge-TTS via Cloud Function. Used for stories added
+    // after the last pre-generation pass, or as a backup if the
+    // static file failed to ship.
     const cacheKey = `${story.id}:${voice}`
     const cached = audioCacheRef.current.get(cacheKey)
     if (cached) {
@@ -184,7 +195,6 @@ export function LibraryRoute() {
         voice,
         text: story.variants[voice],
       })
-      // Aborted while in flight — user pressed stop or switched stories.
       if (loadingId !== null && loadingId !== story.id) return
       const blob = base64ToBlob(res.audioBase64, res.mimeType)
       const url = URL.createObjectURL(blob)
@@ -192,9 +202,19 @@ export function LibraryRoute() {
       setLoadingId(null)
       playFromUrl(story, url)
     } catch (err) {
-      console.warn('Edge-TTS failed, falling back to browser speech', err)
+      // Tier 3: browser Web Speech. Robotic but always available.
+      console.warn('Edge-TTS callable failed, falling back to browser speech', err)
       setLoadingId(null)
       speakViaBrowser(story)
+    }
+  }
+
+  async function staticExists(url: string): Promise<boolean> {
+    try {
+      const res = await fetch(url, { method: 'HEAD' })
+      return res.ok
+    } catch {
+      return false
     }
   }
 
