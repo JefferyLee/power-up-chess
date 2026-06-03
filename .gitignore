@@ -53,3 +53,6 @@ data/puzzles/*.json
 
 # Local Stockfish builds if any
 *.wasm.tmp
+
+# tools/generate-image — generated PNGs are dev artifacts, not source
+tools/generate-image/output/

@@ -5,7 +5,6 @@
 // pass becomes the texture resolution; larger = sharper but heavier.
 
 import Phaser from 'phaser'
-import knightWhiteUrl from '../../../cosmetics/assets/cburnett/wN.svg'
 import pawnBlackUrl from '../../../cosmetics/assets/cburnett/bP.svg'
 import rookBlackUrl from '../../../cosmetics/assets/cburnett/bR.svg'
 import queenBlackUrl from '../../../cosmetics/assets/cburnett/bQ.svg'
@@ -16,11 +15,13 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
+    // The knight is a hand-tuned chibi PNG (generated, then bg-removed +
+    // resized in tools/generate-image/). Lives in /public so it's not
+    // bundled into the main JS — Phaser fetches it lazily on boot.
+    this.load.image('knight-chibi', '/sprites/knight-chibi-side.png')
     // Phaser 4's load.svg() does a buggy atob() on the response and throws on
     // any non-base64 input — bypass it by loading the SVGs as plain images.
-    // SVGs with viewBox rasterise correctly through the <img> path; the only
-    // thing we lose is the width/height resize parameter (we scale at use).
-    this.load.image('knight-w', knightWhiteUrl)
+    // SVGs with viewBox rasterise correctly through the <img> path.
     this.load.image('pawn-b', pawnBlackUrl)
     this.load.image('rook-b', rookBlackUrl)
     this.load.image('queen-b', queenBlackUrl)

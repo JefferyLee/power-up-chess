@@ -65,12 +65,16 @@ export class GameScene extends Phaser.Scene {
     this.skyNear = this.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'sky-near').setOrigin(0, 0)
     this.floor = this.add.tileSprite(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y - 10, 'floor-checker').setOrigin(0, 0)
 
-    // ── Knight (player). Slight bounce tween to look alive while idle.
-    this.knight = this.add.image(150, GROUND_Y, 'knight-w').setOrigin(0.5, 1)
+    // ── Knight (player). Chibi sprite is 256px; scale down so it sits
+    //    nicely on the ground line. Slight bounce tween to look alive while
+    //    idle (squash-stretch from base scale, not absolute, so we don't
+    //    fight the size scale).
+    const KNIGHT_SCALE = 0.5
+    this.knight = this.add.image(150, GROUND_Y, 'knight-chibi').setOrigin(0.5, 1).setScale(KNIGHT_SCALE)
     this.tweens.add({
       targets: this.knight,
-      scaleY: 0.97,
-      scaleX: 1.03,
+      scaleY: KNIGHT_SCALE * 0.97,
+      scaleX: KNIGHT_SCALE * 1.03,
       duration: 240,
       yoyo: true,
       repeat: -1,
@@ -180,10 +184,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private knightHitbox(): Phaser.Geom.Rectangle {
-    // Sprite is ~96 wide × 96 tall, origin (0.5, 1). Inset by ~20% on each
-    // side for a forgiving feel.
-    const w = 96 * 0.55
-    const h = 96 * 0.80
+    // Chibi sprite is 256 × 256 source, rendered at 0.5 scale → 128 visible.
+    // Origin (0.5, 1). Inset generously so the kid's hitbox feels fair —
+    // the cape and shield extents shouldn't count as the body.
+    const w = 128 * 0.45
+    const h = 128 * 0.85
     return new Phaser.Geom.Rectangle(this.knight.x - w / 2, this.knight.y - h, w, h)
   }
 
