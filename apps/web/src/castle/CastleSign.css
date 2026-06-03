@@ -200,6 +200,60 @@
 }
 
 @media (max-width: 540px) {
-  .puc-sign-overlay { padding: 14px; }
-  .puc-sign-overlay__card { padding: 28px 22px 18px; }
+  /* Compact mobile layout — roughly 75% of desktop chrome so the full
+   * card fits a 667px iPhone viewport without needing to scroll. */
+  .puc-sign-overlay { padding: 8px; }
+  .puc-sign-overlay__card {
+    padding: 22px 16px 14px;
+    max-height: 92vh;
+  }
+  .puc-sign-overlay__pin {
+    width: 22px;
+    height: 22px;
+    top: -10px;
+  }
+  .puc-sign-overlay__close {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    top: 8px;
+    right: 8px;
+  }
+  .puc-sign-overlay__title {
+    font-size: 19px;
+    letter-spacing: 0.9px;
+    margin-bottom: 4px;
+  }
+  .puc-sign-overlay__tagline {
+    font-size: 11.5px;
+    margin-bottom: 10px;
+  }
+  .puc-sign-overlay__list {
+    font-size: 11px;
+    line-height: 1.42;
+    padding-left: 18px;
+    margin-bottom: 10px;
+  }
+  .puc-sign-overlay__list li { margin-bottom: 3px; }
+  .puc-sign-overlay__ages,
+  .puc-sign-overlay__safety {
+    font-size: 10px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .puc-sign-overlay__safety {
+    padding: 6px 8px;
+  }
+  .puc-sign-overlay__actions {
+    margin-top: 10px;
+    gap: 6px;
+  }
+  .puc-sign-overlay__btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .puc-sign-overlay__note {
+    font-size: 10px;
+    margin-top: 6px;
+  }
 }
