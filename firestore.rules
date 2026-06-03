@@ -116,6 +116,22 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Chess invitations — READ allowed for the sender + recipient so each
+    // side's onSnapshot listener can react to status transitions live.
+    // WRITES are always function-only (sendInvite / respondInvite /
+    // cancelInvite hold the only legitimate write paths; they enforce
+    // the 5 CP debit + race-safe status transitions).
+    match /invitations/{inviteId} {
+      allow read: if request.auth != null
+        && (resource.data.fromUid == request.auth.uid
+            || resource.data.toUid == request.auth.uid);
+      allow write: if false;
+    }
+    // Per-uid invite send-rate counter (mirrors feedback_attempts).
+    match /invite_attempts/{uid} {
+      allow read, write: if false;
+    }
+
     // Chat rate-limit counters. Function-only.
     match /chat_rate_limits/{doc} {
       allow read, write: if false;

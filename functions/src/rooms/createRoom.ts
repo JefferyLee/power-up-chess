@@ -1,29 +1,13 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from './roomId'
-import type { CreateRoomRequest, CreateRoomResponse, RoomDoc, TimeControl } from './types'
+import { sanitiseTimeControl } from './sanitiseTimeControl'
+import type { CreateRoomRequest, CreateRoomResponse, RoomDoc } from './types'
 import { postRoomInvite } from '../castle/postRoomInvite'
 import { AWARD_CAPS, type GuestDoc } from '../castle/types'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
-
-const MIN_INITIAL_MS = 30 * 1000      // 30 seconds — anything shorter is unplayable
-const MAX_INITIAL_MS = 24 * 60 * 60 * 1000 // 24 hours — the "1 day" correspondence preset
-const MAX_INCREMENT_MS = 60 * 1000
-
-function sanitiseTimeControl(tc: TimeControl | null): TimeControl | null {
-  if (tc === null) return null
-  const initialMs = Number(tc.initialMs)
-  const incrementMs = Number(tc.incrementMs ?? 0)
-  if (!Number.isFinite(initialMs) || initialMs < MIN_INITIAL_MS || initialMs > MAX_INITIAL_MS) {
-    throw new HttpsError('invalid-argument', 'Invalid timeControl.initialMs.')
-  }
-  if (!Number.isFinite(incrementMs) || incrementMs < 0 || incrementMs > MAX_INCREMENT_MS) {
-    throw new HttpsError('invalid-argument', 'Invalid timeControl.incrementMs.')
-  }
-  return { initialMs, incrementMs }
-}
 
 /**
  * Mints a new private game room with the caller as the white player.

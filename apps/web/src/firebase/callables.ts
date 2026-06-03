@@ -876,3 +876,58 @@ export async function callCreateTournamentRoom(
   const { data } = await createTournamentRoomFn(req)
   return data
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chess invitations (Phase B). User-to-user invites; server charges 5 CP at
+// send time, room is spawned by respondInvite on accept (sender already paid).
+
+import type { TimeControl } from '../clock/timeControl'
+
+export interface SendInviteRequest {
+  fromNormalizedName: string
+  toNormalizedName: string
+  timeControl: TimeControl | null
+}
+export interface SendInviteResponse {
+  ok: true
+  inviteId: string
+  expiresAt: number
+}
+
+export type InvitationStatus =
+  | 'pending'
+  | 'accepted'
+  | 'declined'
+  | 'ignored'
+  | 'cancelled'
+  | 'expired'
+
+export interface RespondInviteRequest {
+  inviteId: string
+  response: 'accept' | 'decline' | 'ignore'
+}
+export interface RespondInviteResponse {
+  ok: true
+  status: InvitationStatus
+  roomId?: string
+}
+
+export interface CancelInviteRequest { inviteId: string }
+export interface CancelInviteResponse { ok: true; status: InvitationStatus }
+
+const sendInviteFn = httpsCallable<SendInviteRequest, SendInviteResponse>(functions, 'sendInvite')
+const respondInviteFn = httpsCallable<RespondInviteRequest, RespondInviteResponse>(functions, 'respondInvite')
+const cancelInviteFn = httpsCallable<CancelInviteRequest, CancelInviteResponse>(functions, 'cancelInvite')
+
+export async function callSendInvite(req: SendInviteRequest): Promise<SendInviteResponse> {
+  const { data } = await sendInviteFn(req)
+  return data
+}
+export async function callRespondInvite(req: RespondInviteRequest): Promise<RespondInviteResponse> {
+  const { data } = await respondInviteFn(req)
+  return data
+}
+export async function callCancelInvite(req: CancelInviteRequest): Promise<CancelInviteResponse> {
+  const { data } = await cancelInviteFn(req)
+  return data
+}
