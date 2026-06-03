@@ -14,6 +14,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
+import { InviteDialog } from '../invitations/InviteDialog'
+import { INVITE_COST_CP } from '../invitations/types'
 import { UserCard } from '../invitations/UserCard'
 import { useLobbyPresence, type LocationTag, type PresenceRow } from './useLobbyChat'
 import './OnlineList.css'
@@ -112,6 +114,9 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
   const rows = useLobbyPresence()
   const { identity } = useCastle()
   const [openCardFor, setOpenCardFor] = useState<string | null>(null)
+  /** Shortcut: clicking the inline ✦ icon opens InviteDialog directly,
+   *  skipping the User Card. Kid power-user move. */
+  const [quickInviteRow, setQuickInviteRow] = useState<PresenceRow | null>(null)
 
   // Sort: you first, then most recently seen.
   const sorted = [...rows].sort((a, b) => {
@@ -137,6 +142,12 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
               if (!normalizedName) return // bypass guests have no normalizedName
               setOpenCardFor(normalizedName)
             }}
+            onQuickInvite={(row) => setQuickInviteRow(row)}
+            selfCanInvite={
+              !!identity
+              && !identity.isBypass
+              && (identity.castlePoints ?? 0) >= INVITE_COST_CP
+            }
           />
         ))}
       </ul>
@@ -148,6 +159,15 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
           onClose={() => setOpenCardFor(null)}
         />
       )}
+      {quickInviteRow && identity && (
+        <InviteDialog
+          toNormalizedName={quickInviteRow.normalizedName}
+          toDisplayName={quickInviteRow.displayName}
+          selfNormalizedName={identity.normalizedName}
+          onClose={() => setQuickInviteRow(null)}
+          onSent={() => setQuickInviteRow(null)}
+        />
+      )}
     </aside>
   )
 }
@@ -157,11 +177,15 @@ function OnlineRow({
   isYou,
   onNav,
   onNameClick,
+  onQuickInvite,
+  selfCanInvite,
 }: {
   row: PresenceRow
   isYou: boolean
   onNav: (href: string) => void
   onNameClick: (normalizedName: string) => void
+  onQuickInvite: (row: PresenceRow) => void
+  selfCanInvite: boolean
 }) {
   const view = viewFor(row.location)
   const cosmetic = row.hasTournamentCrown
@@ -217,6 +241,28 @@ function OnlineRow({
           title={`${view.action.label} ${row.displayName} in ${view.label}`}
         >
           {view.action.label}
+        </button>
+      )}
+      {/* Inline quick-invite. Skips the User Card — for repeat invites
+       *  where you already know who they are. Hidden when:
+       *  - row is yourself / a bypass guest with no normalizedName
+       *  - row is already in a chess/wizard game
+       *  - you can't afford the 5 CP / are a bypass guest yourself */}
+      {!isYou && !row.isBypass && row.normalizedName
+        && view.variant !== 'chess' && view.variant !== 'wizard' && (
+        <button
+          type="button"
+          className="puc-online__invite"
+          onClick={() => onQuickInvite(row)}
+          disabled={!selfCanInvite}
+          title={
+            selfCanInvite
+              ? `Invite ${row.displayName} to a chess game (5 ✦)`
+              : `Need 5 castle points to send an invite.`
+          }
+          aria-label={`Invite ${row.displayName}`}
+        >
+          ✦
         </button>
       )}
     </li>

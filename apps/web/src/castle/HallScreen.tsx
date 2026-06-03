@@ -22,6 +22,7 @@ import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
 import { FeedbackButton } from './FeedbackButton'
+import { HostInviteButton } from '../invitations/HostInviteButton'
 import { FeedbackInbox } from './FeedbackInbox'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
@@ -251,6 +252,7 @@ export function HallScreen() {
             {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
             {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
             <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
+            <HostInviteButton hostId={hostId} />
             <FeedbackButton />
           </div>
         </aside>

@@ -142,3 +142,48 @@
   color: #fff;
   background: rgba(255, 255, 255, 0.04);
 }
+
+/* Clickable name button — strip default button chrome so it still
+ * reads as a name, just hover-underlined. */
+.puc-online__name--clickable {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.puc-online__name--clickable:hover:not(:disabled) {
+  text-decoration: underline;
+  text-decoration-color: rgba(241, 195, 76, 0.6);
+  text-underline-offset: 2px;
+}
+.puc-online__name--clickable:disabled {
+  cursor: default;
+}
+
+/* Inline ✦ invite button — small + gold, right next to the
+ * follow/watch action. Same disabled-look as everywhere. */
+.puc-online__invite {
+  margin-left: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(241, 195, 76, 0.14);
+  border: 1px solid rgba(241, 195, 76, 0.5);
+  color: var(--puc-text-accent);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-online__invite:hover:not(:disabled) {
+  background: rgba(241, 195, 76, 0.26);
+}
+.puc-online__invite:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

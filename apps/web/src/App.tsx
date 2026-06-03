@@ -33,6 +33,8 @@ import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 import { trackScreen } from './firebase/analytics'
 import { InviteInbox } from './invitations/InviteInbox'
+import { OutgoingInviteProvider } from './invitations/OutgoingInviteContext'
+import { SentInviteToast } from './invitations/SentInviteToast'
 
 /** Single source of truth for presence — runs at the App root so every
  *  authenticated route auto-publishes a location to lobby/presence
@@ -76,9 +78,11 @@ export function App() {
   return (
     <BrowserRouter>
       <CastleIdentityProvider>
+        <OutgoingInviteProvider>
         <GlobalPresenceHeartbeat />
         <GlobalScreenTracker />
         <InviteInbox />
+        <SentInviteToast />
         <Routes>
           <Route path="/" element={<CastleEntry />} />
           <Route path="/local" element={<LocalGameRoute />} />
@@ -110,6 +114,7 @@ export function App() {
           <Route path="/tournament" element={<TournamentRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </OutgoingInviteProvider>
       </CastleIdentityProvider>
     </BrowserRouter>
   )
