@@ -6,6 +6,8 @@
 // Lucy ↔ Magic Forest, Luca ↔ Starry Universe, no separate theme picker.
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../firebase/app'
 import { applyTheme } from '../theme/themes'
 import type { HostId } from '../hosts/hosts'
 import { hostOnDuty, msUntilNextRotation } from '../hosts/hostOnDuty'
@@ -49,6 +51,52 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyTheme(themeForHost(hostId))
   }, [hostId])
+
+  // ── Single source of truth: server cosmetics ─────────────────────
+  // The local identity in localStorage is just a cache. We subscribe
+  // to `guests/{normalizedName}` and project the cosmetic state +
+  // castlePoints back onto the cached identity whenever the server
+  // changes. Three drift cases this fixes:
+  //   • Multi-device: equip on phone, see the new piece on desktop.
+  //   • Stale castleEnter localStorage from before this code shipped.
+  //   • Cosmetics updated by other server paths (rewards, halo timeout).
+  useEffect(() => {
+    if (!identity || identity.isBypass) return
+    const ref = doc(db, 'guests', identity.normalizedName)
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data() as
+        | {
+            cosmetics?: { pieceSet?: string }
+            castlePoints?: number
+          }
+        | undefined
+      if (!data) return
+      const serverPieceSet = data.cosmetics?.pieceSet
+      const serverPoints = typeof data.castlePoints === 'number'
+        ? data.castlePoints
+        : undefined
+      setIdentity((prev) => {
+        if (!prev || prev.normalizedName !== identity.normalizedName) return prev
+        const cachedPiece = prev.cosmetics?.pieceSet
+        const samePiece = (serverPieceSet ?? undefined) === (cachedPiece ?? undefined)
+        const samePoints = serverPoints === undefined || serverPoints === prev.castlePoints
+        if (samePiece && samePoints) return prev
+        const next: CastleIdentity = {
+          ...prev,
+          ...(serverPoints !== undefined ? { castlePoints: serverPoints } : {}),
+          ...(serverPieceSet !== undefined
+            ? { cosmetics: { ...(prev.cosmetics ?? {}), pieceSet: serverPieceSet } }
+            : {}),
+        }
+        saveIdentity(next)
+        return next
+      })
+    })
+    return () => unsub()
+    // Only re-subscribe when the SIGNED-IN identity changes (not on
+    // every nested update we make inside the snapshot handler).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identity?.normalizedName, identity?.isBypass])
 
   const signIn = useCallback((next: CastleIdentity, credential?: CastleCredential) => {
     if (credential) {

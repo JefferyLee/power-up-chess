@@ -79,6 +79,10 @@ export interface EnterBonus {
   /** Sum of starter + checkIn + streak — handy for the toast headline. */
   total: number
 }
+export interface EnterCosmetics {
+  pieceSet?: string
+  ownedPieceSets?: string[]
+}
 export type CastleEnterResponse =
   | {
       status: 'new'
@@ -88,6 +92,7 @@ export type CastleEnterResponse =
       pointsBeforeDecay: 0
       bonus?: EnterBonus
       sessionId: string
+      cosmetics?: EnterCosmetics
     }
   | {
       status: 'returning'
@@ -97,6 +102,7 @@ export type CastleEnterResponse =
       pointsBeforeDecay: number
       bonus?: EnterBonus
       sessionId: string
+      cosmetics?: EnterCosmetics
     }
   | { status: 'wrong-magic'; attemptsRemaining: number }
   | { status: 'rate-limited'; retryAfterMs: number }

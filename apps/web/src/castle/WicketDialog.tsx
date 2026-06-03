@@ -51,6 +51,11 @@ export function WicketDialog() {
       credential: CastleCredential,
     ): boolean => {
       if (res.status === 'new' || res.status === 'returning') {
+        // Server-pushed cosmetics are the source of truth on sign-in
+        // — the localStorage cache could be stale (other device, etc).
+        // Project them onto the identity so useCosmetics() reads the
+        // canonical equipped set from the very first frame.
+        const serverPieceSet = res.cosmetics?.pieceSet
         signIn(
           {
             displayName: res.displayName,
@@ -63,6 +68,7 @@ export function WicketDialog() {
               ? { lastDecay: { decayedBy: res.decayedBy, pointsBefore: res.pointsBeforeDecay } }
               : {}),
             ...(res.bonus && res.bonus.total > 0 ? { lastBonus: res.bonus } : {}),
+            ...(serverPieceSet ? { cosmetics: { pieceSet: serverPieceSet } } : {}),
           },
           credential,
         )

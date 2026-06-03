@@ -21,6 +21,10 @@ export type CastleEnterResponse =
        *  every subsequent server call; older devices for this same
        *  account get evicted because their stored sessionId is now stale. */
       sessionId: string
+      /** Server-side cosmetics so the client can render the right
+       *  piece-set on the first frame without trusting localStorage.
+       *  Absent only when the guest has no cosmetics set yet. */
+      cosmetics?: EnterCosmetics
     }
   | {
       status: 'returning'
@@ -33,6 +37,7 @@ export type CastleEnterResponse =
       /** Phase C: bundled check-in + streak bonus, if any fired this visit. */
       bonus?: EnterBonus
       sessionId: string
+      cosmetics?: EnterCosmetics
     }
   | {
       status: 'wrong-magic'
@@ -50,6 +55,18 @@ export type CastleEnterResponse =
 export interface CastleBypassResponse {
   /** A generated throwaway display name, format `Guest-NNNN`. */
   displayName: string
+}
+
+/** Snapshot of the persistent cosmetics state sent to the client on
+ *  castleEnter. The plain `pieceSet` is the equipped id; bool flags
+ *  let the client render halo / crown chips without a second read. */
+export interface EnterCosmetics {
+  /** Currently-equipped piece-set id. Defaults to 'classic' on the
+   *  client when missing. */
+  pieceSet?: string
+  /** Set of piece-set ids the guest owns. Drives the shop's
+   *  "purchased" badges immediately, without a second fetch. */
+  ownedPieceSets?: string[]
 }
 
 /** Optional bonus block returned by castleEnter. Any combination of the
