@@ -15,6 +15,10 @@ const FEATURES: string[] = [
   'Practice with Lucy or Luca, two AI hosts who chat about your moves',
   'Forest Adventure + Wizard’s Duel — playful side games that earn castle points',
   'The Great Hall — moderated lobby chat. No DMs, no public matchmaking, display names only.',
+  '[NEW] Chess Basics — 5 short interactive lessons that take first-timers from zero',
+  '[NEW] Story Library — 108 chess stories, read or listened to in Lucy or Luca’s voice',
+  '[NEW] Theme Shop — collect piece sets (Cburnett, Fantasy, Glowing Crystal) with castle points',
+  '[NEW] Knight’s Hop — learn each piece by playing AS it, one chess-legal hop at a time',
 ]
 
 export function CastleSign() {
