@@ -14,7 +14,14 @@ export const ENDGAME_LESSONS: Record<string, { positions: string[] }> = {
     positions: ['Classic ladder', 'Rook on the corner file', 'King a step off'],
   },
   kpk: {
-    positions: ['King well ahead', 'King supports from behind'],
+    positions: [
+      'King well ahead',
+      'King supports from behind',
+      'Flank file (g-pawn)',
+    ],
+  },
+  krrk: {
+    positions: ['Rooks in the corners', 'King already on the back rank'],
   },
 }
 

@@ -96,6 +96,31 @@ export const LESSONS: Lesson[] = [
         fen: '4k3/8/8/4K3/4P3/8/8/8 w - - 0 1',
         parMoves: 18,
       },
+      {
+        label: 'Flank file (g-pawn)',
+        fen: '6k1/8/6K1/6P1/8/8/8/8 w - - 0 1',
+        parMoves: 14,
+      },
+    ],
+  },
+  {
+    id: 'krrk',
+    title: 'Two Rooks mate',
+    pieceSummary: 'K + R + R  vs  K',
+    goal: 'Mate the lone king using the rook ladder.',
+    technique:
+      'Park one rook on a rank that cuts the king off; check with the other rook to drive the king toward the edge. Each turn shrinks the box by one rank or file. The defender king has no good square — keep climbing the ladder.',
+    positions: [
+      {
+        label: 'Rooks in the corners',
+        fen: '8/8/8/4k3/8/8/8/R3K2R w KQ - 0 1',
+        parMoves: 10,
+      },
+      {
+        label: 'King already on the back rank',
+        fen: '4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1',
+        parMoves: 8,
+      },
     ],
   },
 ]

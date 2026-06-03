@@ -77,6 +77,15 @@ export const OPENINGS: Opening[] = [
         explanation:
           'd4 challenges Black’s e5 pawn and opens lines for your pieces. The c3 pawn supports it; the bishop on c4 is unleashed on the long diagonal. This is the Italian’s textbook plan.',
       },
+      {
+        fen: 'r1bqk2r/pppp1ppp/2n2n2/8/1bBP4/5N2/PP3PPP/RNBQK2R w KQkq - 1 7',
+        context: 'After 5.d4 exd4 6.cxd4 Bb4+ — block the check.',
+        expectedUci: 'c1d2',
+        expectedSan: 'Bd2',
+        hint: 'Use a piece to block (and offer a trade), not the king.',
+        explanation:
+          'Bd2 is the quiet Möller block. After Bxd2+ Nbxd2 d6 you reach a calm, balanced middlegame. Stepping the king with Kf1 instead would lose castling and the right to develop normally.',
+      },
     ],
   },
   {
@@ -122,6 +131,15 @@ export const OPENINGS: Opening[] = [
         explanation:
           'Re1 quietly defends e4 (freeing the knight from sentry duty) and stares down the e-file at Black’s king and bishop. A classic Spanish setup — every piece has a job before the centre opens.',
       },
+      {
+        fen: 'r1bqk2r/2ppbppp/p1n2n2/1p2p3/B3P3/5N2/PPPP1PPP/RNBQR1K1 w kq - 0 7',
+        context: 'After 6.Re1 b5 — Black kicks the bishop. Keep it alive.',
+        expectedUci: 'a4b3',
+        expectedSan: 'Bb3',
+        hint: 'Don’t trade — drop the bishop back where it still eyes the centre.',
+        explanation:
+          'Bb3 keeps the Spanish bishop pointed at f7 and the long diagonal. Trading it with Bxc6 (dxc6) would hand Black the bishop pair and open the d-file. Strong Spanish play preserves this piece for the squeeze.',
+      },
     ],
   },
   {
@@ -166,6 +184,15 @@ export const OPENINGS: Opening[] = [
         hint: 'A small pawn move that opens a path for your light-squared bishop.',
         explanation:
           'e3 keeps the centre solid and clears the way for Bd3. It is intentionally modest — the Queen’s Gambit is a long-term squeeze, not a forced attack. Next you’ll develop the bishop, castle, and pile up on d5.',
+      },
+      {
+        fen: 'rnbq1rk1/ppp1bppp/4pn2/3p2B1/2PP4/2N1P3/PP3PPP/R2QKBNR w KQ - 1 6',
+        context: 'After 5.e3 O-O — develop your last minor piece.',
+        expectedUci: 'g1f3',
+        expectedSan: 'Nf3',
+        hint: 'Bring out the king-side knight to its natural square.',
+        explanation:
+          'Nf3 finishes minor-piece development. After this you castle and start the slow squeeze on d5 with Bd3, Qc2, Rfd1 — the textbook Queen\'s Gambit Declined formation.',
       },
     ],
   },

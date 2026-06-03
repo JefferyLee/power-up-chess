@@ -7,9 +7,9 @@
 // given the modest reward).
 
 export const OPENING_POSITION_COUNT: Record<string, number> = {
-  italian: 4,
-  'ruy-lopez': 4,
-  'queens-gambit': 4,
+  italian: 5,
+  'ruy-lopez': 5,
+  'queens-gambit': 5,
 }
 
 export const OPENING_POSITION_REWARD_PTS = 5
