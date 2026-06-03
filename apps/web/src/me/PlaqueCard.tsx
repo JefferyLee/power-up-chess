@@ -65,7 +65,7 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
           className="puc-plaque-equipment__btn"
           onClick={() => navigate('/shop')}
         >
-          {isSelf ? '换装备' : 'Want this →'}
+          {isSelf ? 'Change Equipment' : 'Want this →'}
         </button>
       </aside>
 
