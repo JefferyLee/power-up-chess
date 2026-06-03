@@ -70,7 +70,10 @@
 }
 .puc-plaque-card__head { grid-area: head; }
 .puc-plaque-card__stats { grid-area: stats; min-width: 0; }
-.puc-plaque-card__equipment { grid-area: equipment; align-self: start; }
+/* Equipment hugs the bottom of its cell so the upper-right of the
+ * plaque stays as breathing-room whitespace and the gear sits in
+ * the empty corner the user pointed out. */
+.puc-plaque-card__equipment { grid-area: equipment; align-self: end; }
 /* Four corner rivets via four positioned radial gradients on ::before. */
 .puc-plaque-card::before {
   content: '';
@@ -320,27 +323,27 @@
 .puc-plaque-equipment__label {
   margin: 0;
   font-family: 'Cinzel', Georgia, serif;
-  font-size: 12px;
-  letter-spacing: 0.6px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
   color: #3a230c;
   text-align: center;
   max-width: 200px;
   line-height: 1.2;
 }
 .puc-plaque-equipment__btn {
-  margin-top: 4px;
-  padding: 6px 14px;
+  margin-top: 2px;
+  padding: 3px 10px;
   border-radius: 999px;
   border: 1px solid rgba(60, 38, 10, 0.55);
   background: linear-gradient(135deg, #f4c266, #d99c3a);
   color: #1a1408;
   font-family: 'Cinzel', Georgia, serif;
-  font-size: 12px;
-  letter-spacing: 0.6px;
+  font-size: 10px;
+  letter-spacing: 0.4px;
   cursor: pointer;
   box-shadow:
     inset 0 1px 0 rgba(255, 240, 200, 0.7),
-    0 2px 4px rgba(0, 0, 0, 0.35);
+    0 1px 3px rgba(0, 0, 0, 0.3);
   font-weight: 600;
 }
 .puc-plaque-equipment__btn:hover {

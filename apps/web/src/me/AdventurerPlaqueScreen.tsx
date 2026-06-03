@@ -5,6 +5,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
 import { callGetPublicProfile, type GetPublicProfileResponse } from '../firebase/callables'
 import { PlaqueCard } from './PlaqueCard'
@@ -61,6 +63,42 @@ export function AdventurerPlaqueScreen() {
       document.removeEventListener('visibilitychange', onVis)
     }
   }, [identity, fetchProfile])
+
+  // Live-subscribe to the user's own guest doc so equipment changes
+  // (made on /shop without leaving the SPA) propagate to the plaque
+  // immediately — focus/visibility refetch doesn't fire on intra-app
+  // navigation. We only patch the small set of fields that actually
+  // update live; aggregate stats keep coming from the callable.
+  useEffect(() => {
+    if (!identity || identity.isBypass) return
+    const ref = doc(db, 'guests', identity.normalizedName)
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.data() as
+        | { cosmetics?: { pieceSet?: string }; castlePoints?: number }
+        | undefined
+      if (!data) return
+      setState((prev) => {
+        if (prev.kind !== 'ready') return prev
+        const nextEquipped = data.cosmetics?.pieceSet ?? null
+        const nextPoints = typeof data.castlePoints === 'number'
+          ? data.castlePoints
+          : prev.profile.castlePoints
+        if (
+          nextEquipped === prev.profile.equippedPieceSet &&
+          nextPoints === prev.profile.castlePoints
+        ) return prev
+        return {
+          kind: 'ready',
+          profile: {
+            ...prev.profile,
+            equippedPieceSet: nextEquipped,
+            castlePoints: nextPoints,
+          },
+        }
+      })
+    })
+    return () => unsub()
+  }, [identity])
 
   return (
     <div className="puc-plaque-page">
