@@ -32,42 +32,42 @@ export function DailyStrip({ daily, onOpen, compact = false }: Props) {
     <button
       type="button"
       className={
-        'puc-daily' +
-        (allDone ? ' puc-daily--done' : '') +
-        (compact ? ' puc-daily--compact' : '')
+        'puc-dailystrip' +
+        (allDone ? ' puc-dailystrip--done' : '') +
+        (compact ? ' puc-dailystrip--compact' : '')
       }
       onClick={onOpen}
     >
-      <div className="puc-daily__glyph" aria-hidden="true">⭐</div>
-      <div className="puc-daily__body">
-        <div className="puc-daily__head">
-          <span className="puc-daily__chip">Today</span>
-          <span className="puc-daily__title">
+      <div className="puc-dailystrip__glyph" aria-hidden="true">⭐</div>
+      <div className="puc-dailystrip__body">
+        <div className="puc-dailystrip__head">
+          <span className="puc-dailystrip__chip">Today</span>
+          <span className="puc-dailystrip__title">
             {allDone ? "Today's Five — done!" : "Today's Five"}
           </span>
         </div>
-        <div className="puc-daily__sub">
+        <div className="puc-dailystrip__sub">
           {allDone
             ? `${solved} of 5 solved — come back tomorrow`
             : 'Hand-picked daily quest · +10 castle points on completion'}
         </div>
-        <div className="puc-daily__stones" aria-hidden="true">
+        <div className="puc-dailystrip__stones" aria-hidden="true">
           {slots.map((r, i) => (
             <span
               key={i}
               className={
-                'puc-daily__stone ' +
+                'puc-dailystrip__stone ' +
                 (r === true
-                  ? 'puc-daily__stone--solved'
+                  ? 'puc-dailystrip__stone--solved'
                   : r === false
-                    ? 'puc-daily__stone--failed'
-                    : 'puc-daily__stone--pending')
+                    ? 'puc-dailystrip__stone--failed'
+                    : 'puc-dailystrip__stone--pending')
               }
             />
           ))}
         </div>
       </div>
-      <div className="puc-daily__cta" aria-hidden="true">
+      <div className="puc-dailystrip__cta" aria-hidden="true">
         {allDone ? 'Review →' : 'Open →'}
       </div>
     </button>

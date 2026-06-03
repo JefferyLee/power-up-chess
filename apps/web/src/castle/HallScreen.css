@@ -56,7 +56,7 @@
 /* Today's Five (compact pill) sits inside the .puc-hall__doors--learn
  * section, above the "Learn and play chess" title. Centre it and give
  * it a touch of breathing room below. */
-.puc-hall__doors--learn .puc-daily--compact {
+.puc-hall__doors--learn .puc-dailystrip--compact {
   width: fit-content;
   max-width: 100%;
   margin: 0 auto 12px;

@@ -1,6 +1,6 @@
 /* Today's Five hero strip. Used on both /puzzles and the Hall.
  * Layout: ⭐ glyph │ [TODAY chip] title + sub + stones │ "Open →" CTA */
-.puc-daily {
+.puc-dailystrip {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -22,12 +22,12 @@
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   width: 100%;
 }
-.puc-daily:hover {
+.puc-dailystrip:hover {
   transform: translateY(-2px);
   border-color: rgba(244, 194, 102, 0.85);
   box-shadow: 0 10px 28px rgba(244, 194, 102, 0.20);
 }
-.puc-daily--done {
+.puc-dailystrip--done {
   background: linear-gradient(
     135deg,
     rgba(72, 200, 120, 0.14),
@@ -36,26 +36,26 @@
   border-color: rgba(72, 200, 120, 0.55);
   box-shadow: 0 6px 22px rgba(72, 200, 120, 0.10);
 }
-.puc-daily--done:hover {
+.puc-dailystrip--done:hover {
   border-color: rgba(72, 200, 120, 0.8);
   box-shadow: 0 10px 28px rgba(72, 200, 120, 0.18);
 }
-.puc-daily__glyph {
+.puc-dailystrip__glyph {
   font-size: 28px;
   line-height: 1;
   filter: drop-shadow(0 0 6px rgba(244, 194, 102, 0.55));
 }
-.puc-daily--done .puc-daily__glyph {
+.puc-dailystrip--done .puc-dailystrip__glyph {
   filter: drop-shadow(0 0 6px rgba(72, 200, 120, 0.55));
 }
-.puc-daily__body { min-width: 0; }
-.puc-daily__head {
+.puc-dailystrip__body { min-width: 0; }
+.puc-dailystrip__head {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 2px;
 }
-.puc-daily__chip {
+.puc-dailystrip__chip {
   font-family: var(--puc-font-display);
   font-size: 10px;
   letter-spacing: 1.4px;
@@ -66,36 +66,36 @@
   border-radius: 999px;
   font-weight: 700;
 }
-.puc-daily--done .puc-daily__chip {
+.puc-dailystrip--done .puc-dailystrip__chip {
   background: linear-gradient(135deg, #6fcf97, #3da76a);
   color: #0e1a12;
 }
-.puc-daily__title {
+.puc-dailystrip__title {
   font-family: var(--puc-font-display);
   font-size: 18px;
   color: var(--puc-text-accent);
 }
-.puc-daily__sub {
+.puc-dailystrip__sub {
   font-size: 12.5px;
   color: var(--puc-text-muted);
   margin-top: 2px;
 }
-.puc-daily__stones {
+.puc-dailystrip__stones {
   display: flex;
   gap: 7px;
   margin-top: 8px;
 }
-.puc-daily__stone {
+.puc-dailystrip__stone {
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: rgba(120, 120, 140, 0.3);
   border: 1px solid rgba(0, 0, 0, 0.25);
 }
-.puc-daily__stone--pending { background: rgba(120, 120, 140, 0.3); }
-.puc-daily__stone--solved { background: rgba(72, 200, 120, 0.85); }
-.puc-daily__stone--failed { background: rgba(220, 130, 120, 0.85); }
-.puc-daily__cta {
+.puc-dailystrip__stone--pending { background: rgba(120, 120, 140, 0.3); }
+.puc-dailystrip__stone--solved { background: rgba(72, 200, 120, 0.85); }
+.puc-dailystrip__stone--failed { background: rgba(220, 130, 120, 0.85); }
+.puc-dailystrip__cta {
   font-family: var(--puc-font-display);
   font-size: 13px;
   color: var(--puc-text-accent);
@@ -106,14 +106,14 @@
 @media (max-width: 540px) {
   /* Phone: drop the glyph + CTA so the body keeps its prominence and
    * the whole card stays a tappable hero without crowding. */
-  .puc-daily { grid-template-columns: 1fr; gap: 4px; padding: 14px 16px; }
-  .puc-daily__glyph { display: none; }
-  .puc-daily__cta { display: none; }
+  .puc-dailystrip { grid-template-columns: 1fr; gap: 4px; padding: 14px 16px; }
+  .puc-dailystrip__glyph { display: none; }
+  .puc-dailystrip__cta { display: none; }
 }
 
 /* Compact variant — slim horizontal pill used in the Hall above the
  * door grid. One row: chip + title + stones + CTA. No glyph, no sub. */
-.puc-daily--compact {
+.puc-dailystrip--compact {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -122,28 +122,28 @@
   margin: 0;
   border-radius: 999px;
 }
-.puc-daily--compact .puc-daily__glyph { display: none; }
-.puc-daily--compact .puc-daily__body {
+.puc-dailystrip--compact .puc-dailystrip__glyph { display: none; }
+.puc-dailystrip--compact .puc-dailystrip__body {
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 1;
   min-width: 0;
 }
-.puc-daily--compact .puc-daily__head { margin: 0; gap: 6px; }
-.puc-daily--compact .puc-daily__title { font-size: 13px; }
-.puc-daily--compact .puc-daily__chip { font-size: 9.5px; padding: 1px 7px; }
-.puc-daily--compact .puc-daily__sub { display: none; }
-.puc-daily--compact .puc-daily__stones { margin: 0; gap: 5px; }
-.puc-daily--compact .puc-daily__stone { width: 10px; height: 10px; }
-.puc-daily--compact .puc-daily__cta { font-size: 12px; }
+.puc-dailystrip--compact .puc-dailystrip__head { margin: 0; gap: 6px; }
+.puc-dailystrip--compact .puc-dailystrip__title { font-size: 13px; }
+.puc-dailystrip--compact .puc-dailystrip__chip { font-size: 9.5px; padding: 1px 7px; }
+.puc-dailystrip--compact .puc-dailystrip__sub { display: none; }
+.puc-dailystrip--compact .puc-dailystrip__stones { margin: 0; gap: 5px; }
+.puc-dailystrip--compact .puc-dailystrip__stone { width: 10px; height: 10px; }
+.puc-dailystrip--compact .puc-dailystrip__cta { font-size: 12px; }
 
 @media (max-width: 540px) {
-  .puc-daily--compact {
+  .puc-dailystrip--compact {
     padding: 6px 12px;
     gap: 8px;
   }
   /* Phone compact: drop the title text so chip + stones + CTA fit. */
-  .puc-daily--compact .puc-daily__title { display: none; }
-  .puc-daily--compact .puc-daily__cta { font-size: 11px; }
+  .puc-dailystrip--compact .puc-dailystrip__title { display: none; }
+  .puc-dailystrip--compact .puc-dailystrip__cta { font-size: 11px; }
 }
