@@ -310,6 +310,13 @@ export function HallScreen() {
             variant="parchment"
             onClick={() => navigate('/library')}
           />
+          <RoomDoor
+            icon="🏆"
+            label="Weekly Tournament"
+            blurb="Sign up Mon–Sun. Pairings + play coming soon."
+            variant="oak"
+            onClick={() => navigate('/tournament')}
+          />
         </div>
       </section>
 

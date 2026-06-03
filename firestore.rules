@@ -61,6 +61,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Weekly tournament — public-ish read so any signed-in guest can
+    // see registrations + (in later slices) standings. Writes only
+    // via Cloud Functions (registerForTournament + future pairing /
+    // result-reporting callables).
+    match /tournaments/{weekKey} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Per-uid enter-attempt counters (rate limiting + 3-strike tracking).
     match /castle_enter_attempts/{uid} {
       allow read, write: if false;

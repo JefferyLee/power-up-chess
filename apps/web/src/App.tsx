@@ -25,6 +25,7 @@ import { EndgameRoute } from './endgame/EndgameRoute'
 import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { OpeningsRoute } from './openings/OpeningsRoute'
 import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
+import { TournamentRoute } from './tournament/TournamentRoute'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 
@@ -69,6 +70,7 @@ export function App() {
           <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
           <Route path="/openings" element={<OpeningsRoute />} />
           <Route path="/openings/:id" element={<OpeningLessonScreen />} />
+          <Route path="/tournament" element={<TournamentRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>

@@ -623,6 +623,41 @@ const submitOpeningClearFn = httpsCallable<
   SubmitOpeningClearResponse
 >(functions, 'submitOpeningClear')
 
+// P2.H Weekly Tournament — Slice 1: registration only.
+export interface TournamentParticipant {
+  normalizedName: string
+  displayName: string
+  registeredAt: number
+}
+export interface TournamentDoc {
+  weekKey: string
+  status: 'registration' | 'active' | 'closed'
+  openedAt: number
+  closesAt: number
+  participants: TournamentParticipant[]
+}
+export interface GetCurrentTournamentResponse {
+  ok: true
+  tournament: TournamentDoc
+}
+export interface RegisterForTournamentRequest {
+  normalizedName: string
+  sessionId: string
+}
+export interface RegisterForTournamentResponse {
+  ok: true
+  tournament: TournamentDoc
+  alreadyRegistered: boolean
+}
+const getCurrentTournamentFn = httpsCallable<
+  Record<string, never>,
+  GetCurrentTournamentResponse
+>(functions, 'getCurrentTournament')
+const registerForTournamentFn = httpsCallable<
+  RegisterForTournamentRequest,
+  RegisterForTournamentResponse
+>(functions, 'registerForTournament')
+
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
 ): Promise<GetNextPuzzleResponse> {
@@ -711,5 +746,15 @@ export async function callSubmitOpeningClear(
   req: SubmitOpeningClearRequest,
 ): Promise<SubmitOpeningClearResponse> {
   const { data } = await submitOpeningClearFn(req)
+  return data
+}
+export async function callGetCurrentTournament(): Promise<GetCurrentTournamentResponse> {
+  const { data } = await getCurrentTournamentFn({})
+  return data
+}
+export async function callRegisterForTournament(
+  req: RegisterForTournamentRequest,
+): Promise<RegisterForTournamentResponse> {
+  const { data } = await registerForTournamentFn(req)
   return data
 }
