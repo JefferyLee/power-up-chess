@@ -188,6 +188,13 @@ export function HallScreen() {
        *  visitor sees the path to learning + playing before the social
        *  layer pulls focus. Two visual rows of four on desktop. */}
       <section className="puc-hall__doors puc-hall__doors--learn">
+        {!identity.isBypass && (
+          <DailyStrip
+            daily={puzzleDaily}
+            onOpen={() => navigate('/puzzles/daily')}
+            compact
+          />
+        )}
         <h2 className="puc-hall__doors-title">Learn and play chess</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
           <RoomDoor
@@ -259,18 +266,6 @@ export function HallScreen() {
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
-
-      {/* Today's Five — same visual strip as the Puzzle Garden. Sits
-       *  right under the chess doors so a kid in the Hall sees the
-       *  daily quest immediately without going to /puzzles first. */}
-      {!identity.isBypass && (
-        <section className="puc-hall__daily">
-          <DailyStrip
-            daily={puzzleDaily}
-            onOpen={() => navigate('/puzzles/daily')}
-          />
-        </section>
-      )}
 
       {/* Social row below the doors — host on the left, chat in the
        *  middle (the most vertical real-estate), passive info on the

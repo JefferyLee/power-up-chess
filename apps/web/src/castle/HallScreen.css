@@ -53,13 +53,14 @@
  *    "supporting" rather than "matched in weight" to the doors hero
  *    above. The middle chat column absorbs the freed space. */
 
-/* Today's Five strip — shares the same max-width band as the door
- * grids above/below so the page reads as a single vertical column. */
-.puc-hall__daily {
-  max-width: 1200px;
-  margin: 0 auto 24px;
+/* Today's Five (compact pill) sits inside the .puc-hall__doors--learn
+ * section, above the "Learn and play chess" title. Centre it and give
+ * it a touch of breathing room below. */
+.puc-hall__doors--learn .puc-daily--compact {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 12px;
 }
-.puc-hall__daily .puc-daily { margin-bottom: 0; }
 
 .puc-hall__top {
   max-width: 1200px;

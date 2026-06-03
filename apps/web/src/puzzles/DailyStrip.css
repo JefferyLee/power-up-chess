@@ -110,3 +110,40 @@
   .puc-daily__glyph { display: none; }
   .puc-daily__cta { display: none; }
 }
+
+/* Compact variant — slim horizontal pill used in the Hall above the
+ * door grid. One row: chip + title + stones + CTA. No glyph, no sub. */
+.puc-daily--compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  grid-template-columns: none;
+  padding: 7px 14px;
+  margin: 0;
+  border-radius: 999px;
+}
+.puc-daily--compact .puc-daily__glyph { display: none; }
+.puc-daily--compact .puc-daily__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.puc-daily--compact .puc-daily__head { margin: 0; gap: 6px; }
+.puc-daily--compact .puc-daily__title { font-size: 13px; }
+.puc-daily--compact .puc-daily__chip { font-size: 9.5px; padding: 1px 7px; }
+.puc-daily--compact .puc-daily__sub { display: none; }
+.puc-daily--compact .puc-daily__stones { margin: 0; gap: 5px; }
+.puc-daily--compact .puc-daily__stone { width: 10px; height: 10px; }
+.puc-daily--compact .puc-daily__cta { font-size: 12px; }
+
+@media (max-width: 540px) {
+  .puc-daily--compact {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  /* Phone compact: drop the title text so chip + stones + CTA fit. */
+  .puc-daily--compact .puc-daily__title { display: none; }
+  .puc-daily--compact .puc-daily__cta { font-size: 11px; }
+}

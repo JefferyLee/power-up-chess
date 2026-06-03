@@ -17,9 +17,11 @@ export interface DailyStripState {
 interface Props {
   daily: DailyStripState | null
   onOpen: () => void
+  /** Compact (Hall) variant — one slim row instead of the tall garden hero. */
+  compact?: boolean
 }
 
-export function DailyStrip({ daily, onOpen }: Props) {
+export function DailyStrip({ daily, onOpen, compact = false }: Props) {
   const slots: Array<boolean | null> =
     daily && Array.isArray(daily.results) && daily.results.length === 5
       ? daily.results
@@ -29,7 +31,11 @@ export function DailyStrip({ daily, onOpen }: Props) {
   return (
     <button
       type="button"
-      className={'puc-daily ' + (allDone ? 'puc-daily--done' : '')}
+      className={
+        'puc-daily' +
+        (allDone ? ' puc-daily--done' : '') +
+        (compact ? ' puc-daily--compact' : '')
+      }
       onClick={onOpen}
     >
       <div className="puc-daily__glyph" aria-hidden="true">⭐</div>
