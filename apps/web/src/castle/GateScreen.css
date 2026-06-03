@@ -196,7 +196,11 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 5;
+  /* No z-index — creating a stacking context here traps the fixed-position
+   * overlays inside (CastleSign / corner panels / pulse story) below the
+   * wicket (z-index 50). Without it, those overlays' fixed positioning
+   * forms a root-level stacking context where their own z-index actually
+   * outranks the wicket. */
 }
 
 .puc-gate__overlay > * {
@@ -246,12 +250,69 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
-.puc-gate__panel--guests {
+.puc-gate__panel--activity {
   left: 24px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puc-gate__panel--activity:hover {
+  border-color: rgba(247, 232, 182, 0.5);
+}
+.puc-gate__panel--activity:focus-visible {
+  outline: 2px solid #f1c34c;
+  outline-offset: 2px;
 }
 
 .puc-gate__panel--leaderboard {
   right: 24px;
+  cursor: pointer;
+}
+.puc-gate__panel--leaderboard:focus-visible {
+  outline: 2px solid #f1c34c;
+  outline-offset: 2px;
+}
+
+.puc-gate__activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #ece9ff;
+}
+.puc-gate__activity li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 6px;
+  align-items: baseline;
+}
+.puc-gate__activity-icon {
+  font-size: 13px;
+  text-align: center;
+  filter: drop-shadow(0 0 3px rgba(241, 195, 76, 0.4));
+}
+.puc-gate__activity-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-gate__activity--list {
+  font-size: 14px;
+  gap: 10px;
+}
+.puc-gate__activity--list .puc-gate__activity-text {
+  white-space: normal;
+}
+
+/* The compact one-line preview is hidden on desktop (full panel is shown);
+ * mobile media query swaps them. */
+.puc-gate__activity-compact,
+.puc-gate__champions-compact {
+  display: none;
 }
 
 /* Parchment-scroll treatment for the leaderboard — overrides the
@@ -412,19 +473,160 @@
 }
 
 @media (max-width: 720px) {
-  .puc-gate__title { font-size: 30px; letter-spacing: 3px; }
-  .puc-gate__tagline { font-size: 13px; }
+  .puc-gate__title { font-size: 26px; letter-spacing: 2.5px; margin: 0; }
+  .puc-gate__tagline { font-size: 12px; }
+  .puc-gate__header { top: 16px; }
+
+  /* Collapse both top-corner panels into pill-shaped badges that sit
+   * on the tower shoulders. Full content is only available via the
+   * tap-to-overlay modal. */
   .puc-gate__panel {
-    position: static;
-    width: calc(50% - 12px);
-    max-width: none;
-  }
-  .puc-gate__panel-side {
     position: absolute;
-    top: 88px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    gap: 12px;
+    top: 76px;
+    min-width: 90px;
+    max-width: 44vw;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(20, 16, 36, 0.82);
+    border: 1px solid rgba(247, 232, 182, 0.35);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
   }
+  .puc-gate__panel--activity { left: 10px; }
+  .puc-gate__panel--leaderboard {
+    right: 10px;
+    /* Strip the parchment chrome on mobile — too noisy at badge size. */
+    clip-path: none;
+    background: rgba(36, 26, 12, 0.85);
+    border-color: rgba(247, 232, 182, 0.4);
+    color: #f7e8b6;
+    font-family: inherit;
+    padding: 6px 10px;
+  }
+  .puc-gate__scroll-handle { display: none; }
+
+  /* The full panel-title/list/note rendering is hidden — only the compact
+   * preview (one line) shows on mobile. */
+  .puc-gate__panel-title,
+  .puc-gate__activity--full,
+  .puc-gate__champions-full,
+  .puc-gate__panel--activity .puc-gate__panel-note,
+  .puc-gate__panel--leaderboard .puc-gate__panel-note {
+    display: none;
+  }
+  .puc-gate__activity-compact,
+  .puc-gate__champions-compact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 12px;
+    color: #f7e8b6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .puc-gate__champions-compact .puc-gate__lb-name {
+    color: #f7e8b6;
+    font-family: inherit;
+  }
+  .puc-gate__champions-compact .puc-gate__lb-points {
+    color: #f1c34c;
+    font-family: inherit;
+    font-size: 12px;
+    margin-left: auto;
+  }
+}
+
+/* ── Tap-to-expand overlay (shared by both corner panels) ───────────── */
+.puc-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: rgba(8, 6, 24, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: puc-gate-overlay-fadein 200ms ease-out;
+}
+@keyframes puc-gate-overlay-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.puc-gate-overlay__card {
+  width: min(520px, 100%);
+  max-height: min(80vh, 720px);
+  background: linear-gradient(
+    180deg,
+    rgba(40, 32, 70, 0.96),
+    rgba(20, 16, 38, 0.96)
+  );
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #ece9ff;
+}
+.puc-gate-overlay__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(241, 195, 76, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+}
+.puc-gate-overlay__title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.6px;
+  color: #f1c34c;
+}
+.puc-gate-overlay__close {
+  background: transparent;
+  color: #ece9ff;
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-gate-overlay__close:hover {
+  border-color: rgba(241, 195, 76, 0.7);
+  color: #f1c34c;
+}
+.puc-gate-overlay__body {
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+}
+.puc-gate__overlay-empty {
+  margin: 0;
+  font-style: italic;
+  color: #9b97c1;
+  text-align: center;
+}
+/* Inside the overlay the parchment leaderboard chrome would look out of
+ * place — neutralise the inherited .puc-gate__scroll styling on the
+ * embedded list. */
+.puc-gate-overlay__body .puc-gate__leaderboard {
+  font-size: 14px;
+}
+.puc-gate-overlay__body .puc-gate__lb-row {
+  color: #ece9ff;
+  border-bottom-color: rgba(241, 195, 76, 0.18);
+}
+.puc-gate-overlay__body .puc-gate__lb-rank,
+.puc-gate-overlay__body .puc-gate__lb-points {
+  color: #f1c34c;
+}
+.puc-gate-overlay__body .puc-gate__lb-title {
+  color: #b6aee0;
+}
+@media (max-width: 540px) {
+  .puc-gate-overlay { padding: 14px; }
+  .puc-gate-overlay__card { max-height: 88vh; }
 }
