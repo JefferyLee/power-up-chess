@@ -1,0 +1,245 @@
+/* Adventurer's Plaque — a brass-nameplate page with engraved sections.
+ * Visual language matches the gate's corner plaques (.puc-gate__panel).
+ */
+
+.puc-plaque-page {
+  min-height: 100dvh;
+  padding: 60px 20px 40px;
+  background:
+    radial-gradient(circle at 50% 30%, #1f1748 0%, #0a0815 70%);
+  color: #ece9ff;
+  font-family: 'IM Fell English', Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.puc-plaque-back {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  background: rgba(20, 16, 36, 0.78);
+  border: 1px solid rgba(247, 232, 182, 0.4);
+  border-radius: 999px;
+  color: #f7e8b6;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-plaque-back:hover {
+  background: rgba(40, 30, 60, 0.92);
+}
+
+.puc-plaque-status {
+  color: #d0c6f5;
+  font-style: italic;
+  padding: 40px 16px;
+}
+
+/* Brass card — same gradient palette as the gate panels, scaled up. */
+.puc-plaque-card {
+  position: relative;
+  width: min(440px, 100%);
+  background:
+    linear-gradient(180deg,
+      #e2b770 0%,
+      #c9994a 22%,
+      #9a6f28 70%,
+      #6f4d18 100%);
+  border: 1px solid #3d2810;
+  border-radius: 14px;
+  padding: 18px 22px 22px;
+  color: #2a1c08;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    inset 0 0 80px rgba(140, 95, 30, 0.25),
+    0 24px 64px rgba(0, 0, 0, 0.6);
+}
+/* Four corner rivets via four positioned radial gradients on ::before. */
+.puc-plaque-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12px 12px, #1a0e02 0 3px, rgba(0,0,0,0) 3.5px),
+    radial-gradient(circle at calc(100% - 12px) 12px, #1a0e02 0 3px, rgba(0,0,0,0) 3.5px),
+    radial-gradient(circle at 12px calc(100% - 12px), #1a0e02 0 3px, rgba(0,0,0,0) 3.5px),
+    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), #1a0e02 0 3px, rgba(0,0,0,0) 3.5px);
+}
+
+.puc-plaque-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(60, 38, 10, 0.4);
+  margin-bottom: 12px;
+}
+.puc-plaque-card__crest {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 35% 30%, #fcdf99, #b48745 70%, #6a4818);
+  border: 1px solid rgba(60, 38, 10, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.7);
+}
+.puc-plaque-card__name h1 {
+  margin: 0 0 2px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 22px;
+  letter-spacing: 1.4px;
+  color: #2a1c08;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 0 rgba(255, 230, 160, 0.5),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.puc-plaque-card__subtitle {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #4a3318;
+}
+
+.puc-plaque-section {
+  margin-bottom: 12px;
+}
+.puc-plaque-section:last-child {
+  margin-bottom: 0;
+}
+.puc-plaque-section__title {
+  margin: 0 0 6px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #3a230c;
+  font-weight: 700;
+  text-shadow:
+    0 1px 0 rgba(255, 230, 160, 0.55),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(60, 38, 10, 0.35);
+}
+
+.puc-plaque-row {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: 13px;
+}
+.puc-plaque-row__label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 10.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #5a3d18;
+}
+.puc-plaque-row__value {
+  color: #2a1c08;
+}
+.puc-plaque-row__value b {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  color: #2a1c08;
+}
+
+.puc-plaque-delta {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Cinzel', Georgia, serif;
+}
+.puc-plaque-delta--up   { color: #1f6e1f; }
+.puc-plaque-delta--down { color: #8a2a2a; }
+
+.puc-plaque-aside {
+  color: #4a3318;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.puc-plaque-trio {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  column-gap: 18px;
+  font-size: 13px;
+}
+
+.puc-plaque-plots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 8px;
+  font-size: 12px;
+  font-family: 'Cinzel', Georgia, serif;
+}
+.puc-plaque-plot {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(60, 38, 10, 0.08);
+  border: 1px solid rgba(60, 38, 10, 0.18);
+}
+.puc-plaque-plot--empty {
+  opacity: 0.55;
+}
+.puc-plaque-plot__label {
+  color: #5a3d18;
+  font-size: 10.5px;
+}
+.puc-plaque-plot__rating {
+  color: #2a1c08;
+  font-weight: 700;
+}
+
+.puc-plaque-pieces {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.puc-plaque-pieces__row {
+  display: inline-flex;
+  gap: 4px;
+  font-size: 28px;
+  line-height: 1;
+  /* Force the piece glyphs to render in a brass-friendly tone — the
+   * unicode-glyph sets pick up currentColor; SVG sets ignore it. */
+  color: #2a1c08;
+}
+.puc-plaque-pieces__row .puc-piece {
+  font-size: 28px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-plaque-pieces__label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: #3a230c;
+}
+
+@media (max-width: 480px) {
+  .puc-plaque-page { padding: 56px 12px 28px; }
+  .puc-plaque-card { padding: 16px 16px 18px; }
+  .puc-plaque-card__name h1 { font-size: 19px; letter-spacing: 1.2px; }
+  .puc-plaque-row { grid-template-columns: 80px 1fr; font-size: 12.5px; }
+  .puc-plaque-pieces__row { font-size: 24px; }
+}

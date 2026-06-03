@@ -45,6 +45,30 @@ export interface GetPublicProfileResponse {
   /** True if the user is currently in a chess or wizard room — drives
    *  the "Invite" button's disabled state at the call site. */
   inGame: boolean
+  // ── MVP3-P1 stats for the Adventurer's Plaque ──
+  /** Live chess Elo. null until the user finishes their first rated online game. */
+  chessRating: number | null
+  /** Most recent Elo delta (signed). null if no game yet. */
+  chessRatingDelta: number | null
+  /** Rated online chess games played. */
+  chessGames: number
+  /** Aggregate puzzle ELO (max across plots, or null). */
+  bestPuzzleRating: number | null
+  /** Per-plot puzzle ELO snapshot — keys are plot ids, values are ratings. */
+  puzzleRatings: Record<string, number>
+  /** AI-practice + local-board match counts. Write side TODO — `null`
+   *  when not yet tracked so the plaque renders "—". */
+  matchesAi: number | null
+  matchesLocal: number | null
+  /** Tournament history. Write side TODO. */
+  tournamentsEntered: number | null
+  tournamentsBestPlacement: number | null
+  /** Library stats. Write side TODO. */
+  booksRead: number | null
+  quizCorrect: number | null
+  quizAttempted: number | null
+  /** Currently-equipped piece-set id (used to render mini-pieces on the plaque). */
+  equippedPieceSet: string | null
 }
 
 export const getPublicProfile = onCall<
@@ -95,6 +119,17 @@ export const getPublicProfile = onCall<
   const hasTournamentCrown = freshest?.hasTournamentCrown
     ?? ((cosmetics.tournamentCrownExpiresAt ?? 0) > now2)
 
+  const puzzleRatings: Record<string, number> = {}
+  let bestPuzzleRating: number | null = null
+  if (guest.puzzleRatings) {
+    for (const [plot, r] of Object.entries(guest.puzzleRatings)) {
+      if (typeof r === 'number') {
+        puzzleRatings[plot] = r
+        if (bestPuzzleRating === null || r > bestPuzzleRating) bestPuzzleRating = r
+      }
+    }
+  }
+
   return {
     displayName: guest.displayName,
     normalizedName: normalized,
@@ -108,5 +143,18 @@ export const getPublicProfile = onCall<
     hostId: freshest?.hostId ?? 'lucy',
     currentLocation,
     inGame,
+    chessRating: typeof guest.chessRating === 'number' ? guest.chessRating : null,
+    chessRatingDelta: typeof guest.chessRatingDelta === 'number' ? guest.chessRatingDelta : null,
+    chessGames: guest.chessGames ?? 0,
+    bestPuzzleRating,
+    puzzleRatings,
+    matchesAi: typeof guest.matchesAi === 'number' ? guest.matchesAi : null,
+    matchesLocal: typeof guest.matchesLocal === 'number' ? guest.matchesLocal : null,
+    tournamentsEntered: typeof guest.tournamentsEntered === 'number' ? guest.tournamentsEntered : null,
+    tournamentsBestPlacement: typeof guest.tournamentsBestPlacement === 'number' ? guest.tournamentsBestPlacement : null,
+    booksRead: typeof guest.booksRead === 'number' ? guest.booksRead : null,
+    quizCorrect: typeof guest.quizCorrect === 'number' ? guest.quizCorrect : null,
+    quizAttempted: typeof guest.quizAttempted === 'number' ? guest.quizAttempted : null,
+    equippedPieceSet: guest.cosmetics?.pieceSet ?? null,
   }
 })

@@ -962,6 +962,19 @@ export interface GetPublicProfileResponse {
   hostId: 'lucy' | 'luca'
   currentLocation: LocationTag | null
   inGame: boolean
+  chessRating: number | null
+  chessRatingDelta: number | null
+  chessGames: number
+  bestPuzzleRating: number | null
+  puzzleRatings: Record<string, number>
+  matchesAi: number | null
+  matchesLocal: number | null
+  tournamentsEntered: number | null
+  tournamentsBestPlacement: number | null
+  booksRead: number | null
+  quizCorrect: number | null
+  quizAttempted: number | null
+  equippedPieceSet: string | null
 }
 
 const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfileResponse>(

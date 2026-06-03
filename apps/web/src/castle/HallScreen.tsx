@@ -152,6 +152,9 @@ export function HallScreen() {
         <h1 className="puc-hall__title">The Great Hall</h1>
         <div className="puc-hall__header-right">
           <FeedbackInbox />
+          <button type="button" className="puc-hall__link" onClick={() => navigate('/me')}>
+            My plaque
+          </button>
           <button type="button" className="puc-hall__link" onClick={() => navigate('/history')}>
             Match history
           </button>

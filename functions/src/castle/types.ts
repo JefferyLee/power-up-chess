@@ -289,7 +289,43 @@ export interface GuestDoc {
    *  (the last lesson). Reward fires once-ever; subsequent completions
    *  no-op. Drives the Hall tutorial card's "completed" state. */
   learnedBasicsAt?: number
+
+  // ── MVP3-P1 Adventurer's Plaque fields ──────────────────────────────
+  /** Live chess ELO. Default ELO_DEFAULT when missing. Updated by the
+   *  onRoomFinished trigger after every finished online chess game. */
+  chessRating?: number
+  /** Last Elo delta (signed). Drives the "↑42 / ↓17" indicator on the
+   *  plaque. Refreshed on every rated update. */
+  chessRatingDelta?: number
+  /** Number of rated online chess games — drives the K-factor in the
+   *  Elo formula (K=32 for new players, K=16 after PROVISIONAL_GAMES). */
+  chessGames?: number
+  /** AI-practice match count (write side TODO — currently always missing). */
+  matchesAi?: number
+  /** Local-board (pass-and-play) match count (write side TODO). */
+  matchesLocal?: number
+  /** Tournaments registered for (write side TODO). */
+  tournamentsEntered?: number
+  /** Best (numerically smallest) podium finish ever — 1 = first place,
+   *  2 = runner-up, etc. Missing = never placed. (Write side TODO.) */
+  tournamentsBestPlacement?: number
+  /** Library books read to completion (write side TODO). */
+  booksRead?: number
+  /** Correct story-quiz answers all-time (write side TODO). */
+  quizCorrect?: number
+  /** Total story-quiz attempts (write side TODO). */
+  quizAttempted?: number
 }
+
+/** Starting Elo for a brand-new player. Mid-beginner so a couple of
+ *  wins against an early-rated peer feels good but not laughable. */
+export const ELO_DEFAULT = 800
+/** Number of rated games before the K-factor halves. Standard FIDE-style
+ *  ramp-down — protects experienced players from giant single-game swings. */
+export const ELO_PROVISIONAL_GAMES = 30
+/** Higher K = faster movement. 32 for fresh accounts, 16 once seasoned. */
+export const ELO_K_PROVISIONAL = 32
+export const ELO_K_SEASONED = 16
 
 /** One-time castle-point reward for finishing all 5 basics lessons. */
 export const TUTORIAL_COMPLETE_REWARD = 50
