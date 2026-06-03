@@ -21,6 +21,7 @@ const TOURNAMENT_WINNER_REWARD_PTS = 100
 import {
   BYE_OPPONENT,
   callCloseTournament,
+  callCreateTournamentRoom,
   callGetCurrentTournament,
   callRegisterForTournament,
   callReportTournamentResult,
@@ -111,6 +112,28 @@ export function TournamentRoute() {
       setBusy(null)
     }
   }, [identity])
+
+  const onOpenRoom = useCallback(
+    async (roundIndex: number, pairingIndex: number) => {
+      if (!identity || identity.isBypass || !identity.sessionId) return
+      setBusy(`room-${roundIndex}-${pairingIndex}`)
+      setActionError(null)
+      try {
+        const res = await callCreateTournamentRoom({
+          normalizedName: identity.normalizedName,
+          sessionId: identity.sessionId,
+          roundIndex,
+          pairingIndex,
+        })
+        navigate(`/r/${res.roomId}`)
+      } catch (err) {
+        setActionError(messageFor(err))
+      } finally {
+        setBusy(null)
+      }
+    },
+    [identity, navigate],
+  )
 
   const onReport = useCallback(
     async (roundIndex: number, pairingIndex: number, result: Exclude<PairingResult, 'bye-white'>) => {
@@ -225,6 +248,7 @@ export function TournamentRoute() {
                   identity={identity}
                   busy={busy}
                   onReport={onReport}
+                  onOpenRoom={onOpenRoom}
                 />
               </>
             )}
@@ -418,11 +442,13 @@ function Rounds({
   identity,
   busy,
   onReport,
+  onOpenRoom,
 }: {
   tournament: TournamentDoc
   identity: ReturnType<typeof useCastle>['identity']
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
+  onOpenRoom: (r: number, p: number) => void
 }) {
   if (tournament.rounds.length === 0) {
     return (
@@ -446,6 +472,7 @@ function Rounds({
           nameMap={nameMap}
           busy={busy}
           onReport={onReport}
+          onOpenRoom={onOpenRoom}
           locked={tournament.status === 'closed'}
         />
       ))}
@@ -459,6 +486,7 @@ function RoundCard({
   nameMap,
   busy,
   onReport,
+  onOpenRoom,
   locked,
 }: {
   round: TournamentRound
@@ -466,6 +494,7 @@ function RoundCard({
   nameMap: Map<string, string>
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
+  onOpenRoom: (r: number, p: number) => void
   locked: boolean
 }) {
   return (
@@ -481,6 +510,7 @@ function RoundCard({
             nameMap={nameMap}
             busy={busy}
             onReport={onReport}
+            onOpenRoom={onOpenRoom}
             locked={locked}
           />
         ))}
@@ -496,6 +526,7 @@ function PairingRow({
   nameMap,
   busy,
   onReport,
+  onOpenRoom,
   locked,
 }: {
   roundIndex: number
@@ -504,6 +535,7 @@ function PairingRow({
   nameMap: Map<string, string>
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
+  onOpenRoom: (r: number, p: number) => void
   locked: boolean
 }) {
   const whiteName = nameMap.get(pairing.white) ?? pairing.white
@@ -511,7 +543,10 @@ function PairingRow({
     pairing.black === BYE_OPPONENT ? 'bye' : nameMap.get(pairing.black) ?? pairing.black
   const mine = !locked && (pairing.white === me || pairing.black === me)
   const busyKey = `report-${roundIndex}-${pairing.index}`
+  const roomBusyKey = `room-${roundIndex}-${pairing.index}`
   const isBye = pairing.black === BYE_OPPONENT
+  const iAmWhite = mine && pairing.white === me
+  const showRoomCta = mine && !isBye && !pairing.result
   return (
     <li
       className={
@@ -527,6 +562,31 @@ function PairingRow({
         <span className="puc-tour__pairing-color">Black</span>
         <span className="puc-tour__pairing-name">{blackName}</span>
       </div>
+      {showRoomCta && (
+        <div className="puc-tour__pairing-room">
+          {pairing.roomId ? (
+            <a
+              href={`/r/${pairing.roomId}`}
+              className="puc-tour__btn puc-tour__btn--tiny puc-tour__btn--primary"
+            >
+              {iAmWhite ? 'Open your game →' : 'Join your game →'}
+            </a>
+          ) : iAmWhite ? (
+            <button
+              type="button"
+              className="puc-tour__btn puc-tour__btn--tiny puc-tour__btn--primary"
+              onClick={() => onOpenRoom(roundIndex, pairing.index)}
+              disabled={busy === roomBusyKey}
+            >
+              {busy === roomBusyKey ? 'Opening…' : 'Start game room'}
+            </button>
+          ) : (
+            <span className="puc-tour__pairing-pending">
+              waiting for {whiteName} to open the room…
+            </span>
+          )}
+        </div>
+      )}
       <div className="puc-tour__pairing-result">
         {pairing.result ? (
           <span className={`puc-tour__pairing-outcome puc-tour__pairing-outcome--${pairing.result}`}>

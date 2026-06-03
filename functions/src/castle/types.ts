@@ -184,6 +184,9 @@ export interface TopGuest {
   hasHalo?: boolean
   /** Has an active 3-win streak crown (last 72 h). Overrides halo visually. */
   hasCrown?: boolean
+  /** P2.H — Weekly Tournament champion crown (last 7 days). Highest
+   *  priority of the three when rendering one marker per kid. */
+  hasTournamentCrown?: boolean
 }
 
 /** Firestore shape for guests/{normalizedName}. */

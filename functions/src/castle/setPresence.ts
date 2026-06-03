@@ -36,6 +36,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     const db = getFirestore()
     let hasHalo = false
     let hasCrown = false
+    let hasTournamentCrown = false
     let title: string | null = null
     // Verify non-bypass identity against the guest doc + read cosmetic state.
     if (!isBypass) {
@@ -63,6 +64,8 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       hasHalo = typeof halo === 'number' && halo > now
       const crown = guest.cosmetics?.winStreakCrownExpiresAt
       hasCrown = typeof crown === 'number' && crown > now
+      const tCrown = guest.cosmetics?.tournamentCrownExpiresAt
+      hasTournamentCrown = typeof tCrown === 'number' && tCrown > now
       const lifetime = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
       title = titleFor(lifetime)?.label ?? null
     }
@@ -80,6 +83,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       ...(location ? { location } : {}),
       ...(hasHalo ? { hasHalo: true } : {}),
       ...(hasCrown ? { hasCrown: true } : {}),
+      ...(hasTournamentCrown ? { hasTournamentCrown: true } : {}),
       ...(title ? { title } : {}),
     }
     await db.doc(`lobby/presence/items/${sessionId}`).set(presence)

@@ -44,12 +44,16 @@ export const refreshCastlePublicStats = onSchedule(
       const titleLabel = titleFor(lifetime)?.label
       const halo = g.cosmetics?.duelWinnerExpiresAt
       const crown = g.cosmetics?.winStreakCrownExpiresAt
+      const tCrown = g.cosmetics?.tournamentCrownExpiresAt
       return {
         displayName: g.displayName,
         castlePoints: g.castlePoints,
         ...(titleLabel ? { title: titleLabel } : {}),
         ...(typeof halo === 'number' && halo > now ? { hasHalo: true } : {}),
         ...(typeof crown === 'number' && crown > now ? { hasCrown: true } : {}),
+        ...(typeof tCrown === 'number' && tCrown > now
+          ? { hasTournamentCrown: true }
+          : {}),
       }
     })
 

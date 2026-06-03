@@ -144,11 +144,13 @@ export function GateScreen() {
                 <li key={`${g.displayName}-${i}`} className="puc-gate__lb-row">
                   <span className="puc-gate__lb-rank">{i + 1}</span>
                   <span className="puc-gate__lb-name">
-                    {g.hasCrown
-                      ? <span className="puc-gate__lb-mark puc-gate__lb-mark--crown" title="3+ duel wins in a row">🔥</span>
-                      : g.hasHalo
-                        ? <span className="puc-gate__lb-mark puc-gate__lb-mark--halo" title="Recent duel winner">✨</span>
-                        : null}
+                    {g.hasTournamentCrown
+                      ? <span className="puc-gate__lb-mark puc-gate__lb-mark--crown" title="Weekly Tournament champion">🏆</span>
+                      : g.hasCrown
+                        ? <span className="puc-gate__lb-mark puc-gate__lb-mark--crown" title="3+ duel wins in a row">🔥</span>
+                        : g.hasHalo
+                          ? <span className="puc-gate__lb-mark puc-gate__lb-mark--halo" title="Recent duel winner">✨</span>
+                          : null}
                     {g.displayName}
                     {g.title && <span className="puc-gate__lb-title"> · {g.title}</span>}
                   </span>

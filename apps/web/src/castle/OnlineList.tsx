@@ -145,22 +145,26 @@ function OnlineRow({
   onNav: (href: string) => void
 }) {
   const view = viewFor(row.location)
-  const cosmetic = row.hasCrown
-    ? { icon: '🔥', title: '3+ duel wins in a row — last 72h' }
-    : row.hasHalo
-      ? { icon: '✨', title: 'Duel winner — last 24h' }
-      : null
+  const cosmetic = row.hasTournamentCrown
+    ? { icon: '🏆', title: 'Weekly Tournament champion — last 7 days' }
+    : row.hasCrown
+      ? { icon: '🔥', title: '3+ duel wins in a row — last 72h' }
+      : row.hasHalo
+        ? { icon: '✨', title: 'Duel winner — last 24h' }
+        : null
   const showAction = !!view.action && !isYou
   return (
     <li
       className={
         'puc-online__row' +
         (isYou ? ' puc-online__row--you' : '') +
-        (row.hasCrown
-          ? ' puc-online__row--crown'
-          : row.hasHalo
-            ? ' puc-online__row--halo'
-            : '')
+        (row.hasTournamentCrown
+          ? ' puc-online__row--tcrown'
+          : row.hasCrown
+            ? ' puc-online__row--crown'
+            : row.hasHalo
+              ? ' puc-online__row--halo'
+              : '')
       }
     >
       <span className="puc-online__name">

@@ -30,6 +30,9 @@ export interface Pairing {
   /** normalizedName of whichever player reported the result. */
   reportedBy?: string
   reportedAt?: number
+  /** P2.H Slice 4 — private game room minted by the white player.
+   *  Both kids click into /r/{roomId} to play. */
+  roomId?: string
 }
 
 export interface TournamentRound {

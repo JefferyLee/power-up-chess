@@ -641,6 +641,9 @@ export interface Pairing {
   result?: PairingResult
   reportedBy?: string
   reportedAt?: number
+  /** P2.H Slice 4 — game room minted by the white player; both kids
+   *  play through /r/{roomId}. */
+  roomId?: string
 }
 export interface TournamentRound {
   index: number
@@ -720,6 +723,21 @@ const closeTournamentFn = httpsCallable<
   CloseTournamentRequest,
   CloseTournamentResponse
 >(functions, 'closeTournament')
+
+export interface CreateTournamentRoomRequest {
+  normalizedName: string
+  sessionId: string
+  roundIndex: number
+  pairingIndex: number
+}
+export interface CreateTournamentRoomResponse {
+  ok: true
+  roomId: string
+}
+const createTournamentRoomFn = httpsCallable<
+  CreateTournamentRoomRequest,
+  CreateTournamentRoomResponse
+>(functions, 'createTournamentRoom')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -837,5 +855,11 @@ export async function callCloseTournament(
   req: CloseTournamentRequest,
 ): Promise<CloseTournamentResponse> {
   const { data } = await closeTournamentFn(req)
+  return data
+}
+export async function callCreateTournamentRoom(
+  req: CreateTournamentRoomRequest,
+): Promise<CreateTournamentRoomResponse> {
+  const { data } = await createTournamentRoomFn(req)
   return data
 }

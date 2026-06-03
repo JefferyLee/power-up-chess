@@ -15,6 +15,9 @@ export interface TopGuest {
   hasHalo?: boolean
   /** Active 3-win streak crown. Overrides halo visually. */
   hasCrown?: boolean
+  /** P2.H — Weekly Tournament champion crown (last 7 days). Highest
+   *  priority of the three. */
+  hasTournamentCrown?: boolean
 }
 
 export interface PublicStats {

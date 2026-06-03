@@ -56,6 +56,10 @@ export interface ChatMessageDoc {
   /** True if the author had the streak crown (3+ consecutive Wizard's
    *  Duel wins) at send time. Visually overrides hasHalo. */
   hasCrown?: boolean
+  /** P2.H — true if the author was a Weekly Tournament champion at
+   *  send time (within the last 7 days). Highest priority of the
+   *  three cosmetics. */
+  hasTournamentCrown?: boolean
   /** Author's lifetime-earn title label at send time ("Apprentice", etc.),
    *  omitted when below the entry threshold. Snapshot — historical
    *  bubbles keep showing the title from when they were posted. */
@@ -97,6 +101,9 @@ export interface PresenceDoc {
   hasHalo?: boolean
   /** True if the guest currently has the streak crown. Overrides halo. */
   hasCrown?: boolean
+  /** P2.H — true while the Weekly Tournament champion crown is
+   *  active. Highest priority of the three cosmetics. */
+  hasTournamentCrown?: boolean
   /** Live lifetime-earn title label, refreshed each heartbeat. */
   title?: string
 }

@@ -429,6 +429,14 @@
   font-size: 12px;
   border-radius: 6px;
 }
+.puc-tour__pairing-room {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.puc-tour__pairing-room .puc-tour__btn {
+  text-decoration: none;
+}
 
 @media (max-width: 540px) {
   .puc-tour__header { padding: 12px 14px; gap: 12px; }

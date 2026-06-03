@@ -58,6 +58,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     let guestRefForDeduct: FirebaseFirestore.DocumentReference | null = null
     let hasHalo = false
     let hasCrown = false
+    let hasTournamentCrown = false
     let title: string | null = null
     if (!isBypass) {
       const guestRef = db.doc(`guests/${normalizedName}`)
@@ -78,6 +79,8 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       hasHalo = typeof halo === 'number' && halo > now
       const crown = guest.cosmetics?.winStreakCrownExpiresAt
       hasCrown = typeof crown === 'number' && crown > now
+      const tCrown = guest.cosmetics?.tournamentCrownExpiresAt
+      hasTournamentCrown = typeof tCrown === 'number' && tCrown > now
       const lifetime = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
       title = titleFor(lifetime)?.label ?? null
     }
@@ -102,6 +105,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       ts: Date.now(),
       ...(hasHalo ? { hasHalo: true } : {}),
       ...(hasCrown ? { hasCrown: true } : {}),
+      ...(hasTournamentCrown ? { hasTournamentCrown: true } : {}),
       ...(title ? { title } : {}),
     }
     const ref = await db.collection('lobby/messages/items').add(msg)

@@ -35,6 +35,8 @@ export interface ChatMessage {
   hasHalo?: boolean
   /** Streak crown — 3+ consecutive Wizard's Duel wins. Overrides halo. */
   hasCrown?: boolean
+  /** P2.H — Weekly Tournament champion crown. Highest priority. */
+  hasTournamentCrown?: boolean
   /** Lifetime-earn title at send time (Apprentice/Adept/Sorcerer/Archmage). */
   title?: string
 }
@@ -67,6 +69,9 @@ export interface PresenceRow {
   hasHalo?: boolean
   /** True if this guest currently has the 3-win streak crown. Overrides halo. */
   hasCrown?: boolean
+  /** P2.H — true while the Weekly Tournament champion crown is active.
+   *  Highest priority of the three. */
+  hasTournamentCrown?: boolean
   /** Live lifetime-earn title label. */
   title?: string
 }
