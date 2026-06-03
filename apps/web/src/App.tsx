@@ -22,6 +22,7 @@ import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
 import { KnightsRunRoute } from './games/knightsrun/KnightsRunRoute'
+import { DiagnoseRoute } from './screens/DiagnoseRoute'
 import { EndgameRoute } from './endgame/EndgameRoute'
 import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { OpeningsRoute } from './openings/OpeningsRoute'
@@ -112,6 +113,7 @@ export function App() {
           <Route path="/openings" element={<OpeningsRoute />} />
           <Route path="/openings/:id" element={<OpeningLessonScreen />} />
           <Route path="/tournament" element={<TournamentRoute />} />
+          <Route path="/diagnose" element={<DiagnoseRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </OutgoingInviteProvider>

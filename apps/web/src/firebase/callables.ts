@@ -964,3 +964,32 @@ export async function callGetPublicProfile(
   const { data } = await getPublicProfileFn(req)
   return data
 }
+
+// TEMP — diagnostic helper for the multi-uid invite bug. Returns the
+// caller's authoritative state from Firestore so the /diagnose page
+// can show why an invite isn't landing. Remove after the fix lands.
+export interface DebugInvitesResponse {
+  authUid: string
+  guestNormalizedName: string | null
+  guestUids: string[]
+  guestUidsMatchAuth: boolean
+  recentPresenceForMe: Array<{ sessionId: string; uid: string; normalizedName: string; lastSeenAt: number }>
+  pendingInvitesByToUidsContains: number
+  pendingInvitesByToUidContains: number
+  pendingInvitesToMyNormalizedName: Array<{
+    inviteId: string
+    fromName: string
+    toUid: string
+    toUids: string[]
+    toUidsContainsMe: boolean
+    toUidEqualsMe: boolean
+  }>
+}
+const debugInvitesFn = httpsCallable<Record<string, never>, DebugInvitesResponse>(
+  functions,
+  'debugInvites',
+)
+export async function callDebugInvites(): Promise<DebugInvitesResponse> {
+  const { data } = await debugInvitesFn({})
+  return data
+}

@@ -48,6 +48,7 @@ export { submitFeedback, markFeedbackRead, deleteFeedback } from './feedback/fee
 export { sendInvite } from './invitations/sendInvite'
 export { respondInvite } from './invitations/respondInvite'
 export { cancelInvite } from './invitations/cancelInvite'
+export { debugInvites } from './invitations/debugInvites'
 export { getPublicProfile } from './castle/getPublicProfile'
 export { awardTutorialComplete } from './castle/awardTutorialComplete'
 export { purchaseCosmetic } from './cosmetics/purchaseCosmetic'

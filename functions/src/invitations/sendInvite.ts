@@ -95,6 +95,16 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
       }
       const toGuest = toSnap.data() as GuestDoc
       const allUids = toGuest.uids ?? []
+      // TEMP DEBUG — log what we know about the recipient so we can see
+      // why an invite to a multi-device account isn't landing in the
+      // inbox. Strip after the bug is fixed.
+      console.log('[sendInvite-debug]', {
+        from: fromNormalized,
+        to: toNormalized,
+        toUidsCount: allUids.length,
+        toUidsTail: allUids.slice(-5),
+        fromUid: req.auth!.uid,
+      })
       if (allUids.length === 0) {
         throw new HttpsError('failed-precondition', 'Recipient has never signed in.')
       }
