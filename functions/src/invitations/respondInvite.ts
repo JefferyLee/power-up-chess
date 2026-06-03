@@ -63,7 +63,12 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
       const snap = await tx.get(inviteRef)
       if (!snap.exists) throw new HttpsError('not-found', 'Invitation not found.')
       const invite = snap.data() as InvitationDoc
-      if (invite.toUid !== req.auth!.uid) {
+      // The invite may have been sent to a previous device of the same
+      // accepter (multi-uid magic-word account). Any uid in toUids is
+      // legitimate. Keep toUid in the legacy single-string check for
+      // back-compat with docs written before the array existed.
+      const targets = invite.toUids ?? (invite.toUid ? [invite.toUid] : [])
+      if (!targets.includes(req.auth!.uid)) {
         throw new HttpsError('permission-denied', 'This invitation was sent to someone else.')
       }
       if (invite.status !== 'pending') {

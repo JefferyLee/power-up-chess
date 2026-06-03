@@ -31,7 +31,15 @@ export interface InvitationDoc {
   /** Normalized lookup key for guests/{name}. */
   fromNormalizedName: string
 
+  /** Convenience field — the freshest known uid for the recipient. Used
+   *  as the room's black.playerId on accept. */
   toUid: string
+  /** Every known uid for the recipient (capped to the most recent N).
+   *  Drives the recipient's onSnapshot via array-contains so an invite
+   *  reaches whichever device the recipient is currently using —
+   *  Anonymous Auth mints a fresh uid per browser/device, so the same
+   *  magic-word account can hold several. */
+  toUids: string[]
   toName: string
   toNormalizedName: string
 

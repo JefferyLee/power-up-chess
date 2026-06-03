@@ -17,7 +17,12 @@ export interface InvitationDoc {
   fromUid: string
   fromName: string
   fromNormalizedName: string
+  /** Legacy single-uid field; redundant with toUids on new docs. */
   toUid: string
+  /** Every known uid for the recipient. The listener uses
+   *  array-contains so an invite reaches whichever device the recipient
+   *  is currently signed in on. */
+  toUids: string[]
   toName: string
   toNormalizedName: string
   timeControl: TimeControl | null

@@ -21,9 +21,12 @@ export function useIncomingInvites(uid: string | null): InvitationDoc[] {
       setRaw([])
       return
     }
+    // array-contains lets a single invite reach every device the
+    // recipient currently has signed in (Anonymous Auth = uid per
+    // device). The doc carries the recipient's most-recent ~10 uids.
     const q = query(
       collection(db, 'invitations'),
-      where('toUid', '==', uid),
+      where('toUids', 'array-contains', uid),
       where('status', '==', 'pending'),
     )
     const unsub = onSnapshot(

@@ -94,10 +94,18 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
         throw new HttpsError('not-found', 'That guest doesn\'t exist.')
       }
       const toGuest = toSnap.data() as GuestDoc
-      const toUid = toGuest.uids?.[0]
-      if (!toUid) {
-        throw new HttpsError('failed-precondition', 'Recipient has no active session.')
+      const allUids = toGuest.uids ?? []
+      if (allUids.length === 0) {
+        throw new HttpsError('failed-precondition', 'Recipient has never signed in.')
       }
+      // Anonymous Auth mints a fresh uid per browser/device — the same
+      // magic-word can collect dozens over the kid's lifetime. Cap to
+      // the most-recent 10 so doc size stays modest while still
+      // covering the realistic "iPad + iPhone + laptop" multi-device
+      // case. The freshest is at the end of the array (uids are
+      // appended on castleEnter).
+      const toUids = allUids.slice(-10)
+      const toUid = toUids[toUids.length - 1]!
 
       const doc: InvitationDoc = {
         inviteId: inviteRef.id,
@@ -105,6 +113,7 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
         fromName: fromGuest.displayName,
         fromNormalizedName: fromNormalized,
         toUid,
+        toUids,
         toName: toGuest.displayName,
         toNormalizedName: toNormalized,
         timeControl,
