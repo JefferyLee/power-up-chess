@@ -21,6 +21,7 @@ import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute
 import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
+import { KnightsRunRoute } from './games/knightsrun/KnightsRunRoute'
 import { EndgameRoute } from './endgame/EndgameRoute'
 import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { OpeningsRoute } from './openings/OpeningsRoute'
@@ -99,6 +100,7 @@ export function App() {
           <Route path="/shop" element={<ShopScreen />} />
           <Route path="/library" element={<LibraryRoute />} />
           <Route path="/knights-hop" element={<KnightsHopRoute />} />
+          <Route path="/knights-run" element={<KnightsRunRoute />} />
           <Route path="/endgame" element={<EndgameRoute />} />
           <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
           <Route path="/openings" element={<OpeningsRoute />} />

@@ -317,6 +317,13 @@ export function HallScreen() {
             variant="oak"
             onClick={() => navigate('/tournament')}
           />
+          <RoomDoor
+            icon="🐎"
+            label="Knight's Run"
+            blurb="Auto-runner — jump over pieces and rack up distance. NEW."
+            variant="starry"
+            onClick={() => navigate('/knights-run')}
+          />
         </div>
       </section>
 
