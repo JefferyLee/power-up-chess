@@ -50,10 +50,19 @@ export interface TournamentDoc {
   closedAt?: number
 }
 
-/** Beta entry gate — must have solved at least this many puzzles
- *  total. Slice 3 will replace with the spec's "50 puzzles solved
- *  THIS WEEK" rule once weekly counters are in place. */
-export const TOURNAMENT_ENTRY_MIN_SOLVES = 5
+/** Spec gate — must have solved this many puzzles in the same ISO
+ *  week as the tournament. Tracked via guest.puzzleSolvesThisWeek
+ *  (incremented by submitPuzzleAttempt). */
+export const TOURNAMENT_ENTRY_WEEKLY_SOLVES = 50
+/** Beta fallback — lifetime puzzle solves. Lets existing engaged
+ *  kids in during the rollout while the weekly counter accumulates.
+ *  Will tighten once weekly tracking has been live for a few weeks. */
+export const TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES = 5
+
+/** P2.H Slice 3 — winner reward. */
+export const TOURNAMENT_WINNER_REWARD_PTS = 100
+/** How long the winner's 🏆 crown cosmetic lasts (set on close). */
+export const TOURNAMENT_CROWN_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Soft close horizon — one week from open. */
 export const TOURNAMENT_WEEK_MS = 7 * 24 * 60 * 60 * 1000

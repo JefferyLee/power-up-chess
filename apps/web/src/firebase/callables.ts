@@ -698,6 +698,7 @@ export interface CloseTournamentResponse {
   ok: true
   tournament: TournamentDoc
   winnerName?: string
+  yourCastlePoints?: number
 }
 const getCurrentTournamentFn = httpsCallable<
   Record<string, never>,

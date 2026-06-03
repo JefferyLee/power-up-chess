@@ -24,6 +24,7 @@ import {
   type SubmitPuzzleAttemptResponse,
 } from './types'
 import { DAILY_BONUS_POINTS, laDayKey } from './dailyFive'
+import { tournamentWeekKey } from '../tournament/weekKey'
 
 export const submitPuzzleAttempt = onCall<
   SubmitPuzzleAttemptRequest,
@@ -112,6 +113,18 @@ export const submitPuzzleAttempt = onCall<
           : { count: 1, dayKey: today }
     }
 
+    // This-week's-solves counter for the Weekly Tournament entry
+    // gate (P2.H Slice 3). Same lazy-reset shape as the daily.
+    let nextPuzzleSolvesThisWeek = guest.puzzleSolvesThisWeek
+    if (success) {
+      const thisWeek = tournamentWeekKey(Date.now())
+      const cur = guest.puzzleSolvesThisWeek
+      nextPuzzleSolvesThisWeek =
+        cur && cur.weekKey === thisWeek
+          ? { count: cur.count + 1, weekKey: thisWeek }
+          : { count: 1, weekKey: thisWeek }
+    }
+
     // Today's Five hook — if this puzzle is in today's slate, record the
     // slot result + fire the +10 completion bonus on the 5th attempt.
     let dailyCompletedNow = false
@@ -169,6 +182,9 @@ export const submitPuzzleAttempt = onCall<
     }
     if (nextPuzzleSolvesToday !== guest.puzzleSolvesToday) {
       update.puzzleSolvesToday = nextPuzzleSolvesToday
+    }
+    if (nextPuzzleSolvesThisWeek !== guest.puzzleSolvesThisWeek) {
+      update.puzzleSolvesThisWeek = nextPuzzleSolvesThisWeek
     }
     if (totalPoints > 0) {
       update.castlePoints = FieldValue.increment(totalPoints)

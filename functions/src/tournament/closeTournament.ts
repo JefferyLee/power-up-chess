@@ -3,11 +3,15 @@
 // the winner by raw score and stamps the doc. The winner crown
 // cosmetic + 100 castle-point award land in Slice 3.
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
 import { computeScores } from './pairing'
-import type { TournamentDoc } from './types'
+import {
+  TOURNAMENT_CROWN_MS,
+  TOURNAMENT_WINNER_REWARD_PTS,
+  type TournamentDoc,
+} from './types'
 import { tournamentWeekKey } from './weekKey'
 
 export interface CloseTournamentRequest {
@@ -19,6 +23,10 @@ export interface CloseTournamentResponse {
   ok: true
   tournament: TournamentDoc
   winnerName?: string
+  /** Updated castlePoints if the caller was the winner — lets the
+   *  client refresh the local identity pill without a guest-doc
+   *  re-fetch. Absent for everyone else. */
+  yourCastlePoints?: number
 }
 
 export const closeTournament = onCall<
@@ -89,7 +97,7 @@ export const closeTournament = onCall<
     const scores = computeScores(tournament.participants, tournament.rounds)
     let topScore = -Infinity
     let winner: { displayName: string; normalizedName: string } | null = null
-    // Tiebreak: earliest registration wins (Buchholz comes in slice 3).
+    // Tiebreak: earliest registration wins (Buchholz comes later).
     const orderedByReg = [...tournament.participants].sort(
       (a, b) => a.registeredAt - b.registeredAt,
     )
@@ -101,12 +109,43 @@ export const closeTournament = onCall<
       }
     }
 
+    // Pre-read the winner's guest doc — Firestore txns require all
+    // reads before any writes, so we can't fetch it conditionally
+    // after computing scores unless we do it here before the writes
+    // below. Re-uses the caller's guest doc when they're the winner.
+    let winnerGuest: GuestDoc | null = null
+    if (winner) {
+      if (winner.normalizedName === normalizedName) {
+        winnerGuest = guest
+      } else {
+        const wSnap = await tx.get(db.doc(`guests/${winner.normalizedName}`))
+        if (wSnap.exists) winnerGuest = wSnap.data() as GuestDoc
+      }
+    }
+
     const now = Date.now()
     tx.update(tournamentRef, {
       status: 'closed',
       closedAt: now,
       winnerName: winner?.displayName ?? null,
     })
+
+    // Crown + 100 pts award (P2.H Slice 3).
+    if (winner && winnerGuest) {
+      const lifetimePrev =
+        winnerGuest.lifetimeEarned ?? Math.max(0, winnerGuest.castlePoints)
+      tx.update(db.doc(`guests/${winner.normalizedName}`), {
+        castlePoints: FieldValue.increment(TOURNAMENT_WINNER_REWARD_PTS),
+        lifetimeEarned: lifetimePrev + TOURNAMENT_WINNER_REWARD_PTS,
+        'cosmetics.tournamentCrownExpiresAt': now + TOURNAMENT_CROWN_MS,
+      })
+    }
+
+    const yourCastlePoints =
+      winner?.normalizedName === normalizedName && winnerGuest
+        ? winnerGuest.castlePoints + TOURNAMENT_WINNER_REWARD_PTS
+        : undefined
+
     return {
       ok: true,
       tournament: {
@@ -116,6 +155,7 @@ export const closeTournament = onCall<
         winnerName: winner?.displayName,
       },
       winnerName: winner?.displayName,
+      ...(yourCastlePoints !== undefined ? { yourCastlePoints } : {}),
     }
   })
 })

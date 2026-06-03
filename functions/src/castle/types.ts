@@ -267,6 +267,13 @@ export interface GuestDoc {
     clearedIndexes: number[]
     lessonMasteredAt?: number
   }>>
+  /** This week's puzzle solve count, ISO-week-scoped (LA tz). Lazily
+   *  reset to 1 on the first solve of a new weekKey. Used by the
+   *  Weekly Tournament entry gate (50 solves/week per spec). */
+  puzzleSolvesThisWeek?: {
+    count: number
+    weekKey: string
+  }
   /** Today's puzzle solve count, LA-day-scoped. Lazily reset to 1 on
    *  the first solve of a new dayKey. Used by the gate's live pulse
    *  to surface top-solvers-today. */
@@ -309,6 +316,10 @@ export interface GuestCosmetics {
   /** Piece-set ids the guest has purchased. Free sets (classic, outline)
    *  are NOT stored here — they're always considered owned. */
   ownedPieceSets?: string[]
+  /** P2.H — Weekly Tournament champion crown expiry (1 week after a
+   *  win). Surfaced as a 🏆 badge in the tournament page + future
+   *  Hall integration. */
+  tournamentCrownExpiresAt?: number
 }
 
 /** Hours the duel-winner halo lasts after a Wizard's Duel victory. */

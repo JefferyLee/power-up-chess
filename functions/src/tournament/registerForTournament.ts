@@ -5,7 +5,8 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
 import {
-  TOURNAMENT_ENTRY_MIN_SOLVES,
+  TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES,
+  TOURNAMENT_ENTRY_WEEKLY_SOLVES,
   TOURNAMENT_WEEK_MS,
   type TournamentDoc,
   type TournamentParticipant,
@@ -67,11 +68,23 @@ export const registerForTournament = onCall<
         'Your session is no longer active. Please refresh.',
       )
     }
-    const solved = guest.puzzleStats?.solved ?? 0
-    if (solved < TOURNAMENT_ENTRY_MIN_SOLVES) {
+    // Spec gate: 50 puzzles solved THIS week. Beta fallback: lifetime
+    // solves >= 5 (so kids who already had momentum before weekly
+    // tracking went live can still enter). Either passing is fine.
+    const weekKeyNow = tournamentWeekKey()
+    const weeklyCount =
+      guest.puzzleSolvesThisWeek?.weekKey === weekKeyNow
+        ? guest.puzzleSolvesThisWeek.count
+        : 0
+    const lifetimeSolved = guest.puzzleStats?.solved ?? 0
+    const weeklyOk = weeklyCount >= TOURNAMENT_ENTRY_WEEKLY_SOLVES
+    const lifetimeOk = lifetimeSolved >= TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES
+    if (!weeklyOk && !lifetimeOk) {
       throw new HttpsError(
         'failed-precondition',
-        `Need ${TOURNAMENT_ENTRY_MIN_SOLVES} puzzle solves to enter — you have ${solved}.`,
+        `Need ${TOURNAMENT_ENTRY_WEEKLY_SOLVES} puzzles solved this week ` +
+          `(or ${TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES} lifetime during beta) — ` +
+          `you have ${weeklyCount} this week, ${lifetimeSolved} lifetime.`,
       )
     }
 

@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
+const TOURNAMENT_WINNER_REWARD_PTS = 100
 import {
   BYE_OPPONENT,
   callCloseTournament,
@@ -33,7 +34,7 @@ import './TournamentRoute.css'
 
 export function TournamentRoute() {
   const navigate = useNavigate()
-  const { identity } = useCastle()
+  const { identity, setCastlePoints } = useCastle()
   const [tournament, setTournament] = useState<TournamentDoc | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -147,12 +148,17 @@ export function TournamentRoute() {
         sessionId: identity.sessionId,
       })
       setTournament(normalizeTournament(res.tournament))
+      // If the caller won, the server pre-computed their new balance;
+      // sync the local identity pill so the +100 shows up immediately.
+      if (typeof res.yourCastlePoints === 'number') {
+        setCastlePoints(res.yourCastlePoints)
+      }
     } catch (err) {
       setActionError(messageFor(err))
     } finally {
       setBusy(null)
     }
-  }, [identity])
+  }, [identity, setCastlePoints])
 
   return (
     <div className="puc-tour">
@@ -181,6 +187,25 @@ export function TournamentRoute() {
         {tournament && (
           <>
             <TournamentHeader tournament={tournament} />
+
+            {tournament.status === 'closed' &&
+              tournament.winnerName === identity?.displayName && (
+                <section className="puc-tour__champion">
+                  <div className="puc-tour__champion-crown" aria-hidden="true">
+                    🏆
+                  </div>
+                  <div className="puc-tour__champion-body">
+                    <h2 className="puc-tour__champion-title">
+                      You won this week!
+                    </h2>
+                    <p className="puc-tour__champion-line">
+                      +{TOURNAMENT_WINNER_REWARD_PTS} castle points landed in
+                      your purse, and the champion crown sits on your
+                      profile for the next 7 days.
+                    </p>
+                  </div>
+                </section>
+              )}
 
             {tournament.status === 'registration' && (
               <RegistrationPanel
@@ -227,9 +252,8 @@ export function TournamentRoute() {
           <h3 className="puc-tour__roadmap-title">Coming soon</h3>
           <ul>
             <li>Auto-generated private game rooms per pairing</li>
-            <li>Winner crown cosmetic (1-week halo) + 100 castle points</li>
-            <li>Entry tightens to "50 puzzle solves THIS week"</li>
             <li>Result disputes + admin override</li>
+            <li>Champion crown badge surfaced in the Hall + chess screens</li>
           </ul>
         </aside>
       </main>
