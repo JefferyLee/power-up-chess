@@ -18,6 +18,7 @@ import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
+import { WizardV2Route } from './games/wizardv2/WizardV2Route'
 import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
@@ -103,6 +104,7 @@ export function App() {
           <Route path="/forest" element={<ForestRoute />} />
           <Route path="/wizard" element={<WizardDuelRoute />} />
           <Route path="/wizard/:roomId" element={<WizardRoomRoute />} />
+          <Route path="/wizard/v2/:roomId" element={<WizardV2Route />} />
           <Route path="/shop" element={<ShopScreen />} />
           <Route path="/library" element={<LibraryRoute />} />
           <Route path="/knights-hop" element={<KnightsHopRoute />} />
