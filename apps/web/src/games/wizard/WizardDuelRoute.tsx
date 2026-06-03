@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useCastle } from '../../castle/useCastle'
+import { useCosmetics } from '../../cosmetics/useCosmetics'
 import { useAuthUid } from '../../auth/useAuthUid'
 import { callCreateWizardRoom, callJoinWizardRoom } from '../../firebase/callables'
 import { useWizardRoom } from './useWizardRoom'
@@ -16,6 +17,7 @@ import { WizardRoomScreen } from './WizardRoomScreen'
 export function WizardDuelRoute() {
   const navigate = useNavigate()
   const { identity } = useCastle()
+  const cosmetics = useCosmetics()
   const auth = useAuthUid()
   const [error, setError] = useState<string | null>(null)
   const creatingRef = useRef(false)
@@ -29,6 +31,7 @@ export function WizardDuelRoute() {
           displayName: identity.displayName,
           normalizedName: identity.normalizedName,
           isBypass: identity.isBypass,
+          pieceSetId: cosmetics.pieceSetId,
         })
         navigate(`/wizard/${roomId}`, { replace: true })
       } catch (e) {
@@ -36,7 +39,7 @@ export function WizardDuelRoute() {
         creatingRef.current = false
       }
     })()
-  }, [identity, auth.status, navigate])
+  }, [identity, auth.status, navigate, cosmetics.pieceSetId])
 
   if (!identity) return <Navigate to="/" replace />
 
@@ -52,6 +55,7 @@ export function WizardRoomRoute() {
   const { roomId } = useParams<{ roomId: string }>()
   const navigate = useNavigate()
   const { identity } = useCastle()
+  const cosmetics = useCosmetics()
   const auth = useAuthUid()
   const { state, retry } = useWizardRoom(roomId ?? null)
   const [joinError, setJoinError] = useState<string | null>(null)
@@ -76,6 +80,7 @@ export function WizardRoomRoute() {
           displayName: identity.displayName,
           normalizedName: identity.normalizedName,
           isBypass: identity.isBypass,
+          pieceSetId: cosmetics.pieceSetId,
         })
         retry()
       } catch (e) {

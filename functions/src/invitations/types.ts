@@ -47,6 +47,11 @@ export interface InvitationDoc {
   /** Picked server-side at send time so neither side can spoof their preferred host. */
   hostMode: 'lucy' | 'luca'
 
+  /** Sender's equipped piece-set id at send time. Carried through to the
+   *  spawned room's white.pieceSetId on accept so the sender's pieces
+   *  render in their chosen set on both players' screens. */
+  fromPieceSetId?: string
+
   status: InvitationStatus
   createdAt: number
   /** UTC ms; client filters out invitations past this even before TTL sweep. */

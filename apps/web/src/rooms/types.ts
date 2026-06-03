@@ -6,6 +6,10 @@
 export interface PlayerRef {
   playerId: string
   displayName: string
+  /** This player's equipped piece-set at game start. Both viewers
+   *  render this side's pieces with this set. Missing on older rooms;
+   *  fall back to the viewer's local default. */
+  pieceSetId?: string
 }
 
 export type RoomStatus = 'waiting' | 'live' | 'completed'
@@ -67,6 +71,8 @@ export interface CreateRoomRequest {
   isBypass?: boolean
   hostMode?: 'lucy' | 'luca'
   timeControl?: TimeControlWire | null
+  /** Caller's equipped piece-set id. Stamped onto white.pieceSetId. */
+  pieceSetId?: string
 }
 export interface CreateRoomResponse {
   roomId: string
@@ -75,6 +81,8 @@ export interface CreateRoomResponse {
 export interface JoinRoomRequest {
   roomId: string
   displayName: string
+  /** Caller's equipped piece-set id. Stamped onto black.pieceSetId. */
+  pieceSetId?: string
 }
 export interface JoinRoomResponse {
   roomId: string

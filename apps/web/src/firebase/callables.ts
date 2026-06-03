@@ -200,6 +200,10 @@ export interface WizardPlayerInfo {
   displayName: string
   normalizedName: string
   isBypass: boolean
+  /** Caller's equipped piece-set id. Stamped onto their slot's
+   *  pieceSetId so both viewers see this player's pieces in their
+   *  chosen set. */
+  pieceSetId?: string
 }
 export interface CreateWizardRoomResponse { roomId: string }
 export interface JoinWizardRoomRequest extends WizardPlayerInfo { roomId: string }
@@ -887,6 +891,9 @@ export interface SendInviteRequest {
   fromNormalizedName: string
   toNormalizedName: string
   timeControl: TimeControl | null
+  /** Sender's equipped piece-set id; flows through to the spawned
+   *  room's white.pieceSetId on accept. */
+  pieceSetId?: string
 }
 export interface SendInviteResponse {
   ok: true
@@ -905,6 +912,9 @@ export type InvitationStatus =
 export interface RespondInviteRequest {
   inviteId: string
   response: 'accept' | 'decline' | 'ignore'
+  /** Accepter's equipped piece-set id; stamped onto the spawned room's
+   *  black.pieceSetId. Ignored on decline / ignore. */
+  pieceSetId?: string
 }
 export interface RespondInviteResponse {
   ok: true

@@ -14,6 +14,7 @@ import {
   TIME_CONTROL_PRESETS,
   type TimeControlPreset,
 } from '../clock/timeControl'
+import { useCosmetics } from '../cosmetics/useCosmetics'
 import { callSendInvite } from '../firebase/callables'
 import { useOutgoingInviteContext } from './OutgoingInviteContext'
 import { INVITE_COST_CP } from './types'
@@ -43,6 +44,7 @@ export function InviteDialog({
   const [selectedId, setSelectedId] = useState<string>(DEFAULT_TIME_CONTROL_ID)
   const [phase, setPhase] = useState<Phase>({ kind: 'compose' })
   const { setInviteId } = useOutgoingInviteContext()
+  const cosmetics = useCosmetics()
   const selected =
     TIME_CONTROL_PRESETS.find((p) => p.id === selectedId) ?? TIME_CONTROL_PRESETS[0]!
 
@@ -57,6 +59,7 @@ export function InviteDialog({
         fromNormalizedName: selfNormalizedName,
         toNormalizedName,
         timeControl: preset.value,
+        pieceSetId: cosmetics.pieceSetId,
       })
       setInviteId(res.inviteId)
       onSent()

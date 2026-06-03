@@ -16,6 +16,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { sanitisePieceSetId } from '../cosmetics/registry'
 import { generateRoomId } from '../rooms/roomId'
 import type { RoomDoc } from '../rooms/types'
 import type { InvitationDoc, InvitationStatus } from './types'
@@ -28,6 +29,9 @@ export type InviteResponseKind = 'accept' | 'decline' | 'ignore'
 export interface RespondInviteRequest {
   inviteId: string
   response: InviteResponseKind
+  /** Accepter's equipped piece-set. Stamped onto black.pieceSetId of the
+   *  spawned room. Only used on the 'accept' path. */
+  pieceSetId?: string
 }
 
 export interface RespondInviteResponse {
@@ -108,9 +112,18 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
       }
 
       const now = Date.now()
+      const accepterPieceSetId = sanitisePieceSetId(req.data?.pieceSetId)
       const roomDoc: RoomDoc = {
-        white: { playerId: invite.fromUid, displayName: invite.fromName },
-        black: { playerId: req.auth!.uid, displayName: accepter.displayName },
+        white: {
+          playerId: invite.fromUid,
+          displayName: invite.fromName,
+          ...(invite.fromPieceSetId ? { pieceSetId: invite.fromPieceSetId } : {}),
+        },
+        black: {
+          playerId: req.auth!.uid,
+          displayName: accepter.displayName,
+          ...(accepterPieceSetId ? { pieceSetId: accepterPieceSetId } : {}),
+        },
         status: 'live',
         currentFen: STARTING_FEN,
         hostMode: invite.hostMode,

@@ -1,6 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { JoinRoomRequest, JoinRoomResponse, RoomDoc } from './types'
+import { sanitisePieceSetId } from '../cosmetics/registry'
 
 /**
  * Adds the caller as the black player and flips the room to `live`.
@@ -46,9 +47,14 @@ export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async
     }
 
     const now = Date.now()
+    const blackPieceSetId = sanitisePieceSetId(req.data.pieceSetId)
     const updated: RoomDoc = {
       ...room,
-      black: { playerId: req.auth!.uid, displayName },
+      black: {
+        playerId: req.auth!.uid,
+        displayName,
+        ...(blackPieceSetId ? { pieceSetId: blackPieceSetId } : {}),
+      },
       status: 'live',
       // White is to move at game start, so white's clock starts ticking now.
       // For an untimed room, lastTickServerTs stays null.

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthUid } from '../auth/useAuthUid'
+import { useCosmetics } from '../cosmetics/useCosmetics'
 import { callRespondInvite } from '../firebase/callables'
 import { useIncomingInvites } from './useIncomingInvites'
 import type { InvitationDoc } from './types'
@@ -35,6 +36,7 @@ export function InviteInbox() {
 
 function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
   const navigate = useNavigate()
+  const cosmetics = useCosmetics()
   const [phase, setPhase] = useState<'idle' | 'accepting' | 'declining' | 'ignoring' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [now, setNow] = useState(Date.now())
@@ -52,7 +54,11 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
     setPhase(nextPhase)
     setError(null)
     try {
-      const res = await callRespondInvite({ inviteId: invite.inviteId, response })
+      const res = await callRespondInvite({
+        inviteId: invite.inviteId,
+        response,
+        ...(response === 'accept' ? { pieceSetId: cosmetics.pieceSetId } : {}),
+      })
       if (response === 'accept' && res.roomId) {
         navigate(`/r/${res.roomId}`)
       }

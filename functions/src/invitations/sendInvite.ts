@@ -15,6 +15,7 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { sanitisePieceSetId } from '../cosmetics/registry'
 import { consumeDailyQuota } from '../llm/rateLimit'
 import { sanitiseTimeControl } from '../rooms/sanitiseTimeControl'
 import type { TimeControl } from '../rooms/types'
@@ -24,6 +25,7 @@ export interface SendInviteRequest {
   fromNormalizedName: string
   toNormalizedName: string
   timeControl: TimeControl | null
+  pieceSetId?: string
 }
 
 export interface SendInviteResponse {
@@ -50,6 +52,7 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     // sanitiseTimeControl throws HttpsError on out-of-range values; reuse so
     // invitations carry exactly the same TC shape as createRoom-sourced games.
     const timeControl = sanitiseTimeControl(req.data?.timeControl ?? null)
+    const fromPieceSetId = sanitisePieceSetId(req.data?.pieceSetId)
 
     const db = getFirestore()
     const fromRef = db.doc(`guests/${fromNormalized}`)
@@ -121,6 +124,7 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
         status: 'pending',
         createdAt: now,
         expiresAt,
+        ...(fromPieceSetId ? { fromPieceSetId } : {}),
       }
 
       tx.update(fromRef, { castlePoints: FieldValue.increment(-INVITE_COST_CP) })

@@ -3,6 +3,11 @@
 export interface PlayerRef {
   playerId: string
   displayName: string
+  /** This player's equipped piece-set at game start. Locked for the
+   *  duration of the game — the board renders this side's pieces with
+   *  this set on every viewer's screen. Older rooms predate the
+   *  field; treat absent as "let the viewer's own default decide". */
+  pieceSetId?: string
 }
 
 export type RoomStatus = 'waiting' | 'live' | 'completed'
@@ -58,6 +63,9 @@ export interface CreateRoomRequest {
   /** True for bypass guests. Bypass guests cannot open rooms (no balance). */
   isBypass?: boolean
   timeControl?: TimeControl | null
+  /** Caller's equipped piece-set id. Stamped onto white.pieceSetId so
+   *  both players see this player's pieces in their chosen set. */
+  pieceSetId?: string
 }
 
 export interface CreateRoomResponse {
@@ -67,6 +75,8 @@ export interface CreateRoomResponse {
 export interface JoinRoomRequest {
   roomId: string
   displayName: string
+  /** Caller's equipped piece-set id. Stamped onto black.pieceSetId. */
+  pieceSetId?: string
 }
 
 export interface JoinRoomResponse {

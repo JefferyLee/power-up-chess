@@ -29,3 +29,13 @@ export function isKnownPieceSet(id: string): boolean {
 export function priceFor(id: string): number | null {
   return PURCHASE_REGISTRY[id]?.priceCp ?? null
 }
+
+/** Normalise an untrusted client-supplied piece-set id. Returns undefined
+ *  if the id is missing, empty, or not a known set — callers should let
+ *  the viewer's local default decide in that case. */
+export function sanitisePieceSetId(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined
+  const trimmed = raw.trim()
+  if (!trimmed) return undefined
+  return isKnownPieceSet(trimmed) ? trimmed : undefined
+}

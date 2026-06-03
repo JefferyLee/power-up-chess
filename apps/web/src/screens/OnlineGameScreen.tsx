@@ -26,6 +26,7 @@ import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile, addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
+import { useCosmetics } from '../cosmetics/useCosmetics'
 import { awardPoints } from '../castle/awardPoints'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import './LocalGameScreen.css'
@@ -138,6 +139,7 @@ function JoinPanel({
   onBack: () => void
 }) {
   const { identity } = useCastle()
+  const cosmetics = useCosmetics()
   // Profile name is the fallback for the rare case where someone hits a
   // room URL without a castle identity (cleared cache, shared link, etc.).
   const initial = loadProfile()
@@ -153,7 +155,7 @@ function JoinPanel({
     setBusy(true)
     setError(null)
     try {
-      await callJoinRoom({ roomId, displayName })
+      await callJoinRoom({ roomId, displayName, pieceSetId: cosmetics.pieceSetId })
       onJoined()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -605,6 +607,8 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
               lastMove={lastMove}
               checkSquare={checkSquare}
               squareSize={SQUARE_SIZE}
+              whitePieceSetId={room.white.pieceSetId}
+              blackPieceSetId={room.black?.pieceSetId}
             />
             {sparks.map((s) => (
               <CaptureSpark

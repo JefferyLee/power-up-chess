@@ -39,6 +39,9 @@ interface Props {
    *  pair from a teleport / single target from a piece-targeted spell).
    *  Rendered with the standard last-move highlight overlay. */
   lastTouched?: { from: SquareName; to: SquareName } | null
+  /** Per-side piece-set overrides from the room doc. See BoardProps. */
+  whitePieceSetId?: string
+  blackPieceSetId?: string
 }
 
 export function WizardBoard({
@@ -51,6 +54,8 @@ export function WizardBoard({
   mode,
   squareSize = 64,
   lastTouched,
+  whitePieceSetId,
+  blackPieceSetId,
 }: Props) {
   const [selected, setSelected] = useState<SquareName | null>(null)
 
@@ -119,7 +124,12 @@ export function WizardBoard({
             fileLabel={rank === '1' ? file : undefined}
             rankLabel={file === 'a' ? rank : undefined}
           >
-            {piece && <Piece piece={piece} />}
+            {piece && (
+              <Piece
+                piece={piece}
+                pieceSetIdOverride={piece.color === 'w' ? whitePieceSetId : blackPieceSetId}
+              />
+            )}
             {sqEffects.length > 0 && <EffectStack effects={sqEffects} />}
             {isSpellTarget && <span className="puc-wizardboard__targetring" />}
           </Square>

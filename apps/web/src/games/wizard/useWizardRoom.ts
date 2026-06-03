@@ -13,6 +13,8 @@ export interface WizardPlayerSlot {
   displayName: string
   normalizedName: string
   isBypass: boolean
+  /** Player's equipped piece-set at game start. Locked for the duration. */
+  pieceSetId?: string
 }
 
 export interface WizardTimeControl {

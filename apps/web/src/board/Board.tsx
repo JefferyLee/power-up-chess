@@ -35,6 +35,12 @@ export interface BoardProps {
   arrows?: ReadonlyArray<BoardArrow>
   /** Pixel size of one square. Defaults to 64. */
   squareSize?: number
+  /** Optional per-side piece-set overrides. Used in online rooms so a
+   *  player who's equipped HD pieces shows them on both viewers' screens
+   *  even when the opponent is on classic. Falls back to the viewer's
+   *  local cosmetic when omitted. */
+  whitePieceSetId?: string
+  blackPieceSetId?: string
 }
 
 interface DragState {
@@ -55,6 +61,8 @@ export function Board({
   checkSquare = null,
   arrows,
   squareSize = 64,
+  whitePieceSetId,
+  blackPieceSetId,
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
   const [selected, setSelected] = useState<SquareName | null>(null)
@@ -252,6 +260,7 @@ export function Board({
               <Piece
                 piece={piece}
                 justMoved={lastMove?.to === sq}
+                pieceSetIdOverride={piece.color === 'w' ? whitePieceSetId : blackPieceSetId}
                 // Re-key on lastMove so the animation re-fires when the same piece
                 // makes consecutive moves to different squares.
                 key={lastMove?.to === sq ? `${lastMove.from}->${sq}` : sq}
@@ -269,7 +278,11 @@ export function Board({
             height: squareSize,
           }}
         >
-          <Piece piece={pieceOn(drag.from)!} dragging />
+          <Piece
+            piece={pieceOn(drag.from)!}
+            dragging
+            pieceSetIdOverride={pieceOn(drag.from)!.color === 'w' ? whitePieceSetId : blackPieceSetId}
+          />
         </div>
       )}
       {arrows && arrows.length > 0 && (

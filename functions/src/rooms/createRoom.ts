@@ -5,6 +5,7 @@ import { sanitiseTimeControl } from './sanitiseTimeControl'
 import type { CreateRoomRequest, CreateRoomResponse, RoomDoc } from './types'
 import { postRoomInvite } from '../castle/postRoomInvite'
 import { AWARD_CAPS, type GuestDoc } from '../castle/types'
+import { sanitisePieceSetId } from '../cosmetics/registry'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -50,11 +51,16 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
     // Charge + create atomically. Tx retries on collision OR contention; we
     // pre-generate room IDs per attempt so the whole transaction either
     // commits a fresh room + debits the points, or rolls back together.
+    const whitePieceSetId = sanitisePieceSetId(req.data.pieceSetId)
     for (let i = 0; i < MAX_TRIES; i++) {
       const roomId = generateRoomId()
       const ref = db.doc(`rooms/${roomId}`)
       const doc: RoomDoc = {
-        white: { playerId: req.auth.uid, displayName },
+        white: {
+          playerId: req.auth.uid,
+          displayName,
+          ...(whitePieceSetId ? { pieceSetId: whitePieceSetId } : {}),
+        },
         black: null,
         status: 'waiting',
         currentFen: STARTING_FEN,

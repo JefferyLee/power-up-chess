@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
+import { useCosmetics } from '../cosmetics/useCosmetics'
 import { HostPortrait } from './HostPortrait'
 import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
@@ -34,6 +35,7 @@ const UNLOCK_THRESHOLD = 200
 export function HallScreen() {
   const navigate = useNavigate()
   const { identity, hostId, signOut, clearDecayInfo, clearBonusInfo } = useCastle()
+  const cosmetics = useCosmetics()
   const profile = loadProfile()
   const host = HOSTS[hostId]
   const auth = useAuthUid()
@@ -120,6 +122,7 @@ export function HallScreen() {
         normalizedName: identity.normalizedName,
         isBypass: identity.isBypass,
         timeControl: preset.value,
+        pieceSetId: cosmetics.pieceSetId,
       })
       setTcTarget(null)
       navigate(`/r/${roomId}`)

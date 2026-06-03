@@ -8,6 +8,7 @@
 import { FieldValue, getFirestore, type Firestore, type Transaction } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from '../../rooms/roomId'
+import { sanitisePieceSetId } from '../../cosmetics/registry'
 import { postRoomInvite } from '../../castle/postRoomInvite'
 import { WizardChess, type SerializedEffect, type WizardRoomState } from './WizardChess'
 import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
@@ -44,6 +45,9 @@ interface PlayerSlot {
   /** Empty for bypass guests (they can't cast spells). */
   normalizedName: string
   isBypass: boolean
+  /** This player's equipped piece-set at game start. Locked for the
+   *  duration; both viewers render this side's pieces in this set. */
+  pieceSetId?: string
 }
 
 interface WizardRoomDoc {
@@ -71,12 +75,14 @@ interface CreateRoomRequest {
   displayName: string
   normalizedName: string
   isBypass: boolean
+  pieceSetId?: string
 }
 interface JoinRoomRequest {
   roomId: string
   displayName: string
   normalizedName: string
   isBypass: boolean
+  pieceSetId?: string
 }
 interface SubmitMoveRequest {
   roomId: string
@@ -620,13 +626,14 @@ function scheduleDuelAnnouncement(
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 function validatePlayer(uid: string, data: unknown): PlayerSlot {
-  const d = (data ?? {}) as { displayName?: unknown; normalizedName?: unknown; isBypass?: unknown }
+  const d = (data ?? {}) as { displayName?: unknown; normalizedName?: unknown; isBypass?: unknown; pieceSetId?: unknown }
   const displayName = String(d.displayName ?? '').trim().slice(0, 40)
   const normalizedName = String(d.normalizedName ?? '').trim().toLowerCase()
   const isBypass = d.isBypass === true
   if (!displayName) throw new HttpsError('invalid-argument', 'displayName required.')
   if (!isBypass && !normalizedName) throw new HttpsError('invalid-argument', 'normalizedName required for non-bypass.')
-  return { uid, displayName, normalizedName, isBypass }
+  const pieceSetId = sanitisePieceSetId(d.pieceSetId)
+  return { uid, displayName, normalizedName, isBypass, ...(pieceSetId ? { pieceSetId } : {}) }
 }
 
 function colorFor(uid: string, room: WizardRoomDoc): Color | null {
