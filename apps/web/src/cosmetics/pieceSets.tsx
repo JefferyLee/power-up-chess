@@ -6,6 +6,8 @@
 //   cburnett  common (200 pts), SVG  — vendored lichess set
 //   fantasy   rare   (500 pts), SVG  — vendored lichess "fantasy" set
 //   animated  master (1000 pts), SVG + CSS glow on top of cburnett
+//   stone     master (1000 pts), PNG — AI-generated stone sculptures
+//             served from /public/sprites/stone/ (not bundled)
 //
 // glyphFor returns ReactNode so SVG sets can render an <img>; Unicode
 // sets return a string. Server-side prices live in
@@ -54,6 +56,20 @@ const FANTASY: Record<Color, Record<PieceSymbol, string>> = {
   b: { k: fantasyBK, q: fantasyBQ, r: fantasyBR, b: fantasyBB, n: fantasyBN, p: fantasyBP },
 }
 
+// Stone sculpture PNGs — AI-generated, hosted at /public/sprites/stone/.
+// Kept out of the bundle (460 KB combined) since they're loaded lazily by
+// the chess board only when this set is equipped.
+const STONE: Record<Color, Record<PieceSymbol, string>> = {
+  w: {
+    k: '/sprites/stone/wK.png', q: '/sprites/stone/wQ.png', r: '/sprites/stone/wR.png',
+    b: '/sprites/stone/wB.png', n: '/sprites/stone/wN.png', p: '/sprites/stone/wP.png',
+  },
+  b: {
+    k: '/sprites/stone/bK.png', q: '/sprites/stone/bQ.png', r: '/sprites/stone/bR.png',
+    b: '/sprites/stone/bB.png', n: '/sprites/stone/bN.png', p: '/sprites/stone/bP.png',
+  },
+}
+
 export type PieceSetTier = 'free' | 'common' | 'rare' | 'master'
 export type PieceSetId =
   | 'classic'
@@ -61,6 +77,7 @@ export type PieceSetId =
   | 'cburnett'
   | 'fantasy'
   | 'animated'
+  | 'stone'
 
 export interface PieceSet {
   id: PieceSetId
@@ -148,6 +165,22 @@ export const PIECE_SETS: Record<PieceSetId, PieceSet> = {
       />
     ),
   },
+  stone: {
+    id: 'stone',
+    label: 'Carved Stone',
+    blurb: 'Marble and obsidian sculptures — like the Wizard\'s Chess pieces in the great hall.',
+    tier: 'master',
+    priceCp: 1000,
+    locked: false,
+    glyphFor: (t, c) => (
+      <img
+        src={STONE[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg"
+      />
+    ),
+  },
 }
 
 export const DEFAULT_PIECE_SET_ID: PieceSetId = 'classic'
@@ -160,6 +193,7 @@ export const PIECE_SET_ORDER: PieceSetId[] = [
   'cburnett',
   'fantasy',
   'animated',
+  'stone',
 ]
 
 export function getPieceSet(id: string | undefined): PieceSet {

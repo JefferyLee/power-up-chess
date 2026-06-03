@@ -17,6 +17,7 @@ export const PURCHASE_REGISTRY: Record<string, { priceCp: number }> = {
   cburnett: { priceCp: 200 },
   fantasy: { priceCp: 500 },
   animated: { priceCp: 1000 },
+  stone: { priceCp: 1000 },
 }
 
 export function isKnownPieceSet(id: string): boolean {
