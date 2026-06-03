@@ -45,7 +45,7 @@
  * are the visual hero — sized so they hit at least 1/3 of the card. */
 .puc-plaque-card {
   position: relative;
-  width: min(460px, 100%);
+  width: min(540px, 100%);
   background:
     linear-gradient(180deg,
       #e2b770 0%,
@@ -62,11 +62,11 @@
     inset 0 0 80px rgba(140, 95, 30, 0.25),
     0 24px 64px rgba(0, 0, 0, 0.6);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px;
+  grid-template-columns: minmax(0, 1fr) 210px;
   grid-template-areas:
     "head head"
     "stats equipment";
-  gap: 6px 16px;
+  gap: 6px 18px;
 }
 .puc-plaque-card__head { grid-area: head; }
 .puc-plaque-card__stats { grid-area: stats; min-width: 0; }
@@ -219,42 +219,36 @@
   font-weight: 700;
 }
 
-/* Equipment column — 3 large stacked pieces + a label below. Each
- * piece picks up --puc-square-size from its container, so we just
- * size the container and the Piece component scales to match. */
+/* Equipment column — one BIG hero piece, randomised per mount, plus a
+ * label below. Picks up --puc-square-size from its container so the
+ * <Piece> component scales to match. */
 .puc-plaque-card__equipment {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding-top: 4px;
+  gap: 8px;
+  padding-top: 8px;
   color: #2a1c08;
 }
-.puc-plaque-equipment__pieces {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-}
-.puc-plaque-equipment__piece {
-  --puc-square-size: 112px;
-  width: 112px;
-  height: 112px;
+.puc-plaque-equipment__hero {
+  --puc-square-size: 200px;
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Drop the per-piece highlight from the board styling — looks
-   * busy floating on brass. */
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  /* Drop a soft cast shadow under the hero piece — looks like it's
+   * sitting on the plaque rather than floating. */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
 }
 .puc-plaque-equipment__label {
-  margin: 4px 0 0;
+  margin: 0;
   font-family: 'Cinzel', Georgia, serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.6px;
   color: #3a230c;
   text-align: center;
-  max-width: 110px;
+  max-width: 200px;
   line-height: 1.2;
 }
 
@@ -262,8 +256,8 @@
   .puc-plaque-page { padding: 56px 12px 28px; }
   .puc-plaque-card {
     padding: 14px 14px 16px;
-    grid-template-columns: minmax(0, 1fr) 96px;
-    gap: 4px 10px;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 4px 12px;
   }
   .puc-plaque-card__name h1 { font-size: 19px; letter-spacing: 1.2px; }
   .puc-plaque-row {
@@ -274,13 +268,13 @@
   .puc-plaque-row__label { font-size: 9.5px; }
   .puc-plaque-trio { gap: 6px 10px; font-size: 12px; }
   .puc-plaque-plots { grid-template-columns: repeat(2, 1fr); }
-  .puc-plaque-equipment__piece {
-    --puc-square-size: 88px;
-    width: 88px;
-    height: 88px;
+  .puc-plaque-equipment__hero {
+    --puc-square-size: 130px;
+    width: 130px;
+    height: 130px;
   }
   .puc-plaque-equipment__label {
-    font-size: 10px;
-    max-width: 88px;
+    font-size: 10.5px;
+    max-width: 130px;
   }
 }

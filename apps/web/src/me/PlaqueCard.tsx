@@ -2,16 +2,28 @@
 // the click-to-open UserCard popover so a guest sees the same engraved
 // stats whether they're looking at themselves or someone else.
 
+import { useMemo } from 'react'
 import type { GetPublicProfileResponse } from '../firebase/callables'
 import { Piece } from '../board/Piece'
 import { getPieceSet, isPieceSetId } from '../cosmetics/pieceSets'
+import type { PieceSymbol } from '../chess/types'
 import './AdventurerPlaqueScreen.css'
 
 const DASH = '—'
+const PIECE_TYPES: PieceSymbol[] = ['k', 'q', 'r', 'b', 'n', 'p']
 
 export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
   const pieceSetId = profile.equippedPieceSet
   const set = isPieceSetId(pieceSetId ?? '') ? getPieceSet(pieceSetId!) : getPieceSet(undefined)
+  // Pick a random piece type once per mount so the showcase changes
+  // between visits but doesn't shuffle mid-view (e.g. on a focus
+  // refetch). normalizedName seeds the choice loosely to keep it
+  // stable for back-and-forth nav within a session.
+  const showcasePiece = useMemo<PieceSymbol>(
+    () => PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]!,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
   const tournamentBest = profile.tournamentsBestPlacement
   const tournamentBestLabel =
     tournamentBest === null || tournamentBest === undefined
@@ -39,17 +51,9 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
       </header>
 
       <aside className="puc-plaque-card__equipment" aria-label="Equipment">
-        <div className="puc-plaque-equipment__pieces">
-          <span className="puc-plaque-equipment__piece">
-            <Piece piece={{ type: 'k', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
-          </span>
-          <span className="puc-plaque-equipment__piece">
-            <Piece piece={{ type: 'n', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
-          </span>
-          <span className="puc-plaque-equipment__piece">
-            <Piece piece={{ type: 'p', color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
-          </span>
-        </div>
+        <span className="puc-plaque-equipment__hero">
+          <Piece piece={{ type: showcasePiece, color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
+        </span>
         <p className="puc-plaque-equipment__label">{set.label}</p>
       </aside>
 
