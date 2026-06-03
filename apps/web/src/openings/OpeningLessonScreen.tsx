@@ -6,14 +6,16 @@
 // Wrong → shake the board, drop a hint after the first miss, and on
 // the second miss show the expected move with a "Got it" advance.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Board } from '../board/Board'
+import { Board, type BoardArrow } from '../board/Board'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { MoveInput, Square } from '../chess/types'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useSound } from '../sound/useSound'
+import { useCastle } from '../castle/useCastle'
+import { callSubmitOpeningClear } from '../firebase/callables'
 import { getOpening, type OpeningPosition } from './openings'
 import './OpeningLessonScreen.css'
 
@@ -24,12 +26,18 @@ type Phase =
   | { kind: 'revealed' }
   | { kind: 'done' }
 
+interface Award {
+  pointsAdded: number
+  lessonMasteredNow: boolean
+}
+
 export function OpeningLessonScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const opening = useMemo(() => getOpening(id), [id])
+  const { identity, setCastlePoints } = useCastle()
 
   const [posIndex, setPosIndex] = useState(0)
   const [phase, setPhase] = useState<Phase>({ kind: 'asking', wrong: 0 })
@@ -40,6 +48,10 @@ export function OpeningLessonScreen() {
   // Tick bumped after every applied move so derived state recomputes
   // (ChessGame mutates in place).
   const [tick, setTick] = useState(0)
+  const [hintArrow, setHintArrow] = useState<BoardArrow | null>(null)
+  const [award, setAward] = useState<Award | null>(null)
+  const [finalAward, setFinalAward] = useState<Award | null>(null)
+  const awardedKeyRef = useRef<string | null>(null)
 
   const current: OpeningPosition | null =
     opening && posIndex < opening.positions.length
@@ -53,7 +65,44 @@ export function OpeningLessonScreen() {
     setGame(new ChessGame(current.fen))
     setTick((t) => t + 1)
     setPhase({ kind: 'asking', wrong: 0 })
+    setHintArrow(null)
+    setAward(null)
   }, [current])
+
+  // Submit the clear once per (opening, positionIndex) — server also
+  // dedupes, but we don't want to fire the callable on every render
+  // while the revealed panel is visible.
+  useEffect(() => {
+    if (phase.kind !== 'revealed') return
+    if (!opening) return
+    if (!identity || identity.isBypass || !identity.sessionId) return
+    const key = `${opening.id}:${posIndex}`
+    if (awardedKeyRef.current === key) return
+    awardedKeyRef.current = key
+    let cancelled = false
+    void callSubmitOpeningClear({
+      normalizedName: identity.normalizedName,
+      sessionId: identity.sessionId,
+      openingId: opening.id,
+      positionIndex: posIndex,
+    })
+      .then((res) => {
+        if (cancelled) return
+        if (res.pointsAdded > 0) setCastlePoints(res.castlePoints)
+        const awardData = {
+          pointsAdded: res.pointsAdded,
+          lessonMasteredNow: res.lessonMasteredNow,
+        }
+        setAward(awardData)
+        if (res.lessonMasteredNow) setFinalAward(awardData)
+      })
+      .catch((err) => {
+        console.warn('submitOpeningClear failed', err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [phase.kind, opening, posIndex, identity, setCastlePoints])
 
   const fen = game.fen()
   const pieces = useMemo(() => piecesFromFen(fen), [fen])
@@ -83,11 +132,13 @@ export function OpeningLessonScreen() {
         input.from + input.to + (input.promotion ? input.promotion : '')
       if (uci === current.expectedUci) {
         // Correct — apply the move so the board animates to its new
-        // state, play sound, reveal the explanation.
+        // state, play sound, reveal the explanation. Clear any hint
+        // arrow since the position is about to change.
         const result = game.move(input)
         if (result?.captured) sound.play('capture')
         else sound.play('move')
         setTick((t) => t + 1)
+        setHintArrow(null)
         setPhase({ kind: 'revealed' })
         return
       }
@@ -112,6 +163,15 @@ export function OpeningLessonScreen() {
     setPosIndex(next)
   }, [opening, posIndex])
 
+  const showHint = useCallback(() => {
+    if (!current || phase.kind !== 'asking') return
+    setHintArrow({
+      from: current.expectedUci.slice(0, 2) as Square,
+      to: current.expectedUci.slice(2, 4) as Square,
+      color: 'rgba(140, 170, 240, 0.85)',
+    })
+  }, [current, phase.kind])
+
   const revealAndAdvance = useCallback(() => {
     if (!current) return
     // Play the expected move so the board shows what was correct,
@@ -133,6 +193,8 @@ export function OpeningLessonScreen() {
 
   const restart = useCallback(() => {
     setPosIndex(0)
+    setFinalAward(null)
+    awardedKeyRef.current = null
   }, [])
 
   if (!opening) {
@@ -192,6 +254,7 @@ export function OpeningLessonScreen() {
             lastMove={lastMove}
             checkSquare={checkSquare}
             squareSize={SQUARE_SIZE}
+            arrows={hintArrow ? [hintArrow] : []}
           />
         </div>
 
@@ -222,6 +285,14 @@ export function OpeningLessonScreen() {
                   Show me {current.expectedSan} →
                 </button>
               )}
+              <button
+                type="button"
+                className="puc-opl__btn puc-opl__btn--hint"
+                onClick={showHint}
+                disabled={!!hintArrow}
+              >
+                {hintArrow ? 'Hint shown' : '💡 Hint (show arrow)'}
+              </button>
             </>
           )}
 
@@ -236,6 +307,19 @@ export function OpeningLessonScreen() {
                     : 'with a peek at the answer.'}
               </p>
               <p className="puc-opl__explanation">{current.explanation}</p>
+              {award && award.pointsAdded > 0 && (
+                <div className="puc-opl__award">
+                  <span className="puc-opl__award-num">+{award.pointsAdded}</span>
+                  <span className="puc-opl__award-label">
+                    castle points{award.lessonMasteredNow ? ' (mastery bonus!)' : ''}
+                  </span>
+                </div>
+              )}
+              {award && award.pointsAdded === 0 && (
+                <p className="puc-opl__already">
+                  Already cleared — no new points, just practice. 🏰
+                </p>
+              )}
               <button
                 type="button"
                 className="puc-opl__btn puc-opl__btn--primary"
@@ -256,6 +340,12 @@ export function OpeningLessonScreen() {
                 in a real game and the first six moves are now muscle
                 memory.
               </p>
+              {finalAward && finalAward.lessonMasteredNow && (
+                <div className="puc-opl__award puc-opl__award--big">
+                  <span className="puc-opl__award-num">+20</span>
+                  <span className="puc-opl__award-label">mastery bonus 🏆</span>
+                </div>
+              )}
               <div className="puc-opl__done-actions">
                 <button
                   type="button"

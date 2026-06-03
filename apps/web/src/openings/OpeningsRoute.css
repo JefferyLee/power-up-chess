@@ -73,6 +73,41 @@
   transform: translateY(-2px);
   border-color: rgba(140, 170, 240, 0.7);
 }
+.puc-op__card--mastered {
+  background: linear-gradient(135deg, rgba(72, 200, 120, 0.10), rgba(140, 170, 240, 0.05));
+  border-color: rgba(72, 200, 120, 0.55);
+}
+.puc-op__card--mastered:hover { border-color: rgba(72, 200, 120, 0.85); }
+
+.puc-op__card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+.puc-op__card-progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.puc-op__card-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8caaf0, #6a8ee0);
+  transition: width 280ms ease;
+}
+.puc-op__card--mastered .puc-op__card-progress-fill {
+  background: linear-gradient(90deg, #6fcf97, #3da76a);
+}
+.puc-op__card-progress-text {
+  font-family: var(--puc-font-display);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--puc-text-muted);
+}
+.puc-op__card--mastered .puc-op__card-progress-text { color: #9be6b6; }
 
 .puc-op__card-flavour {
   font-family: var(--puc-font-display);

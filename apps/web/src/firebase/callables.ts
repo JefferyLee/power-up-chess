@@ -604,6 +604,25 @@ const submitEndgameClearFn = httpsCallable<
   SubmitEndgameClearResponse
 >(functions, 'submitEndgameClear')
 
+// P2.J Opening Trainer — server-side dedupe + castle-point award.
+export interface SubmitOpeningClearRequest {
+  normalizedName: string
+  sessionId: string
+  openingId: string
+  positionIndex: number
+}
+export interface SubmitOpeningClearResponse {
+  ok: true
+  pointsAdded: number
+  castlePoints: number
+  clearedIndexes: number[]
+  lessonMasteredNow: boolean
+}
+const submitOpeningClearFn = httpsCallable<
+  SubmitOpeningClearRequest,
+  SubmitOpeningClearResponse
+>(functions, 'submitOpeningClear')
+
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
 ): Promise<GetNextPuzzleResponse> {
@@ -686,5 +705,11 @@ export async function callSubmitEndgameClear(
   req: SubmitEndgameClearRequest,
 ): Promise<SubmitEndgameClearResponse> {
   const { data } = await submitEndgameClearFn(req)
+  return data
+}
+export async function callSubmitOpeningClear(
+  req: SubmitOpeningClearRequest,
+): Promise<SubmitOpeningClearResponse> {
+  const { data } = await submitOpeningClearFn(req)
   return data
 }

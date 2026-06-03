@@ -260,6 +260,13 @@ export interface GuestDoc {
     clearedPositions: string[]
     lessonMasteredAt?: number
   }>>
+  /** P2.J — opening trainer progress, per opening id. Dedupe is by
+   *  position INDEX (not content), so reordering positions in the
+   *  client would re-award. lessonMasteredAt = first full sweep. */
+  openingProgress?: Partial<Record<string, {
+    clearedIndexes: number[]
+    lessonMasteredAt?: number
+  }>>
   /** Today's puzzle solve count, LA-day-scoped. Lazily reset to 1 on
    *  the first solve of a new dayKey. Used by the gate's live pulse
    *  to surface top-solvers-today. */
