@@ -931,3 +931,36 @@ export async function callCancelInvite(req: CancelInviteRequest): Promise<Cancel
   const { data } = await cancelInviteFn(req)
   return data
 }
+
+// Public profile read for the User Card popover.
+export interface GetPublicProfileRequest { normalizedName: string }
+export type ProfileTitleRank = {
+  id: 'apprentice' | 'adept' | 'sorcerer' | 'archmage'
+  label: string
+  threshold: number
+}
+export interface GetPublicProfileResponse {
+  displayName: string
+  normalizedName: string
+  title: ProfileTitleRank | null
+  castlePoints: number
+  lifetimeEarned: number
+  puzzlesSolved: number
+  hasHalo: boolean
+  hasCrown: boolean
+  hasTournamentCrown: boolean
+  hostId: 'lucy' | 'luca'
+  currentLocation: LocationTag | null
+  inGame: boolean
+}
+
+const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfileResponse>(
+  functions,
+  'getPublicProfile',
+)
+export async function callGetPublicProfile(
+  req: GetPublicProfileRequest,
+): Promise<GetPublicProfileResponse> {
+  const { data } = await getPublicProfileFn(req)
+  return data
+}

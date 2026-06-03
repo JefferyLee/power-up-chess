@@ -32,6 +32,7 @@ import { useLocation } from 'react-router-dom'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 import { trackScreen } from './firebase/analytics'
+import { InviteInbox } from './invitations/InviteInbox'
 
 /** Single source of truth for presence — runs at the App root so every
  *  authenticated route auto-publishes a location to lobby/presence
@@ -77,6 +78,7 @@ export function App() {
       <CastleIdentityProvider>
         <GlobalPresenceHeartbeat />
         <GlobalScreenTracker />
+        <InviteInbox />
         <Routes>
           <Route path="/" element={<CastleEntry />} />
           <Route path="/local" element={<LocalGameRoute />} />

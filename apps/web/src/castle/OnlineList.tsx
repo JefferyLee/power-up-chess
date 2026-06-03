@@ -11,7 +11,10 @@
 //
 // Sort: you first, then by most-recent heartbeat.
 
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCastle } from './useCastle'
+import { UserCard } from '../invitations/UserCard'
 import { useLobbyPresence, type LocationTag, type PresenceRow } from './useLobbyChat'
 import './OnlineList.css'
 
@@ -107,6 +110,8 @@ function viewFor(loc: LocationTag | undefined): LocationView {
 export function OnlineList({ youUid }: { youUid: string | null }) {
   const navigate = useNavigate()
   const rows = useLobbyPresence()
+  const { identity } = useCastle()
+  const [openCardFor, setOpenCardFor] = useState<string | null>(null)
 
   // Sort: you first, then most recently seen.
   const sorted = [...rows].sort((a, b) => {
@@ -128,9 +133,21 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
             row={p}
             isYou={p.uid === youUid}
             onNav={(href) => navigate(href)}
+            onNameClick={(normalizedName) => {
+              if (!normalizedName) return // bypass guests have no normalizedName
+              setOpenCardFor(normalizedName)
+            }}
           />
         ))}
       </ul>
+      {openCardFor && identity && (
+        <UserCard
+          normalizedName={openCardFor}
+          selfNormalizedName={identity.normalizedName}
+          selfCastlePoints={identity.castlePoints ?? 0}
+          onClose={() => setOpenCardFor(null)}
+        />
+      )}
     </aside>
   )
 }
@@ -139,10 +156,12 @@ function OnlineRow({
   row,
   isYou,
   onNav,
+  onNameClick,
 }: {
   row: PresenceRow
   isYou: boolean
   onNav: (href: string) => void
+  onNameClick: (normalizedName: string) => void
 }) {
   const view = viewFor(row.location)
   const cosmetic = row.hasTournamentCrown
@@ -167,7 +186,13 @@ function OnlineRow({
               : '')
       }
     >
-      <span className="puc-online__name">
+      <button
+        type="button"
+        className="puc-online__name puc-online__name--clickable"
+        onClick={() => onNameClick(row.normalizedName)}
+        disabled={row.isBypass || !row.normalizedName}
+        title={row.isBypass ? 'Anonymous guest — no profile to view' : `View ${row.displayName}'s profile`}
+      >
         {row.isBypass ? '👻 ' : ''}
         {cosmetic && (
           <span className="puc-online__cosmetic" title={cosmetic.title}>
@@ -177,7 +202,7 @@ function OnlineRow({
         {row.displayName}
         {row.title && <span className="puc-online__rank"> · {row.title}</span>}
         {isYou ? ' (you)' : ''}
-      </span>
+      </button>
       <span
         className={`puc-online__loc puc-online__loc--${view.variant}`}
         title={view.label}
