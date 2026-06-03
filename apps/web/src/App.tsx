@@ -21,6 +21,8 @@ import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute
 import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
+import { EndgameRoute } from './endgame/EndgameRoute'
+import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 
@@ -61,6 +63,8 @@ export function App() {
           <Route path="/shop" element={<ShopScreen />} />
           <Route path="/library" element={<LibraryRoute />} />
           <Route path="/knights-hop" element={<KnightsHopRoute />} />
+          <Route path="/endgame" element={<EndgameRoute />} />
+          <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CastleIdentityProvider>

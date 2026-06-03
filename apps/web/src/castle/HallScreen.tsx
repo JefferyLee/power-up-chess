@@ -296,6 +296,13 @@ export function HallScreen() {
             variant="mossy"
             onClick={() => navigate('/knights-hop')}
           />
+          <RoomDoor
+            icon="♔"
+            label="Endgame Drills"
+            blurb="Practise the classic checkmates against a stubborn defender."
+            variant="oak"
+            onClick={() => navigate('/endgame')}
+          />
         </div>
       </section>
 
