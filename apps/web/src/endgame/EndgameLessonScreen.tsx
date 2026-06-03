@@ -1,13 +1,19 @@
-// EndgameLessonScreen — play a single endgame drill.
+// EndgameLessonScreen — play through a multi-position endgame drill
+// (P2.K Slice 2).
 //
-// Player is White, Stockfish plays Black at expert level so the
-// defender behaves like a stubborn lone king. The lesson is cleared
-// the moment chess.js reports checkmate with the player as winner.
-// Stalemate, threefold, or 50-move triggers "Try again."
+// Each lesson is a bag of 1+ positions on the same technique. Clear
+// one → "Next position →" advances; final position → lesson mastered.
+// Player is White; Stockfish (hard) plays the lone king as defender.
+//
+// Two engines run side by side: the "defender" engine that picks
+// black's reply, and a separate "hint" engine queried at expert
+// depth when the kid asks for help. Keeping them apart avoids the
+// "AiOpponent is already computing" race when a hint is requested
+// mid-thinking.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Board } from '../board/Board'
+import { Board, type BoardArrow } from '../board/Board'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { Color, MoveInput, Square } from '../chess/types'
@@ -15,10 +21,11 @@ import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById } from '../ai/difficulty'
-import { getLesson } from './lessons'
+import { getLesson, type Lesson } from './lessons'
 import './EndgameLessonScreen.css'
 
 const MAX_SQUARE_SIZE = 72
+const PLAYER_COLOR: Color = 'w'
 
 type Phase =
   | { kind: 'loading' }
@@ -28,8 +35,6 @@ type Phase =
   | { kind: 'failed'; reason: 'stalemate' | 'draw'; moves: number }
   | { kind: 'error'; message: string }
 
-const PLAYER_COLOR: Color = 'w'
-
 export function EndgameLessonScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -37,25 +42,44 @@ export function EndgameLessonScreen() {
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const lesson = useMemo(() => getLesson(id), [id])
 
-  // Engine: hard-tier Stockfish so the defender plays best.
-  const [opponent] = useState(() => new AiOpponent())
-  const preset = difficultyById('hard')
-  useEffect(() => () => opponent.terminate(), [opponent])
+  // Two Stockfish workers: one to drive the defender (hard tier so
+  // the lone king plays best), one to answer hint requests (expert
+  // tier for the strongest "what would you do?" suggestion).
+  const [defender] = useState(() => new AiOpponent())
+  const [hintEngine] = useState(() => new AiOpponent())
+  const defenderPreset = difficultyById('hard')
+  const hintPreset = difficultyById('expert')
+  useEffect(() => {
+    return () => {
+      defender.terminate()
+      hintEngine.terminate()
+    }
+  }, [defender, hintEngine])
+
+  // Round = which position in the bag we're playing.
+  const [round, setRound] = useState(0)
+  const current = lesson?.positions[round] ?? null
 
   const [game, setGame] = useState<ChessGame>(() =>
-    lesson ? new ChessGame(lesson.startFen) : new ChessGame(),
+    current ? new ChessGame(current.fen) : new ChessGame(),
   )
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
   const [moveCount, setMoveCount] = useState(0)
-  // Tick: bumped after every applied move so derived board state (fen,
-  // pieces, status) recomputes — ChessGame mutates in place.
+  // Tick: bumped after every applied move so derived board state
+  // (fen, pieces, status) recomputes — ChessGame mutates in place.
   const [tick, setTick] = useState(0)
+  const [hint, setHint] = useState<BoardArrow | null>(null)
+  const [hintBusy, setHintBusy] = useState(false)
   const cancelledRef = useRef(false)
 
+  // Boot: wait for the defender engine to be ready, then enter
+  // playing phase. Hint engine boots in parallel but we don't gate
+  // on it — the player can start playing before the hint button
+  // becomes usable.
   useEffect(() => {
     if (!lesson) return
     let cancelled = false
-    opponent
+    defender
       .ready()
       .then(() => {
         if (cancelled) return
@@ -72,9 +96,24 @@ export function EndgameLessonScreen() {
     return () => {
       cancelled = true
     }
-  }, [opponent, lesson])
+  }, [defender, lesson])
 
-  // Derived per-tick.
+  // Reset state whenever we change rounds.
+  useEffect(() => {
+    if (!current) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGame(new ChessGame(current.fen))
+    setMoveCount(0)
+    setHint(null)
+    setTick((t) => t + 1)
+    // If the defender engine has booted already, drop straight back
+    // into playing; otherwise the boot effect above flips us in.
+    if (phase.kind !== 'loading') {
+      setPhase({ kind: 'playing' })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [round, current])
+
   const fen = game.fen()
   const pieces = useMemo(() => piecesFromFen(fen), [fen])
   const status = game.status()
@@ -90,7 +129,7 @@ export function EndgameLessonScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick])
 
-  // Resolve terminal status into a phase transition.
+  // Translate terminal chess.js status into a phase transition.
   useEffect(() => {
     if (phase.kind !== 'playing' && phase.kind !== 'thinking') return
     if (status.kind === 'checkmate') {
@@ -122,11 +161,11 @@ export function EndgameLessonScreen() {
     [phase.kind, game],
   )
 
-  const playAi = useCallback(async () => {
+  const playDefender = useCallback(async () => {
     if (cancelledRef.current) return
     setPhase({ kind: 'thinking' })
     try {
-      const uci = await opponent.pickMove(game.fen(), preset.settings)
+      const uci = await defender.pickMove(game.fen(), defenderPreset.settings)
       if (cancelledRef.current) return
       const move: MoveInput = {
         from: uci.slice(0, 2) as Square,
@@ -142,13 +181,13 @@ export function EndgameLessonScreen() {
       setTick((t) => t + 1)
       setPhase({ kind: 'playing' })
     } catch (err) {
-      console.error('endgame: engine move failed', err)
+      console.error('endgame: defender move failed', err)
       setPhase({
         kind: 'error',
         message: err instanceof Error ? err.message : String(err),
       })
     }
-  }, [opponent, preset.settings, game, sound])
+  }, [defender, defenderPreset.settings, game, sound])
 
   const handleMove = useCallback(
     (input: MoveInput) => {
@@ -160,24 +199,53 @@ export function EndgameLessonScreen() {
       else sound.play('move')
       setMoveCount((n) => n + 1)
       setTick((t) => t + 1)
-      // If the player's move ended the game, the status useEffect picks
-      // it up. Otherwise hand the turn to the engine.
+      setHint(null) // stale once the position changes
       const nextStatus = game.status()
       if (nextStatus.kind === 'in_progress') {
-        void playAi()
+        void playDefender()
       }
     },
-    [phase.kind, game, sound, playAi],
+    [phase.kind, game, sound, playDefender],
   )
 
-  const reset = useCallback(() => {
-    if (!lesson) return
+  const askForHint = useCallback(async () => {
+    if (phase.kind !== 'playing') return
+    if (game.turn() !== PLAYER_COLOR) return
+    setHintBusy(true)
+    try {
+      const uci = await hintEngine.pickMove(game.fen(), hintPreset.settings)
+      if (cancelledRef.current) return
+      setHint({
+        from: uci.slice(0, 2) as Square,
+        to: uci.slice(2, 4) as Square,
+      })
+    } catch (err) {
+      console.warn('endgame: hint failed', err)
+    } finally {
+      setHintBusy(false)
+    }
+  }, [hintEngine, hintPreset.settings, phase.kind, game])
+
+  const restartPosition = useCallback(() => {
+    if (!current) return
     cancelledRef.current = false
-    setGame(new ChessGame(lesson.startFen))
+    setGame(new ChessGame(current.fen))
     setMoveCount(0)
+    setHint(null)
     setTick((t) => t + 1)
     setPhase({ kind: 'playing' })
-  }, [lesson])
+  }, [current])
+
+  const nextPosition = useCallback(() => {
+    if (!lesson) return
+    if (round + 1 < lesson.positions.length) {
+      setRound((r) => r + 1)
+    }
+  }, [lesson, round])
+
+  const restartLesson = useCallback(() => {
+    setRound(0)
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -200,8 +268,13 @@ export function EndgameLessonScreen() {
     )
   }
 
+  const total = lesson.positions.length
+  const isFinalRound = round === total - 1
   const playerTurn = game.turn() === PLAYER_COLOR && phase.kind === 'playing'
   const thinking = phase.kind === 'thinking'
+  const hintArrows: BoardArrow[] = hint
+    ? [{ from: hint.from, to: hint.to, color: 'rgba(140, 170, 240, 0.85)' }]
+    : []
 
   return (
     <div className="puc-egl">
@@ -216,12 +289,19 @@ export function EndgameLessonScreen() {
         </button>
         <div className="puc-egl__title-wrap">
           <h1 className="puc-egl__title">{lesson.title}</h1>
-          <p className="puc-egl__sub">{lesson.pieceSummary}</p>
+          <p className="puc-egl__sub">
+            {lesson.pieceSummary} · {current?.label ?? ''}
+          </p>
+        </div>
+        <div className="puc-egl__round" aria-label="Round">
+          <span className="puc-egl__round-label">Round</span>
+          <span className="puc-egl__round-num">{round + 1}</span>
+          <span className="puc-egl__round-of">/ {total}</span>
         </div>
         <div className="puc-egl__counter" aria-label="Moves played">
           <span className="puc-egl__counter-label">Moves</span>
           <span className="puc-egl__counter-num">{moveCount}</span>
-          <span className="puc-egl__counter-par">/ par {lesson.parMoves}</span>
+          <span className="puc-egl__counter-par">/ par {current?.parMoves ?? 0}</span>
         </div>
       </header>
 
@@ -240,13 +320,23 @@ export function EndgameLessonScreen() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="puc-egl__btn puc-egl__btn--ghost"
-            onClick={reset}
-          >
-            Restart drill
-          </button>
+          <div className="puc-egl__actions">
+            <button
+              type="button"
+              className="puc-egl__btn puc-egl__btn--hint"
+              onClick={askForHint}
+              disabled={!playerTurn || hintBusy}
+            >
+              {hintBusy ? 'Thinking…' : hint ? 'Hint shown' : '💡 Hint'}
+            </button>
+            <button
+              type="button"
+              className="puc-egl__btn puc-egl__btn--ghost"
+              onClick={restartPosition}
+            >
+              Restart position
+            </button>
+          </div>
         </aside>
 
         <div className="puc-egl__board-wrap">
@@ -259,34 +349,21 @@ export function EndgameLessonScreen() {
             lastMove={lastMove}
             checkSquare={checkSquare}
             squareSize={SQUARE_SIZE}
+            arrows={hintArrows}
           />
         </div>
       </main>
 
       {phase.kind === 'cleared' && (
-        <div className="puc-egl__overlay puc-egl__overlay--ok">
-          <h2 className="puc-egl__overlay-title">Checkmate!</h2>
-          <p className="puc-egl__overlay-body">
-            Cleared in {phase.moves} moves (par {lesson.parMoves}). Try a
-            different starting position once more arrive.
-          </p>
-          <div className="puc-egl__overlay-actions">
-            <button
-              type="button"
-              className="puc-egl__btn"
-              onClick={() => navigate('/endgame')}
-            >
-              Back to drills
-            </button>
-            <button
-              type="button"
-              className="puc-egl__btn puc-egl__btn--primary"
-              onClick={reset}
-            >
-              Drill again
-            </button>
-          </div>
-        </div>
+        <ClearedOverlay
+          lesson={lesson}
+          moves={phase.moves}
+          par={current?.parMoves ?? 0}
+          isFinalRound={isFinalRound}
+          onNext={nextPosition}
+          onRestart={restartLesson}
+          onExit={() => navigate('/endgame')}
+        />
       )}
 
       {phase.kind === 'failed' && (
@@ -309,7 +386,7 @@ export function EndgameLessonScreen() {
             <button
               type="button"
               className="puc-egl__btn puc-egl__btn--primary"
-              onClick={reset}
+              onClick={restartPosition}
             >
               Try again
             </button>
@@ -332,6 +409,63 @@ export function EndgameLessonScreen() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ClearedOverlay({
+  lesson,
+  moves,
+  par,
+  isFinalRound,
+  onNext,
+  onRestart,
+  onExit,
+}: {
+  lesson: Lesson
+  moves: number
+  par: number
+  isFinalRound: boolean
+  onNext: () => void
+  onRestart: () => void
+  onExit: () => void
+}) {
+  const underPar = moves <= par
+  return (
+    <div className="puc-egl__overlay puc-egl__overlay--ok">
+      <h2 className="puc-egl__overlay-title">
+        {isFinalRound ? 'Lesson mastered ✓' : 'Position cleared ✓'}
+      </h2>
+      <p className="puc-egl__overlay-body">
+        {underPar
+          ? `${moves} moves (under par ${par}). Tight technique.`
+          : `${moves} moves (par ${par}). Walked the king down — the principle is the same.`}{' '}
+        {isFinalRound
+          ? `You've cleared every ${lesson.pieceSummary.toLowerCase()} drill in this lesson.`
+          : 'Next position is a slightly different starting setup.'}
+      </p>
+      <div className="puc-egl__overlay-actions">
+        <button type="button" className="puc-egl__btn" onClick={onExit}>
+          Back to drills
+        </button>
+        {isFinalRound ? (
+          <button
+            type="button"
+            className="puc-egl__btn puc-egl__btn--primary"
+            onClick={onRestart}
+          >
+            Run lesson again
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="puc-egl__btn puc-egl__btn--primary"
+            onClick={onNext}
+          >
+            Next position →
+          </button>
+        )}
+      </div>
     </div>
   )
 }
