@@ -1,0 +1,97 @@
+/* Hall ambient decor — fireplace + window. Positioned fixed inside
+ * the Hall, behind everything, never intercepts pointer events. The
+ * Hall content sits above via stacking context. */
+
+.puc-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.puc-ambient__fireplace {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  width: 120px;
+  height: 140px;
+  opacity: 0.55;
+  filter: drop-shadow(0 0 18px rgba(246, 162, 61, 0.35));
+}
+
+.puc-ambient__window {
+  position: absolute;
+  right: 24px;
+  top: 80px;
+  width: 90px;
+  height: 160px;
+  opacity: 0.5;
+  filter: drop-shadow(0 0 22px rgba(246, 194, 102, 0.35));
+}
+
+/* ── Flame flicker — three keyframes out of phase so the cluster
+ *    moves like real fire. Each flame scales vertically and shifts
+ *    its centre slightly; no transform-origin tricks needed because
+ *    the flames are drawn at the bottom of their bbox. */
+@keyframes puc-flame-1 {
+  0%, 100% { transform: translateY(0)   scaleY(1)    scaleX(1);    opacity: 0.92; }
+  35%      { transform: translateY(-2px) scaleY(1.15) scaleX(0.92); opacity: 1;    }
+  65%      { transform: translateY(1px)  scaleY(0.9)  scaleX(1.08); opacity: 0.85; }
+}
+@keyframes puc-flame-2 {
+  0%, 100% { transform: translateY(-1px) scaleY(1.05) scaleX(1);    opacity: 0.95; }
+  40%      { transform: translateY(2px)  scaleY(0.92) scaleX(1.1);  opacity: 0.85; }
+  75%      { transform: translateY(-3px) scaleY(1.18) scaleX(0.9);  opacity: 1;    }
+}
+@keyframes puc-flame-3 {
+  0%, 100% { transform: translateY(1px)  scaleY(0.95) scaleX(1.03); opacity: 0.88; }
+  30%      { transform: translateY(-2px) scaleY(1.12) scaleX(0.94); opacity: 1;    }
+  70%      { transform: translateY(2px)  scaleY(0.88) scaleX(1.08); opacity: 0.8;  }
+}
+@keyframes puc-hearth-breathe {
+  0%, 100% { opacity: 0.65; transform: scale(1);    }
+  50%      { opacity: 0.95; transform: scale(1.08); }
+}
+
+.puc-ambient__flame {
+  /* transform-origin at the bottom of each flame so scaleY grows
+   * upward like a real flame, not centre-out. */
+  transform-origin: center bottom;
+}
+.puc-ambient__flame--1 { animation: puc-flame-1 1.6s ease-in-out infinite; }
+.puc-ambient__flame--2 { animation: puc-flame-2 1.9s ease-in-out infinite 0.15s; }
+.puc-ambient__flame--3 { animation: puc-flame-3 1.7s ease-in-out infinite 0.35s; }
+.puc-ambient__hearth-glow {
+  transform-origin: 60px 118px;
+  animation: puc-hearth-breathe 2.8s ease-in-out infinite;
+}
+
+/* ── Window light — slow brighten / dim like a dawn pulse */
+@keyframes puc-window-pulse {
+  0%, 100% { opacity: 0.7;  }
+  50%      { opacity: 1;    }
+}
+.puc-ambient__window-glow {
+  animation: puc-window-pulse 5s ease-in-out infinite;
+}
+
+/* On small viewports the corner decor competes with limited space —
+ * shrink + push closer to the edges. */
+@media (max-width: 760px) {
+  .puc-ambient__fireplace { width: 86px; height: 100px; opacity: 0.45; left: 6px; bottom: 6px; }
+  .puc-ambient__window    { width: 60px; height: 108px; opacity: 0.4;  right: 8px; top: 64px;   }
+}
+@media (max-width: 540px) {
+  /* Tight phone viewport — the chat and door grid already crowd
+   * everything. Drop ambient details on phone to avoid clutter. */
+  .puc-ambient { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puc-ambient__flame,
+  .puc-ambient__hearth-glow,
+  .puc-ambient__window-glow {
+    animation: none;
+  }
+}

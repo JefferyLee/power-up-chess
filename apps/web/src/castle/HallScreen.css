@@ -5,7 +5,12 @@
   color: var(--puc-text);
   font-family: var(--puc-font-body);
   padding: 24px 24px 40px;
+  position: relative;
+  isolation: isolate;
 }
+/* Lift every Hall content section above the ambient decor without
+ * having to touch each section individually. */
+.puc-hall > *:not(.puc-ambient) { position: relative; z-index: 1; }
 
 .puc-hall__header {
   display: flex;

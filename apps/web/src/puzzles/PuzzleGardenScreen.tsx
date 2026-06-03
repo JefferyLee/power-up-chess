@@ -11,22 +11,28 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
 import type { Plot } from '../firebase/callables'
+import mateIcon from './assets/plot-icons/mate.svg'
+import forkIcon from './assets/plot-icons/fork.svg'
+import pinSkewerIcon from './assets/plot-icons/pinSkewer.svg'
+import sacrificeIcon from './assets/plot-icons/sacrifice.svg'
+import endgameIcon from './assets/plot-icons/endgame.svg'
+import defenseIcon from './assets/plot-icons/defense.svg'
 import './PuzzleGardenScreen.css'
 
 interface PlotMeta {
   id: Plot
   label: string
   blurb: string
-  emoji: string
+  icon: string
 }
 
 const PLOTS: PlotMeta[] = [
-  { id: 'mate',      label: 'Mate Meadow',         blurb: 'Find the mate.',        emoji: '👑' },
-  { id: 'fork',      label: 'Fork Grove',          blurb: 'One move, two threats.', emoji: '🍴' },
-  { id: 'pinSkewer', label: 'Pin & Skewer Vines',  blurb: 'Pin it. Skewer it.',     emoji: '📌' },
-  { id: 'sacrifice', label: 'Sacrifice Garden',    blurb: 'Give to win.',           emoji: '💥' },
-  { id: 'endgame',   label: 'Endgame Pond',        blurb: 'Promote and finish.',    emoji: '👑' },
-  { id: 'defense',   label: "Defender's Thicket",  blurb: 'Find the only move.',    emoji: '🛡️' },
+  { id: 'mate',      label: 'Mate Meadow',         blurb: 'Find the mate.',         icon: mateIcon },
+  { id: 'fork',      label: 'Fork Grove',          blurb: 'One move, two threats.', icon: forkIcon },
+  { id: 'pinSkewer', label: 'Pin & Skewer Vines',  blurb: 'Pin it. Skewer it.',     icon: pinSkewerIcon },
+  { id: 'sacrifice', label: 'Sacrifice Garden',    blurb: 'Give to win.',           icon: sacrificeIcon },
+  { id: 'endgame',   label: 'Endgame Pond',        blurb: 'Promote and finish.',    icon: endgameIcon },
+  { id: 'defense',   label: "Defender's Thicket",  blurb: 'Find the only move.',    icon: defenseIcon },
 ]
 
 interface GuestPuzzleState {
@@ -305,9 +311,14 @@ function PlotCard({
   onEnter: () => void
 }) {
   return (
-    <button type="button" className="puc-garden__card" onClick={onEnter}>
+    <button
+      type="button"
+      className="puc-garden__card"
+      data-plot={meta.id}
+      onClick={onEnter}
+    >
       <div className="puc-garden__card-icon" aria-hidden="true">
-        {meta.emoji}
+        <img src={meta.icon} alt="" className="puc-garden__card-icon-svg" />
       </div>
       <div className="puc-garden__card-body">
         <div className="puc-garden__card-title">{meta.label}</div>

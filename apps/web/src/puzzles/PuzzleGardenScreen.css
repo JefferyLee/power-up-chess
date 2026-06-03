@@ -363,7 +363,6 @@
 }
 
 .puc-garden__card-icon {
-  font-size: 32px;
   width: 56px;
   height: 56px;
   display: flex;
@@ -371,7 +370,25 @@
   justify-content: center;
   background: rgba(241, 195, 76, 0.08);
   border-radius: 12px;
+  color: #f4c266; /* per-plot override below; this is the mate default */
 }
+.puc-garden__card-icon-svg {
+  width: 36px;
+  height: 36px;
+  display: block;
+  /* SVGs use fill="currentColor" so the icon picks up the parent's
+   * `color`. Tint is varied per-plot via data-plot attribute below. */
+}
+
+/* Per-plot accent so the 6 cards read distinctly at a glance. The
+ * background tint stays gold so the column line still reads as one
+ * family; only the icon glyph colour changes. */
+.puc-garden__card[data-plot="mate"]      .puc-garden__card-icon { color: #f4c266; background: rgba(244, 194, 102, 0.10); }
+.puc-garden__card[data-plot="fork"]      .puc-garden__card-icon { color: #8de0a8; background: rgba(141, 224, 168, 0.10); }
+.puc-garden__card[data-plot="pinSkewer"] .puc-garden__card-icon { color: #c8d0e0; background: rgba(200, 208, 224, 0.10); }
+.puc-garden__card[data-plot="sacrifice"] .puc-garden__card-icon { color: #f08868; background: rgba(240, 136, 104, 0.10); }
+.puc-garden__card[data-plot="endgame"]   .puc-garden__card-icon { color: #88c8e8; background: rgba(136, 200, 232, 0.10); }
+.puc-garden__card[data-plot="defense"]   .puc-garden__card-icon { color: #c0a4f0; background: rgba(192, 164, 240, 0.10); }
 
 .puc-garden__card-body {
   display: flex;
@@ -424,5 +441,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .puc-garden__card { grid-template-columns: 44px 1fr auto; gap: 10px; }
-  .puc-garden__card-icon { font-size: 24px; width: 44px; height: 44px; }
+  .puc-garden__card-icon { width: 44px; height: 44px; }
+  .puc-garden__card-icon-svg { width: 30px; height: 30px; }
 }

@@ -17,6 +17,7 @@ import { ChatPanel } from './ChatPanel'
 import { OnlineList } from './OnlineList'
 import { VisitorCard } from './VisitorCard'
 import { RoomDoor } from './RoomDoor'
+import { HallAmbient } from './HallAmbient'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
@@ -142,6 +143,7 @@ export function HallScreen() {
 
   return (
     <div className="puc-hall">
+      <HallAmbient />
       <header className="puc-hall__header">
         <h1 className="puc-hall__title">The Great Hall</h1>
         <div className="puc-hall__header-right">
