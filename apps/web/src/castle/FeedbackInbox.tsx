@@ -7,6 +7,7 @@
 // Firestore rule guards the read (cross-doc lookup against guests/jeff).
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   collection,
   limit,
@@ -95,7 +96,7 @@ export function FeedbackInbox() {
         📮 Inbox{unread > 0 ? ` · ${unread}` : ''}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="puc-inbox-overlay"
           role="dialog"
@@ -154,7 +155,8 @@ export function FeedbackInbox() {
               </ul>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )
