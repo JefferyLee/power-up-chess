@@ -157,3 +157,28 @@ export const markFeedbackRead = onCall<MarkFeedbackReadRequest, Promise<{ ok: tr
     return { ok: true }
   },
 )
+
+export interface DeleteFeedbackRequest {
+  id: string
+}
+
+export const deleteFeedback = onCall<DeleteFeedbackRequest, Promise<{ ok: true }>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const id = String(req.data?.id ?? '').trim()
+    if (!id) throw new HttpsError('invalid-argument', 'id required.')
+
+    const db = getFirestore()
+    const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
+    const admin = adminSnap.data() as GuestDoc | undefined
+    if (!admin || !admin.uids.includes(req.auth.uid)) {
+      throw new HttpsError('permission-denied', 'Inbox is reserved for the dev.')
+    }
+
+    const ref = db.doc(`feedback/${id}`)
+    const exists = await ref.get()
+    if (!exists.exists) throw new HttpsError('not-found', 'Feedback not found.')
+    await ref.delete()
+    return { ok: true }
+  },
+)

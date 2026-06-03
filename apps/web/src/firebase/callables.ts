@@ -475,6 +475,9 @@ export interface SubmitFeedbackResponse { ok: true; ts: number }
 export interface MarkFeedbackReadRequest { id: string; read?: boolean }
 export interface MarkFeedbackReadResponse { ok: true }
 
+export interface DeleteFeedbackRequest { id: string }
+export interface DeleteFeedbackResponse { ok: true }
+
 export interface AwardTutorialCompleteRequest { normalizedName: string }
 export interface AwardTutorialCompleteResponse {
   ok: true
@@ -535,6 +538,10 @@ const markFeedbackReadFn = httpsCallable<
   MarkFeedbackReadRequest,
   MarkFeedbackReadResponse
 >(functions, 'markFeedbackRead')
+const deleteFeedbackFn = httpsCallable<
+  DeleteFeedbackRequest,
+  DeleteFeedbackResponse
+>(functions, 'deleteFeedback')
 const awardTutorialCompleteFn = httpsCallable<
   AwardTutorialCompleteRequest,
   AwardTutorialCompleteResponse
@@ -791,6 +798,12 @@ export async function callMarkFeedbackRead(
   req: MarkFeedbackReadRequest,
 ): Promise<MarkFeedbackReadResponse> {
   const { data } = await markFeedbackReadFn(req)
+  return data
+}
+export async function callDeleteFeedback(
+  req: DeleteFeedbackRequest,
+): Promise<DeleteFeedbackResponse> {
+  const { data } = await deleteFeedbackFn(req)
   return data
 }
 export async function callAwardTutorialComplete(

@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from './useCastle'
-import { callMarkFeedbackRead } from '../firebase/callables'
+import { callDeleteFeedback, callMarkFeedbackRead } from '../firebase/callables'
 import './FeedbackInbox.css'
 
 const ADMIN_NORMALIZED_NAME = 'jeff'
@@ -85,6 +85,15 @@ export function FeedbackInbox() {
     }
   }
 
+  const deleteRow = async (id: string) => {
+    if (!window.confirm('Delete this feedback? This cannot be undone.')) return
+    try {
+      await callDeleteFeedback({ id })
+    } catch (err) {
+      console.warn('deleteFeedback failed:', err)
+    }
+  }
+
   return (
     <>
       <button
@@ -148,6 +157,14 @@ export function FeedbackInbox() {
                         onClick={() => markRead(r.id, !r.read)}
                       >
                         {r.read ? 'Mark unread' : 'Mark read'}
+                      </button>
+                      <button
+                        type="button"
+                        className="puc-inbox__btn puc-inbox__btn--danger"
+                        onClick={() => deleteRow(r.id)}
+                        aria-label="Delete this feedback"
+                      >
+                        Delete
                       </button>
                     </div>
                   </li>

@@ -5,6 +5,7 @@
 // inbox pill in the Hall header.
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { callSubmitFeedback } from '../firebase/callables'
 import { useCastle } from './useCastle'
@@ -85,7 +86,7 @@ export function FeedbackButton() {
         💡 Suggest / report a bug
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="puc-feedback-overlay"
           role="dialog"
@@ -169,7 +170,8 @@ export function FeedbackButton() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )

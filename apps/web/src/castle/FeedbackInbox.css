@@ -164,6 +164,7 @@
 .puc-inbox__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 6px;
 }
 .puc-inbox__btn {
   background: transparent;
@@ -178,4 +179,12 @@
 .puc-inbox__btn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--puc-text);
+}
+.puc-inbox__btn--danger {
+  border-color: rgba(220, 120, 120, 0.45);
+  color: rgba(240, 170, 160, 0.95);
+}
+.puc-inbox__btn--danger:hover {
+  background: rgba(220, 120, 120, 0.12);
+  color: #f4b0a0;
 }
