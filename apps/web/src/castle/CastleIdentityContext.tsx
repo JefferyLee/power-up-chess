@@ -11,7 +11,7 @@ import type { HostId } from '../hosts/hosts'
 import { hostOnDuty, msUntilNextRotation } from '../hosts/hostOnDuty'
 import { CastleContext, type CastleContextValue } from './castleContext'
 import {
-  clearIdentity,
+  clearIdentityKeepCredential,
   loadIdentity,
   saveIdentity,
   saveIdentityWithCredential,
@@ -60,7 +60,10 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(() => {
-    clearIdentity()
+    // Drop the live identity but keep the cached credential so the
+    // wicket can welcome the user back (still within the 5-day TTL)
+    // without making them re-type their magic word.
+    clearIdentityKeepCredential()
     setIdentity(null)
   }, [])
 

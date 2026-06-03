@@ -13,9 +13,12 @@ const TTL_MS = 5 * 24 * 60 * 60 * 1000  // 5 days
 
 interface StoredAccount {
   savedAt: number
-  identity: CastleIdentity
+  /** Absent after a normal sign-out — credential alone is enough to drive
+   *  the wicket's "Welcome back" path on the next visit. */
+  identity?: CastleIdentity
   /** Cached magic-word credential for "quick re-enter" on the wicket.
-   *  Absent for bypass guests (no Firestore record, no quick-enter). */
+   *  Absent for bypass guests (no Firestore record, no quick-enter) and
+   *  cleared by the "Not me?" link on the wicket. */
   credential?: CastleCredential
 }
 
@@ -91,38 +94,53 @@ function readStored(): StoredAccount | null {
       window.localStorage.removeItem(IDENTITY_KEY)
       return null
     }
+    // Parse identity if present + valid; otherwise the wrapper may still
+    // carry a credential (post-sign-out state) and we shouldn't bail.
     const parsed = wrapper.identity as Partial<CastleIdentity> | undefined
-    if (!parsed || typeof parsed.displayName !== 'string' || parsed.displayName.length === 0) return null
-    if (typeof parsed.normalizedName !== 'string' || parsed.normalizedName.length === 0) return null
-    const lastDecay = parsed.lastDecay
-    const lastBonus = parsed.lastBonus
-    const identity: CastleIdentity = {
-      displayName: parsed.displayName,
-      normalizedName: parsed.normalizedName,
-      castlePoints: typeof parsed.castlePoints === 'number' && parsed.castlePoints >= 0 ? parsed.castlePoints : 0,
-      isBypass: parsed.isBypass === true,
-      isFirstVisit: parsed.isFirstVisit === true,
-      ...(lastDecay && typeof lastDecay.decayedBy === 'number' && typeof lastDecay.pointsBefore === 'number'
-        ? { lastDecay: { decayedBy: lastDecay.decayedBy, pointsBefore: lastDecay.pointsBefore } }
-        : {}),
-      ...(lastBonus && typeof lastBonus.total === 'number' && lastBonus.total > 0
-        ? { lastBonus: { ...lastBonus, total: lastBonus.total } }
-        : {}),
-      ...(typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0
-        ? { sessionId: parsed.sessionId }
-        : {}),
-      ...(parsed.cosmetics &&
-      typeof parsed.cosmetics === 'object' &&
-      typeof parsed.cosmetics.pieceSet === 'string'
-        ? { cosmetics: { pieceSet: parsed.cosmetics.pieceSet } }
-        : {}),
+    let identity: CastleIdentity | undefined
+    if (
+      parsed &&
+      typeof parsed.displayName === 'string' &&
+      parsed.displayName.length > 0 &&
+      typeof parsed.normalizedName === 'string' &&
+      parsed.normalizedName.length > 0
+    ) {
+      const lastDecay = parsed.lastDecay
+      const lastBonus = parsed.lastBonus
+      identity = {
+        displayName: parsed.displayName,
+        normalizedName: parsed.normalizedName,
+        castlePoints:
+          typeof parsed.castlePoints === 'number' && parsed.castlePoints >= 0 ? parsed.castlePoints : 0,
+        isBypass: parsed.isBypass === true,
+        isFirstVisit: parsed.isFirstVisit === true,
+        ...(lastDecay && typeof lastDecay.decayedBy === 'number' && typeof lastDecay.pointsBefore === 'number'
+          ? { lastDecay: { decayedBy: lastDecay.decayedBy, pointsBefore: lastDecay.pointsBefore } }
+          : {}),
+        ...(lastBonus && typeof lastBonus.total === 'number' && lastBonus.total > 0
+          ? { lastBonus: { ...lastBonus, total: lastBonus.total } }
+          : {}),
+        ...(typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0
+          ? { sessionId: parsed.sessionId }
+          : {}),
+        ...(parsed.cosmetics &&
+        typeof parsed.cosmetics === 'object' &&
+        typeof parsed.cosmetics.pieceSet === 'string'
+          ? { cosmetics: { pieceSet: parsed.cosmetics.pieceSet } }
+          : {}),
+      }
     }
     const cred = wrapper.credential
     const credential: CastleCredential | undefined =
       cred && typeof cred.displayName === 'string' && typeof cred.hash === 'string' && cred.hash.length > 0
         ? { displayName: cred.displayName, hash: cred.hash }
         : undefined
-    return { savedAt: wrapper.savedAt, identity, ...(credential ? { credential } : {}) }
+    if (!identity && !credential) return null
+    return {
+      savedAt: wrapper.savedAt,
+      ...(identity ? { identity } : {}),
+      ...(credential ? { credential } : {}),
+    }
   } catch {
     return null
   }
@@ -165,6 +183,21 @@ export function saveIdentityWithCredential(identity: CastleIdentity, credential:
   writeStored({ savedAt: Date.now(), identity, credential })
 }
 
+/** Drop the live identity but keep the cached credential so the wicket
+ *  can still render the "Welcome back" quick-enter path on the next
+ *  visit. Used by the Hall's Sign out button. */
+export function clearIdentityKeepCredential(): void {
+  const existing = readStored()
+  if (!existing || !existing.credential) {
+    clearIdentity()
+    return
+  }
+  writeStored({ savedAt: existing.savedAt, credential: existing.credential })
+}
+
+/** Full forget — clears both identity and credential. Used by the
+ *  wicket's "Not <name>?" link when the user explicitly disowns the
+ *  cached account. */
 export function clearIdentity(): void {
   if (typeof window === 'undefined') return
   try {
