@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import clsx from 'clsx'
 import type { Color, MoveInput, Piece as PieceModel, Square as SquareName } from '../chess/types'
+import { useCosmetics } from '../cosmetics/useCosmetics'
 import { Piece } from './Piece'
 import { Square, type SquareHighlights } from './Square'
 import { FILES, RANKS, squareColor, squaresInVisualOrder, type File, type Rank } from './squares'
@@ -184,9 +185,24 @@ export function Board({
 
   const cells = useMemo(() => squaresInVisualOrder(orientation), [orientation])
 
-  const styleVars: CSSProperties = {
-    ['--puc-square-size' as string]: `${squareSize}px`,
-  }
+  // When the equipped piece set ships its own board palette (HD's
+  // marble + walnut, Chibi's pastel pink + lavender, Stone's ivory +
+  // twilight, etc.), use it as a per-board override of the visual
+  // theme's default --puc-sq-* tokens. Sets without a palette leave
+  // the tokens alone and inherit whatever theme the host chose.
+  const { pieceSet } = useCosmetics()
+  const styleVars: CSSProperties = useMemo(() => {
+    const vars: Record<string, string> = {
+      '--puc-square-size': `${squareSize}px`,
+    }
+    const bc = pieceSet.boardColors
+    if (bc) {
+      vars['--puc-sq-light'] = bc.light
+      vars['--puc-sq-dark'] = bc.dark
+      if (bc.bg) vars['--puc-board-bg'] = bc.bg
+    }
+    return vars as CSSProperties
+  }, [squareSize, pieceSet])
 
   return (
     <div

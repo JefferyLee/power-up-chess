@@ -70,7 +70,32 @@ const STONE: Record<Color, Record<PieceSymbol, string>> = {
   },
 }
 
-export type PieceSetTier = 'free' | 'common' | 'rare' | 'master'
+// HD humanoid warriors — Lion Kingdom (white) vs Wolf Kingdom (black).
+// AI-generated in the "modern Battle Chess homage" style.
+const HD: Record<Color, Record<PieceSymbol, string>> = {
+  w: {
+    k: '/sprites/hd/wK.png', q: '/sprites/hd/wQ.png', r: '/sprites/hd/wR.png',
+    b: '/sprites/hd/wB.png', n: '/sprites/hd/wN.png', p: '/sprites/hd/wP.png',
+  },
+  b: {
+    k: '/sprites/hd/bK.png', q: '/sprites/hd/bQ.png', r: '/sprites/hd/bR.png',
+    b: '/sprites/hd/bB.png', n: '/sprites/hd/bN.png', p: '/sprites/hd/bP.png',
+  },
+}
+
+// Chibi horse-warrior army — anthropomorphic kawaii style.
+const CHIBI: Record<Color, Record<PieceSymbol, string>> = {
+  w: {
+    k: '/sprites/chibi/wK.png', q: '/sprites/chibi/wQ.png', r: '/sprites/chibi/wR.png',
+    b: '/sprites/chibi/wB.png', n: '/sprites/chibi/wN.png', p: '/sprites/chibi/wP.png',
+  },
+  b: {
+    k: '/sprites/chibi/bK.png', q: '/sprites/chibi/bQ.png', r: '/sprites/chibi/bR.png',
+    b: '/sprites/chibi/bB.png', n: '/sprites/chibi/bN.png', p: '/sprites/chibi/bP.png',
+  },
+}
+
+export type PieceSetTier = 'free' | 'common' | 'rare' | 'master' | 'legendary'
 export type PieceSetId =
   | 'classic'
   | 'outline'
@@ -78,6 +103,18 @@ export type PieceSetId =
   | 'fantasy'
   | 'animated'
   | 'stone'
+  | 'chibi'
+  | 'hd'
+
+/** Overrides for the board's CSS colour tokens when this set is equipped.
+ *  Themed colour pairing per set so the pieces + board feel like one work,
+ *  not pieces dropped onto an unrelated background. */
+export interface PieceSetBoardColors {
+  light: string
+  dark: string
+  /** Outer container bg, visible at the rounded corners + drop shadow. */
+  bg?: string
+}
 
 export interface PieceSet {
   id: PieceSetId
@@ -89,6 +126,9 @@ export interface PieceSet {
   /** True until the set has real assets in place. The shop renders
    *  locked cards with the price visible but no Equip action. */
   locked: boolean
+  /** Optional themed board colours. When omitted the board falls back
+   *  to the active visual theme's defaults (magic-forest / starry). */
+  boardColors?: PieceSetBoardColors
   /** Returns a renderable for one piece. Unicode sets return a string
    *  (rendered via CSS colour on the parent `.puc-piece--w/b`); SVG sets
    *  return an `<img>` element so the artwork carries its own colour. */
@@ -172,9 +212,49 @@ export const PIECE_SETS: Record<PieceSetId, PieceSet> = {
     tier: 'master',
     priceCp: 1000,
     locked: false,
+    boardColors: { light: '#e8e3d4', dark: '#3d3550', bg: '#1a1530' },
     glyphFor: (t, c) => (
       <img
         src={STONE[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg"
+      />
+    ),
+  },
+  chibi: {
+    id: 'chibi',
+    label: 'Chibi Horse Heroes',
+    blurb: 'Kawaii horse warriors — same friendly army on both sides, just different colours.',
+    tier: 'master',
+    priceCp: 1500,
+    locked: false,
+    // Soft pastel board to match the pink + lavender vibe of the chibi
+    // character palette.
+    boardColors: { light: '#fbd6e2', dark: '#c4a8e6', bg: '#b8e5cb' },
+    glyphFor: (t, c) => (
+      <img
+        src={CHIBI[c][t]}
+        alt=""
+        draggable={false}
+        className="puc-piece-svg"
+      />
+    ),
+  },
+  hd: {
+    id: 'hd',
+    label: 'Lion & Wolf Kingdoms',
+    blurb: 'Modern HD humanoid warriors. The Lion Kingdom (white) faces the Wolf Kingdom (black) — a high-fidelity tribute to classic Battle Chess.',
+    tier: 'legendary',
+    priceCp: 3000,
+    locked: false,
+    // Creamy marble + walnut + warm deep walnut bg — pairs with the gold
+    // armour on the Lion Kingdom pieces and the navy/silver on the
+    // Wolf Kingdom side without fighting either palette.
+    boardColors: { light: '#f3e8d0', dark: '#5c3d24', bg: '#2b1c10' },
+    glyphFor: (t, c) => (
+      <img
+        src={HD[c][t]}
         alt=""
         draggable={false}
         className="puc-piece-svg"
@@ -194,6 +274,8 @@ export const PIECE_SET_ORDER: PieceSetId[] = [
   'fantasy',
   'animated',
   'stone',
+  'chibi',
+  'hd',
 ]
 
 export function getPieceSet(id: string | undefined): PieceSet {
@@ -210,4 +292,5 @@ export const PIECE_SET_TIER_LABEL: Record<PieceSetTier, string> = {
   common: 'Common',
   rare: 'Rare',
   master: 'Master',
+  legendary: 'Legendary',
 }
