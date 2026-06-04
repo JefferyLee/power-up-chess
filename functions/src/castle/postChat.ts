@@ -95,6 +95,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       await guestRefForDeduct.update({ castlePoints: FieldValue.increment(-HALL_CHAT_COST) })
     }
 
+    const viaTerminal = req.data?.viaTerminal === true
     const msg: ChatMessageDoc = {
       name: displayName,
       uid,
@@ -107,6 +108,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       ...(hasCrown ? { hasCrown: true } : {}),
       ...(hasTournamentCrown ? { hasTournamentCrown: true } : {}),
       ...(title ? { title } : {}),
+      ...(viaTerminal ? { viaTerminal: true } : {}),
     }
     const ref = await db.collection('lobby/messages/items').add(msg)
 

@@ -90,7 +90,9 @@ export function TerminalOverlay({ onClose }: Props) {
         // typed into the terminal is NOT broadcast — see the !handled
         // branch below.
         postPublic: async (msg: string) => {
-          await callPostChat({ text: msg.slice(0, 200) })
+          // Every terminal-originated public post carries the
+          // viaTerminal flag so onlookers see a "secret tunnel" tag.
+          await callPostChat({ text: msg.slice(0, 200), viaTerminal: true })
         },
         exitTerminal: onClose,
       })

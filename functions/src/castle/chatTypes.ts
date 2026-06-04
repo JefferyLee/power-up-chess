@@ -87,6 +87,10 @@ export interface ChatMessageDoc {
    *  omitted when below the entry threshold. Snapshot — historical
    *  bubbles keep showing the title from when they were posted. */
   title?: string
+  /** True if the message was sent via the Castle Terminal's /say
+   *  bridge instead of the normal chat input. Lets the bubble render
+   *  a "secret tunnel" tag so onlookers know where it came from. */
+  viaTerminal?: boolean
 }
 
 /** Where the user currently is in the app. `hall` is the default; any
@@ -140,6 +144,10 @@ export interface PresenceDoc {
 
 export interface PostChatRequest {
   text: string
+  /** True when the message came from the Castle Terminal's /say
+   *  bridge. Stamped onto the stored doc so the bubble can show a
+   *  "secret tunnel" tag. */
+  viaTerminal?: boolean
 }
 export type PostChatResponse =
   | { status: 'ok'; messageId: string; censored: boolean; hostReplyPending: boolean }

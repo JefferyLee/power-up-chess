@@ -142,6 +142,9 @@ const awardCastlePointsFn = httpsCallable<AwardCastlePointsRequest, AwardCastleP
 // MVP2 Phase D: Hall chat.
 export interface PostChatRequest {
   text: string
+  /** True when the post came from the Castle Terminal's /say bridge —
+   *  rendered with a "secret tunnel" tag in chat. */
+  viaTerminal?: boolean
 }
 export type PostChatResponse =
   | { status: 'ok'; messageId: string; censored: boolean; hostReplyPending: boolean }

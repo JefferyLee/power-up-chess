@@ -48,6 +48,9 @@ export interface ChatMessage {
   hasTournamentCrown?: boolean
   /** Lifetime-earn title at send time (Apprentice/Adept/Sorcerer/Archmage). */
   title?: string
+  /** True when this message was sent via the Castle Terminal's /say
+   *  bridge — the bubble renders a "secret tunnel" tag. */
+  viaTerminal?: boolean
 }
 
 export type LocationTag =

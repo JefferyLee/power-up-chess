@@ -315,6 +315,16 @@
   text-transform: none;
 }
 
+/* "Sent from the secret tunnel" tag — purple, mystery vibe. Renders
+ * inline between the title chip and timestamp. */
+.puc-chat__tunnel {
+  margin-left: 4px;
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  color: rgba(178, 156, 255, 0.85);
+}
+
 .puc-chat__text {
   color: var(--puc-text);
   word-wrap: break-word;

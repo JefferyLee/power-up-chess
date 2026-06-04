@@ -178,6 +178,11 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
         {message.title && <span className="puc-chat__title">· {message.title}</span>}
         {isHost ? ' · host' : ''}
         {isSystem ? ' · system' : ''}
+        {message.viaTerminal && (
+          <span className="puc-chat__tunnel" title="Sent through the Castle Terminal">
+            · 🌀 from the secret tunnel
+          </span>
+        )}
         <span className="puc-chat__time">{formatChatTime(message.ts)}</span>
       </span>
       {paragraphs ? (
