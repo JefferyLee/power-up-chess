@@ -15,6 +15,7 @@ import { usePublicStats, type PublicStatsState } from './usePublicStats'
 import { LivePulsePanel } from './LivePulsePanel'
 import { CastleSign } from './CastleSign'
 import { useCastleLivePulse, type CastleLivePulse, type CastleLivePulseState } from './useCastleLivePulse'
+import { NameLink } from '../invitations/NameLink'
 import './GateScreen.css'
 
 type GatePhase = 'closed' | 'opening' | 'open'
@@ -377,7 +378,11 @@ function ChampionsList({ stats }: { stats: PublicStatsState }) {
       {stats.stats.topGuests.map((g, i) => (
         <li key={`${g.displayName}-${i}`} className="puc-gate__lb-row">
           <span className="puc-gate__lb-rank">{i + 1}</span>
-          <span className="puc-gate__lb-name">
+          <NameLink
+            normalizedName={g.normalizedName}
+            displayName={g.displayName}
+            className="puc-gate__lb-name puc-gate__lb-name--link"
+          >
             {g.hasTournamentCrown
               ? <span className="puc-gate__lb-mark puc-gate__lb-mark--crown" title="Weekly Tournament champion">🏆</span>
               : g.hasCrown
@@ -387,7 +392,7 @@ function ChampionsList({ stats }: { stats: PublicStatsState }) {
                   : null}
             {g.displayName}
             {g.title && <span className="puc-gate__lb-title"> · {g.title}</span>}
-          </span>
+          </NameLink>
           <span className="puc-gate__lb-points">{g.castlePoints}</span>
         </li>
       ))}

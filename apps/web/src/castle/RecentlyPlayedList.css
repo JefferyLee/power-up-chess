@@ -1,0 +1,83 @@
+/* Recently played sidebar — sits in the Hall's right column under
+ * the VisitorCard + OnlineList. */
+.puc-recently {
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(231, 184, 65, 0.16);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--puc-text);
+  margin-top: 12px;
+}
+.puc-recently__title {
+  margin: 0 0 8px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(231, 184, 65, 0.78);
+  font-weight: 600;
+}
+.puc-recently__empty {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+.puc-recently__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puc-recently__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+.puc-recently__row:hover {
+  background: rgba(241, 195, 76, 0.06);
+}
+.puc-recently__row--offline { opacity: 0.6; }
+
+.puc-recently__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(140, 140, 160, 0.4);
+  flex-shrink: 0;
+}
+.puc-recently__dot--on {
+  background: #6fcf97;
+  box-shadow: 0 0 4px rgba(72, 200, 120, 0.7);
+}
+
+.puc-recently__name {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-recently__name:hover {
+  color: var(--puc-text-accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(241, 195, 76, 0.4);
+}
+
+.puc-recently__where {
+  font-size: 10.5px;
+  color: rgba(231, 184, 65, 0.65);
+  font-style: italic;
+}

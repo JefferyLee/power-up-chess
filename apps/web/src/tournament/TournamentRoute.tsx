@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
+import { NameLink } from '../invitations/NameLink'
 const TOURNAMENT_WINNER_REWARD_PTS = 100
 import {
   BYE_OPPONENT,
@@ -426,7 +427,11 @@ function Standings({
           <li key={r.normalizedName} className="puc-tour__standings-row">
             <span className="puc-tour__standings-rank">#{i + 1}</span>
             <span className="puc-tour__standings-name">
-              {r.displayName}
+              <NameLink
+                normalizedName={r.normalizedName}
+                displayName={r.displayName}
+                className="puc-tour__name-link"
+              />
               {tournament.winnerName === r.displayName && ' 🏆'}
             </span>
             <span className="puc-tour__standings-score">{formatScore(r.score)}</span>
@@ -665,7 +670,13 @@ function ParticipantList({
               }
             >
               <span className="puc-tour__list-num">#{i + 1}</span>
-              <span className="puc-tour__list-name">{p.displayName}</span>
+              <span className="puc-tour__list-name">
+                <NameLink
+                  normalizedName={p.normalizedName}
+                  displayName={p.displayName}
+                  className="puc-tour__name-link"
+                />
+              </span>
               <span className="puc-tour__list-time">{formatJoined(p.registeredAt)}</span>
             </li>
           ))}

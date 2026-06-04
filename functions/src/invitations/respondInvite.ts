@@ -16,6 +16,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { appendRecentlyPlayedTx } from '../castle/recentlyPlayed'
 import { sanitisePieceSetId } from '../cosmetics/registry'
 import { generateRoomId } from '../rooms/roomId'
 import type { RoomDoc } from '../rooms/types'
@@ -91,13 +92,19 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
       }
 
       // Accept path — read remaining preconditions inside the txn so other
-      // simultaneous writes can't sneak past us.
+      // simultaneous writes can't sneak past us. Sender guest is also
+      // read so we can bump both sides' recentlyPlayedWith list.
       const accepterGuestRef = db.doc(`guests/${invite.toNormalizedName}`)
-      const accepterSnap = await tx.get(accepterGuestRef)
+      const senderGuestRef = db.doc(`guests/${invite.fromNormalizedName}`)
+      const [accepterSnap, senderSnap] = await Promise.all([
+        tx.get(accepterGuestRef),
+        tx.get(senderGuestRef),
+      ])
       if (!accepterSnap.exists) {
         throw new HttpsError('failed-precondition', 'Accepter guest record missing.')
       }
       const accepter = accepterSnap.data() as GuestDoc
+      const sender = senderSnap.exists ? (senderSnap.data() as GuestDoc) : null
 
       // Find an unused room id. Reading until we hit a free slot — Firestore
       // refuses to .create() over an existing doc, but we use .get() in the
@@ -143,6 +150,22 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
         status: 'accepted' as InvitationStatus,
         roomId: chosenRoomId,
       })
+
+      // Bump recently-played-with on both sides. Accepting an invite
+      // is a clear "we're playing together" signal — front-load this
+      // BEFORE the actual game finishes so the list updates the moment
+      // a kid hits Accept.
+      appendRecentlyPlayedTx(tx, accepterGuestRef, accepter, {
+        normalizedName: invite.fromNormalizedName,
+        displayName: invite.fromName,
+      }, now)
+      if (sender) {
+        appendRecentlyPlayedTx(tx, senderGuestRef, sender, {
+          normalizedName: invite.toNormalizedName,
+          displayName: accepter.displayName,
+        }, now)
+      }
+
       return { status: 'accepted' as InvitationStatus, roomId: chosenRoomId }
     })
 

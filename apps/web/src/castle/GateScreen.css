@@ -407,6 +407,22 @@
   gap: 3px;
   min-width: 0;
 }
+/* When the name is rendered as a NameLink button it needs the default
+ * browser button chrome stripped so it sits inline like the span. */
+button.puc-gate__lb-name--link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+button.puc-gate__lb-name--link:hover {
+  color: #f1c34c;
+  text-decoration: underline;
+  text-decoration-color: rgba(241, 195, 76, 0.4);
+}
 
 .puc-gate__lb-mark {
   display: inline-block;

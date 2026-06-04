@@ -22,6 +22,8 @@ import { OnlineList } from './OnlineList'
 import { VisitorCard } from './VisitorCard'
 import { RoomDoor } from './RoomDoor'
 import { HallAmbient } from './HallAmbient'
+import { RecentlyPlayedList } from './RecentlyPlayedList'
+import { FindPlayer } from './FindPlayer'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
@@ -297,6 +299,8 @@ export function HallScreen() {
         <div className="puc-hall__sidecol">
           <VisitorCard />
           <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
+          <FindPlayer />
+          <RecentlyPlayedList />
         </div>
       </section>
 

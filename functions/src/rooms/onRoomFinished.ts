@@ -18,6 +18,7 @@ import {
   ELO_PROVISIONAL_GAMES,
   type GuestDoc,
 } from '../castle/types'
+import { appendRecentlyPlayedTx } from '../castle/recentlyPlayed'
 import type { RoomDoc } from './types'
 
 function normalizeName(name: string): string {
@@ -87,5 +88,26 @@ export const onRoomFinished = onDocumentUpdated('rooms/{roomId}', async (event) 
       chessRatingDelta: blackDelta,
       chessGames: blackG + 1,
     })
+
+    // Recently-played-with: each side bumps the other to the top of
+    // their own list. Uses the displayName off the room (which is the
+    // server-stored copy of what was on each player's identity at
+    // game-start) so the casing stays nice.
+    const now = Date.now()
+    const blackPlayer = after.black!
+    appendRecentlyPlayedTx(
+      tx,
+      whiteRef,
+      whiteDoc,
+      { normalizedName: blackName, displayName: blackPlayer.displayName },
+      now,
+    )
+    appendRecentlyPlayedTx(
+      tx,
+      blackRef,
+      blackDoc,
+      { normalizedName: whiteName, displayName: after.white.displayName },
+      now,
+    )
   })
 })

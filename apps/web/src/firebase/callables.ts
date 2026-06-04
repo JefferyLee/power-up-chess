@@ -635,6 +635,35 @@ export async function callGetLibraryShelves(): Promise<GetLibraryShelvesResponse
   return data
 }
 
+export interface RecentlyPlayedEntry {
+  normalizedName: string
+  displayName: string
+  lastPlayedAt: number
+  online: boolean
+  here?: 'hall' | 'chess' | 'wizard' | 'puzzle' | 'practice' | 'local' | 'forest'
+}
+export interface GetRecentlyPlayedResponse { entries: RecentlyPlayedEntry[] }
+const getRecentlyPlayedFn = httpsCallable<unknown, GetRecentlyPlayedResponse>(
+  functions,
+  'getRecentlyPlayed',
+)
+export async function callGetRecentlyPlayed(): Promise<GetRecentlyPlayedResponse> {
+  const { data } = await getRecentlyPlayedFn(undefined)
+  return data
+}
+
+export interface FindPlayerRequest { query: string }
+export interface FindPlayerMatch { normalizedName: string; displayName: string }
+export interface FindPlayerResponse { matches: FindPlayerMatch[] }
+const findPlayerFn = httpsCallable<FindPlayerRequest, FindPlayerResponse>(
+  functions,
+  'findPlayer',
+)
+export async function callFindPlayer(req: FindPlayerRequest): Promise<FindPlayerResponse> {
+  const { data } = await findPlayerFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string

@@ -194,6 +194,10 @@ export const WIZARD_ABSOLUTE_FLOOR = 1000
 
 export interface TopGuest {
   displayName: string
+  /** Lookup key — used by client surfaces to open this guest's plaque
+   *  via the UserCard / getPublicProfile callable. Missing on pre-2026
+   *  stats docs; the client should fall through to a non-link. */
+  normalizedName?: string
   castlePoints: number
   /** Lifetime-earn title label at refresh time ("Apprentice", etc.). */
   title?: string
@@ -332,11 +336,25 @@ export interface GuestDoc {
   /** Distinct story ids the guest has opened or listened to. Dedupe key
    *  for booksRead — re-opening the same story doesn't double-count. */
   booksReadIds?: string[]
+  /** Recently-interacted guests — capped, newest-first. Drives the
+   *  "Recently played with" list on the Hall sidebar so offline kids
+   *  whose plaques you care about are one tap away. Written by
+   *  onRoomFinished (online chess) + respondInvite (on accept). */
+  recentlyPlayedWith?: Array<{
+    normalizedName: string
+    displayName: string
+    /** ms timestamp of the last interaction. */
+    at: number
+  }>
   /** Correct story-quiz answers all-time (write side TODO). */
   quizCorrect?: number
   /** Total story-quiz attempts (write side TODO). */
   quizAttempted?: number
 }
+
+/** Cap for recentlyPlayedWith — newest 12 entries. Keeps the guest
+ *  doc small while covering a couple weeks of casual play. */
+export const RECENTLY_PLAYED_MAX = 12
 
 /** Starting Elo for a brand-new player. Mid-beginner so a couple of
  *  wins against an early-rated peer feels good but not laughable. */

@@ -8,6 +8,9 @@ import { db } from '../firebase/app'
 
 export interface TopGuest {
   displayName: string
+  /** Normalized lookup key for opening this guest's plaque via UserCard.
+   *  Missing on stats docs written before this field landed. */
+  normalizedName?: string
   castlePoints: number
   /** Lifetime-earn title label (Apprentice/Adept/Sorcerer/Archmage). */
   title?: string

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
+import { NameLink } from '../invitations/NameLink'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
@@ -113,7 +114,15 @@ function Bubble({ message }: { message: ChatMessage }) {
           : message.hasCrown
             ? <span className="puc-chat__crown" title="3+ duel wins in a row — last 72h">🔥</span>
             : message.hasHalo && <span className="puc-chat__halo" title="Duel winner — last 24h">✨</span>}
-        {message.name}
+        {message.kind === 'user' && !message.isBypass && message.normalizedName ? (
+          <NameLink
+            normalizedName={message.normalizedName}
+            displayName={message.name}
+            className="puc-chat__name-link"
+          />
+        ) : (
+          <>{message.name}</>
+        )}
         {message.title && <span className="puc-chat__title">· {message.title}</span>}
         {isHost ? ' · host' : ''}
         {isSystem ? ' · system' : ''}

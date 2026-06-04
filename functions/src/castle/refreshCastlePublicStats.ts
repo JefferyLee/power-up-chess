@@ -47,6 +47,7 @@ export const refreshCastlePublicStats = onSchedule(
       const tCrown = g.cosmetics?.tournamentCrownExpiresAt
       return {
         displayName: g.displayName,
+        normalizedName: g.normalizedName,
         castlePoints: g.castlePoints,
         ...(titleLabel ? { title: titleLabel } : {}),
         ...(typeof halo === 'number' && halo > now ? { hasHalo: true } : {}),

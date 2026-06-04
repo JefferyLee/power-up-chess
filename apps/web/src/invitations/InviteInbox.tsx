@@ -13,6 +13,7 @@ import { useAuthUid } from '../auth/useAuthUid'
 import { useCosmetics } from '../cosmetics/useCosmetics'
 import { callRespondInvite } from '../firebase/callables'
 import { useIncomingInvites } from './useIncomingInvites'
+import { NameLink } from './NameLink'
 import type { InvitationDoc } from './types'
 import './InviteInbox.css'
 
@@ -78,7 +79,14 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
     <div className="puc-inbox-overlay" role="dialog" aria-label="Chess invitation">
       <div className="puc-inbox__card">
         <p className="puc-inbox__eyebrow">Chess invitation</p>
-        <h2 className="puc-inbox__title">{invite.fromName} wants to play.</h2>
+        <h2 className="puc-inbox__title">
+          <NameLink
+            normalizedName={invite.fromNormalizedName}
+            displayName={invite.fromName}
+            className="puc-inbox__from-link"
+          />
+          {' '}wants to play.
+        </h2>
         <p className="puc-inbox__sub">
           Time control: <b>{tcLabel}</b>
         </p>
