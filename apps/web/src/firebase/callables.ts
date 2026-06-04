@@ -82,6 +82,8 @@ export interface EnterBonus {
 export interface EnterCosmetics {
   pieceSet?: string
   ownedPieceSets?: string[]
+  /** Personal heraldic avatar (slice 4b). */
+  avatar?: TeamBadge
 }
 export type CastleEnterResponse =
   | {
@@ -791,6 +793,14 @@ export async function callPostTeamRecruitment(req: PostTeamRecruitmentRequest): 
   return data
 }
 
+export interface EquipAvatarRequest { avatar: TeamBadge }
+export interface EquipAvatarResponse { ok: true; avatar: TeamBadge }
+const equipAvatarFn = httpsCallable<EquipAvatarRequest, EquipAvatarResponse>(functions, 'equipAvatar')
+export async function callEquipAvatar(req: EquipAvatarRequest): Promise<EquipAvatarResponse> {
+  const { data } = await equipAvatarFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string
@@ -1170,6 +1180,7 @@ export interface GetPublicProfileResponse {
   quizCorrect: number | null
   quizAttempted: number | null
   equippedPieceSet: string | null
+  avatar: TeamBadge | null
   todaysFiveSolved: number | null
   todaysFiveTotal: number | null
   todaysFiveDone: boolean

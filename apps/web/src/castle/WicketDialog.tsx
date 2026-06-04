@@ -56,6 +56,10 @@ export function WicketDialog() {
         // Project them onto the identity so useCosmetics() reads the
         // canonical equipped set from the very first frame.
         const serverPieceSet = res.cosmetics?.pieceSet
+        const serverAvatar = res.cosmetics?.avatar
+        const cosmetics: { pieceSet?: string; avatar?: Record<string, unknown> } = {}
+        if (serverPieceSet) cosmetics.pieceSet = serverPieceSet
+        if (serverAvatar) cosmetics.avatar = serverAvatar as Record<string, unknown>
         signIn(
           {
             displayName: res.displayName,
@@ -68,7 +72,7 @@ export function WicketDialog() {
               ? { lastDecay: { decayedBy: res.decayedBy, pointsBefore: res.pointsBeforeDecay } }
               : {}),
             ...(res.bonus && res.bonus.total > 0 ? { lastBonus: res.bonus } : {}),
-            ...(serverPieceSet ? { cosmetics: { pieceSet: serverPieceSet } } : {}),
+            ...(Object.keys(cosmetics).length > 0 ? { cosmetics } : {}),
           },
           credential,
         )

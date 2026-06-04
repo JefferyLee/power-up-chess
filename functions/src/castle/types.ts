@@ -67,6 +67,9 @@ export interface EnterCosmetics {
   /** Set of piece-set ids the guest owns. Drives the shop's
    *  "purchased" badges immediately, without a second fetch. */
   ownedPieceSets?: string[]
+  /** Personal heraldic avatar (slice 4b). Absent → client renders the
+   *  default avatar (shield-heater / azure / king). */
+  avatar?: TeamBadge
 }
 
 /** Optional bonus block returned by castleEnter. Any combination of the
@@ -517,6 +520,11 @@ export interface GuestCosmetics {
    *  win). Surfaced as a 🏆 badge in the tournament page + future
    *  Hall integration. */
   tournamentCrownExpiresAt?: number
+  /** MVP3-P3 Slice 4b — personal heraldic avatar. Reuses the team
+   *  badge config shape; the avatar editor disables the engraved-
+   *  text fields, so this should always have text/textPosition/
+   *  textColor absent. Server enforces that. */
+  avatar?: TeamBadge
 }
 
 /** Hours the duel-winner halo lasts after a Wizard's Duel victory. */

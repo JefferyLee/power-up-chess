@@ -70,6 +70,8 @@ export interface GetPublicProfileResponse {
   quizAttempted: number | null
   /** Currently-equipped piece-set id (used to render mini-pieces on the plaque). */
   equippedPieceSet: string | null
+  /** Heraldic avatar config — drives the avatar render across the app. */
+  avatar: import('./types').TeamBadge | null
   /** Today's Five — solved count for the current LA day (0-5). null
    *  when the guest hasn't started today's set. */
   todaysFiveSolved: number | null
@@ -189,6 +191,7 @@ export const getPublicProfile = onCall<
     quizCorrect: typeof guest.quizCorrect === 'number' ? guest.quizCorrect : null,
     quizAttempted: typeof guest.quizAttempted === 'number' ? guest.quizAttempted : null,
     equippedPieceSet: guest.cosmetics?.pieceSet ?? null,
+    avatar: guest.cosmetics?.avatar ?? null,
     todaysFiveSolved,
     todaysFiveTotal,
     todaysFiveDone,

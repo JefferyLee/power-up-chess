@@ -58,13 +58,19 @@ export interface CastleIdentity {
     streakDays?: number
     total: number
   }
-  /** P1.D — local cosmetics selection. Server-side mirror lands in the
-   *  next slice; for now this is sessionStorage-only. */
+  /** P1.D — local cosmetics selection. Server is the canonical truth
+   *  (CastleIdentityContext subscribes to the guest doc and patches
+   *  these), the cached copy keeps first-paint fast. */
   cosmetics?: {
     /** PieceSetId, kept as a plain string here so a stale stored value
      *  from a future client doesn't crash older builds — see
      *  cosmetics/pieceSets.ts `getPieceSet` which defaults unknown ids. */
     pieceSet?: string
+    /** Personal heraldic avatar config (slice 4b). Same shape as
+     *  TeamBadge minus the engraved-text fields. Stored as a plain
+     *  object so future heraldry options don't require this type
+     *  to know about them. */
+    avatar?: Record<string, unknown>
   }
 }
 
@@ -123,10 +129,17 @@ function readStored(): StoredAccount | null {
         ...(typeof parsed.sessionId === 'string' && parsed.sessionId.length > 0
           ? { sessionId: parsed.sessionId }
           : {}),
-        ...(parsed.cosmetics &&
-        typeof parsed.cosmetics === 'object' &&
-        typeof parsed.cosmetics.pieceSet === 'string'
-          ? { cosmetics: { pieceSet: parsed.cosmetics.pieceSet } }
+        ...(parsed.cosmetics && typeof parsed.cosmetics === 'object'
+          ? {
+              cosmetics: {
+                ...(typeof parsed.cosmetics.pieceSet === 'string'
+                  ? { pieceSet: parsed.cosmetics.pieceSet }
+                  : {}),
+                ...(parsed.cosmetics.avatar && typeof parsed.cosmetics.avatar === 'object'
+                  ? { avatar: parsed.cosmetics.avatar as Record<string, unknown> }
+                  : {}),
+              },
+            }
           : {}),
       }
     }

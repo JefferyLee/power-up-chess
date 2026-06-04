@@ -69,6 +69,7 @@ export {
   postTeamRecruitment,
 } from './teams/captainActions'
 export { sweepTeams } from './teams/sweepTeams'
+export { equipAvatar } from './teams/equipAvatar'
 export { awardTutorialComplete } from './castle/awardTutorialComplete'
 export { purchaseCosmetic } from './cosmetics/purchaseCosmetic'
 export { equipCosmetic } from './cosmetics/equipCosmetic'

@@ -25,6 +25,17 @@ function themeForHost(hostId: HostId): string {
   return hostId === 'lucy' ? 'magic-forest' : 'starry-universe'
 }
 
+/** Tiny equality helper just for the cosmetics.avatar diff — saves
+ *  an unnecessary identity re-save when the snapshot fires but
+ *  nothing actually changed. */
+function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const ka = Object.keys(a)
+  const kb = Object.keys(b)
+  if (ka.length !== kb.length) return false
+  for (const k of ka) if (a[k] !== b[k]) return false
+  return true
+}
+
 export function CastleIdentityProvider({ children }: { children: ReactNode }) {
   // Host on duty is wall-clock driven: same host for every visitor at the
   // same instant. Re-checked on a timer so a tab open across the rotation
@@ -66,27 +77,35 @@ export function CastleIdentityProvider({ children }: { children: ReactNode }) {
     const unsub = onSnapshot(ref, (snap) => {
       const data = snap.data() as
         | {
-            cosmetics?: { pieceSet?: string }
+            cosmetics?: { pieceSet?: string; avatar?: Record<string, unknown> }
             castlePoints?: number
           }
         | undefined
       if (!data) return
       const serverPieceSet = data.cosmetics?.pieceSet
+      const serverAvatar = data.cosmetics?.avatar
       const serverPoints = typeof data.castlePoints === 'number'
         ? data.castlePoints
         : undefined
       setIdentity((prev) => {
         if (!prev || prev.normalizedName !== identity.normalizedName) return prev
         const cachedPiece = prev.cosmetics?.pieceSet
+        const cachedAvatar = prev.cosmetics?.avatar
         const samePiece = (serverPieceSet ?? undefined) === (cachedPiece ?? undefined)
+        const sameAvatar = serverAvatar === undefined
+          ? cachedAvatar === undefined
+          : cachedAvatar !== undefined && shallowEqual(serverAvatar, cachedAvatar)
         const samePoints = serverPoints === undefined || serverPoints === prev.castlePoints
-        if (samePiece && samePoints) return prev
+        if (samePiece && sameAvatar && samePoints) return prev
+        const nextCosmetics = {
+          ...(prev.cosmetics ?? {}),
+          ...(serverPieceSet !== undefined ? { pieceSet: serverPieceSet } : {}),
+          ...(serverAvatar !== undefined ? { avatar: serverAvatar } : {}),
+        }
         const next: CastleIdentity = {
           ...prev,
           ...(serverPoints !== undefined ? { castlePoints: serverPoints } : {}),
-          ...(serverPieceSet !== undefined
-            ? { cosmetics: { ...(prev.cosmetics ?? {}), pieceSet: serverPieceSet } }
-            : {}),
+          ...(Object.keys(nextCosmetics).length > 0 ? { cosmetics: nextCosmetics } : {}),
         }
         saveIdentity(next)
         return next
