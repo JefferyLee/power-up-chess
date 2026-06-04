@@ -21,6 +21,15 @@ import { setClearedAtNow } from '../clearedAt'
 import { renderAsciiBoard } from './asciiBoard'
 import { loadPlayState, savePlayState, clearPlayState, DEFAULT_RATING } from './playState'
 import { bestReplyUci } from './playEngine'
+import {
+  ROOMS,
+  describeExits,
+  markVisited,
+  parseDirection,
+  saveCurrentRoom,
+  type Direction,
+  type RoomId,
+} from './world'
 
 export type CommandTier = 'basic' | 'advanced' | 'hidden'
 
@@ -34,6 +43,13 @@ export interface WorldSnapshot {
   /** Last ~80 public Hall messages, oldest-first. Snapshot only —
    *  /read picks the tail; the terminal itself never renders these. */
   recentMessages: ChatMessage[]
+  /** Where the kid is in the Castle Map right now. Drives /look and
+   *  the per-room gating for /ask + /play. */
+  currentRoom: RoomId
+  /** Setter so navigation handlers (/go, /n, etc.) can update both
+   *  state and persisted localStorage in one place. Re-renders the
+   *  terminal so subsequent commands see the new room. */
+  setCurrentRoom: (next: RoomId) => void
 }
 
 export interface CommandContext {
@@ -191,26 +207,86 @@ registerCommand({
 registerCommand({
   name: 'look',
   tier: 'basic',
-  description: 'Look around the Great Hall.',
+  description: 'Look around your current room.',
   handle: (_args, ctx) => {
-    const hostName = ctx.world.hostOnDuty === 'lucy' ? 'Lucy' : 'Luca'
-    const hallCount = ctx.world.presence.filter(
-      (p) => !p.location || p.location.kind === 'hall',
-    ).length
-    const lines = [
-      'You stand in the Great Hall. Tall windows. A hearth that never quite goes out.',
-      `${hostName} keeps watch behind the host's lectern, half-smiling at no one in particular.`,
-      hallCount === 0
-        ? 'The Hall is empty just now — only the candles whisper.'
-        : `${hallCount} adventurer${hallCount === 1 ? '' : 's'} mill about. (Type /who to see who.)`,
-    ]
-    if (ctx.world.currentStoryTitle) {
-      lines.push(`On the lectern lies a tale: "${ctx.world.currentStoryTitle}".`)
+    const room = ROOMS[ctx.world.currentRoom]
+    const lines = [`── ${room.name} ──`, room.description]
+    if (room.occupant) lines.push(room.occupant)
+    // Hall-only flavour: who else is around + the live story.
+    if (room.id === 'hall') {
+      const hallCount = ctx.world.presence.filter(
+        (p) => !p.location || p.location.kind === 'hall',
+      ).length
+      if (hallCount > 0) {
+        lines.push(`${hallCount} adventurer${hallCount === 1 ? '' : 's'} mill about. (Type /who to see who.)`)
+      }
+      if (ctx.world.currentStoryTitle) {
+        lines.push(`On the lectern lies a tale: "${ctx.world.currentStoryTitle}".`)
+      }
     }
-    lines.push("Doors lead to the puzzle garden, the wizard's tower, and the forest beyond.")
+    lines.push(`Exits: ${describeExits(room)}`)
     pushPrivate('reply', lines.join('\n'))
   },
 })
+
+// ─── Basic: /go + n/s/e/w/up/down shortcuts ───────────────────────
+
+function move(direction: Direction, ctx: CommandContext): void {
+  const room = ROOMS[ctx.world.currentRoom]
+  const nextId = room.exits[direction]
+  if (!nextId) {
+    pushPrivate('reply', `No exit ${directionWord(direction)} from here.`)
+    return
+  }
+  const next = ROOMS[nextId]
+  ctx.world.setCurrentRoom(nextId)
+  saveCurrentRoom(nextId)
+  pushPrivate('reply', `You go ${directionWord(direction)}.`)
+  const isFirst = markVisited(nextId)
+  if (isFirst && next.firstVisit) {
+    pushPrivate('reply', next.firstVisit)
+  }
+  // Auto-look on arrival so the kid doesn't have to type /look every step.
+  const lines = [`── ${next.name} ──`, next.description]
+  if (next.occupant) lines.push(next.occupant)
+  lines.push(`Exits: ${describeExits(next)}`)
+  pushPrivate('reply', lines.join('\n'))
+}
+
+function directionWord(d: Direction): string {
+  switch (d) {
+    case 'n': return 'north'
+    case 's': return 'south'
+    case 'e': return 'east'
+    case 'w': return 'west'
+    case 'up': return 'up'
+    case 'down': return 'down'
+  }
+}
+
+registerCommand({
+  name: 'go',
+  tier: 'basic',
+  description: 'Walk to a connected room: /go north (or /n /s /e /w /up /down).',
+  handle: (args, ctx) => {
+    const word = args.trim().split(/\s+/)[0]
+    const dir = word ? parseDirection(word) : null
+    if (!dir) {
+      pushPrivate('reply', 'Use /go followed by a direction, e.g. /go north. Or just /n /s /e /w /up /down.')
+      return
+    }
+    move(dir, ctx)
+  },
+})
+
+for (const dir of ['n', 's', 'e', 'w', 'up', 'down'] as const) {
+  registerCommand({
+    name: dir,
+    tier: 'basic',
+    description: `Walk ${directionWord(dir)}.`,
+    handle: (_args, ctx) => { move(dir, ctx) },
+  })
+}
 
 // ─── Basic: /who ───────────────────────────────────────────────────
 
@@ -403,8 +479,16 @@ registerCommand({
   tier: 'advanced',
   description: 'Play vs the Castle. /play 1200 to start at rating, /play e4 to move, /play board, /play new, /play resign.',
   unlockedFor: isAdvancedUnlocked,
-  handle: async (args) => {
+  handle: async (args, ctx) => {
+    // The duel board lives in the Wizard's Antechamber. Allow status
+    // checks (/play board / /play resign) from anywhere so a kid who
+    // wanders off mid-game can still take stock of it.
     const sub = args.trim()
+    const statusOnly = sub === 'board' || sub === 'resign' || sub === ''
+    if (!statusOnly && ctx.world.currentRoom !== 'wizard') {
+      pushPrivate('reply', "The duelling board is in the Wizard's Antechamber. Go east from the Great Hall (/e) to reach it.")
+      return
+    }
     let state = loadPlayState()
 
     // /play <number> — start a new game at that rating.
@@ -567,13 +651,23 @@ registerCommand({
   tier: 'hidden',
   description: 'Ask Lucy or Luca a question, e.g. /ask Lucy why do knights move that way.',
   unlockedFor: isHiddenUnlocked,
-  handle: async (args) => {
+  handle: async (args, ctx) => {
     const m = /^(lucy|luca)\s+(.+)$/i.exec(args.trim())
     if (!m) {
       pushPrivate('reply', 'Use /ask Lucy <question> or /ask Luca <question>.')
       return
     }
     const host = m[1]!.toLowerCase() === 'lucy' ? 'lucy' : 'luca'
+    // Lucy listens in her Reading Nook (north from Hall). Luca listens
+    // in his Study (south from Hall, then up the Tower).
+    if (host === 'lucy' && ctx.world.currentRoom !== 'nook') {
+      pushPrivate('reply', "Lucy is in her Reading Nook. Go north from the Great Hall (/n) to find her.")
+      return
+    }
+    if (host === 'luca' && ctx.world.currentRoom !== 'study') {
+      pushPrivate('reply', "Luca is in his Study, atop the Tower. Go south (/s), then up (/up).")
+      return
+    }
     const question = m[2]!.trim()
     if (question.length < 4) {
       pushPrivate('reply', 'Ask a real question — at least a few words.')

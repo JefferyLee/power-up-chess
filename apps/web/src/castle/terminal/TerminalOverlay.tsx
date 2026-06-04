@@ -19,6 +19,7 @@ import { callPostChat } from '../../firebase/callables'
 import { dispatchCommand, type WorldSnapshot } from './commandRegistry'
 import { usePrivateStream, pushPrivate, type PrivateEntry } from './privateStream'
 import { playKeyClick } from './keyClick'
+import { loadCurrentRoom, markVisited, ROOMS, type RoomId } from './world'
 import './TerminalOverlay.css'
 
 const PROMPT = 'PuC>'
@@ -38,7 +39,11 @@ export function TerminalOverlay({ onClose }: Props) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [currentStoryTitle, setCurrentStoryTitle] = useState<string | null>(null)
+  // Castle Map location. Reads the persisted room on first open so the
+  // kid resumes where they left off.
+  const [currentRoom, setCurrentRoom] = useState<RoomId>(() => loadCurrentRoom())
   const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Track the live story title so /look can mention it. We only want
@@ -53,23 +58,22 @@ export function TerminalOverlay({ onClose }: Props) {
     return () => unsub()
   }, [hostId])
 
-  // Stick to bottom on new content. Two rAFs: the first lets React
-  // commit, the second lets layout settle. Without that delay the
-  // ASCII board (a multi-line <pre>) clips at the bottom because
-  // scrollTop = scrollHeight is read before the new block has its
-  // final height.
+  // Stick to bottom on new content. The previous scrollTop = scrollHeight
+  // approach read the container height BEFORE the just-pushed ASCII
+  // board (a multi-line <pre>) had finished laying out, so the board
+  // clipped at the first line. scrollIntoView on a bottom-anchor
+  // element is layout-aware — the browser computes the right offset
+  // including the new block. rAF + setTimeout fallback covers iOS
+  // Safari's occasional miss when the keyboard is mid-animation.
   useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    let frame2 = 0
-    const frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight
-      })
-    })
+    const scroll = () => {
+      bottomRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' })
+    }
+    const frame = requestAnimationFrame(scroll)
+    const timer = window.setTimeout(scroll, 100)
     return () => {
-      cancelAnimationFrame(frame1)
-      if (frame2) cancelAnimationFrame(frame2)
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
     }
   }, [privateEntries.length])
 
@@ -80,6 +84,29 @@ export function TerminalOverlay({ onClose }: Props) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  // First-open auto-look: when the kid opens a fresh terminal session
+  // (empty private stream), describe the room they're in so they get
+  // oriented without having to type /look. /clear then reopen also
+  // triggers this — that's intentional, kid gets a clean "you are here".
+  // Ref guard prevents the effect from firing twice in React strict mode.
+  const didAutoLookRef = useRef(false)
+  useEffect(() => {
+    if (didAutoLookRef.current) return
+    if (privateEntries.length > 0) {
+      didAutoLookRef.current = true
+      return
+    }
+    didAutoLookRef.current = true
+    const room = ROOMS[currentRoom]
+    const lines = [`── ${room.name} ──`, room.description]
+    if (room.occupant) lines.push(room.occupant)
+    const isFirst = markVisited(currentRoom)
+    if (isFirst && room.firstVisit) lines.push(room.firstVisit)
+    lines.push('Type /help to see what you can do.')
+    pushPrivate('reply', lines.join('\n'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,6 +121,8 @@ export function TerminalOverlay({ onClose }: Props) {
         hostOnDuty: hostId,
         currentStoryTitle,
         recentMessages,
+        currentRoom,
+        setCurrentRoom,
       }
       const handled = await dispatchCommand(trimmed, {
         identity,
@@ -145,13 +174,15 @@ export function TerminalOverlay({ onClose }: Props) {
       <div className="puc-term__scroll" ref={scrollRef}>
         {privateEntries.length === 0 && (
           <p className="puc-term__welcome">
-            You enter the Castle Terminal. The Hall is sealed off here — only your
-            own footsteps echo. Type /help to begin.
+            You slip behind the chat panel into the older rooms of the Castle…
           </p>
         )}
         {privateEntries.map((entry) =>
           <PrivateLine key={`priv-${entry.id}`} entry={entry} />,
         )}
+        {/* Bottom-anchor for scrollIntoView; cheaper than measuring
+            the scroll container's scrollHeight after layout. */}
+        <div ref={bottomRef} aria-hidden="true" />
       </div>
 
       <form className="puc-term__form" onSubmit={onSubmit}>
