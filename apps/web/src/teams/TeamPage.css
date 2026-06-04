@@ -141,6 +141,25 @@
   font-style: italic;
   color: #9b97c1;
 }
+.puc-team__row-kick {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(220, 130, 120, 0.4);
+  color: #f1a8a8;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.puc-team__row-kick:hover:not(:disabled) {
+  background: rgba(220, 130, 120, 0.2);
+  color: #ffdedb;
+}
+.puc-team__row-kick:disabled { opacity: 0.4; }
 
 .puc-team__actions {
   max-width: 540px;

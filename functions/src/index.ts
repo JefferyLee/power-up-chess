@@ -61,6 +61,14 @@ export {
   declineApplication,
   cancelApplication,
 } from './teams/approveApplication'
+export {
+  transferCaptain,
+  kickMember,
+  renameTeam,
+  rebadgeTeam,
+  postTeamRecruitment,
+} from './teams/captainActions'
+export { sweepTeams } from './teams/sweepTeams'
 export { awardTutorialComplete } from './castle/awardTutorialComplete'
 export { purchaseCosmetic } from './cosmetics/purchaseCosmetic'
 export { equipCosmetic } from './cosmetics/equipCosmetic'

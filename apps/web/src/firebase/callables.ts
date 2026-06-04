@@ -738,6 +738,50 @@ export async function callCancelApplication(req: ApplicationActionRequest): Prom
   return data
 }
 
+export interface TransferCaptainRequest { teamId: string; toNormalizedName: string }
+export interface TransferCaptainResponse { ok: true }
+const transferCaptainFn = httpsCallable<TransferCaptainRequest, TransferCaptainResponse>(
+  functions, 'transferCaptain',
+)
+export async function callTransferCaptain(req: TransferCaptainRequest): Promise<TransferCaptainResponse> {
+  const { data } = await transferCaptainFn(req)
+  return data
+}
+
+export interface KickMemberRequest { teamId: string; normalizedName: string }
+export interface KickMemberResponse { ok: true }
+const kickMemberFn = httpsCallable<KickMemberRequest, KickMemberResponse>(functions, 'kickMember')
+export async function callKickMember(req: KickMemberRequest): Promise<KickMemberResponse> {
+  const { data } = await kickMemberFn(req)
+  return data
+}
+
+export interface RenameTeamRequest { teamId: string; name: string; motto?: string }
+export interface RenameTeamResponse { ok: true; name: string }
+const renameTeamFn = httpsCallable<RenameTeamRequest, RenameTeamResponse>(functions, 'renameTeam')
+export async function callRenameTeam(req: RenameTeamRequest): Promise<RenameTeamResponse> {
+  const { data } = await renameTeamFn(req)
+  return data
+}
+
+export interface RebadgeTeamRequest { teamId: string; badge: TeamBadge }
+export interface RebadgeTeamResponse { ok: true }
+const rebadgeTeamFn = httpsCallable<RebadgeTeamRequest, RebadgeTeamResponse>(functions, 'rebadgeTeam')
+export async function callRebadgeTeam(req: RebadgeTeamRequest): Promise<RebadgeTeamResponse> {
+  const { data } = await rebadgeTeamFn(req)
+  return data
+}
+
+export interface PostTeamRecruitmentRequest { teamId: string }
+export interface PostTeamRecruitmentResponse { ok: true }
+const postTeamRecruitmentFn = httpsCallable<PostTeamRecruitmentRequest, PostTeamRecruitmentResponse>(
+  functions, 'postTeamRecruitment',
+)
+export async function callPostTeamRecruitment(req: PostTeamRecruitmentRequest): Promise<PostTeamRecruitmentResponse> {
+  const { data } = await postTeamRecruitmentFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string

@@ -1,0 +1,79 @@
+.puc-cc {
+  max-width: 540px;
+  margin: 0 auto 28px;
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(241, 195, 76, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.puc-cc__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.puc-cc__btn {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(241, 195, 76, 0.08);
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  color: #f7e8b6;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-align: left;
+}
+.puc-cc__btn:hover:not(:disabled) {
+  background: rgba(241, 195, 76, 0.18);
+}
+.puc-cc__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.puc-cc__note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  text-align: center;
+}
+.puc-cc__note--ok { color: #6fcf97; }
+.puc-cc__note--err { color: #f1a8a8; }
+.puc-cc__note--muted {
+  color: var(--puc-text-muted);
+  font-style: italic;
+  margin: 4px 0 8px;
+}
+
+/* Transfer modal — candidate list. */
+.puc-cc__candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.puc-cc__candidate {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(20, 16, 36, 0.7);
+  border: 1px solid rgba(241, 195, 76, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.puc-cc__candidate:hover {
+  background: rgba(241, 195, 76, 0.08);
+}
+.puc-cc__candidate--on {
+  background: linear-gradient(135deg, rgba(244, 194, 102, 0.18), rgba(239, 154, 63, 0.18));
+  border-color: rgba(241, 195, 76, 0.7);
+}
+.puc-cc__candidate-name {
+  font-family: 'Cinzel', Georgia, serif;
+  color: #f7e8b6;
+  font-size: 13px;
+}
+
+/* Modal-shared override: shrink edit-name modal */
+.puc-cc__modal { max-height: 80vh; }

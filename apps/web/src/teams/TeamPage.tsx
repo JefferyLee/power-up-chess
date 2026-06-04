@@ -13,10 +13,12 @@ import {
   callCancelApplication,
   callDeclineApplication,
   callDisbandTeam,
+  callKickMember,
   callLeaveTeam,
 } from '../firebase/callables'
 import { useTeam } from './useTeam'
 import { TeamBadge } from './TeamBadge'
+import { CaptainControls } from './CaptainControls'
 import { NameLink } from '../invitations/NameLink'
 import './TeamPage.css'
 
@@ -121,11 +123,19 @@ export function TeamPage() {
               <span className="puc-team__row-joined">
                 joined {relativeTime(m.joinedAt)}
               </span>
+              {isCaptain && m.normalizedName !== team.captainNormalizedName && (
+                <KickButton
+                  teamId={team.teamId}
+                  normalizedName={m.normalizedName}
+                  displayName={m.displayName}
+                />
+              )}
             </li>
           ))}
         </ul>
       </section>
 
+      {isCaptain && <CaptainControls team={team} />}
       {isCaptain && <CaptainInbox teamId={team.teamId} />}
 
       {!isMember && identity && !identity.isBypass && team.memberCount < 20 && (
@@ -349,6 +359,36 @@ function ApplyToTeamSection({ teamId, teamName }: { teamId: string; teamName: st
       </button>
       {error && <p className="puc-team__error">{error}</p>}
     </section>
+  )
+}
+
+function KickButton({
+  teamId,
+  normalizedName,
+  displayName,
+}: {
+  teamId: string
+  normalizedName: string
+  displayName: string
+}) {
+  const [busy, setBusy] = useState(false)
+  const onKick = async () => {
+    if (busy) return
+    if (!confirm(`Kick ${displayName} from the team?`)) return
+    setBusy(true)
+    try { await callKickMember({ teamId, normalizedName }) }
+    catch (e) { alert(e instanceof Error ? e.message : String(e)) }
+    finally { setBusy(false) }
+  }
+  return (
+    <button
+      type="button"
+      className="puc-team__row-kick"
+      onClick={onKick}
+      disabled={busy}
+      title={`Kick ${displayName}`}
+      aria-label={`Kick ${displayName}`}
+    >✕</button>
   )
 }
 
