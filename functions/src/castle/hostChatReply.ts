@@ -68,7 +68,18 @@ export async function generateHostReply(args: ReplyArgs): Promise<string | null>
 
   try {
     const text = await Promise.race([
-      callGemini({ apiKey, systemPrompt, userPrompt, temperature: 0.8, maxOutputTokens: 200 }),
+      callGemini({
+        apiKey,
+        systemPrompt,
+        userPrompt,
+        temperature: 0.8,
+        maxOutputTokens: 200,
+        // gemini-3.5-flash is a thinking model: without this it would
+        // burn the 200-token budget on internal reasoning and emit
+        // a truncated reply like "Hello Jeff, I would love to". The
+        // 1-2 sentence task doesn't need reasoning.
+        thinkingBudget: 0,
+      }),
       timeoutAfter(TIMEOUT_MS),
     ])
     if (!text || text.length < 4) return null

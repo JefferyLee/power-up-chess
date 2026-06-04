@@ -111,6 +111,11 @@ export const askHost = onCall<AskHostRequest, Promise<AskHostResponse>>(
           userPrompt,
           temperature: 0.7,
           maxOutputTokens: 200,
+          // Disable internal reasoning — same hazard as hostChatReply:
+          // a 1-3 sentence reply doesn't need the model to "think",
+          // and reasoning would eat the 200-token budget before any
+          // visible text is emitted.
+          thinkingBudget: 0,
         }),
         timeoutAfter(TIMEOUT_MS),
       ])
