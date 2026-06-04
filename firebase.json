@@ -1,15 +1,38 @@
 {
-  "hosting": {
-    "public": "apps/web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
-    "predeploy": ["pnpm --filter @power-up-chess/web build"]
-  },
+  "hosting": [
+    {
+      "target": "app",
+      "public": "apps/web/dist",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "predeploy": ["pnpm --filter @power-up-chess/web build"]
+    },
+    {
+      "target": "landing",
+      "public": "apps/landing",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "cleanUrls": true,
+      "headers": [
+        {
+          "source": "/index.html",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+          ]
+        },
+        {
+          "source": "**/*.@(png|jpg|jpeg|svg|webp|ico)",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=604800" }
+          ]
+        }
+      ]
+    }
+  ],
   "functions": [
     {
       "source": "functions",

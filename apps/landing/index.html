@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1530" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <title>Power Up Castle — a warm, safe home where kids learn chess by playing</title>
+    <meta name="description" content="A safe-by-design online chess castle for kids ages 5+. Chess Basics, 5,300+ adaptive puzzles, Wizard's Duel, story bookshelf, daily quests, and play with friends — all moderated, no DMs, no public matchmaking." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Power Up Castle" />
+    <meta property="og:description" content="A warm, safe home where kids learn chess by playing." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://powerupcastle.app/" />
+    <meta property="og:image" content="https://powerupcastle.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Power Up Castle" />
+    <meta name="twitter:description" content="A warm, safe home where kids learn chess by playing." />
+    <meta name="twitter:image" content="https://powerupcastle.app/og.png" />
+
+    <!-- Fonts match the in-app type system. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+English:ital@0;1&display=swap"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink:    '#1a1530',
+              brass:  '#f4c266',
+              brassDeep: '#c89a3a',
+              cream:  '#f7e8b6',
+              parchment: '#efe1bb',
+              twilight: '#0a0815',
+              mist:   '#d0c6f5',
+            },
+            fontFamily: {
+              display: ['Cinzel', 'Georgia', 'serif'],
+              fell:    ['"IM Fell English"', 'Georgia', 'serif'],
+            },
+          },
+        },
+      }
+    </script>
+
+    <style>
+      html, body { background: #0a0815; }
+      .twilight-bg {
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(244,194,102,0.10), transparent 60%),
+          radial-gradient(ellipse at 80% 80%, rgba(120,80,200,0.18), transparent 55%),
+          linear-gradient(180deg, #1a1530 0%, #0a0815 70%);
+      }
+      .brass-card {
+        background: linear-gradient(180deg, #e2b770 0%, #c9994a 22%, #9a6f28 70%, #6f4d18 100%);
+        color: #2a1c08;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 240, 200, 0.7),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+          inset 0 0 60px rgba(140, 95, 30, 0.25),
+          0 12px 40px rgba(0, 0, 0, 0.45);
+      }
+      .engraved {
+        text-shadow:
+          0 1px 0 rgba(255, 230, 160, 0.55),
+          0 -1px 0 rgba(0, 0, 0, 0.25);
+      }
+      .cta {
+        background: linear-gradient(135deg, #f4c266, #ef9a3f);
+        color: #1a1a1f;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 240, 200, 0.7),
+          0 6px 18px rgba(244, 194, 102, 0.35);
+      }
+      .cta:hover { filter: brightness(1.05); transform: translateY(-1px); }
+      .feature-grid > .feature {
+        background: rgba(20, 16, 36, 0.55);
+        border: 1px solid rgba(231, 184, 65, 0.18);
+        border-radius: 14px;
+        backdrop-filter: blur(2px);
+      }
+    </style>
+  </head>
+
+  <body class="twilight-bg text-cream font-fell selection:bg-brass selection:text-ink">
+
+    <!-- ──────────────── Hero ──────────────── -->
+    <section class="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-24">
+      <div class="max-w-5xl mx-auto text-center">
+        <p class="text-brass tracking-[0.4em] text-xs sm:text-sm mb-4 font-display">
+          ⛧ A SAFE HOME FOR CURIOUS CHESS KIDS ⛧
+        </p>
+        <h1 class="font-display text-4xl sm:text-6xl tracking-wider text-cream mb-4 engraved">
+          POWER UP CASTLE
+        </h1>
+        <p class="text-mist text-lg sm:text-2xl italic font-fell mb-10 max-w-2xl mx-auto">
+          A warm, safe home where kids learn chess by playing.
+        </p>
+
+        <a
+          href="https://app.powerupcastle.app/"
+          class="cta inline-block px-8 py-4 rounded-full font-display text-base sm:text-lg tracking-wider transition"
+        >
+          Enter the castle →
+        </a>
+
+        <p class="mt-6 text-xs sm:text-sm text-mist/70 font-fell italic">
+          Ages 5+ &nbsp;·&nbsp; Free &nbsp;·&nbsp; Works in any browser, installs as a phone app
+        </p>
+      </div>
+    </section>
+
+    <!-- ──────────────── What's inside ──────────────── -->
+    <section class="px-6 py-16 sm:py-20">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="font-display text-2xl sm:text-3xl tracking-widest text-brass text-center mb-12">
+          WHAT'S INSIDE
+        </h2>
+        <div class="feature-grid grid gap-4 sm:gap-5 sm:grid-cols-2">
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Learn</h3>
+            <p class="text-mist text-sm leading-relaxed">Chess Basics + Knight's Hop — short interactive lessons that take a beginner from zero.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Solve</h3>
+            <p class="text-mist text-sm leading-relaxed">5,300+ adaptive puzzles across six themed plots, with a daily Today's Five quest.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Play</h3>
+            <p class="text-mist text-sm leading-relaxed">Invite friends by private link, join the weekly tournament, or train against Lucy and Luca.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Explore</h3>
+            <p class="text-mist text-sm leading-relaxed">Side quests: Forest Adventure, Wizard's Duel, Knight's Run, and a 108-story chess bookshelf.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Collect</h3>
+            <p class="text-mist text-sm leading-relaxed">Piece sets, board themes, daily streaks — all tracked on your Adventurer's Plaque.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Chat</h3>
+            <p class="text-mist text-sm leading-relaxed">The Great Hall: moderated lobby chat. Find any player, peek at their plaque, no DMs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──────────────── Safe by design ──────────────── -->
+    <section class="px-6 py-16 sm:py-20">
+      <div class="max-w-3xl mx-auto brass-card rounded-2xl px-7 py-8 sm:px-10 sm:py-12 relative">
+        <h2 class="font-display text-2xl sm:text-3xl tracking-widest text-ink text-center mb-6 engraved">
+          SAFE BY DESIGN
+        </h2>
+        <ul class="space-y-3 text-base sm:text-lg leading-relaxed">
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>No personal info.</b> Display name and a 4-character magic word. No email, no phone, no real name.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>No DMs, no public matchmaking.</b> Online play is private-room-link only — kids only play with people they invited or were invited by.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>Server-moderated chat.</b> Profanity filter, rate limits, report flag, auto-hide.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>Honest praise only.</b> "Brilliant / Excellent / Mistake / Blunder" comes from Stockfish analysis, not templates — your kid never gets fake compliments.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ──────────────── Built by a dad ──────────────── -->
+    <section class="px-6 py-16 sm:py-20">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="font-display text-xl sm:text-2xl tracking-widest text-brass mb-6">
+          BUILT BY A DAD FOR HIS DAUGHTER
+        </h2>
+        <p class="text-mist text-base sm:text-lg leading-relaxed font-fell italic mb-4">
+          Power Up Castle started because Ada wanted to play chess online with her friends — but every "chess for kids" site I found leaked personal info, public chat, ads, or all three.
+        </p>
+        <p class="text-mist text-base sm:text-lg leading-relaxed font-fell italic">
+          So I built the castle she'd actually want to live in. Every feature you see here is something Ada (or one of her test players) asked for at the kitchen table.
+        </p>
+      </div>
+    </section>
+
+    <!-- ──────────────── Second CTA ──────────────── -->
+    <section class="px-6 py-16 sm:py-24 text-center">
+      <a
+        href="https://app.powerupcastle.app/"
+        class="cta inline-block px-10 py-4 rounded-full font-display text-base sm:text-lg tracking-wider transition"
+      >
+        Knock on the gate →
+      </a>
+      <p class="mt-4 text-xs sm:text-sm text-mist/70 font-fell italic">
+        opens in your browser — no app store, no install
+      </p>
+    </section>
+
+    <!-- ──────────────── Footer ──────────────── -->
+    <footer class="px-6 py-10 border-t border-mist/10 text-center">
+      <p class="text-xs text-mist/50 mb-2">
+        Powered by chess.js · Stockfish · Anthropic Claude · Firebase
+      </p>
+      <p class="text-xs text-mist/40">
+        © Power Up Castle · made with care for kids 5+
+      </p>
+    </footer>
+
+  </body>
+</html>
