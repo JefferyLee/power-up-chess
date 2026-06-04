@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/app'
 import { useCastle } from '../useCastle'
-import { useLobbyPresence } from '../useLobbyChat'
+import { useLobbyMessages, useLobbyPresence } from '../useLobbyChat'
 import { callPostChat } from '../../firebase/callables'
 import { dispatchCommand, type WorldSnapshot } from './commandRegistry'
 import { usePrivateStream, pushPrivate, type PrivateEntry } from './privateStream'
@@ -31,6 +31,9 @@ export function TerminalOverlay({ onClose }: Props) {
   const { identity, hostId } = useCastle()
   const privateEntries = usePrivateStream()
   const presence = useLobbyPresence()
+  // Subscribed but NOT rendered in the terminal UI — only fed into
+  // the world snapshot so /read can peek the Hall on demand.
+  const recentMessages = useLobbyMessages()
   const navigate = useNavigate()
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -76,6 +79,7 @@ export function TerminalOverlay({ onClose }: Props) {
         presence,
         hostOnDuty: hostId,
         currentStoryTitle,
+        recentMessages,
       }
       const handled = await dispatchCommand(trimmed, {
         identity,

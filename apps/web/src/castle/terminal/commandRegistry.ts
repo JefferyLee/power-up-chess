@@ -14,7 +14,7 @@
 import { Chess } from 'chess.js'
 import type { CastleIdentity } from '../identity'
 import type { HostId } from '../../hosts/hosts'
-import type { PresenceRow } from '../useLobbyChat'
+import type { PresenceRow, ChatMessage } from '../useLobbyChat'
 import type { NavigateFunction } from 'react-router-dom'
 import { pushPrivate, clearPrivate } from './privateStream'
 import { setClearedAtNow } from '../clearedAt'
@@ -31,6 +31,9 @@ export interface WorldSnapshot {
   presence: PresenceRow[]
   hostOnDuty: HostId
   currentStoryTitle: string | null
+  /** Last ~80 public Hall messages, oldest-first. Snapshot only —
+   *  /read picks the tail; the terminal itself never renders these. */
+  recentMessages: ChatMessage[]
 }
 
 export interface CommandContext {
@@ -278,6 +281,61 @@ registerCommand({
     } catch (err) {
       pushPrivate('reply', err instanceof Error ? err.message : 'The Hall is quiet — your shout did not carry.')
     }
+  },
+})
+
+// ─── Basic: /say ───────────────────────────────────────────────────
+
+registerCommand({
+  name: 'say',
+  tier: 'basic',
+  description: 'Send a message to the public Hall, e.g. /say hi everyone.',
+  handle: async (args, ctx) => {
+    const text = args.trim()
+    if (!text) {
+      pushPrivate('reply', 'Use /say followed by what you want to send, e.g. /say hello!')
+      return
+    }
+    const id = ctx.identity
+    if (!id || id.isBypass) {
+      pushPrivate('reply', 'Sign in with a magic word first — visitors cannot post to the Hall.')
+      return
+    }
+    try {
+      await ctx.postPublic(text.slice(0, 200))
+      pushPrivate('reply', `Posted to the Hall: "${text.slice(0, 200)}"`)
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'The Hall did not hear you. Try again.')
+    }
+  },
+})
+
+// ─── Basic: /read ──────────────────────────────────────────────────
+
+registerCommand({
+  name: 'read',
+  tier: 'basic',
+  description: 'Peek the last few public Hall messages. /read 20 for more.',
+  handle: (args, ctx) => {
+    const requested = Number.parseInt(args.trim(), 10)
+    const count = Number.isFinite(requested)
+      ? Math.max(1, Math.min(40, requested))
+      : 10
+    const tail = ctx.world.recentMessages.slice(-count)
+    if (tail.length === 0) {
+      pushPrivate('reply', 'The Hall is quiet. Nothing has been said lately.')
+      return
+    }
+    const lines: string[] = ['── HALL · last ' + tail.length + ' messages ──']
+    for (const m of tail) {
+      const hh = String(new Date(m.ts).getHours()).padStart(2, '0')
+      const mm = String(new Date(m.ts).getMinutes()).padStart(2, '0')
+      const tag = m.kind === 'host' ? ' (host)' : m.kind === 'system' ? ' (system)' : ''
+      lines.push(`[${hh}:${mm}] ${m.name}${tag}: ${m.text}`)
+    }
+    lines.push('')
+    lines.push('(Use /say to reply, /exit to return to the Hall.)')
+    pushPrivate('reply', lines.join('\n'))
   },
 })
 

@@ -53,11 +53,11 @@
 
 .puc-story-panel__body {
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: #d8d0f5;
-  max-height: 240px;
-  overflow-y: auto;
-  padding-right: 4px;
+  /* No max-height — bundled stories are short (≤500 chars), and
+   * clipping them at 240px made kids think the tale was truncated.
+   * Let the panel grow with its content; the page scrolls if needed. */
 }
 .puc-story-panel__body p {
   margin: 0 0 8px;
@@ -93,8 +93,6 @@
   font-style: italic;
 }
 
-@media (max-width: 720px) {
-  /* Phone: same look, but body height capped tighter so the host
-   * card doesn't dominate the Hall on first render. */
-  .puc-story-panel__body { max-height: 200px; }
-}
+/* Phone-specific tightening removed — the panel collapses by default
+ * on phones via the defaultCollapsed prop, and once expanded the kid
+ * wants to see the whole tale, not a clipped fragment. */

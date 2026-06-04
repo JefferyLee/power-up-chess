@@ -40,8 +40,10 @@ export function toggleMuted(): boolean {
   return next
 }
 
-/** Short 40 ms square-wave tick with a sharp envelope — sounds like a
- *  soft chiclet key. Silent if /mute is on. */
+/** Soft mechanical "thock" — a low sine that drops in pitch with a
+ *  gentle envelope, plus a touch of lowpass-filtered noise for the
+ *  key-strike texture. Avoids the bright square-wave shrillness of
+ *  the earlier version. Silent if /mute is on. */
 export function playKeyClick(): void {
   if (isMuted()) return
   const audio = getContext()
@@ -50,16 +52,38 @@ export function playKeyClick(): void {
     void audio.resume()
   }
   const now = audio.currentTime
-  const osc = audio.createOscillator()
-  const gain = audio.createGain()
-  // Slight pitch jitter so rapid typing doesn't sound metronomic.
-  osc.frequency.value = 1100 + Math.random() * 200
-  osc.type = 'square'
-  gain.gain.setValueAtTime(0.0001, now)
-  gain.gain.exponentialRampToValueAtTime(0.04, now + 0.004)
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045)
-  osc.connect(gain)
-  gain.connect(audio.destination)
-  osc.start(now)
-  osc.stop(now + 0.05)
+
+  // Layer 1: low sine body, slight pitch drop = "thock"
+  const body = audio.createOscillator()
+  const bodyGain = audio.createGain()
+  body.type = 'sine'
+  const startHz = 230 + Math.random() * 30
+  body.frequency.setValueAtTime(startHz, now)
+  body.frequency.exponentialRampToValueAtTime(startHz * 0.6, now + 0.06)
+  bodyGain.gain.setValueAtTime(0.0001, now)
+  bodyGain.gain.exponentialRampToValueAtTime(0.045, now + 0.006)
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08)
+  body.connect(bodyGain).connect(audio.destination)
+  body.start(now)
+  body.stop(now + 0.1)
+
+  // Layer 2: very short lowpass-filtered noise burst = key strike
+  // texture. Filtering well below ~1 kHz keeps it warm, not hissy.
+  const noiseDur = 0.018
+  const sampleRate = audio.sampleRate
+  const buffer = audio.createBuffer(1, Math.ceil(sampleRate * noiseDur), sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length)
+  }
+  const noise = audio.createBufferSource()
+  noise.buffer = buffer
+  const noiseFilter = audio.createBiquadFilter()
+  noiseFilter.type = 'lowpass'
+  noiseFilter.frequency.value = 900
+  const noiseGain = audio.createGain()
+  noiseGain.gain.setValueAtTime(0.025, now)
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + noiseDur)
+  noise.connect(noiseFilter).connect(noiseGain).connect(audio.destination)
+  noise.start(now)
 }
