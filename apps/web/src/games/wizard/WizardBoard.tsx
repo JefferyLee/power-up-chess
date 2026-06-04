@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Piece } from '../../board/Piece'
 import { Square, type SquareHighlights } from '../../board/Square'
-import { squareColor, squaresInVisualOrder } from '../../board/squares'
+import { FILES, RANKS, squareColor, squaresInVisualOrder } from '../../board/squares'
 import type { Color, Piece as PieceModel, Square as SquareName } from '../../chess/types'
 import type { Effect, EffectKind } from './types'
 import './WizardBoard.css'
@@ -42,6 +42,9 @@ interface Props {
   /** Per-side piece-set overrides from the room doc. See BoardProps. */
   whitePieceSetId?: string
   blackPieceSetId?: string
+  /** Board orientation. White at the bottom unless flipped. Defaults
+   *  to white so spectators / waiting state get the canonical view. */
+  orientation?: Color
 }
 
 export function WizardBoard({
@@ -56,6 +59,7 @@ export function WizardBoard({
   lastTouched,
   whitePieceSetId,
   blackPieceSetId,
+  orientation = 'w',
 }: Props) {
   const [selected, setSelected] = useState<SquareName | null>(null)
 
@@ -85,8 +89,10 @@ export function WizardBoard({
     if (piece && piece.color === turn) setSelected(sq)
   }
 
-  const cells = useMemo(() => squaresInVisualOrder('w'), [])
+  const cells = useMemo(() => squaresInVisualOrder(orientation), [orientation])
   const styleVars: CSSProperties = { ['--puc-square-size' as string]: `${squareSize}px` }
+  const leftFile = orientation === 'w' ? FILES[0] : FILES[FILES.length - 1]
+  const bottomRank = orientation === 'w' ? RANKS[0] : RANKS[RANKS.length - 1]
 
   return (
     <div
@@ -121,8 +127,8 @@ export function WizardBoard({
             square={sq}
             color={squareColor(file, rank)}
             highlights={highlights}
-            fileLabel={rank === '1' ? file : undefined}
-            rankLabel={file === 'a' ? rank : undefined}
+            fileLabel={rank === bottomRank ? file : undefined}
+            rankLabel={file === leftFile ? rank : undefined}
           >
             {piece && (
               <Piece

@@ -323,6 +323,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
               lastTouched={lastTouched}
               whitePieceSetId={room.white.pieceSetId}
               blackPieceSetId={room.black?.pieceSetId}
+              orientation={yourColor ?? 'w'}
             />
             {room.status === 'waiting' && (
               <WaitingOverlay roomId={roomId} onCopy={copyLink} />
