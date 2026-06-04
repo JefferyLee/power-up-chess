@@ -392,7 +392,13 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         await submitMove(uci)
         setSubmitError(null)
       } catch (e) {
-        setSubmitError(e instanceof Error ? e.message : String(e))
+        const msg = e instanceof Error ? e.message : String(e)
+        // The "Move index out of sync" error is a benign race — the
+        // snapshot will reconcile the board within a tick. Hiding it
+        // from the kid avoids a confusing flash for what is invisibly
+        // self-healing.
+        if (/Move index out of sync/i.test(msg)) return
+        setSubmitError(msg)
       }
     },
     [submitMove],

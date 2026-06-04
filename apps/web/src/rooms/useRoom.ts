@@ -5,7 +5,7 @@
 // found, or the caller is not yet a participant per security rules).
 
 import { doc, onSnapshot } from 'firebase/firestore'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { db } from '../firebase/app'
 import { callSubmitMove } from '../firebase/callables'
 import type { RoomDoc } from './types'
@@ -28,6 +28,17 @@ export interface UseRoomResult {
 export function useRoom(roomId: string | null): UseRoomResult {
   const [state, setState] = useState<RoomState>({ status: 'loading' })
   const [retryTick, setRetryTick] = useState(0)
+  // Ref mirror of state so submitMove always reads the LATEST moves
+  // length, not whatever the closure captured at memo time. Combined
+  // with the in-flight lock below this kills the "Move index out of
+  // sync" race: a tick that lands between submit dispatch and call
+  // execution still gets the up-to-date ply count.
+  const stateRef = useRef(state)
+  const inFlightRef = useRef(false)
+
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   useEffect(() => {
     if (!roomId) return
@@ -62,19 +73,27 @@ export function useRoom(roomId: string | null): UseRoomResult {
 
   const retry = useCallback(() => setRetryTick((n) => n + 1), [])
 
-  const submitMove = useMemo(() => {
-    return async (uci: string) => {
-      if (state.status !== 'ready' || !roomId) {
-        throw new Error('Room is not ready.')
-      }
+  const submitMove = useCallback(async (uci: string) => {
+    const current = stateRef.current
+    if (current.status !== 'ready' || !roomId) {
+      throw new Error('Room is not ready.')
+    }
+    // Single-flight: a touch-event double-fire or a fast re-click
+    // would otherwise send the same moveIndex twice. The second send
+    // is silently dropped — the snapshot will reflect the first one.
+    if (inFlightRef.current) return
+    inFlightRef.current = true
+    try {
       await callSubmitMove({
         roomId,
-        moveIndex: state.room.moves.length,
+        moveIndex: current.room.moves.length,
         uci,
         clientTs: Date.now(),
       })
+    } finally {
+      inFlightRef.current = false
     }
-  }, [roomId, state])
+  }, [roomId])
 
   return { state, submitMove, retry }
 }
