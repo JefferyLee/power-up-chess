@@ -100,7 +100,21 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
         {messages.length === 0 && (
           <p className="puc-chat__empty">The Hall is quiet right now — say hi!</p>
         )}
-        {messages.map((m) => <Bubble key={m.id} message={m} />)}
+        {(() => {
+          // Only the LATEST story-with-quiz keeps its card. Older
+          // story bubbles render as plain teaser text. Server already
+          // closes the prior quiz when a new story posts; this just
+          // stops the closed cards from cluttering chat history.
+          const latestQuizId = (() => {
+            for (let i = messages.length - 1; i >= 0; i--) {
+              if (messages[i]!.quiz) return messages[i]!.id
+            }
+            return null
+          })()
+          return messages.map((m) => (
+            <Bubble key={m.id} message={m} showQuiz={m.id === latestQuizId} />
+          ))
+        })()}
       </div>
       <form className="puc-chat__form" onSubmit={handleSubmit}>
         <button
@@ -137,7 +151,7 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
   )
 }
 
-function Bubble({ message }: { message: ChatMessage }) {
+function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean }) {
   const isHost = message.kind === 'host'
   const isSystem = message.kind === 'system'
   // Host stories are usually 2-5 sentences — split them into short
@@ -174,7 +188,7 @@ function Bubble({ message }: { message: ChatMessage }) {
         <span className="puc-chat__text">{message.text}</span>
       )}
       {message.action && <ActionButton action={message.action} />}
-      {message.quiz && <QuizBlock messageId={message.id} quiz={message.quiz} />}
+      {message.quiz && showQuiz && <QuizBlock messageId={message.id} quiz={message.quiz} />}
     </div>
   )
 }
