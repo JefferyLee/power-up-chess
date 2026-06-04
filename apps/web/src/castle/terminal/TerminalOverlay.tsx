@@ -53,10 +53,24 @@ export function TerminalOverlay({ onClose }: Props) {
     return () => unsub()
   }, [hostId])
 
-  // Stick to bottom on new content.
+  // Stick to bottom on new content. Two rAFs: the first lets React
+  // commit, the second lets layout settle. Without that delay the
+  // ASCII board (a multi-line <pre>) clips at the bottom because
+  // scrollTop = scrollHeight is read before the new block has its
+  // final height.
   useEffect(() => {
     const el = scrollRef.current
-    if (el) el.scrollTop = el.scrollHeight
+    if (!el) return
+    let frame2 = 0
+    const frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight
+      })
+    })
+    return () => {
+      cancelAnimationFrame(frame1)
+      if (frame2) cancelAnimationFrame(frame2)
+    }
   }, [privateEntries.length])
 
   // ESC closes; focus the input on mount.
