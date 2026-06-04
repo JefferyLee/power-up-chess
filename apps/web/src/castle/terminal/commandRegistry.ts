@@ -14,7 +14,7 @@
 import { Chess } from 'chess.js'
 import type { CastleIdentity } from '../identity'
 import type { HostId } from '../../hosts/hosts'
-import type { PresenceRow, ChatMessage } from '../useLobbyChat'
+import type { PresenceRow, ChatMessage, LocationTag } from '../useLobbyChat'
 import type { NavigateFunction } from 'react-router-dom'
 import { pushPrivate, clearPrivate } from './privateStream'
 import { setClearedAtNow } from '../clearedAt'
@@ -305,6 +305,244 @@ registerCommand({
     const names = inHall.slice(0, 12).map((p) => p.displayName)
     const extra = inHall.length > 12 ? ` …and ${inHall.length - 12} more` : ''
     pushPrivate('reply', `Around you: ${names.join(', ')}${extra}.`)
+  },
+})
+
+// ─── Basic: /games — active chess + wizard duels ──────────────────
+
+/** Aggregate live games from presence: anyone in a chess/wizard
+ *  room implies a game exists there. Cheap (no extra Firestore reads)
+ *  and good enough — rooms with zero presence are effectively dead. */
+function liveGames(
+  presence: PresenceRow[],
+): Array<{ kind: 'chess' | 'wizard'; roomId: string; players: string[] }> {
+  const map = new Map<string, { kind: 'chess' | 'wizard'; roomId: string; players: Set<string> }>()
+  for (const p of presence) {
+    const loc = p.location
+    if (!loc || (loc.kind !== 'chess' && loc.kind !== 'wizard')) continue
+    const key = `${loc.kind}:${loc.roomId}`
+    let row = map.get(key)
+    if (!row) {
+      row = { kind: loc.kind, roomId: loc.roomId, players: new Set() }
+      map.set(key, row)
+    }
+    row.players.add(p.displayName)
+  }
+  return [...map.values()].map((r) => ({ ...r, players: [...r.players] }))
+}
+
+registerCommand({
+  name: 'games',
+  tier: 'basic',
+  description: 'List active chess + wizard duels in the castle.',
+  handle: (_args, ctx) => {
+    const games = liveGames(ctx.world.presence)
+    if (games.length === 0) {
+      pushPrivate('reply', 'No active games right now. The boards are quiet.')
+      return
+    }
+    const lines = [`── ACTIVE GAMES · ${games.length} ──`]
+    for (const g of games) {
+      const kindTag = g.kind === 'wizard' ? 'wizard' : 'chess '
+      const who = g.players.length === 1
+        ? `${g.players[0]} (alone — open to a challenger)`
+        : g.players.join(' vs ')
+      lines.push(`  ${kindTag}  ${g.roomId}  ${who}`)
+    }
+    lines.push('')
+    lines.push('Use /watch <roomId> to spectate one.')
+    pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /users — paginated list of everyone present ───────────
+
+function describeLocation(loc: LocationTag | undefined): string {
+  if (!loc) return 'in the Hall'
+  switch (loc.kind) {
+    case 'hall': return 'in the Hall'
+    case 'chess': return `in chess room ${loc.roomId}`
+    case 'wizard': return `in wizard room ${loc.roomId}`
+    case 'puzzle-garden': return 'in the Puzzle Garden'
+    case 'puzzle-plot': return `in the ${loc.plot} plot`
+    case 'puzzle-daily': return "on today's Daily Five"
+    case 'puzzle-legends': return 'in the Legends arena'
+    case 'puzzle-calibration': return 'calibrating'
+    case 'puzzle-leaderboard': return 'at the leaderboard'
+    case 'practice': return 'practicing'
+    case 'local': return 'at the local board'
+    case 'forest': return 'in the Forest'
+  }
+}
+
+const USERS_PAGE_SIZE = 12
+
+registerCommand({
+  name: 'users',
+  tier: 'basic',
+  description: 'List everyone in the castle with their current status. /users 2 for next page.',
+  handle: (args, ctx) => {
+    const all = ctx.world.presence
+    if (all.length === 0) {
+      pushPrivate('reply', 'No one is in the castle right now. Strange.')
+      return
+    }
+    const requested = Number.parseInt(args.trim(), 10)
+    const totalPages = Math.max(1, Math.ceil(all.length / USERS_PAGE_SIZE))
+    const page = Number.isFinite(requested)
+      ? Math.max(1, Math.min(totalPages, requested))
+      : 1
+    const start = (page - 1) * USERS_PAGE_SIZE
+    const slice = all.slice(start, start + USERS_PAGE_SIZE)
+    // Even column width keeps the location chunk aligned.
+    const nameWidth = Math.max(...slice.map((p) => p.displayName.length), 4)
+    const lines = [`── ADVENTURERS · page ${page}/${totalPages} · ${all.length} present ──`]
+    for (const p of slice) {
+      lines.push(`  ${p.displayName.padEnd(nameWidth)}  ${describeLocation(p.location)}`)
+    }
+    lines.push('')
+    if (page < totalPages) {
+      lines.push(`/users ${page + 1} for the next page.`)
+    } else if (totalPages > 1) {
+      lines.push(`(last page — /users 1 to start over)`)
+    }
+    pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /find <name> — lookup a castle guest by name ──────────
+
+registerCommand({
+  name: 'find',
+  tier: 'basic',
+  description: 'Find a castle guest by name, e.g. /find Ada.',
+  handle: async (args, ctx) => {
+    const query = args.trim()
+    if (query.length < 2) {
+      pushPrivate('reply', 'Use /find <name>, e.g. /find Ada (at least 2 letters).')
+      return
+    }
+    // Check live presence first — instant hit if they're online.
+    const normalized = query.toLowerCase()
+    const onlineMatch = ctx.world.presence.find(
+      (p) => p.normalizedName === normalized || p.displayName.toLowerCase() === normalized,
+    )
+    if (onlineMatch) {
+      pushPrivate('reply', [
+        `${onlineMatch.displayName} — ${describeLocation(onlineMatch.location)} (online now)`,
+        onlineMatch.location?.kind === 'chess' || onlineMatch.location?.kind === 'wizard'
+          ? `Spectate with /watch ${onlineMatch.location.roomId}.`
+          : `Invite them with /invite ${onlineMatch.displayName}.`,
+      ].join('\n'))
+      return
+    }
+    // Fall back to the server directory for offline / unknown names.
+    try {
+      const { callFindPlayer } = await import('../../firebase/callables')
+      const { matches } = await callFindPlayer({ query: normalized })
+      if (matches.length === 0) {
+        pushPrivate('reply', `No castle guest called "${query}". Names are case-insensitive.`)
+        return
+      }
+      const lines = matches.length === 1
+        ? [`${matches[0]!.displayName} — registered, but offline right now.`]
+        : [`${matches.length} matches:`, ...matches.map((m) => `  ${m.displayName}`)]
+      lines.push(`Invite them with /invite ${matches[0]!.displayName} — the invitation waits up to a minute for them to come back online.`)
+      pushPrivate('reply', lines.join('\n'))
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'Could not search the directory.')
+    }
+  },
+})
+
+// ─── Basic: /watch <roomId> — go spectate a live game ─────────────
+
+registerCommand({
+  name: 'watch',
+  tier: 'basic',
+  description: 'Spectate a live game by room id, e.g. /watch ABC123.',
+  handle: (args, ctx) => {
+    const id = args.trim()
+    if (!id) {
+      pushPrivate('reply', 'Use /watch <roomId>, e.g. /watch ABC123. Type /games to see what is live.')
+      return
+    }
+    // Disambiguate chess vs wizard from presence. Same roomId can't
+    // collide across collections in practice but we still scan both.
+    const target = ctx.world.presence.find(
+      (p) => (p.location?.kind === 'chess' || p.location?.kind === 'wizard') && p.location.roomId === id,
+    )
+    if (!target || (target.location?.kind !== 'chess' && target.location?.kind !== 'wizard')) {
+      pushPrivate('reply', `No live game called "${id}". Type /games to see active rooms.`)
+      return
+    }
+    const path = target.location.kind === 'wizard' ? `/wizard/${id}` : `/r/${id}`
+    pushPrivate('reply', `Heading to ${target.location.kind} room ${id}…`)
+    ctx.exitTerminal()
+    ctx.navigate(path)
+  },
+})
+
+// ─── Basic: /invite <name> — invite an online guest to play ───────
+
+registerCommand({
+  name: 'invite',
+  tier: 'basic',
+  description: 'Invite a castle guest to a chess game, e.g. /invite Ada. Costs 5 castle points.',
+  handle: async (args, ctx) => {
+    const name = args.trim()
+    if (!name) {
+      pushPrivate('reply', 'Use /invite <name>, e.g. /invite Ada. Costs 5 castle points.')
+      return
+    }
+    const me = ctx.identity
+    if (!me || me.isBypass) {
+      pushPrivate('reply', 'Sign in with a magic word first — visitors cannot send invitations.')
+      return
+    }
+    const normalized = name.toLowerCase()
+    if (normalized === me.normalizedName) {
+      pushPrivate('reply', "You can't invite yourself, adventurer.")
+      return
+    }
+    // Resolve to a real guest. Prefer the live presence row (so spelling
+    // forgives a slightly different display name), fall back to a server
+    // directory lookup for offline-but-registered guests.
+    let toNormalized = ctx.world.presence.find(
+      (p) => p.normalizedName === normalized || p.displayName.toLowerCase() === normalized,
+    )?.normalizedName
+    if (!toNormalized) {
+      try {
+        const { callFindPlayer } = await import('../../firebase/callables')
+        const { matches } = await callFindPlayer({ query: normalized })
+        if (matches.length === 0) {
+          pushPrivate('reply', `No castle guest called "${name}".`)
+          return
+        }
+        toNormalized = matches[0]!.normalizedName
+      } catch (err) {
+        pushPrivate('reply', err instanceof Error ? err.message : 'Could not look that name up.')
+        return
+      }
+    }
+    try {
+      const { callSendInvite } = await import('../../firebase/callables')
+      const res = await callSendInvite({
+        fromNormalizedName: me.normalizedName,
+        toNormalizedName: toNormalized,
+        // Untimed by default — kids can use the Hall's normal invite UI
+        // for time-control choices. Keeps the terminal command simple.
+        timeControl: null,
+        ...(me.cosmetics?.pieceSet ? { pieceSetId: me.cosmetics.pieceSet } : {}),
+      })
+      const minutes = Math.max(0, Math.round((res.expiresAt - Date.now()) / 60_000))
+      pushPrivate('reply', `Invitation sent to ${name} (5 castle points spent). It will wait ${minutes} minute${minutes === 1 ? '' : 's'} for a reply.`)
+    } catch (err) {
+      const msg = err instanceof Error
+        ? err.message.replace(/^FirebaseError: /, '')
+        : 'Could not send the invitation.'
+      pushPrivate('reply', msg)
+    }
   },
 })
 
