@@ -9,6 +9,7 @@ import { Piece } from '../board/Piece'
 import { getPieceSet, isPieceSetId } from '../cosmetics/pieceSets'
 import type { PieceSymbol } from '../chess/types'
 import { useCastle } from '../castle/useCastle'
+import { TeamBadge as TeamBadgeView } from '../teams/TeamBadge'
 import './AdventurerPlaqueScreen.css'
 
 const DASH = '—'
@@ -148,8 +149,37 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
           <Row label="Entered"><b>{nullable(profile.tournamentsEntered)}</b></Row>
           <Row label="Best">{tournamentBestLabel}</Row>
         </Section>
+
+        {profile.teams.length > 0 && (
+          <Section title="Teams">
+            <PlaqueTeamsRow teams={profile.teams} />
+          </Section>
+        )}
       </div>
     </div>
+  )
+}
+
+function PlaqueTeamsRow({ teams }: { teams: GetPublicProfileResponse['teams'] }) {
+  const navigate = useNavigate()
+  return (
+    <span className="puc-plaque-teams">
+      {teams.map((t) => (
+        <button
+          type="button"
+          key={t.teamId}
+          className="puc-plaque-team"
+          onClick={() => navigate(`/team/${t.teamId}`)}
+          title={t.captain ? `Captain of ${t.name}` : t.name}
+        >
+          <span className="puc-plaque-team__badge">
+            <TeamBadgeView badge={t.badge} size={26} />
+          </span>
+          <span className="puc-plaque-team__name">{t.name}</span>
+          {t.captain && <span className="puc-plaque-team__pip" aria-label="Captain">⚓</span>}
+        </button>
+      ))}
+    </span>
   )
 }
 

@@ -14,7 +14,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc, TitleRank } from './types'
+import type { GuestDoc, TeamDoc, TitleRank } from './types'
 import { titleFor } from './types'
 import type { LocationTag, PresenceDoc } from './chatTypes'
 import { laDayKey } from '../puzzles/dailyFive'
@@ -72,6 +72,15 @@ export interface GetPublicProfileResponse {
   equippedPieceSet: string | null
   /** Heraldic avatar config — drives the avatar render across the app. */
   avatar: import('./types').TeamBadge | null
+  /** Teams this guest is a current member of. Inlined name + badge
+   *  so the plaque doesn't have to round-trip every team doc. */
+  teams: Array<{
+    teamId: string
+    name: string
+    badge: import('./types').TeamBadge
+    /** True when this guest is the captain of this team. */
+    captain: boolean
+  }>
   /** Today's Five — solved count for the current LA day (0-5). null
    *  when the guest hasn't started today's set. */
   todaysFiveSolved: number | null
@@ -165,6 +174,26 @@ export const getPublicProfile = onCall<
     }
   }
 
+  // Inline the user's teams — name + badge so the plaque can render
+  // without an extra round trip per team. Capped at TEAM_PER_USER_MAX
+  // (2) so this is at most 2 reads; bail on any team that has been
+  // disbanded since the guest doc was last updated.
+  const teamIds = Array.isArray(guest.teamIds) ? guest.teamIds : []
+  const teams: GetPublicProfileResponse['teams'] = []
+  if (teamIds.length > 0) {
+    const teamSnaps = await Promise.all(teamIds.map((id) => db.doc(`teams/${id}`).get()))
+    for (const snap of teamSnaps) {
+      if (!snap.exists) continue
+      const t = snap.data() as TeamDoc
+      teams.push({
+        teamId: t.teamId,
+        name: t.name,
+        badge: t.badge,
+        captain: t.captainNormalizedName === normalized,
+      })
+    }
+  }
+
   return {
     displayName: guest.displayName,
     normalizedName: normalized,
@@ -192,6 +221,7 @@ export const getPublicProfile = onCall<
     quizAttempted: typeof guest.quizAttempted === 'number' ? guest.quizAttempted : null,
     equippedPieceSet: guest.cosmetics?.pieceSet ?? null,
     avatar: guest.cosmetics?.avatar ?? null,
+    teams,
     todaysFiveSolved,
     todaysFiveTotal,
     todaysFiveDone,

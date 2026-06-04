@@ -376,3 +376,43 @@
     max-width: 130px;
   }
 }
+
+/* Teams row — small badge + name chip for each team the guest is on.
+ * Captain pip ⚓ flips to gold so they stand out. */
+.puc-plaque-teams {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.puc-plaque-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 999px;
+  background: rgba(60, 38, 10, 0.12);
+  border: 1px solid rgba(60, 38, 10, 0.4);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  color: #2a1c08;
+  cursor: pointer;
+  max-width: 100%;
+}
+.puc-plaque-team:hover {
+  background: rgba(60, 38, 10, 0.22);
+}
+.puc-plaque-team__badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.puc-plaque-team__name {
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-plaque-team__pip {
+  font-size: 11px;
+  filter: drop-shadow(0 1px 0 rgba(255, 230, 160, 0.6));
+}

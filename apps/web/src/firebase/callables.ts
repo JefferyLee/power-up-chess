@@ -1181,6 +1181,12 @@ export interface GetPublicProfileResponse {
   quizAttempted: number | null
   equippedPieceSet: string | null
   avatar: TeamBadge | null
+  teams: Array<{
+    teamId: string
+    name: string
+    badge: TeamBadge
+    captain: boolean
+  }>
   todaysFiveSolved: number | null
   todaysFiveTotal: number | null
   todaysFiveDone: boolean
