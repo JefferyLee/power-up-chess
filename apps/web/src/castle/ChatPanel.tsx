@@ -4,6 +4,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
+import { parseChat } from './chatCommands'
+import { useClearedAt, setClearedAtNow } from './clearedAt'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
 import { NameLink } from '../invitations/NameLink'
@@ -11,7 +13,13 @@ import { TeamBadge } from '../teams/TeamBadge'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
-  const messages = useLobbyMessages()
+  const allMessages = useLobbyMessages()
+  // /clear hides everything posted BEFORE the local timestamp. Server-
+  // side messages are untouched; this is purely a self-view filter.
+  const clearedAt = useClearedAt()
+  const messages = clearedAt > 0
+    ? allMessages.filter((m) => m.ts >= clearedAt)
+    : allMessages
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,10 +50,30 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
       setError('Message too long — keep it under 200 characters.')
       return
     }
+
+    // Slash-command dispatch. Later slices add /skill, /shout, /define;
+    // for slice 1 we handle /clear locally and let everything else
+    // pass through to postChat as plain text.
+    const parsed = parseChat(trimmed)
+    if (parsed.kind === 'clear') {
+      setClearedAtNow()
+      setText('')
+      setError(null)
+      return
+    }
+    if (parsed.kind === 'error') {
+      setError(parsed.message)
+      return
+    }
+    // Slice 1 fall-through: anything that isn't /clear or a plain
+    // message just posts as literal text. Future slices intercept
+    // the other kinds before we get here.
+    const toPost = parsed.kind === 'message' ? parsed.text : trimmed
+
     setSubmitting(true)
     setError(null)
     try {
-      const res = await callPostChat({ text: trimmed })
+      const res = await callPostChat({ text: toPost })
       if (res.status === 'rate-limited') {
         const seconds = Math.max(1, Math.ceil(res.retryAfterMs / 1000))
         setError(`Slow down — try again in ${seconds}s.`)
