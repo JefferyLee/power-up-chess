@@ -384,6 +384,27 @@
   transition: opacity 200ms ease;
 }
 
+/* Terminal toggle — sits left of the input. Same height/radius as
+ * the input field so the row stays balanced; gold border hints that
+ * something deeper lives behind it. */
+.puc-chat__terminal {
+  flex: 0 0 38px;
+  width: 38px;
+  padding: 0;
+  background: rgba(10, 18, 12, 0.55);
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  border-radius: 8px;
+  color: #f7e8b6;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 200ms ease, transform 150ms ease;
+}
+.puc-chat__terminal:hover:not(:disabled) {
+  background: rgba(241, 195, 76, 0.18);
+  transform: translateY(-1px);
+}
+.puc-chat__terminal:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .puc-chat__send:disabled {
   opacity: 0.4;
   cursor: not-allowed;

@@ -94,8 +94,11 @@ export class StockfishEngine {
     return this.booted
   }
 
-  /** Returns Stockfish's evaluation of `fen` at the given depth (default 18). */
-  async analyze(fen: string, depth = 18): Promise<AnalyzeResult> {
+  /** Returns Stockfish's evaluation of `fen` at the given depth (default 18).
+   *  `skillLevel` overrides the UCI "Skill Level" option (0-20). It's
+   *  always sent so the engine doesn't carry a previous call's weaker
+   *  setting into a strong analysis. Default 20 = full strength. */
+  async analyze(fen: string, depth = 18, skillLevel = 20): Promise<AnalyzeResult> {
     if (this.terminated) throw new Error('Engine terminated.')
     await this.booted
     return new Promise<AnalyzeResult>((resolve, reject) => {
@@ -112,6 +115,8 @@ export class StockfishEngine {
           reject,
           latest: { evalCp: 0, mate: null, bestMoveUci: '', pv: [], depth: 0, sideToMove },
         }
+        const clampedSkill = Math.max(0, Math.min(20, Math.round(skillLevel)))
+        this.worker.postMessage(`setoption name Skill Level value ${clampedSkill}`)
         this.worker.postMessage('ucinewgame')
         this.worker.postMessage(`position fen ${fen}`)
         this.worker.postMessage(`go depth ${depth}`)

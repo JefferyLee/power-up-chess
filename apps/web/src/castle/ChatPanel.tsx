@@ -4,12 +4,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
-import { parseChat } from './chatCommands'
 import { useClearedAt, setClearedAtNow } from './clearedAt'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
 import { NameLink } from '../invitations/NameLink'
 import { TeamBadge } from '../teams/TeamBadge'
+import { TerminalOverlay } from './terminal/TerminalOverlay'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
@@ -23,6 +23,7 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [terminalOpen, setTerminalOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   // Track whether user is at the bottom; if not, don't auto-scroll
   // (so reading old messages isn't yanked back).
@@ -51,29 +52,26 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
       return
     }
 
-    // Slash-command dispatch. Later slices add /skill, /shout, /define;
-    // for slice 1 we handle /clear locally and let everything else
-    // pass through to postChat as plain text.
-    const parsed = parseChat(trimmed)
-    if (parsed.kind === 'clear') {
-      setClearedAtNow()
-      setText('')
-      setError(null)
+    // Embedded chat only handles /clear inline; every other slash
+    // command lives in the terminal overlay (tap ⛶ to enter). This
+    // keeps the inline UI calm — kids who type /xyz here get a nudge
+    // toward the terminal where the world unfolds.
+    if (trimmed.startsWith('/')) {
+      const name = trimmed.slice(1).split(/\s+/)[0]?.toLowerCase()
+      if (name === 'clear') {
+        setClearedAtNow()
+        setText('')
+        setError(null)
+        return
+      }
+      setError('Open the terminal (tap ⛶) to use commands.')
       return
     }
-    if (parsed.kind === 'error') {
-      setError(parsed.message)
-      return
-    }
-    // Slice 1 fall-through: anything that isn't /clear or a plain
-    // message just posts as literal text. Future slices intercept
-    // the other kinds before we get here.
-    const toPost = parsed.kind === 'message' ? parsed.text : trimmed
 
     setSubmitting(true)
     setError(null)
     try {
-      const res = await callPostChat({ text: toPost })
+      const res = await callPostChat({ text: trimmed })
       if (res.status === 'rate-limited') {
         const seconds = Math.max(1, Math.ceil(res.retryAfterMs / 1000))
         setError(`Slow down — try again in ${seconds}s.`)
@@ -105,6 +103,16 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
         {messages.map((m) => <Bubble key={m.id} message={m} />)}
       </div>
       <form className="puc-chat__form" onSubmit={handleSubmit}>
+        <button
+          type="button"
+          className="puc-chat__terminal"
+          onClick={() => setTerminalOpen(true)}
+          disabled={!canChat}
+          title="Open the Castle Terminal"
+          aria-label="Open terminal"
+        >
+          ⛶
+        </button>
         <input
           className="puc-chat__input"
           type="text"
@@ -124,6 +132,7 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
         </button>
       </form>
       {error && <p className="puc-chat__error">{error}</p>}
+      {terminalOpen && <TerminalOverlay onClose={() => setTerminalOpen(false)} />}
     </div>
   )
 }

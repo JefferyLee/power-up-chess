@@ -1,0 +1,130 @@
+/* Castle Terminal — full-screen MUD-style chat mode. Monospace,
+ * warm-gold-on-deep-blue (not classic green-on-black; matches the
+ * castle's twilight palette so it still feels like Power Up Castle,
+ * just deeper). */
+
+.puc-term {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background:
+    radial-gradient(ellipse at 50% 30%, #1f1748 0%, #0a0815 70%);
+  color: #d6cca8;
+  display: flex;
+  flex-direction: column;
+  font-family: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.puc-term__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(241, 195, 76, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  /* iOS safe area */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+}
+.puc-term__title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #f4c266;
+  text-transform: uppercase;
+}
+.puc-term__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  color: #f7e8b6;
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-term__close:hover { background: rgba(241, 195, 76, 0.15); }
+
+.puc-term__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.puc-term__welcome {
+  margin: 16px 0 8px;
+  color: #b0a890;
+  font-style: italic;
+}
+
+.puc-term__line {
+  word-break: break-word;
+}
+.puc-term__name {
+  color: #f4c266;
+  margin-right: 8px;
+}
+.puc-term__text {
+  color: #ece9ff;
+}
+.puc-term__line--public { color: #ece9ff; }
+.puc-term__line--echo {
+  color: #b0a890;
+  display: flex;
+  gap: 8px;
+}
+.puc-term__line--echo .puc-term__prompt {
+  color: #6e5a2a;
+  font-weight: 700;
+}
+.puc-term__line--reply {
+  color: #d6cca8;
+  margin-bottom: 4px;
+}
+.puc-term__line--whisper {
+  color: #8b815f;
+  font-style: italic;
+  margin: 2px 0 6px;
+}
+.puc-term__ascii {
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(241, 195, 76, 0.18);
+  border-radius: 4px;
+  color: #f7e8b6;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.puc-term__form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(241, 195, 76, 0.25);
+  background: rgba(0, 0, 0, 0.45);
+  /* iOS safe area */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+.puc-term__prompt {
+  color: #f4c266;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.puc-term__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ece9ff;
+  font: inherit;
+  outline: none;
+  caret-color: #f4c266;
+}
+.puc-term__input::placeholder { color: rgba(176, 168, 144, 0.6); }

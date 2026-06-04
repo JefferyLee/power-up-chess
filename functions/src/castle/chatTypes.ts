@@ -19,6 +19,17 @@ export type ChatMessageAction =
        *  this field; the client falls back to a default badge. */
       badge?: TeamBadge
     }
+  | {
+      /** Slice 2 (paused): skill cast as a chat-overlay animation.
+       *  Carried as a type variant so castSkill.ts still compiles even
+       *  while the feature is on the bench. */
+      kind: 'skill'
+      skillId: string
+      casterName: string
+      targetName?: string
+      casterBadge?: TeamBadge
+      targetBadge?: TeamBadge
+    }
 
 /** Visible-only state for the story-comprehension quiz attached to a
  *  host's ambient story. The secret answer key lives in a separate

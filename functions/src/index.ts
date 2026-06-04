@@ -27,6 +27,7 @@ export { setPresence } from './castle/setPresence'
 export { hostAmbientStory } from './castle/hostAmbientStory'
 export { hostStoryAnswer } from './castle/hostStoryAnswer'
 export { hostTellStory } from './castle/hostTellStory'
+export { askHost } from './castle/askHost'
 export { cleanupPresence } from './castle/cleanupPresence'
 export { submitForestScore } from './forest/submitForestScore'
 export {

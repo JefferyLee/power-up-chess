@@ -295,6 +295,18 @@ export type HostTellStoryResponse =
   | { status: 'no-story-available' }
 const hostTellStoryFn = httpsCallable<HostTellStoryRequest, HostTellStoryResponse>(functions, 'hostTellStory')
 
+// Hidden Text World V1 — terminal /ask Lucy|Luca handler.
+export interface AskHostRequest {
+  host: 'lucy' | 'luca'
+  question: string
+}
+export type AskHostResponse =
+  | { status: 'ok'; answer: string }
+  | { status: 'rate-limited'; retryAfterMs: number }
+  | { status: 'too-long' }
+  | { status: 'blocked' }
+const askHostFn = httpsCallable<AskHostRequest, AskHostResponse>(functions, 'askHost')
+
 export async function callCreateRoom(req: CreateRoomRequest): Promise<CreateRoomResponse> {
   const { data } = await createRoomFn(req)
   return data
@@ -385,6 +397,11 @@ export async function callPostWizardMessage(req: PostWizardMessageRequest): Prom
 }
 export async function callPostWizardVoice(req: PostWizardVoiceRequest): Promise<PostWizardVoiceResponse> {
   const { data } = await postWizardVoiceFn(req)
+  return data
+}
+
+export async function callAskHost(req: AskHostRequest): Promise<AskHostResponse> {
+  const { data } = await askHostFn(req)
   return data
 }
 export async function callHostStoryAnswer(req: HostStoryAnswerRequest): Promise<HostStoryAnswerResponse> {
