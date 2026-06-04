@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
@@ -361,16 +361,32 @@ function ReviewView({
 
       <div className="puc-review__main">
         <div className="puc-review__board-col">
-          <Board
-            pieces={pieces}
-            turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
-            legalDestinationsFrom={() => []}
-            onMove={() => { /* read-only in review */ }}
-            lastMove={lastMove}
-            checkSquare={null}
-            arrows={replayArrows}
-            squareSize={SQUARE_SIZE}
-          />
+          <ReviewBoardSticky
+            onPrev={() => {
+              if (selectedIdx === null || selectedIdx <= 0) return
+              setSelectedIdx(selectedIdx - 1)
+            }}
+            onNext={() => {
+              if (selectedIdx === null) return
+              if (selectedIdx >= analysis.moves.length - 1) return
+              setSelectedIdx(selectedIdx + 1)
+            }}
+            canPrev={selectedIdx !== null && selectedIdx > 0}
+            canNext={selectedIdx !== null && selectedIdx < analysis.moves.length - 1}
+            selected={selected}
+            selectedIsBrilliant={selected ? brilliantIdx.has(selected.index) : false}
+          >
+            <Board
+              pieces={pieces}
+              turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
+              legalDestinationsFrom={() => []}
+              onMove={() => { /* read-only in review */ }}
+              lastMove={lastMove}
+              checkSquare={null}
+              arrows={replayArrows}
+              squareSize={SQUARE_SIZE}
+            />
+          </ReviewBoardSticky>
           <EvalBar evalCp={evalCp} />
           <div className="puc-review__host-panel">
             <p className="puc-review__host-name">
@@ -426,6 +442,100 @@ function ReviewView({
             })}
           </ol>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** Sticky wrapper around the board: pins board + control-bar to the
+ *  top of the mobile viewport so a kid can step through moves without
+ *  scrolling back up after every tap. Adds left/right swipe gestures
+ *  on the board area as a bonus invisible affordance. */
+function ReviewBoardSticky({
+  children,
+  onPrev,
+  onNext,
+  canPrev,
+  canNext,
+  selected,
+  selectedIsBrilliant,
+}: {
+  children: React.ReactNode
+  onPrev: () => void
+  onNext: () => void
+  canPrev: boolean
+  canNext: boolean
+  selected: AnalyzedMove | null
+  selectedIsBrilliant: boolean
+}) {
+  const touchStartXRef = useRef<number | null>(null)
+  const touchStartYRef = useRef<number | null>(null)
+  const SWIPE_MIN_DX = 50
+  const SWIPE_MAX_DY = 60  // ignore mostly-vertical gestures (scroll)
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    if (!t) return
+    touchStartXRef.current = t.clientX
+    touchStartYRef.current = t.clientY
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const sx = touchStartXRef.current
+    const sy = touchStartYRef.current
+    touchStartXRef.current = null
+    touchStartYRef.current = null
+    if (sx === null || sy === null) return
+    const t = e.changedTouches[0]
+    if (!t) return
+    const dx = t.clientX - sx
+    const dy = t.clientY - sy
+    if (Math.abs(dx) < SWIPE_MIN_DX) return
+    if (Math.abs(dy) > SWIPE_MAX_DY) return
+    // Swipe LEFT → next move (board moves with you); RIGHT → previous.
+    if (dx < 0 && canNext) onNext()
+    else if (dx > 0 && canPrev) onPrev()
+  }
+
+  const moveLabel = selected
+    ? `${Math.floor(selected.index / 2) + 1}${selected.color === 'w' ? '.' : '…'} ${selected.san}`
+    : '—'
+  return (
+    <div className="puc-review__board-sticky">
+      <div
+        className="puc-review__board-touch"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {children}
+      </div>
+      <div className="puc-review__navbar" role="group" aria-label="Move navigation">
+        <button
+          type="button"
+          className="puc-review__nav-btn"
+          onClick={onPrev}
+          disabled={!canPrev}
+          aria-label="Previous move"
+        >
+          ◀
+        </button>
+        <span className="puc-review__nav-chip">
+          <span className="puc-review__nav-move">{moveLabel}</span>
+          {selected && (
+            <ClassificationBadge
+              classification={selected.classification}
+              brilliant={selectedIsBrilliant}
+            />
+          )}
+        </span>
+        <button
+          type="button"
+          className="puc-review__nav-btn"
+          onClick={onNext}
+          disabled={!canNext}
+          aria-label="Next move"
+        >
+          ▶
+        </button>
       </div>
     </div>
   )

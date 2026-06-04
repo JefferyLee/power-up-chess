@@ -112,6 +112,85 @@
   gap: 12px;
 }
 
+/* Sticky wrapper pinning the Board + nav bar to the top of the mobile
+ * viewport so a kid can step through moves without scrolling back up
+ * after every tap. Inactive on desktop (everything fits already). */
+.puc-review__board-sticky {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.puc-review__board-touch {
+  /* The Board lives inside this — no extra layout, just a target for
+   * the swipe-gesture handlers. */
+  touch-action: pan-y;  /* let vertical scrolling pass through */
+}
+
+/* Move-navigation control bar: ◀ / current-move chip / ▶ */
+.puc-review__navbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.puc-review__nav-btn {
+  flex: 0 0 auto;
+  min-width: 48px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(241, 195, 76, 0.12);
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  color: var(--puc-text-accent);
+  font-size: 18px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-review__nav-btn:hover:not(:disabled) {
+  background: rgba(241, 195, 76, 0.22);
+}
+.puc-review__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.puc-review__nav-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--puc-font-display);
+  color: var(--puc-text);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-review__nav-move {
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  /* Mobile: pin board + nav bar to the top of the viewport so prev/
+   * next never requires scrolling. Background covers the layer below
+   * cleanly while the move list scrolls underneath. */
+  .puc-review__board-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--puc-bg-deep);
+    padding: 6px 0 4px;
+    margin: -6px 0 0;
+  }
+}
+
 .puc-review__moves-col {
   background: var(--puc-surface);
   border: 1px solid var(--puc-surface-edge);
