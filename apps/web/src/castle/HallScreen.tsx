@@ -25,6 +25,7 @@ import { HallAmbient } from './HallAmbient'
 import { RecentlyPlayedList } from './RecentlyPlayedList'
 import { FindPlayer } from './FindPlayer'
 import { MyTeamsList } from '../teams/MyTeamsList'
+import { CurrentStoryPanel } from './CurrentStoryPanel'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
@@ -287,6 +288,12 @@ export function HallScreen() {
             </p>
             {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
             {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
+            {/* Story panel — collapsed by default on phone widths so
+             *  the host card doesn't dominate the Hall above the fold. */}
+            <CurrentStoryPanel
+              currentHostId={hostId}
+              defaultCollapsed={typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches}
+            />
             <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
             <HostInviteButton hostId={hostId} />
             <FeedbackButton />

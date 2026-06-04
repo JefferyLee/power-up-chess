@@ -67,18 +67,39 @@ export async function pickAndPostStory(args: Args): Promise<PostStoryResult | nu
     ? { question: quizKey.question, state: 'open' }
     : undefined
 
+  // Story body goes to its own surface in the Hall ("under the host's
+  // portrait"). Chat only carries a short teaser so the story doesn't
+  // get buried by ongoing conversation. The quiz STAYS in chat as an
+  // interactive card — that's chat-shaped UX (input + submit + winner
+  // shoutout).
+  const body = textForHost(story, hostId)
+  const hostName = hostId === 'lucy' ? 'Lucy' : 'Luca'
+  const teaser = `🌿 ${hostName} is telling a new tale — "${story.title}". See it under ${hostName === 'Lucy' ? 'her' : 'his'} portrait.`
   const msg: ChatMessageDoc = {
-    name: hostId === 'lucy' ? 'Lucy' : 'Luca',
+    name: hostName,
     uid: '',
     normalizedName: '',
     isBypass: false,
     kind: 'host',
     hostId,
-    text: textForHost(story, hostId),
+    text: teaser,
     ts: now,
     ...(quizState ? { quiz: quizState } : {}),
   }
   const msgRef = await db.collection('lobby/messages/items').add(msg)
+
+  // Publish the full story body to the Hall's current-story panel.
+  // Listeners (CurrentStoryPanel) subscribe to this doc and render
+  // the body + a TTS button. Replacing the doc on every new story
+  // means an offline kid never sees a stale tale.
+  await db.doc('castle_live/current_story').set({
+    hostId,
+    storyId: story.id,
+    title: story.title,
+    body,
+    postedAt: now,
+    messageId: msgRef.id,
+  })
 
   if (quizKey) {
     await db.doc(`story_quiz_keys/${msgRef.id}`).set({
