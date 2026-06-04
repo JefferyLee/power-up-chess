@@ -53,42 +53,39 @@ export async function generateShareImage(): Promise<Blob> {
   ctx.font = '400 24px "Helvetica Neue", Arial, sans-serif'
   ctx.fillText('A warm, safe home where kids learn chess by playing.', 72, 162)
 
-  // Feature lines.
-  const features = [
-    '5,300+ puzzles that adapt to your level — six themed plots, daily quests, master + legend tiers',
-    'Play friends privately by room link — 5-min blitz to 1-day correspondence',
-    'Practice with Lucy or Luca, two AI hosts who chat about your moves',
-    'Forest Adventure + Wizard’s Duel — playful side games that earn castle points',
-    'The Great Hall — moderated lobby chat. No DMs, no public matchmaking, display names only.',
-    '[NEW] Chess Basics — 5 short interactive lessons that take first-timers from zero',
-    '[NEW] Story Library — 108 chess stories, read or listened to in Lucy or Luca’s voice',
-    '[NEW] Theme Shop — collect piece sets (Cburnett, Fantasy, Glowing Crystal) with castle points',
-    '[NEW] Knight’s Hop — learn each piece by playing AS it, one chess-legal hop at a time',
+  // Feature lines — mirrors the FEATURES list in CastleSign.tsx.
+  // Verb-led parallel structure; the verb renders in gold ahead of an
+  // em-dash + plain-coloured body so the eye can skim left-down fast.
+  const features: Array<{ verb: string; rest: string }> = [
+    { verb: 'Learn',   rest: 'Chess Basics + Knight’s Hop, short interactive lessons' },
+    { verb: 'Solve',   rest: '5,300+ adaptive puzzles, six plots, daily Today’s Five' },
+    { verb: 'Play',    rest: 'invite friends, weekly tournament, or train vs Lucy / Luca' },
+    { verb: 'Explore', rest: 'Forest Adventure, Wizard’s Duel, Knight’s Run, Story Bookshelf' },
+    { verb: 'Collect', rest: 'piece sets, boards, daily streaks; check your Adventurer’s Plaque' },
+    { verb: 'Chat',    rest: 'Great Hall — find any player, peek at their plaque' },
   ]
-  // Feature lines — tighter than v1 because the list grew to 9.
-  // [NEW] prefix renders as a gold pill before the line text so the
-  // recent additions read at a glance.
-  ctx.font = '400 17px "Helvetica Neue", Arial, sans-serif'
-  let y = 210
-  const lineSpacing = 32
-  for (const raw of features) {
-    const isNew = raw.startsWith('[NEW] ')
-    const text = isNew ? raw.slice(6) : raw
-    drawBullet(ctx, 80, y + 9, isNew)
-    let xCursor = 110
-    if (isNew) {
-      xCursor = drawNewPill(ctx, xCursor, y + 2)
-    }
-    ctx.fillStyle = isNew ? '#f1e6c8' : '#d8d2f0'
-    ctx.font = '400 17px "Helvetica Neue", Arial, sans-serif'
-    wrapText(ctx, text, xCursor, y, W - xCursor - 240, 22)
+  ctx.font = '400 18px "Helvetica Neue", Arial, sans-serif'
+  let y = 218
+  const lineSpacing = 38
+  for (const line of features) {
+    drawBullet(ctx, 80, y + 10, true)
+    // Verb in gold, body in cool grey, separated by ' — '.
+    ctx.font = '700 18px "Helvetica Neue", Arial, sans-serif'
+    ctx.fillStyle = '#f4c266'
+    ctx.fillText(line.verb, 110, y)
+    const verbW = ctx.measureText(line.verb).width
+    ctx.font = '400 18px "Helvetica Neue", Arial, sans-serif'
+    ctx.fillStyle = '#d8d2f0'
+    const restX = 110 + verbW + 8
+    ctx.fillText('—', 110 + verbW, y)
+    wrapText(ctx, line.rest, restX + 14, y, W - restX - 14 - 240, 24)
     y += lineSpacing
   }
 
   // Footer — ages note + URL.
   ctx.fillStyle = 'rgba(244, 194, 102, 0.85)'
   ctx.font = '400 18px "Helvetica Neue", Arial, sans-serif'
-  ctx.fillText('Ages 8–12 · every chess level', 72, H - 92)
+  ctx.fillText('Ages 5+ · every chess level', 72, H - 92)
   ctx.fillStyle = '#f4c266'
   ctx.font = '600 24px "Helvetica Neue", Arial, sans-serif'
   ctx.fillText(SHARE_URL.replace(/^https?:\/\//, ''), 72, H - 62)
@@ -148,56 +145,6 @@ function drawBullet(
   ctx.arc(x, y, bright ? 5 : 4, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
-}
-
-/** Draws a small gold "NEW" pill and returns the next x cursor. */
-function drawNewPill(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-): number {
-  const text = 'NEW'
-  ctx.save()
-  ctx.font = '700 12px "Helvetica Neue", Arial, sans-serif'
-  const metrics = ctx.measureText(text)
-  const padX = 8
-  const w = metrics.width + padX * 2
-  const h = 18
-  // Pill background
-  const grad = ctx.createLinearGradient(x, y, x + w, y + h)
-  grad.addColorStop(0, '#f4c266')
-  grad.addColorStop(1, '#ef9a3f')
-  ctx.fillStyle = grad
-  roundRect(ctx, x, y, w, h, 9)
-  ctx.fill()
-  // Pill text
-  ctx.fillStyle = '#1a1530'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(text, x + padX, y + h / 2 + 1)
-  ctx.textBaseline = 'top'
-  ctx.restore()
-  return x + w + 8
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-): void {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.lineTo(x + w - r, y)
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-  ctx.lineTo(x + w, y + h - r)
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y + r)
-  ctx.quadraticCurveTo(x, y, x + r, y)
-  ctx.closePath()
 }
 
 /** Word-wrap helper. Returns the y of the last line for layout chaining. */

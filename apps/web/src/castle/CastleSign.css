@@ -191,6 +191,22 @@
   font-weight: 600;
 }
 .puc-sign-overlay__btn--primary:hover:not(:disabled) { filter: brightness(1.05); }
+.puc-sign-overlay__save {
+  display: block;
+  margin: 6px 0 0 auto;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  color: #6a3e10;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-style: italic;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(120, 80, 30, 0.4);
+}
+.puc-sign-overlay__save:hover { color: #3a230c; }
+.puc-sign-overlay__save:disabled { opacity: 0.5; cursor: default; }
 .puc-sign-overlay__note {
   margin: 10px 0 0;
   font-size: 12px;

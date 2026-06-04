@@ -1,24 +1,29 @@
 // CastleSign — wooden billboard at the castle gate. Pre-auth, public.
 //
 // Collapsed: a small "📜 What's inside?" tag hanging on the wall.
-// Expanded: parchment overlay with the castle's ad copy + a Share button
-// that generates a PNG (title + tagline + features + URL + QR code)
-// and downloads it via an <a download> link.
+// Expanded: parchment overlay with the castle's ad copy + a Share
+// button that adaptively picks the best path the platform supports:
+// Web Share API (iOS / macOS PWA → system share sheet) → Clipboard
+// API (image to clipboard) → download. A secondary "save as image"
+// link is always available as an explicit escape hatch.
 
 import { useEffect, useState } from 'react'
-import { downloadShareImage } from './shareImage'
+import { downloadShareImage, generateShareImage } from './shareImage'
 import './CastleSign.css'
 
-const FEATURES: string[] = [
-  '5,300+ puzzles that adapt to your level — six themed plots, daily quests, master + legend tiers',
-  'Play friends privately by room link — 5-min blitz to 1-day correspondence',
-  'Practice with Lucy or Luca, two AI hosts who chat about your moves',
-  'Forest Adventure + Wizard’s Duel — playful side games that earn castle points',
-  'The Great Hall — moderated lobby chat. No DMs, no public matchmaking, display names only.',
-  '[NEW] Chess Basics — 5 short interactive lessons that take first-timers from zero',
-  '[NEW] Story Library — 108 chess stories, read or listened to in Lucy or Luca’s voice',
-  '[NEW] Theme Shop — collect piece sets (Cburnett, Fantasy, Glowing Crystal) with castle points',
-  '[NEW] Knight’s Hop — learn each piece by playing AS it, one chess-legal hop at a time',
+const SHARE_TITLE = 'Power Up Castle'
+const SHARE_TEXT = 'A warm, safe home where kids learn chess by playing.'
+const SHARE_URL = 'https://power-up-chess-dev.web.app'
+
+// Verb-led parallel structure. Each line ≤ 15 words. The leading
+// word + em-dash render as a bold lede so the eye can skim.
+const FEATURES: Array<{ verb: string; rest: string }> = [
+  { verb: 'Learn',   rest: 'Chess Basics + Knight’s Hop, short interactive lessons' },
+  { verb: 'Solve',   rest: '5,300+ adaptive puzzles, six plots, daily Today’s Five' },
+  { verb: 'Play',    rest: 'invite friends, weekly tournament, or train vs Lucy / Luca' },
+  { verb: 'Explore', rest: 'Forest Adventure, Wizard’s Duel, Knight’s Run, Story Bookshelf' },
+  { verb: 'Collect', rest: 'piece sets, boards, daily streaks; check your Adventurer’s Plaque' },
+  { verb: 'Chat',    rest: 'Great Hall — find any player, peek at their plaque' },
 ]
 
 export function CastleSign() {
@@ -33,12 +38,65 @@ export function CastleSign() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  /** Primary share path. Feature-detects at call time:
+   *   1. navigator.share + files → native share sheet (iOS / macOS).
+   *   2. navigator.clipboard.write(ClipboardItem) → image to pasteboard.
+   *   3. Fallback: trigger download.
+   *  Cancelled native shares are silent (user picked "X" out of the
+   *  sheet — no toast needed). Failures fall through to the next path.
+   */
   const onShare = async () => {
     if (busy) return
     setBusy(true)
     setShareNote(null)
     try {
-      await downloadShareImage()
+      const blob = await generateShareImage()
+      const file = new File([blob], 'power-up-castle.png', { type: 'image/png' })
+
+      // 1. Native share sheet — best on iOS / macOS PWA.
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: SHARE_TITLE,
+            text: SHARE_TEXT,
+            url: SHARE_URL,
+          })
+          setShareNote('Shared.')
+          return
+        } catch (err) {
+          // AbortError = user cancelled the share sheet — that's fine,
+          // don't surface a toast. Other errors fall through to clipboard.
+          if (err instanceof Error && err.name === 'AbortError') return
+          console.warn('navigator.share failed, trying clipboard:', err)
+        }
+      }
+
+      // 2. Image to clipboard — best on desktop Chrome / Edge.
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        typeof ClipboardItem !== 'undefined' &&
+        typeof navigator.clipboard.write === 'function'
+      ) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob }),
+          ])
+          setShareNote('Copied to clipboard — paste it anywhere.')
+          return
+        } catch (err) {
+          console.warn('clipboard.write failed, falling back to download:', err)
+        }
+      }
+
+      // 3. Plain old download — works in every browser.
+      triggerDownload(blob, 'power-up-castle.png')
       setShareNote('Image downloaded — share it anywhere.')
     } catch (err) {
       console.warn('share image failed:', err)
@@ -46,6 +104,36 @@ export function CastleSign() {
     } finally {
       setBusy(false)
     }
+  }
+
+  /** Explicit "give me the file" escape hatch — always downloads
+   *  regardless of what the primary Share path would choose. Useful
+   *  on platforms where the auto choice ended up in clipboard but the
+   *  user actually wants a file. */
+  const onSave = async () => {
+    if (busy) return
+    setBusy(true)
+    setShareNote(null)
+    try {
+      await downloadShareImage()
+      setShareNote('Image downloaded.')
+    } catch (err) {
+      console.warn('save image failed:', err)
+      setShareNote('Could not build the share image. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
   }
 
   return (
@@ -84,15 +172,16 @@ export function CastleSign() {
             </p>
             <ul className="puc-sign-overlay__list">
               {FEATURES.map((line, i) => (
-                <li key={i}>{line}</li>
+                <li key={i}>
+                  <b>{line.verb}</b> — {line.rest}
+                </li>
               ))}
             </ul>
             <p className="puc-sign-overlay__ages">
-              Ages 8–12 · every chess level — from &ldquo;what&apos;s a knight?&rdquo; to &ldquo;I just hit 1500.&rdquo;
+              Ages 5+ · every chess level — from &ldquo;what&apos;s a knight?&rdquo; to &ldquo;I just hit 1500.&rdquo;
             </p>
             <p className="puc-sign-overlay__safety">
-              Safe by design: no personal info collected, chat is server-moderated,
-              and online play happens only with friends you share a link with.
+              Safe by design — no personal info, server-moderated chat, online play by friend invite only.
             </p>
             <div className="puc-sign-overlay__actions">
               <button
@@ -108,9 +197,17 @@ export function CastleSign() {
                 onClick={onShare}
                 disabled={busy}
               >
-                {busy ? 'Drawing…' : '↓ Share this castle'}
+                {busy ? 'Drawing…' : 'Share this castle'}
               </button>
             </div>
+            <button
+              type="button"
+              className="puc-sign-overlay__save"
+              onClick={onSave}
+              disabled={busy}
+            >
+              or save as image
+            </button>
             {shareNote && <p className="puc-sign-overlay__note">{shareNote}</p>}
           </div>
         </div>
