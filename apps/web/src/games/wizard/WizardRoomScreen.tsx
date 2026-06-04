@@ -205,6 +205,12 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     }
   }, [cast, engine])
 
+  // Track whether a resign attempt has already failed once — used to
+  // let the kid bail out even if the server keeps rejecting (e.g. game
+  // already ended out from under them). Without this the dialog would
+  // never close from the kid's POV: pressing Yes refires the same
+  // failing call and the dialog appears to "loop".
+  const resignAttemptedRef = useRef(false)
   const handleConfirmResign = useCallback(async () => {
     if (resigning) return
     setResigning(true)
@@ -214,7 +220,17 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
       setResignOpen(false)
       onExit()
     } catch (e) {
-      setError(humanError(e))
+      if (resignAttemptedRef.current) {
+        // Already failed once — honour the kid's clear intent to leave.
+        // The room may have ended on its own (timeout etc.) or be in
+        // a state the server won't resign; either way they shouldn't
+        // be trapped here. We still close the dialog and exit.
+        setResignOpen(false)
+        onExit()
+      } else {
+        resignAttemptedRef.current = true
+        setError(humanError(e))
+      }
     } finally {
       setResigning(false)
     }
@@ -260,17 +276,18 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     lastSeenActionsRef.current = actions.length
   }, [room.actions, sound])
 
-  // Flag-fall watcher: if it's the opponent's turn and their clock would
-  // run out before our next snapshot, schedule a claim. The server has
-  // the final say; we just nudge it.
+  // Flag-fall watcher: when the moving side's clock runs out, both
+  // clients try to claim. Fires from either side (including the
+  // side that's actually flagging) so a duel doesn't get stuck "live"
+  // forever when the opponent isn't online to claim. Server idempotency
+  // (status === 'completed' is a no-op) handles the duplicate call.
   useEffect(() => {
     if (room.status !== 'live') return
     if (!yourColor || !room.timeControl) return
-    if (yourColor === room.currentTurn) return
     if (room.lastTickServerTs == null) return
-    const opponentTimeMs = room.currentTurn === 'w' ? room.whiteTimeMs : room.blackTimeMs
-    if (opponentTimeMs == null) return
-    const remaining = opponentTimeMs - (Date.now() - room.lastTickServerTs)
+    const moverTimeMs = room.currentTurn === 'w' ? room.whiteTimeMs : room.blackTimeMs
+    if (moverTimeMs == null) return
+    const remaining = moverTimeMs - (Date.now() - room.lastTickServerTs)
     const fire = () => { void callClaimWizardTimeWin(roomId).catch(() => {}) }
     if (remaining <= 0) {
       fire()

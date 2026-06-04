@@ -495,30 +495,33 @@ export const claimWizardTimeWin = onCall<ClaimTimeRequest, Promise<{ ok: true }>
 
       const callerColor = colorFor(uid, room)
       if (callerColor === null) throw new HttpsError('permission-denied', 'Not a player.')
-      if (callerColor === room.currentTurn) {
-        // You can't claim a flag-fall while your OWN clock is the one ticking.
-        throw new HttpsError('failed-precondition', 'It is your turn — you cannot claim time.')
-      }
 
+      // The mover is the side whose clock is running. Whoever called
+      // (mover or opponent or spectator-now-rejected-above), the loser
+      // is always the mover — that's whose flag fell. Letting the
+      // mover self-claim covers the case where the opponent is offline
+      // and would otherwise leave the duel stuck in 'live' forever.
+      const moverColor = room.currentTurn
+      const moverTime = moverColor === 'w' ? room.whiteTimeMs : room.blackTimeMs
       const now = Date.now()
       const elapsed = now - room.lastTickServerTs
-      const opponentTime = room.currentTurn === 'w' ? room.whiteTimeMs : room.blackTimeMs
-      if (elapsed < opponentTime) {
-        throw new HttpsError('failed-precondition', 'Opponent has not run out of time.')
+      if (elapsed < moverTime) {
+        throw new HttpsError('failed-precondition', 'The clock has not run out yet.')
       }
+      const winner = opposite(moverColor)
 
       const update: Partial<WizardRoomDoc> = {
         status: 'completed',
-        winner: callerColor,
+        winner,
         endReason: 'timeout',
         lastTickServerTs: null,
         updatedAt: now,
       }
-      if (room.currentTurn === 'w') update.whiteTimeMs = 0
+      if (moverColor === 'w') update.whiteTimeMs = 0
       else update.blackTimeMs = 0
-      await applyDuelPayouts(tx, room, callerColor)
+      await applyDuelPayouts(tx, room, winner)
       tx.update(ref, update)
-      scheduleDuelAnnouncement(roomId, room, callerColor, 'timeout')
+      scheduleDuelAnnouncement(roomId, room, winner, 'timeout')
     })
 
     return { ok: true }
@@ -548,41 +551,48 @@ async function applyDuelPayouts(
   const haloExpiresAt = now + DUEL_HALO_HOURS * 60 * 60 * 1000
   const crownExtensionMs = CROWN_HOURS * 60 * 60 * 1000
 
-  if (winnerSlot && !winnerSlot.isBypass && winnerSlot.normalizedName) {
-    const ref = db.doc(`guests/${winnerSlot.normalizedName}`)
-    const snap = await tx.get(ref)
-    if (snap.exists) {
-      const winnerDoc = snap.data() as GuestDoc
-      const nextStreak = (winnerDoc.cosmetics?.winStreak ?? 0) + 1
-      // Phase D: lifetime-earn lazy-migrates from current balance for old guests.
-      const lifetimePrev = winnerDoc.lifetimeEarned ?? Math.max(0, winnerDoc.castlePoints)
-      const updates: Record<string, unknown> = {
-        castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner),
-        lifetimeEarned: lifetimePrev + AWARD_CAPS.duelWinner,
-        'cosmetics.duelWinnerExpiresAt': haloExpiresAt,
-        'cosmetics.winStreak': nextStreak,
-      }
-      // Hitting (or staying past) the threshold extends the crown another
-      // CROWN_HOURS from now — so a sustained streak keeps the crown lit.
-      if (nextStreak >= CROWN_THRESHOLD) {
-        updates['cosmetics.winStreakCrownExpiresAt'] = now + crownExtensionMs
-      }
-      tx.update(ref, updates)
+  // Firestore transactions require ALL reads before ANY writes. Earlier
+  // this function read winner → wrote winner → read loser, which threw
+  // INTERNAL whenever both players had castle accounts (i.e. the common
+  // case). Batch the reads first, then issue both writes.
+  const winnerRef = winnerSlot && !winnerSlot.isBypass && winnerSlot.normalizedName
+    ? db.doc(`guests/${winnerSlot.normalizedName}`)
+    : null
+  const loserRef = loserSlot && !loserSlot.isBypass && loserSlot.normalizedName
+    ? db.doc(`guests/${loserSlot.normalizedName}`)
+    : null
+  const [winnerSnap, loserSnap] = await Promise.all([
+    winnerRef ? tx.get(winnerRef) : Promise.resolve(null),
+    loserRef ? tx.get(loserRef) : Promise.resolve(null),
+  ])
+
+  if (winnerRef && winnerSnap && winnerSnap.exists) {
+    const winnerDoc = winnerSnap.data() as GuestDoc
+    const nextStreak = (winnerDoc.cosmetics?.winStreak ?? 0) + 1
+    // Phase D: lifetime-earn lazy-migrates from current balance for old guests.
+    const lifetimePrev = winnerDoc.lifetimeEarned ?? Math.max(0, winnerDoc.castlePoints)
+    const updates: Record<string, unknown> = {
+      castlePoints: FieldValue.increment(AWARD_CAPS.duelWinner),
+      lifetimeEarned: lifetimePrev + AWARD_CAPS.duelWinner,
+      'cosmetics.duelWinnerExpiresAt': haloExpiresAt,
+      'cosmetics.winStreak': nextStreak,
     }
+    // Hitting (or staying past) the threshold extends the crown another
+    // CROWN_HOURS from now — so a sustained streak keeps the crown lit.
+    if (nextStreak >= CROWN_THRESHOLD) {
+      updates['cosmetics.winStreakCrownExpiresAt'] = now + crownExtensionMs
+    }
+    tx.update(winnerRef, updates)
   }
-  if (loserSlot && !loserSlot.isBypass && loserSlot.normalizedName) {
-    const ref = db.doc(`guests/${loserSlot.normalizedName}`)
-    const snap = await tx.get(ref)
-    if (snap.exists) {
-      const loserDoc = snap.data() as GuestDoc
-      const lifetimePrev = loserDoc.lifetimeEarned ?? Math.max(0, loserDoc.castlePoints)
-      tx.update(ref, {
-        castlePoints: FieldValue.increment(AWARD_CAPS.duelLoser),
-        lifetimeEarned: lifetimePrev + AWARD_CAPS.duelLoser,
-        // Loss resets the streak; the crown lives out its natural expiry.
-        'cosmetics.winStreak': 0,
-      })
-    }
+  if (loserRef && loserSnap && loserSnap.exists) {
+    const loserDoc = loserSnap.data() as GuestDoc
+    const lifetimePrev = loserDoc.lifetimeEarned ?? Math.max(0, loserDoc.castlePoints)
+    tx.update(loserRef, {
+      castlePoints: FieldValue.increment(AWARD_CAPS.duelLoser),
+      lifetimeEarned: lifetimePrev + AWARD_CAPS.duelLoser,
+      // Loss resets the streak; the crown lives out its natural expiry.
+      'cosmetics.winStreak': 0,
+    })
   }
 }
 
