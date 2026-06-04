@@ -60,6 +60,7 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
           playerId: req.auth.uid,
           displayName,
           ...(whitePieceSetId ? { pieceSetId: whitePieceSetId } : {}),
+          normalizedName,
         },
         black: null,
         status: 'waiting',

@@ -10,6 +10,11 @@ export interface PlayerRef {
    *  render this side's pieces with this set. Missing on older rooms;
    *  fall back to the viewer's local default. */
   pieceSetId?: string
+  /** Castle name (lowercased + trimmed). Lets the same player rejoin
+   *  the seat from a different anonymous-auth uid after a disconnect
+   *  or device switch. Missing on rooms created before this field
+   *  existed; reclaim falls back to spectator in that case. */
+  normalizedName?: string
 }
 
 export type RoomStatus = 'waiting' | 'live' | 'completed'
@@ -83,6 +88,12 @@ export interface JoinRoomRequest {
   displayName: string
   /** Caller's equipped piece-set id. Stamped onto black.pieceSetId. */
   pieceSetId?: string
+  /** Caller's castle name (lowercased + trimmed). Server uses this to
+   *  reclaim an existing seat after a uid change (disconnect / device
+   *  switch). When the room already has both players and one's
+   *  normalizedName matches the caller, joinRoom updates that slot's
+   *  playerId instead of rejecting "room full". */
+  normalizedName?: string
 }
 export interface JoinRoomResponse {
   roomId: string

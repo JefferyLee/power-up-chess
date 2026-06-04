@@ -8,6 +8,11 @@ export interface PlayerRef {
    *  this set on every viewer's screen. Older rooms predate the
    *  field; treat absent as "let the viewer's own default decide". */
   pieceSetId?: string
+  /** Castle name (lowercased + trimmed). Lets the same player rejoin
+   *  the seat from a different anonymous-auth uid after a disconnect
+   *  or device switch. Missing on rooms created before this field
+   *  existed; reclaim falls back to spectator in that case. */
+  normalizedName?: string
 }
 
 export type RoomStatus = 'waiting' | 'live' | 'completed'
@@ -77,6 +82,10 @@ export interface JoinRoomRequest {
   displayName: string
   /** Caller's equipped piece-set id. Stamped onto black.pieceSetId. */
   pieceSetId?: string
+  /** Caller's castle name. Lets the server reclaim an existing seat
+   *  when the caller's uid has changed (disconnect / device switch)
+   *  but their castle identity matches a slot's stored normalizedName. */
+  normalizedName?: string
 }
 
 export interface JoinRoomResponse {

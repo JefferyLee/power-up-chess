@@ -40,6 +40,44 @@ export function OnlineGameScreen() {
   const auth = useAuthUid()
   const { state, submitMove, retry } = useRoom(roomId ?? null)
   const [watchOnly, setWatchOnly] = useState(false)
+  const { identity: castleIdentity } = useCastle()
+  const myCosmetics = useCosmetics()
+  // Seat-reclaim flag: true while we're calling joinRoom to swap a
+  // stale playerId for the caller's current uid.
+  const [reclaiming, setReclaiming] = useState(false)
+
+  // Auto-reclaim: when the room is ready and we're not currently
+  // recognised as a player, but our castle name matches one of the
+  // seats, swap the seat's playerId silently. Covers the "I lost
+  // connection / switched device but came back through Watch" case.
+  useEffect(() => {
+    if (state.status !== 'ready' || !roomId || auth.status !== 'ready') return
+    if (reclaiming) return
+    const room = state.room
+    const uid = auth.uid
+    const isAlreadyPlayer =
+      room.white.playerId === uid ||
+      (room.black?.playerId !== undefined && room.black.playerId === uid)
+    if (isAlreadyPlayer) return
+    const mine = castleIdentity?.normalizedName
+    if (!mine || castleIdentity?.isBypass) return
+    const matchesSeat =
+      room.white.normalizedName === mine ||
+      room.black?.normalizedName === mine
+    if (!matchesSeat) return
+    setReclaiming(true)
+    void callJoinRoom({
+      roomId,
+      displayName: castleIdentity.displayName,
+      normalizedName: mine,
+      pieceSetId: myCosmetics.pieceSetId,
+    })
+      .then(() => retry())
+      .catch((err) => {
+        console.warn('seat reclaim failed:', err)
+      })
+      .finally(() => setReclaiming(false))
+  }, [state, roomId, auth, castleIdentity, myCosmetics.pieceSetId, retry, reclaiming])
 
   if (auth.status === 'loading') {
     return <FullPageStatus text="Signing you in…" />
@@ -70,6 +108,12 @@ export function OnlineGameScreen() {
   const isPlayer =
     room.white.playerId === auth.uid ||
     (room.black?.playerId !== undefined && room.black.playerId === auth.uid)
+
+  // Mid-reclaim status — show a small "Reconnecting" message instead
+  // of flashing the spectator board.
+  if (reclaiming && !isPlayer) {
+    return <FullPageStatus text="Reconnecting to your seat…" />
+  }
 
   // If the room is still waiting and you're not the creator, offer to join as
   // black. The "Watch instead" button on JoinPanel sets watchOnly so we drop
@@ -155,7 +199,12 @@ function JoinPanel({
     setBusy(true)
     setError(null)
     try {
-      await callJoinRoom({ roomId, displayName, pieceSetId: cosmetics.pieceSetId })
+      await callJoinRoom({
+        roomId,
+        displayName,
+        pieceSetId: cosmetics.pieceSetId,
+        ...(identity?.normalizedName ? { normalizedName: identity.normalizedName } : {}),
+      })
       onJoined()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
