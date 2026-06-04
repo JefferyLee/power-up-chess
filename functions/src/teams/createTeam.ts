@@ -19,6 +19,7 @@ import {
 import type { ChatMessageDoc } from '../castle/chatTypes'
 import { hostOnDuty } from '../shared/hostOnDuty'
 import { generateTeamId, normalizeTeamName } from './teamId'
+import { sanitiseBadge } from './sanitiseBadge'
 
 const NAME_MIN = 2
 const NAME_MAX = 30
@@ -38,30 +39,6 @@ function sanitiseName(raw: string): string {
   return raw.replace(/[ -]/g, '').trim().slice(0, NAME_MAX)
 }
 
-function sanitiseBadge(raw: TeamBadge | undefined): TeamBadge {
-  const defaults: TeamBadge = {
-    shape: 'shield-heater',
-    layout: 'solid',
-    bg: '#3a5b9c',
-    border: '#1a1530',
-    symbol: 'king',
-    symbolColor: '#f4c266',
-  }
-  if (!raw) return defaults
-  const allowedShapes = ['shield-heater', 'shield-round', 'shield-pointed', 'roundel']
-  const allowedLayouts = ['solid', 'horizontal', 'vertical', 'quartered']
-  const colour = (s: unknown): string | undefined =>
-    typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s) ? s : undefined
-  return {
-    shape: allowedShapes.includes(String(raw.shape)) ? raw.shape : defaults.shape,
-    layout: allowedLayouts.includes(String(raw.layout)) ? raw.layout : defaults.layout,
-    bg: colour(raw.bg) ?? defaults.bg,
-    bg2: colour(raw.bg2),
-    border: colour(raw.border) ?? defaults.border,
-    symbol: typeof raw.symbol === 'string' && raw.symbol.length <= 24 ? raw.symbol : defaults.symbol,
-    symbolColor: colour(raw.symbolColor) ?? defaults.symbolColor,
-  }
-}
 
 export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>(
   async (req) => {

@@ -667,12 +667,21 @@ export async function callFindPlayer(req: FindPlayerRequest): Promise<FindPlayer
 // ── Teams (MVP3-P3) ──
 export interface TeamBadge {
   shape?: 'shield-heater' | 'shield-round' | 'shield-pointed' | 'roundel'
+    | 'oval' | 'kite' | 'lozenge' | 'heart'
   layout?: 'solid' | 'horizontal' | 'vertical' | 'quartered'
+    | 'bend' | 'chevron' | 'chief' | 'bordure'
   bg?: string
   bg2?: string
   border?: string
   symbol?: string
   symbolColor?: string
+  /** Optional motto / monogram engraved on the badge. ≤12 chars,
+   *  uppercase letters + digits + spaces only. Server-sanitised. */
+  text?: string
+  /** Where the text appears. 'chief' = top band inside the shield,
+   *  'base' = scroll banner below the shield, 'none' = no text. */
+  textPosition?: 'none' | 'chief' | 'base'
+  textColor?: string
 }
 
 export interface CreateTeamRequest {

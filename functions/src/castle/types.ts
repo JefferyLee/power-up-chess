@@ -391,21 +391,37 @@ export const TEAM_SOLO_DISBAND_DAYS = 14
  *  background colour only). Older docs may have a smaller subset of
  *  fields — clients should default missing parts. */
 export interface TeamBadge {
-  /** Shield outline. */
-  shape?: 'shield-heater' | 'shield-round' | 'shield-pointed' | 'roundel'
-  /** Two-tone background division. */
-  layout?: 'solid' | 'horizontal' | 'vertical' | 'quartered'
+  /** Shield outline. 8 options as of slice 4. */
+  shape?: string
+  /** Background division: solid, per-pale, per-fess, per-bend,
+   *  per-chevron, quartered, chief, bordure. */
+  layout?: string
   /** Primary (background) colour. */
   bg?: string
   /** Secondary (for split layouts) colour. */
   bg2?: string
   /** Frame / border colour. */
   border?: string
-  /** Centred symbol id (chess piece, animal, etc). */
+  /** Centred symbol id (chess piece, animal, heraldic charge, etc). */
   symbol?: string
   /** Fill colour of the symbol. */
   symbolColor?: string
+  /** Optional engraved motto / monogram. Server enforces:
+   *    • ≤ TEAM_TEXT_MAX characters
+   *    • [A-Z0-9 ] only (auto-uppercased)
+   *    • profanity-scrubbed (any hit → field is dropped entirely
+   *      rather than censored with asterisks, since asterisks on a
+   *      shield look like a permanent shaming brand) */
+  text?: string
+  /** Where the text appears on the badge. */
+  textPosition?: 'none' | 'chief' | 'base'
+  /** Fill colour for engraved text. */
+  textColor?: string
 }
+
+/** Max characters for engraved badge text. Anything longer is unreadable
+ *  in a small inline render. */
+export const TEAM_TEXT_MAX = 12
 
 export interface TeamMember {
   normalizedName: string

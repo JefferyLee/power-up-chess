@@ -9,6 +9,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { ChatMessageDoc } from '../castle/chatTypes'
 import { hostOnDuty } from '../shared/hostOnDuty'
 import { type GuestDoc, type TeamBadge, type TeamDoc } from '../castle/types'
+import { sanitiseBadge } from './sanitiseBadge'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const NAME_MIN = 2
@@ -20,22 +21,6 @@ function normalizeTeamName(name: string): string {
 }
 function sanitiseName(raw: string): string {
   return raw.replace(/[ -]/g, '').trim().slice(0, NAME_MAX)
-}
-function colour(s: unknown): string | undefined {
-  return typeof s === 'string' && /^#[0-9a-f]{3,8}$/i.test(s) ? s : undefined
-}
-function sanitiseBadge(raw: TeamBadge | undefined): TeamBadge {
-  const allowedShapes = ['shield-heater', 'shield-round', 'shield-pointed', 'roundel']
-  const allowedLayouts = ['solid', 'horizontal', 'vertical', 'quartered']
-  return {
-    shape: allowedShapes.includes(String(raw?.shape)) ? raw!.shape : 'shield-heater',
-    layout: allowedLayouts.includes(String(raw?.layout)) ? raw!.layout : 'solid',
-    bg: colour(raw?.bg) ?? '#3a5b9c',
-    bg2: colour(raw?.bg2),
-    border: colour(raw?.border) ?? '#1a1530',
-    symbol: typeof raw?.symbol === 'string' && raw.symbol.length <= 24 ? raw.symbol : 'king',
-    symbolColor: colour(raw?.symbolColor) ?? '#f4c266',
-  }
 }
 
 // ─── transferCaptain ──────────────────────────────────────────────────
