@@ -30,6 +30,7 @@ import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
 import { TournamentRoute } from './tournament/TournamentRoute'
 import { AdventurerPlaqueScreen } from './me/AdventurerPlaqueScreen'
 import { TeamPage } from './teams/TeamPage'
+import { FloatingBack } from './nav/FloatingBack'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
@@ -86,6 +87,7 @@ export function App() {
         <GlobalScreenTracker />
         <InviteInbox />
         <SentInviteToast />
+        <FloatingBack />
         <Routes>
           <Route path="/" element={<CastleEntry />} />
           <Route path="/local" element={<LocalGameRoute />} />

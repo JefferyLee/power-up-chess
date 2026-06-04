@@ -1,0 +1,75 @@
+/* Floating bottom-left back button. Brass disc with engraved arrow.
+ * Respects iOS safe-area insets so it sits above the home indicator
+ * (and below the Dynamic Island when the device's notch eats the top
+ * of the screen).
+ *
+ * z-index: above page content + sticky bars (chess review board
+ * sticky is z-index 5; corner-panel overlays use 1050+); below
+ * full-screen modals (1100+). */
+.puc-fab-back {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 14px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 900;
+
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid #3d2810;
+
+  /* Brass disc — same palette as the gate plaques + the
+   * Adventurer's Plaque. */
+  background:
+    linear-gradient(180deg,
+      #e2b770 0%,
+      #c9994a 36%,
+      #9a6f28 72%,
+      #6f4d18 100%);
+  color: #2a1c08;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    inset 0 0 22px rgba(140, 95, 30, 0.25),
+    0 6px 14px rgba(0, 0, 0, 0.55);
+
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 26px;
+  font-weight: 700;
+  /* Engraved-arrow look — top-light + bottom-dark text-shadow. */
+  text-shadow:
+    0 1px 0 rgba(255, 240, 200, 0.7),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.puc-fab-back:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.puc-fab-back:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 22px rgba(140, 95, 30, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.55);
+}
+.puc-fab-back:focus-visible {
+  outline: 2px solid #f1c34c;
+  outline-offset: 3px;
+}
+
+/* Small viewports / phones — keep a thumb-friendly 56px target but
+ * pull a touch closer to the corner so it doesn't crowd in-page CTAs. */
+@media (max-width: 540px) {
+  .puc-fab-back {
+    left: calc(env(safe-area-inset-left, 0px) + 12px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  }
+}
