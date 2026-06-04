@@ -16,6 +16,8 @@ import {
   type TeamBadge,
   type TeamDoc,
 } from '../castle/types'
+import type { ChatMessageDoc } from '../castle/chatTypes'
+import { hostOnDuty } from '../shared/hostOnDuty'
 import { generateTeamId, normalizeTeamName } from './teamId'
 
 const NAME_MIN = 2
@@ -160,6 +162,33 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
         castlePoints: guest.castlePoints - TEAM_CREATE_COST_CP,
         teamIds: FieldValue.arrayUnion(teamId),
       })
+
+      // Auto-post a recruit card to the Hall chat so the Castle
+      // immediately sees there's a new team looking for members.
+      // Written server-side so it bypasses the chat moderation
+      // pipeline (the text is mechanical, not user free-form).
+      const recruitMessage: ChatMessageDoc = {
+        name: 'Castle',
+        uid: '',
+        normalizedName: '',
+        isBypass: false,
+        kind: 'system',
+        text: `${idData.displayName} just founded a new team: ${name}.`,
+        ts: now,
+        hostId: hostOnDuty(),
+        action: {
+          kind: 'team-recruit',
+          teamId,
+          teamName: name,
+          captainDisplayName: idData.displayName,
+          memberCount: 1,
+          badge,
+        },
+      }
+      tx.create(db.collection('lobby/messages/items').doc(), recruitMessage)
+      // Stamp recruit time so the 1-week rate limit on manual reposts
+      // counts from the auto-post.
+      tx.update(teamRef, { lastRecruitAt: now })
 
       return {
         teamId,

@@ -55,6 +55,12 @@ export { findPlayer } from './castle/findPlayer'
 export { createTeam } from './teams/createTeam'
 export { leaveTeam } from './teams/leaveTeam'
 export { disbandTeam } from './teams/disbandTeam'
+export { applyToTeam } from './teams/applyToTeam'
+export {
+  approveApplication,
+  declineApplication,
+  cancelApplication,
+} from './teams/approveApplication'
 export { awardTutorialComplete } from './castle/awardTutorialComplete'
 export { purchaseCosmetic } from './cosmetics/purchaseCosmetic'
 export { equipCosmetic } from './cosmetics/equipCosmetic'

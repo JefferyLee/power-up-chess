@@ -181,3 +181,105 @@
   font-size: 13px;
   margin: 8px 0 0;
 }
+
+/* Captain inbox */
+.puc-team__inbox {
+  max-width: 540px;
+  margin: 0 auto 28px;
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(241, 195, 76, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.puc-team__inbox-count {
+  color: #f1c34c;
+  font-weight: 700;
+}
+.puc-team__empty {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+.puc-team__app {
+  padding: 10px 4px;
+  border-bottom: 1px dashed rgba(241, 195, 76, 0.12);
+}
+.puc-team__app:last-child { border-bottom: none; }
+.puc-team__app-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.puc-team__app-pitch {
+  margin: 4px 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: #d8d0f5;
+}
+.puc-team__app-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.puc-team__btn--accept {
+  background: linear-gradient(135deg, #6fcf97, #3da76a);
+  color: #0e1a12;
+  border-color: rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+}
+.puc-team__btn--accept:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* Apply-to-team section (non-members) */
+.puc-team__apply {
+  max-width: 540px;
+  margin: 0 auto 28px;
+  padding: 14px 16px;
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(241, 195, 76, 0.25);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.puc-team__apply-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puc-team__apply-field span {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(231, 184, 65, 0.85);
+}
+.puc-team__apply-field input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(20, 16, 36, 0.65);
+  border: 1px solid rgba(231, 184, 65, 0.3);
+  color: var(--puc-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.puc-team__apply-field input:focus {
+  border-color: rgba(241, 195, 76, 0.7);
+}
+.puc-team__apply-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--puc-text-muted);
+}
+.puc-team__apply-note b {
+  color: #f7e8b6;
+  font-weight: 600;
+}
+.puc-team__btn--apply {
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  color: #1a1a1f;
+  border-color: rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+}
+.puc-team__btn--apply:hover:not(:disabled) { filter: brightness(1.06); }

@@ -2,11 +2,23 @@
 // Mirrored by apps/web/src/firebase/callables.ts.
 
 import type { HostId } from '../shared/hostId'
+import type { TeamBadge } from './types'
 
 export type ChatMessageKind = 'user' | 'host' | 'system'
 
 export type ChatMessageAction =
   | { kind: 'join-room'; roomKind: 'chess' | 'wizard'; roomId: string; openerName: string }
+  | {
+      kind: 'team-recruit'
+      teamId: string
+      teamName: string
+      captainDisplayName: string
+      memberCount: number
+      /** Inlined snapshot of the badge config so the chat card can
+       *  render the SVG without an extra read. Older messages predate
+       *  this field; the client falls back to a default badge. */
+      badge?: TeamBadge
+    }
 
 /** Visible-only state for the story-comprehension quiz attached to a
  *  host's ambient story. The secret answer key lives in a separate

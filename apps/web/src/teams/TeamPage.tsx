@@ -2,10 +2,19 @@
 // badge, disband, kick) and the application/approval flow land in
 // Slice 2/3; this slice is roster + badge + leave/disband only.
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
-import { callDisbandTeam, callLeaveTeam } from '../firebase/callables'
+import {
+  callApplyToTeam,
+  callApproveApplication,
+  callCancelApplication,
+  callDeclineApplication,
+  callDisbandTeam,
+  callLeaveTeam,
+} from '../firebase/callables'
 import { useTeam } from './useTeam'
 import { TeamBadge } from './TeamBadge'
 import { NameLink } from '../invitations/NameLink'
@@ -117,6 +126,12 @@ export function TeamPage() {
         </ul>
       </section>
 
+      {isCaptain && <CaptainInbox teamId={team.teamId} />}
+
+      {!isMember && identity && !identity.isBypass && team.memberCount < 20 && (
+        <ApplyToTeamSection teamId={team.teamId} teamName={team.name} />
+      )}
+
       {(isMember || isCaptain) && (
         <section className="puc-team__actions">
           {isMember && !isCaptain && (
@@ -143,6 +158,197 @@ export function TeamPage() {
         </section>
       )}
     </div>
+  )
+}
+
+/** Pending applications inbox shown only to the captain. Live-subscribes
+ *  to team_applications where teamId == this team & status == 'pending'. */
+interface ApplicationRow {
+  applicationId: string
+  fromNormalizedName: string
+  fromDisplayName: string
+  pitch?: string
+  createdAt: number
+  expiresAt: number
+  status: string
+}
+
+function CaptainInbox({ teamId }: { teamId: string }) {
+  const [apps, setApps] = useState<ApplicationRow[] | null>(null)
+  const [actingId, setActingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'team_applications'),
+      where('teamId', '==', teamId),
+      where('status', '==', 'pending'),
+    )
+    const unsub = onSnapshot(q, (snap) => {
+      const now = Date.now()
+      const rows: ApplicationRow[] = []
+      for (const d of snap.docs) {
+        const a = d.data() as ApplicationRow
+        if (a.expiresAt > now) rows.push(a)
+      }
+      rows.sort((a, b) => a.createdAt - b.createdAt)
+      setApps(rows)
+    }, (err) => {
+      console.warn('CaptainInbox snapshot error', err)
+      setApps([])
+    })
+    return () => unsub()
+  }, [teamId])
+
+  const onApprove = async (id: string) => {
+    if (actingId) return
+    setActingId(id)
+    setError(null)
+    try { await callApproveApplication({ applicationId: id }) }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    finally { setActingId(null) }
+  }
+  const onDecline = async (id: string) => {
+    if (actingId) return
+    setActingId(id)
+    setError(null)
+    try { await callDeclineApplication({ applicationId: id }) }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    finally { setActingId(null) }
+  }
+
+  if (apps === null) return null
+  return (
+    <section className="puc-team__inbox">
+      <h2 className="puc-team__roster-title">
+        Pending applications {apps.length > 0 && <span className="puc-team__inbox-count">({apps.length})</span>}
+      </h2>
+      {apps.length === 0 && (
+        <p className="puc-team__empty">Nothing waiting for you. Share the recruit card to bring people in.</p>
+      )}
+      <ul className="puc-team__list">
+        {apps.map((a) => (
+          <li key={a.applicationId} className="puc-team__app">
+            <div className="puc-team__app-row">
+              <NameLink
+                normalizedName={a.fromNormalizedName}
+                displayName={a.fromDisplayName}
+                className="puc-team__row-name"
+              />
+              <span className="puc-team__row-joined">{relativeTime(a.createdAt)}</span>
+            </div>
+            {a.pitch && <p className="puc-team__app-pitch">"{a.pitch}"</p>}
+            <div className="puc-team__app-actions">
+              <button
+                type="button"
+                className="puc-team__btn puc-team__btn--accept"
+                onClick={() => onApprove(a.applicationId)}
+                disabled={!!actingId}
+              >
+                Approve
+              </button>
+              <button
+                type="button"
+                className="puc-team__btn"
+                onClick={() => onDecline(a.applicationId)}
+                disabled={!!actingId}
+              >
+                Decline
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {error && <p className="puc-team__error">{error}</p>}
+    </section>
+  )
+}
+
+function ApplyToTeamSection({ teamId, teamName }: { teamId: string; teamName: string }) {
+  // Subscribe to my own pending application (if any) so the button
+  // reflects the current state across devices.
+  const { identity } = useCastle()
+  const [pending, setPending] = useState<{ applicationId: string } | null>(null)
+  const [pitch, setPitch] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!identity || identity.isBypass) return
+    const q = query(
+      collection(db, 'team_applications'),
+      where('teamId', '==', teamId),
+      where('fromNormalizedName', '==', identity.normalizedName),
+      where('status', '==', 'pending'),
+    )
+    const unsub = onSnapshot(q, (snap) => {
+      const now = Date.now()
+      const live = snap.docs
+        .map((d) => d.data() as { applicationId: string; expiresAt: number })
+        .find((a) => a.expiresAt > now)
+      setPending(live ? { applicationId: live.applicationId } : null)
+    })
+    return () => unsub()
+  }, [teamId, identity])
+
+  const onApply = async () => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await callApplyToTeam({ teamId, pitch: pitch.trim() || undefined })
+      setPitch('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const onCancel = async () => {
+    if (busy || !pending) return
+    setBusy(true)
+    setError(null)
+    try { await callCancelApplication({ applicationId: pending.applicationId }) }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    finally { setBusy(false) }
+  }
+
+  if (pending) {
+    return (
+      <section className="puc-team__apply">
+        <p className="puc-team__apply-note">
+          You've applied to <b>{teamName}</b> — waiting on the captain.
+        </p>
+        <button type="button" className="puc-team__btn" onClick={onCancel} disabled={busy}>
+          Cancel application
+        </button>
+        {error && <p className="puc-team__error">{error}</p>}
+      </section>
+    )
+  }
+  return (
+    <section className="puc-team__apply">
+      <label className="puc-team__apply-field">
+        <span>Pitch the captain (optional)</span>
+        <input
+          type="text"
+          value={pitch}
+          onChange={(e) => setPitch(e.target.value)}
+          maxLength={120}
+          placeholder="why you'd be a good teammate"
+          autoComplete="off"
+        />
+      </label>
+      <button
+        type="button"
+        className="puc-team__btn puc-team__btn--apply"
+        onClick={onApply}
+        disabled={busy}
+      >
+        {busy ? 'Sending…' : `Apply to join ${teamName}`}
+      </button>
+      {error && <p className="puc-team__error">{error}</p>}
+    </section>
   )
 }
 

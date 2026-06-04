@@ -706,6 +706,38 @@ export async function callDisbandTeam(req: DisbandTeamRequest): Promise<DisbandT
   return data
 }
 
+export interface ApplyToTeamRequest { teamId: string; pitch?: string }
+export interface ApplyToTeamResponse { applicationId: string; expiresAt: number }
+const applyToTeamFn = httpsCallable<ApplyToTeamRequest, ApplyToTeamResponse>(functions, 'applyToTeam')
+export async function callApplyToTeam(req: ApplyToTeamRequest): Promise<ApplyToTeamResponse> {
+  const { data } = await applyToTeamFn(req)
+  return data
+}
+
+export interface ApplicationActionRequest { applicationId: string }
+export interface ApplicationActionResponse { status: 'approved' | 'declined' | 'noop' }
+const approveApplicationFn = httpsCallable<ApplicationActionRequest, ApplicationActionResponse>(
+  functions, 'approveApplication',
+)
+export async function callApproveApplication(req: ApplicationActionRequest): Promise<ApplicationActionResponse> {
+  const { data } = await approveApplicationFn(req)
+  return data
+}
+const declineApplicationFn = httpsCallable<ApplicationActionRequest, ApplicationActionResponse>(
+  functions, 'declineApplication',
+)
+export async function callDeclineApplication(req: ApplicationActionRequest): Promise<ApplicationActionResponse> {
+  const { data } = await declineApplicationFn(req)
+  return data
+}
+const cancelApplicationFn = httpsCallable<ApplicationActionRequest, ApplicationActionResponse>(
+  functions, 'cancelApplication',
+)
+export async function callCancelApplication(req: ApplicationActionRequest): Promise<ApplicationActionResponse> {
+  const { data } = await cancelApplicationFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string

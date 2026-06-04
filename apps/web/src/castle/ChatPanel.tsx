@@ -7,6 +7,7 @@ import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
 import { NameLink } from '../invitations/NameLink'
+import { TeamBadge } from '../teams/TeamBadge'
 import './ChatPanel.css'
 
 export function ChatPanel({ canChat }: { canChat: boolean }) {
@@ -230,18 +231,42 @@ function QuizBlock({ messageId, quiz }: { messageId: string; quiz: QuizState }) 
 
 function ActionButton({ action }: { action: ChatMessageAction }) {
   const navigate = useNavigate()
-  if (action.kind !== 'join-room') return null
-  const path = action.roomKind === 'wizard' ? `/wizard/${action.roomId}` : `/r/${action.roomId}`
-  const label = action.roomKind === 'wizard' ? 'Enter duel' : 'Join room'
-  return (
-    <button
-      type="button"
-      className={`puc-chat__action puc-chat__action--${action.roomKind}`}
-      onClick={() => navigate(path)}
-    >
-      ▸ {label}
-    </button>
-  )
+  if (action.kind === 'join-room') {
+    const path = action.roomKind === 'wizard' ? `/wizard/${action.roomId}` : `/r/${action.roomId}`
+    const label = action.roomKind === 'wizard' ? 'Enter duel' : 'Join room'
+    return (
+      <button
+        type="button"
+        className={`puc-chat__action puc-chat__action--${action.roomKind}`}
+        onClick={() => navigate(path)}
+      >
+        ▸ {label}
+      </button>
+    )
+  }
+  if (action.kind === 'team-recruit') {
+    return (
+      <div className="puc-chat__teamcard">
+        <span className="puc-chat__teamcard-badge">
+          <TeamBadge badge={action.badge} size={48} />
+        </span>
+        <div className="puc-chat__teamcard-body">
+          <p className="puc-chat__teamcard-name">{action.teamName}</p>
+          <p className="puc-chat__teamcard-meta">
+            Captain {action.captainDisplayName} · {action.memberCount} / 20
+          </p>
+        </div>
+        <button
+          type="button"
+          className="puc-chat__action puc-chat__action--team"
+          onClick={() => navigate(`/team/${action.teamId}`)}
+        >
+          ▸ View team
+        </button>
+      </div>
+    )
+  }
+  return null
 }
 
 /** Format a chat ts (epoch ms) as a compact "HH:MM". Messages > 24 h

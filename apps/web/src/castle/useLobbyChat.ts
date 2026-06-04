@@ -3,9 +3,18 @@
 import { useEffect, useState } from 'react'
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase/app'
+import type { TeamBadge } from '../firebase/callables'
 
 export type ChatMessageAction =
   | { kind: 'join-room'; roomKind: 'chess' | 'wizard'; roomId: string; openerName: string }
+  | {
+      kind: 'team-recruit'
+      teamId: string
+      teamName: string
+      captainDisplayName: string
+      memberCount: number
+      badge?: TeamBadge
+    }
 
 export interface QuizState {
   question: string
