@@ -24,6 +24,7 @@ import { RoomDoor } from './RoomDoor'
 import { HallAmbient } from './HallAmbient'
 import { RecentlyPlayedList } from './RecentlyPlayedList'
 import { FindPlayer } from './FindPlayer'
+import { MyTeamsList } from '../teams/MyTeamsList'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
@@ -300,6 +301,7 @@ export function HallScreen() {
           <VisitorCard />
           <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
           <FindPlayer />
+          <MyTeamsList />
           <RecentlyPlayedList />
         </div>
       </section>

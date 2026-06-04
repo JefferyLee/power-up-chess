@@ -47,6 +47,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Teams (MVP3-P3). Public read so anyone can render /team/:id and
+    // the Plaque badge for any team. Writes only via callables.
+    match /teams/{teamId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    // Uniqueness lock for team names — internal bookkeeping, never
+    // exposed; clients call createTeam which handles it server-side.
+    match /team_names/{name} {
+      allow read: if false;
+      allow write: if false;
+    }
+    // Team applications — visible to BOTH the applicant and the team
+    // captain so they can see their own outbox + inbox respectively.
+    // Writes are callable-only.
+    match /team_applications/{applicationId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // MVP2 G.2 — castle gate "live pulse": duel count, recent duel
     // results, last host-story snippet. PUBLIC read for the gate page;
     // rebuilt every 2 min by refreshCastleLivePulse.

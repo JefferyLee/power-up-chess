@@ -1,0 +1,183 @@
+.puc-team-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% 20%, #1f1748 0%, #0a0815 70%);
+  color: #ece9ff;
+  padding: 60px 20px 40px;
+  font-family: 'IM Fell English', Georgia, serif;
+}
+
+.puc-team__back {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  background: rgba(20, 16, 36, 0.78);
+  border: 1px solid rgba(247, 232, 182, 0.4);
+  border-radius: 999px;
+  color: #f7e8b6;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.puc-team__loading {
+  text-align: center;
+  color: #c9c0e8;
+  padding: 40px 16px;
+  font-style: italic;
+}
+
+.puc-team__head {
+  max-width: 540px;
+  margin: 0 auto 28px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, rgba(40, 32, 70, 0.85), rgba(20, 16, 38, 0.85));
+  border: 1px solid rgba(241, 195, 76, 0.35);
+  border-radius: 16px;
+}
+.puc-team__badge-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-team__id { min-width: 0; }
+.puc-team__name {
+  margin: 0 0 4px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 22px;
+  letter-spacing: 1.2px;
+  color: #f7e8b6;
+}
+.puc-team__motto {
+  margin: 0 0 6px;
+  font-style: italic;
+  color: #d8d0f5;
+  font-size: 14px;
+}
+.puc-team__captain {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: #b6aee0;
+}
+.puc-team__captain-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #f1c34c;
+  cursor: pointer;
+}
+.puc-team__captain-link:hover {
+  text-decoration: underline;
+}
+.puc-team__count {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9b97c1;
+  font-family: 'Cinzel', Georgia, serif;
+  letter-spacing: 0.4px;
+}
+
+.puc-team__roster {
+  max-width: 540px;
+  margin: 0 auto 28px;
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(231, 184, 65, 0.18);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.puc-team__roster-title {
+  margin: 0 0 10px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(231, 184, 65, 0.85);
+}
+.puc-team__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puc-team__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  border-bottom: 1px dashed rgba(241, 195, 76, 0.12);
+}
+.puc-team__row:last-child { border-bottom: none; }
+.puc-team__row:hover { background: rgba(241, 195, 76, 0.05); }
+.puc-team__captain-pip {
+  font-size: 14px;
+  filter: drop-shadow(0 0 3px rgba(241, 195, 76, 0.6));
+}
+.puc-team__row-name {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #f7e8b6;
+  flex: 1;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-team__row-name:hover { text-decoration: underline; }
+.puc-team__row-joined {
+  font-size: 11px;
+  font-style: italic;
+  color: #9b97c1;
+}
+
+.puc-team__actions {
+  max-width: 540px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.puc-team__btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(241, 195, 76, 0.1);
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  color: #f7e8b6;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+}
+.puc-team__btn:hover:not(:disabled) {
+  background: rgba(241, 195, 76, 0.22);
+}
+.puc-team__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.puc-team__btn--danger {
+  border-color: rgba(220, 130, 120, 0.55);
+  color: #f1c4b8;
+  background: rgba(220, 130, 120, 0.08);
+}
+.puc-team__btn--danger:hover:not(:disabled) {
+  background: rgba(220, 130, 120, 0.22);
+}
+
+.puc-team__error {
+  width: 100%;
+  text-align: center;
+  color: #f1a8a8;
+  font-size: 13px;
+  margin: 8px 0 0;
+}

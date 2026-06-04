@@ -1,0 +1,81 @@
+.puc-myteams {
+  background: rgba(20, 16, 36, 0.5);
+  border: 1px solid rgba(231, 184, 65, 0.16);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--puc-text);
+  margin-top: 12px;
+}
+.puc-myteams__title {
+  margin: 0 0 8px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(231, 184, 65, 0.78);
+  font-weight: 600;
+}
+.puc-myteams__empty {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+}
+.puc-myteams__list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.puc-myteams__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.puc-myteams__row:hover {
+  background: rgba(241, 195, 76, 0.07);
+}
+.puc-myteams__row--loading { opacity: 0.6; }
+.puc-myteams__badge {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-myteams__name {
+  flex: 1;
+  font-family: 'Cinzel', Georgia, serif;
+  color: #f7e8b6;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.puc-myteams__count {
+  font-size: 10.5px;
+  color: var(--puc-text-muted);
+  font-family: 'Cinzel', Georgia, serif;
+}
+.puc-myteams__create {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(241, 195, 76, 0.1);
+  border: 1px dashed rgba(241, 195, 76, 0.45);
+  color: #f7e8b6;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11.5px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+}
+.puc-myteams__create:hover {
+  background: rgba(241, 195, 76, 0.18);
+}

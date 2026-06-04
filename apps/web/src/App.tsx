@@ -29,6 +29,7 @@ import { OpeningsRoute } from './openings/OpeningsRoute'
 import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
 import { TournamentRoute } from './tournament/TournamentRoute'
 import { AdventurerPlaqueScreen } from './me/AdventurerPlaqueScreen'
+import { TeamPage } from './teams/TeamPage'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
@@ -116,6 +117,7 @@ export function App() {
           <Route path="/openings/:id" element={<OpeningLessonScreen />} />
           <Route path="/tournament" element={<TournamentRoute />} />
           <Route path="/me" element={<AdventurerPlaqueScreen />} />
+          <Route path="/team/:teamId" element={<TeamPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </OutgoingInviteProvider>

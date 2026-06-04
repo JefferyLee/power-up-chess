@@ -346,6 +346,9 @@ export interface GuestDoc {
     /** ms timestamp of the last interaction. */
     at: number
   }>
+  /** Team membership — up to TEAM_PER_USER_MAX team ids. Plaque + Hall
+   *  use these to render the team badges + sidebar entry. */
+  teamIds?: string[]
   /** Correct story-quiz answers all-time (write side TODO). */
   quizCorrect?: number
   /** Total story-quiz attempts (write side TODO). */
@@ -355,6 +358,106 @@ export interface GuestDoc {
 /** Cap for recentlyPlayedWith — newest 12 entries. Keeps the guest
  *  doc small while covering a couple weeks of casual play. */
 export const RECENTLY_PLAYED_MAX = 12
+
+// ─── Teams (MVP3-P3) ───────────────────────────────────────────────────
+//
+// Self-organised teams. Any guest can create one for TEAM_CREATE_COST_CP.
+// Members cap at TEAM_MEMBER_MAX. A guest can be in at most TEAM_PER_USER_MAX
+// teams at once. Captain is the creator; can transfer to any member or
+// disband. If captain is offline > TEAM_CAPTAIN_TIMEOUT_DAYS the team
+// auto-dissolves (cron sweep, separate file).
+
+/** Cost in castle points to spin up a new team. Steep enough to
+ *  prevent spam-creating; cheap enough that a kid who's saved up some
+ *  puzzle wins can afford one. */
+export const TEAM_CREATE_COST_CP = 100
+/** Max members per team. Class-group sized; bigger groups need
+ *  sub-structure that V1 doesn't have. */
+export const TEAM_MEMBER_MAX = 20
+/** Max teams a single guest can belong to simultaneously. */
+export const TEAM_PER_USER_MAX = 2
+/** Captain inactivity threshold — team auto-disbands if the captain
+ *  hasn't called castleEnter in this many days. */
+export const TEAM_CAPTAIN_TIMEOUT_DAYS = 30
+/** Days an unanswered application sticks around before auto-expiring. */
+export const TEAM_APPLICATION_TTL_DAYS = 7
+/** Solo-team auto-disband threshold — when the team shrinks to just
+ *  the captain AND no new applications/joins for this many days. */
+export const TEAM_SOLO_DISBAND_DAYS = 14
+
+/** Heraldry-style badge config. Stored on the team doc as a small
+ *  JSON; rendered client-side as SVG so it scales to any size. Slice 4
+ *  expands the builder; Slice 1 ships with a minimal stub (shape +
+ *  background colour only). Older docs may have a smaller subset of
+ *  fields — clients should default missing parts. */
+export interface TeamBadge {
+  /** Shield outline. */
+  shape?: 'shield-heater' | 'shield-round' | 'shield-pointed' | 'roundel'
+  /** Two-tone background division. */
+  layout?: 'solid' | 'horizontal' | 'vertical' | 'quartered'
+  /** Primary (background) colour. */
+  bg?: string
+  /** Secondary (for split layouts) colour. */
+  bg2?: string
+  /** Frame / border colour. */
+  border?: string
+  /** Centred symbol id (chess piece, animal, etc). */
+  symbol?: string
+  /** Fill colour of the symbol. */
+  symbolColor?: string
+}
+
+export interface TeamMember {
+  normalizedName: string
+  displayName: string
+  joinedAt: number
+}
+
+export interface TeamDoc {
+  /** Short random base36 id — drives /team/:id URLs. */
+  teamId: string
+  name: string
+  /** Lower-cased + trimmed name — uniqueness key. */
+  normalizedName: string
+  /** Optional one-liner the captain sets ("We solve puzzles before bed"). */
+  motto?: string
+  badge: TeamBadge
+  /** Captain's identity at the latest update. Captain is the only one
+   *  who can rename / rebadge / approve / kick / transfer / disband
+   *  the team. */
+  captainUid: string
+  captainNormalizedName: string
+  captainDisplayName: string
+  /** Newest-first roster. Captain is always in here too. */
+  members: TeamMember[]
+  /** Soft total — denormalised count for cheap rendering. */
+  memberCount: number
+  createdAt: number
+  /** ms timestamp of the most recent member-changing event (join /
+   *  leave / kick). Drives the 14-day solo-disband sweep. */
+  lastChangeAt: number
+  /** Rate-limit timestamps — last time the captain renamed, changed
+   *  the badge, or posted a recruit broadcast (each capped to 1/week). */
+  lastRenamedAt?: number
+  lastRebadgedAt?: number
+  lastRecruitAt?: number
+}
+
+/** Per-team application — stored as a top-level collection keyed by
+ *  application id (uid-of-applicant + ":" + teamId). */
+export interface TeamApplicationDoc {
+  applicationId: string
+  teamId: string
+  fromUid: string
+  fromNormalizedName: string
+  fromDisplayName: string
+  /** Optional one-liner from the applicant. */
+  pitch?: string
+  createdAt: number
+  /** Server ts when this expires (createdAt + TEAM_APPLICATION_TTL_DAYS). */
+  expiresAt: number
+  status: 'pending' | 'approved' | 'declined' | 'expired'
+}
 
 /** Starting Elo for a brand-new player. Mid-beginner so a couple of
  *  wins against an early-rated peer feels good but not laughable. */

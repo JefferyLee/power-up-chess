@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "power-up-chess-dev"
-  }
+  },
+  "targets": {
+    "power-up-chess-dev": {
+      "hosting": {
+        "app": [
+          "power-up-chess-dev"
+        ],
+        "landing": [
+          "powerupcastle-landing"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

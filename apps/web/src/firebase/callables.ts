@@ -664,6 +664,48 @@ export async function callFindPlayer(req: FindPlayerRequest): Promise<FindPlayer
   return data
 }
 
+// ── Teams (MVP3-P3) ──
+export interface TeamBadge {
+  shape?: 'shield-heater' | 'shield-round' | 'shield-pointed' | 'roundel'
+  layout?: 'solid' | 'horizontal' | 'vertical' | 'quartered'
+  bg?: string
+  bg2?: string
+  border?: string
+  symbol?: string
+  symbolColor?: string
+}
+
+export interface CreateTeamRequest {
+  name: string
+  motto?: string
+  badge?: TeamBadge
+}
+export interface CreateTeamResponse {
+  teamId: string
+  castlePoints: number
+}
+const createTeamFn = httpsCallable<CreateTeamRequest, CreateTeamResponse>(functions, 'createTeam')
+export async function callCreateTeam(req: CreateTeamRequest): Promise<CreateTeamResponse> {
+  const { data } = await createTeamFn(req)
+  return data
+}
+
+export interface LeaveTeamRequest { teamId: string }
+export interface LeaveTeamResponse { ok: true; disbanded: boolean }
+const leaveTeamFn = httpsCallable<LeaveTeamRequest, LeaveTeamResponse>(functions, 'leaveTeam')
+export async function callLeaveTeam(req: LeaveTeamRequest): Promise<LeaveTeamResponse> {
+  const { data } = await leaveTeamFn(req)
+  return data
+}
+
+export interface DisbandTeamRequest { teamId: string }
+export interface DisbandTeamResponse { ok: true }
+const disbandTeamFn = httpsCallable<DisbandTeamRequest, DisbandTeamResponse>(functions, 'disbandTeam')
+export async function callDisbandTeam(req: DisbandTeamRequest): Promise<DisbandTeamResponse> {
+  const { data } = await disbandTeamFn(req)
+  return data
+}
+
 // P2.K Endgame Trainer — server-side dedupe + castle-point award.
 export interface SubmitEndgameClearRequest {
   normalizedName: string
