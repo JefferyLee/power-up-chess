@@ -290,33 +290,51 @@ registerCommand({
   handle: (_args, ctx) => {
     const buckets = helpByTier(ctx.identity)
     const lines: string[] = []
-    lines.push('── COMMANDS ──')
-    for (const h of buckets.basic) {
-      lines.push(`  /${h.name.padEnd(8)} ${h.description}`)
+
+    const renderSection = (title: string, items: typeof buckets.basic) => {
+      lines.push(`── ${title} ──`)
+      for (const h of items) {
+        lines.push(`  /${h.name}`)
+        lines.push(`      ${h.description}`)
+      }
+      lines.push('')
     }
+
+    renderSection('BASIC', buckets.basic)
+
     if (buckets.advanced.length > 0) {
-      lines.push('')
-      lines.push('── ADVANCED (you have earned these) ──')
-      for (const h of buckets.advanced) {
-        lines.push(`  /${h.name.padEnd(8)} ${h.description}`)
-      }
+      renderSection('ADVANCED (you have earned these)', buckets.advanced)
     } else {
-      lines.push('')
       lines.push(`More commands wait at ${ADVANCED_UNLOCK_CP} castle points.`)
+      lines.push('')
     }
+
     if (buckets.hidden.length > 0) {
-      lines.push('')
-      lines.push('── HIDDEN ──')
-      for (const h of buckets.hidden) {
-        lines.push(`  /${h.name.padEnd(8)} ${h.description}`)
-      }
+      renderSection('HIDDEN', buckets.hidden)
     } else if (isAdvancedUnlocked(ctx.identity)) {
-      lines.push('')
       lines.push(`Deeper secrets unlock at ${HIDDEN_UNLOCK_CP} castle points.`)
+      lines.push('')
     }
-    lines.push('')
+
     lines.push('Tip: some words work without a slash. Try typing them.')
     pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /mute ──────────────────────────────────────────────────
+
+registerCommand({
+  name: 'mute',
+  tier: 'basic',
+  description: 'Toggle keyboard click sounds.',
+  handle: async () => {
+    // Lazy-import so the audio module doesn't tug at the rest of the
+    // bundle for guests who never open the terminal.
+    const { toggleMuted } = await import('./keyClick')
+    const muted = toggleMuted()
+    pushPrivate('reply', muted
+      ? 'The keys go silent. Type /mute again to bring back the click.'
+      : 'The keys click softly once more.')
   },
 })
 

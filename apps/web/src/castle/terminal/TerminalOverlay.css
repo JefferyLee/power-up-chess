@@ -84,6 +84,10 @@
 .puc-term__line--reply {
   color: #d6cca8;
   margin-bottom: 4px;
+  /* Honour \n line breaks while still wrapping long lines. /help and
+   * /look depend on this so multi-line replies aren't squashed onto
+   * one line. */
+  white-space: pre-wrap;
 }
 .puc-term__line--whisper {
   color: #8b815f;

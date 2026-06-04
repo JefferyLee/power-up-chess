@@ -18,7 +18,10 @@ import { useLobbyPresence } from '../useLobbyChat'
 import { callPostChat } from '../../firebase/callables'
 import { dispatchCommand, type WorldSnapshot } from './commandRegistry'
 import { usePrivateStream, pushPrivate, type PrivateEntry } from './privateStream'
+import { playKeyClick } from './keyClick'
 import './TerminalOverlay.css'
+
+const PROMPT = 'PuC>'
 
 interface Props {
   onClose: () => void
@@ -99,13 +102,17 @@ export function TerminalOverlay({ onClose }: Props) {
       console.warn('terminal submit failed', err)
     } finally {
       setBusy(false)
+      // Snap focus back to the prompt so the next command can be
+      // typed without a click. Defer one tick so React re-enables the
+      // input first (busy flag toggles disabled).
+      requestAnimationFrame(() => inputRef.current?.focus())
     }
   }
 
   return createPortal(
     <div className="puc-term">
       <header className="puc-term__head">
-        <span className="puc-term__title">CASTLE TERMINAL</span>
+        <span className="puc-term__title">Terminal of Power Up Castle</span>
         <button
           type="button"
           className="puc-term__close"
@@ -128,13 +135,20 @@ export function TerminalOverlay({ onClose }: Props) {
       </div>
 
       <form className="puc-term__form" onSubmit={onSubmit}>
-        <span className="puc-term__prompt">castle&gt;</span>
+        <span className="puc-term__prompt">{PROMPT}</span>
         <input
           ref={inputRef}
           className="puc-term__input"
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            // Click on every keystroke that contributes a visible
+            // character (so arrow keys + modifiers stay silent).
+            if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
+              playKeyClick()
+            }
+          }}
           maxLength={200}
           autoComplete="off"
           autoCapitalize="none"
@@ -152,7 +166,7 @@ function PrivateLine({ entry }: { entry: PrivateEntry }) {
   if (entry.kind === 'echo') {
     return (
       <div className="puc-term__line puc-term__line--echo">
-        <span className="puc-term__prompt">&gt;</span>
+        <span className="puc-term__prompt">{PROMPT}</span>
         <span className="puc-term__text">{entry.text}</span>
       </div>
     )
