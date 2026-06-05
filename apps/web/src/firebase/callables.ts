@@ -125,6 +125,7 @@ export type AwardSource =
   | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
   | { source: 'chess-win'; gameId: string; opponent?: ChessOpponent }
   | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
+  | { source: 'mystery'; mysteryId: string }
 export interface AwardCastlePointsRequest {
   normalizedName: string
   award: AwardSource

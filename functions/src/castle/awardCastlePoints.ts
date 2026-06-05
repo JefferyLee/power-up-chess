@@ -53,6 +53,8 @@ function amountFor(award: AwardSource): number {
       const total = brilliant * AWARD_CAPS.chessBrilliantEach + bestExcellent * AWARD_CAPS.chessBestExcellentEach
       return Math.min(total, AWARD_CAPS.chessReviewMax)
     }
+    case 'mystery':
+      return AWARD_CAPS.mysteryReward
   }
 }
 
@@ -60,18 +62,19 @@ function amountFor(award: AwardSource): number {
  *  `forest` is intentionally not handled here — Forest pays out via
  *  submitForestScore directly. */
 function dailyCapFor(source: AwardSource['source']): {
-  key: 'puzzle' | 'chessWin' | 'chessReview'
+  key: 'puzzle' | 'chessWin' | 'chessReview' | 'mystery'
   cap: number
 } {
   switch (source) {
     case 'puzzle':       return { key: 'puzzle',       cap: AWARD_CAPS.puzzleDailyMax }
     case 'chess-win':    return { key: 'chessWin',     cap: AWARD_CAPS.chessWinDailyMax }
     case 'chess-review': return { key: 'chessReview',  cap: AWARD_CAPS.chessReviewDailyMax }
+    case 'mystery':      return { key: 'mystery',      cap: AWARD_CAPS.mysteryDailyMax }
   }
 }
 
 function emptyEarn(dayKey: number): GuestDailyEarn {
-  return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0 }
+  return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0, mystery: 0 }
 }
 
 export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>(
@@ -122,7 +125,7 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
         ? { ...guest.dailyEarn }
         : emptyEarn(todayKey)
 
-      const headroom = Math.max(0, cap - earn[bucketKey])
+      const headroom = Math.max(0, cap - (earn[bucketKey] ?? 0))
       const grantedAmount = Math.min(baseAmount, headroom)
       if (grantedAmount <= 0) {
         // Cap hit for the day; persist any bucket roll-over but don't add points.
@@ -134,7 +137,7 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
 
       const before = guest.castlePoints
       const after = before + grantedAmount
-      earn[bucketKey] += grantedAmount
+      earn[bucketKey] = (earn[bucketKey] ?? 0) + grantedAmount
       const unlockedJustNow = before < UNLOCK_THRESHOLD && after >= UNLOCK_THRESHOLD
 
       // Lazy-migrate lifetimeEarned: if absent, seed from current balance

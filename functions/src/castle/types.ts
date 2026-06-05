@@ -101,6 +101,10 @@ export type AwardSource =
   | { source: 'puzzle'; puzzleId: string; scorePoints: number; isFirstSolve: boolean }
   | { source: 'chess-win'; gameId: string; opponent?: ChessOpponent }
   | { source: 'chess-review'; gameId: string; brilliant: number; bestExcellent: number }
+  /** Terminal /daily — kid solved the day's mystery riddle. The
+   *  mysteryId is just the riddle index for traceability; dedup is
+   *  enforced via the daily cap, set equal to the per-solve amount. */
+  | { source: 'mystery'; mysteryId: string }
 
 export interface AwardCastlePointsRequest {
   normalizedName: string
@@ -163,6 +167,10 @@ export const AWARD_CAPS = {
   chessWinDailyMax: 80,
   /** One generous post-game review per day (per-review cap is already 80). */
   chessReviewDailyMax: 100,
+  /** Terminal /daily mystery — 5 CP per solve, capped at 5/day so the
+   *  kid can only claim once per day (server-enforced dedup). */
+  mysteryReward: 5,
+  mysteryDailyMax: 5,
   /** Forest Adventure tier table — payout in castle points per run, by
    *  end-of-run score. Capped daily by forestDailyMax. */
   forestTiers: [
@@ -500,6 +508,9 @@ export interface GuestDailyEarn {
   chessReview: number
   /** Phase E — Forest Adventure castle-point payout this day. */
   forest?: number
+  /** Terminal /daily mystery payout this day. Optional for backwards
+   *  compat with old guest docs; treated as 0 when absent. */
+  mystery?: number
 }
 
 export interface GuestCosmetics {

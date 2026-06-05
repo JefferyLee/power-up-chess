@@ -43,6 +43,12 @@ import {
   takeItem,
   type Item,
 } from './items'
+import {
+  isCorrect,
+  markSolvedToday,
+  readSolvedToday,
+  todaysMystery,
+} from './mysteries'
 
 export type CommandTier = 'basic' | 'advanced' | 'hidden'
 
@@ -1252,6 +1258,74 @@ registerCommand({
     }
 
     lines.push('Tip: some words work without a slash. Try typing them.')
+    pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /daily — today's mystery riddle ───────────────────────
+
+registerCommand({
+  name: 'daily',
+  tier: 'basic',
+  description: "Today's mystery riddle. /daily to see it, /daily <answer> to try.",
+  handle: async (args, ctx) => {
+    const mystery = todaysMystery()
+    const guess = args.trim()
+    const already = readSolvedToday()
+
+    if (!guess) {
+      // Show the riddle — and note if it's already been solved today.
+      const lines = ['── TODAY\'S MYSTERY ──', mystery.question]
+      if (already && already.mysteryId === mystery.id) {
+        lines.push('')
+        lines.push('(You already solved this one today. Come back tomorrow.)')
+      } else {
+        lines.push('')
+        lines.push(`Reward: ${5} castle points. Try /daily <your answer>.`)
+      }
+      pushPrivate('reply', lines.join('\n'))
+      return
+    }
+
+    if (already && already.mysteryId === mystery.id) {
+      pushPrivate('reply', `You already cracked today's mystery. The Castle remembers. Try again tomorrow.`)
+      return
+    }
+
+    if (!isCorrect(mystery, guess)) {
+      pushPrivate('reply', `"${guess}" isn't it. Try again — there's no penalty for guessing.`)
+      return
+    }
+
+    // Right answer. Mark locally for instant UX, then claim CP server-side
+    // (which has its own daily-cap dedupe so a wiped localStorage can't
+    // re-claim).
+    markSolvedToday(mystery.id)
+    const id = ctx.identity
+    let pointsLine = ''
+    if (id && !id.isBypass) {
+      try {
+        const { callAwardCastlePoints } = await import('../../firebase/callables')
+        const res = await callAwardCastlePoints({
+          normalizedName: id.normalizedName,
+          award: { source: 'mystery', mysteryId: mystery.id },
+        })
+        pointsLine = res.added > 0
+          ? ` +${res.added} castle points (you now have ${res.castlePoints}).`
+          : ' (The Castle had already noted your earlier solve today.)'
+      } catch (err) {
+        pointsLine = err instanceof Error ? ` (${err.message})` : ''
+      }
+    } else {
+      pointsLine = ' (Visitors don\'t earn points — sign in with a magic word to start banking them.)'
+    }
+
+    const lines = [
+      `Correct.${pointsLine}`,
+      mystery.explain ? `📜 ${mystery.explain}` : '',
+      '',
+      'Come back tomorrow for a new mystery.',
+    ].filter(Boolean)
     pushPrivate('reply', lines.join('\n'))
   },
 })
