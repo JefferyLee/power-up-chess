@@ -23,6 +23,7 @@ import {
   callEquipCosmetic,
   callPurchaseCosmetic,
 } from '../firebase/callables'
+import { useSound } from '../sound/useSound'
 import type { PieceSymbol } from '../chess/types'
 import './ShopScreen.css'
 
@@ -38,6 +39,7 @@ export function ShopScreen() {
   const navigate = useNavigate()
   const { identity, setCastlePoints, setPieceSetId } = useCastle()
   const { pieceSetId } = useCosmetics()
+  const sound = useSound()
 
   // Live owned-sets list from Firestore. Free sets are implicitly
   // owned and not stored, so the set is always {…purchased} only.
@@ -89,13 +91,14 @@ export function ShopScreen() {
         })
         setCastlePoints(res.castlePoints)
         setPieceSetId(res.equippedPieceSet)
+        sound.play('shop-purchase')
       } catch (err) {
         setError(messageFor(err))
       } finally {
         setBusyId(null)
       }
     },
-    [identity, setCastlePoints, setPieceSetId],
+    [identity, setCastlePoints, setPieceSetId, sound],
   )
 
   if (!identity) {

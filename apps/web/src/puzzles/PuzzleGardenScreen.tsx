@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
+import { useSound } from '../sound/useSound'
 import type { Plot } from '../firebase/callables'
 import mateIcon from './assets/plot-icons/mate.svg'
 import forkIcon from './assets/plot-icons/fork.svg'
@@ -55,6 +56,11 @@ const LEGENDS_UNLOCK_SOLVES = 50
 export function PuzzleGardenScreen() {
   const navigate = useNavigate()
   const { identity } = useCastle()
+  const sound = useSound()
+  const enterPlot = (path: string) => {
+    sound.play('plot-enter')
+    navigate(path)
+  }
   const [state, setState] = useState<GuestPuzzleState | null>(null)
 
   // Live-subscribe to the guest doc so the plot cards update after a solve.
@@ -164,7 +170,7 @@ export function PuzzleGardenScreen() {
               key={p.id}
               meta={p}
               rating={ratings[p.id]}
-              onEnter={() => navigate(`/puzzles/plot/${p.id}`)}
+              onEnter={() => enterPlot(`/puzzles/plot/${p.id}`)}
             />
           ))}
         </div>

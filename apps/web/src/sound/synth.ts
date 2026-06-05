@@ -13,6 +13,11 @@ export type SoundName =
   | 'knock' | 'wicket-creak'
   | 'powerup-classic' | 'powerup-lightning' | 'powerup-comet'
   | 'knight-jump' | 'knight-coin' | 'knight-hit' | 'knight-newbest'
+  // MVP3 P1.E — the eight ambient/UI SFX. All synthesized; no asset
+  // files needed. Tuned to sit warm next to the existing chess SFX.
+  | 'small-solve' | 'big-solve' | 'streak'
+  | 'level-up' | 'badge-earned'
+  | 'shop-purchase' | 'shop-browse' | 'plot-enter'
 
 /** Sounds backed by a real audio file (vs. one of the RECIPES synths).
  *  When a name is in this map, playSound() routes to an Audio element
@@ -356,6 +361,65 @@ function knightNewBest(): void {
   tone({ freq: 1046, type: 'sine', duration: 0.22, peakGain: 0.26, release: 0.26, startOffset: 0.32 })
 }
 
+// ── MVP3 P1.E ambient + UI SFX ──────────────────────────────────────
+
+function smallSolve(): void {
+  // Two quick rising sine pips — small "got one" feel.
+  tone({ freq: 660, type: 'sine', duration: 0.07, peakGain: 0.18, release: 0.10 })
+  tone({ freq: 880, type: 'sine', duration: 0.09, peakGain: 0.20, release: 0.12, startOffset: 0.06 })
+}
+
+function bigSolve(): void {
+  // Five-note ascending arpeggio — bigger payoff (Today's Five etc.).
+  ;[523, 659, 784, 988, 1175].forEach((f, i) => {
+    tone({ freq: f, type: 'sine', duration: 0.09, peakGain: 0.20, release: 0.13, startOffset: i * 0.07 })
+  })
+  // Soft bell tail.
+  tone({ freq: 1568, type: 'sine', duration: 0.45, peakGain: 0.14, attack: 0.02, release: 0.40, startOffset: 0.36 })
+}
+
+function streak(): void {
+  // Three-note up-up-UP build — quicker than bigSolve.
+  tone({ freq: 587, type: 'triangle', duration: 0.07, peakGain: 0.18, release: 0.08 })
+  tone({ freq: 740, type: 'triangle', duration: 0.07, peakGain: 0.20, release: 0.08, startOffset: 0.07 })
+  tone({ freq: 988, type: 'triangle', duration: 0.14, peakGain: 0.24, release: 0.16, startOffset: 0.14 })
+}
+
+function levelUp(): void {
+  // Glissando up across an octave + sustained chord. "You leveled."
+  tone({ freq: [392, 784], type: 'sine', duration: 0.32, peakGain: 0.18, attack: 0.02, release: 0.20 })
+  tone({ freq: 988, type: 'sine', duration: 0.40, peakGain: 0.20, attack: 0.04, release: 0.36, startOffset: 0.25 })
+  tone({ freq: 1318, type: 'sine', duration: 0.40, peakGain: 0.15, attack: 0.05, release: 0.36, startOffset: 0.28 })
+}
+
+function badgeEarned(): void {
+  // Bell + glitter — earned-a-badge moment.
+  tone({ freq: 1318, type: 'sine', duration: 0.50, peakGain: 0.22, attack: 0.005, release: 0.50 })
+  tone({ freq: 1976, type: 'sine', duration: 0.40, peakGain: 0.14, attack: 0.02, release: 0.40, startOffset: 0.04 })
+  // Sparkle tail.
+  ;[2637, 3136, 2349].forEach((f, i) => {
+    tone({ freq: f, type: 'sine', duration: 0.06, peakGain: 0.10, release: 0.12, startOffset: 0.25 + i * 0.08 })
+  })
+}
+
+function shopPurchase(): void {
+  // Coin clink + warm low confirmation.
+  tone({ freq: 1046, type: 'sine', duration: 0.08, peakGain: 0.20, release: 0.10 })
+  tone({ freq: 1568, type: 'sine', duration: 0.10, peakGain: 0.20, release: 0.14, startOffset: 0.05 })
+  tone({ freq: 220,  type: 'sine', duration: 0.20, peakGain: 0.14, attack: 0.02, release: 0.20, startOffset: 0.08 })
+}
+
+function shopBrowse(): void {
+  // Tiny soft single-tone selector click. Quieter than the others.
+  tone({ freq: 740, type: 'sine', duration: 0.05, peakGain: 0.10, release: 0.06 })
+}
+
+function plotEnter(): void {
+  // Light door-creak swell + soft chime — entering a puzzle plot.
+  tone({ freq: [200, 320], type: 'triangle', duration: 0.30, peakGain: 0.14, attack: 0.05, release: 0.22 })
+  tone({ freq: 880, type: 'sine', duration: 0.30, peakGain: 0.16, attack: 0.04, release: 0.28, startOffset: 0.22 })
+}
+
 const RECIPES: Record<SoundName, () => void> = {
   move,
   capture,
@@ -372,6 +436,14 @@ const RECIPES: Record<SoundName, () => void> = {
   'knight-coin': knightCoin,
   'knight-hit': knightHit,
   'knight-newbest': knightNewBest,
+  'small-solve': smallSolve,
+  'big-solve': bigSolve,
+  streak,
+  'level-up': levelUp,
+  'badge-earned': badgeEarned,
+  'shop-purchase': shopPurchase,
+  'shop-browse': shopBrowse,
+  'plot-enter': plotEnter,
 }
 
 /** Module-level mute flag for one-shot SFX. Mirrors the React useSound

@@ -1,39 +1,42 @@
 // Knight's Hop — turn-based piece-movement game.
 //
-// Two levels ship today: PAWN (one-step forward / diagonal capture)
-// and KNIGHT (four forward L-shapes). Each level constrains the
-// player to a single piece's chess-legal movement, so the kid
-// internalises piece motion by playing with the actual rules.
+// Five levels: PAWN (1 forward / diagonal capture), KNIGHT (four
+// forward L-shapes that JUMP over obstacles), BISHOP (forward
+// diagonal slide up to 3, can't jump), ROOK (forward straight slide
+// up to 3, can't jump), QUEEN (combines bishop + rook moves).
 //
-// Board is 5 columns × 8 visible rows. The player is always rendered
-// at the bottom row; after every move the board "scrolls" down by the
-// move's row delta (1 for pawn / pawn-capture / short-knight; 2 for
-// long-knight) and that many fresh obstacle rows spawn at the top.
-// Score = total rows scrolled — knight clears the level faster
-// because each L-jump covers more ground.
-//
-// Future slices: bishop (diagonal slide), rook (rank slide), queen
-// (combo), level transitions, retire /forest once the ladder feels
-// complete.
+// Each level constrains the player to a single piece's chess-legal
+// movement, so the kid internalises piece motion by playing with the
+// actual rules. The board is 5 columns × 8 visible rows; player
+// always rendered at the bottom row. After every move the board
+// "scrolls" down by the move's row delta (1-3) and that many fresh
+// obstacle rows spawn at the top. Score = total rows scrolled.
 
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../../castle/useCastle'
+import { useSound } from '../../sound/useSound'
 import pawnWhite from '../../cosmetics/assets/cburnett/wP.svg'
 import pawnBlack from '../../cosmetics/assets/cburnett/bP.svg'
 import knightWhite from '../../cosmetics/assets/cburnett/wN.svg'
+import bishopWhite from '../../cosmetics/assets/cburnett/wB.svg'
+import rookWhite from '../../cosmetics/assets/cburnett/wR.svg'
+import queenWhite from '../../cosmetics/assets/cburnett/wQ.svg'
 import './KnightsHopRoute.css'
 
 const COLS = 5
 const VISIBLE_ROWS = 8
 const OBSTACLE_DENSITY = 0.32
 const LEVEL_GOAL = 25 // rows-of-progress target
+/** Max slide distance for bishop/rook/queen. 3 keeps the queen from
+ *  clearing the level in two moves while still feeling powerful. */
+const SLIDE_MAX = 3
 
-type Piece = 'pawn' | 'knight'
+type Piece = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen'
 
 interface Move {
   col: number
-  rowDelta: 1 | 2
+  rowDelta: 1 | 2 | 3
 }
 
 interface BoardState {
@@ -72,10 +75,38 @@ function cellAt(board: BoardState, col: number, rowFromBottom: number): 'oob' | 
   return (row & (1 << col)) !== 0 ? 'obstacle' : 'empty'
 }
 
+/** Sliding-piece move generator. For each direction, walk outward up
+ *  to maxRange squares. Stop at the first obstacle (which IS a legal
+ *  capture target — the piece can't jump over it but can land on it).
+ *  Out-of-bounds or backwards (rowDelta < 1) directions are skipped. */
+function slidingMoves(
+  board: BoardState,
+  directions: ReadonlyArray<readonly [dc: number, dr: number]>,
+  maxRange: number,
+): Move[] {
+  const out: Move[] = []
+  for (const [dc, dr] of directions) {
+    for (let step = 1; step <= maxRange; step++) {
+      const c = board.col + dc * step
+      const r = dr * step
+      if (r < 1 || r > 3) break
+      const cell = cellAt(board, c, r)
+      if (cell === 'oob') break
+      if (cell === 'empty') {
+        out.push({ col: c, rowDelta: r as 1 | 2 | 3 })
+        continue
+      }
+      // Obstacle — accept as a capture target then stop the ray.
+      out.push({ col: c, rowDelta: r as 1 | 2 | 3 })
+      break
+    }
+  }
+  return out
+}
+
 function legalMoves(board: BoardState, piece: Piece): Move[] {
-  const moves: Move[] = []
   if (piece === 'pawn') {
-    // Forward one to empty; diagonal one to obstacle (capture).
+    const moves: Move[] = []
     const ahead = cellAt(board, board.col, 1)
     if (ahead === 'empty') moves.push({ col: board.col, rowDelta: 1 })
     for (const dc of [-1, +1]) {
@@ -85,19 +116,32 @@ function legalMoves(board: BoardState, piece: Piece): Move[] {
     }
     return moves
   }
-  // Knight: four forward L-shapes. Empty OR obstacle both legal
-  // (knight either jumps onto safe square or captures).
-  const offsets: Array<[dc: number, dr: 1 | 2]> = [
-    [-1, 2], [+1, 2], [-2, 1], [+2, 1],
-  ]
-  for (const [dc, dr] of offsets) {
-    const c = board.col + dc
-    const cell = cellAt(board, c, dr)
-    if (cell === 'empty' || cell === 'obstacle') {
-      moves.push({ col: c, rowDelta: dr })
+  if (piece === 'knight') {
+    // Four forward L-shapes. Knight jumps so any cell is legal.
+    const moves: Move[] = []
+    const offsets: Array<[dc: number, dr: 1 | 2]> = [
+      [-1, 2], [+1, 2], [-2, 1], [+2, 1],
+    ]
+    for (const [dc, dr] of offsets) {
+      const c = board.col + dc
+      const cell = cellAt(board, c, dr)
+      if (cell === 'empty' || cell === 'obstacle') {
+        moves.push({ col: c, rowDelta: dr })
+      }
     }
+    return moves
   }
-  return moves
+  if (piece === 'bishop') {
+    // Forward diagonals only — bishop slides up to SLIDE_MAX.
+    return slidingMoves(board, [[-1, 1], [+1, 1]], SLIDE_MAX)
+  }
+  if (piece === 'rook') {
+    // Straight forward only. Sideways slides don't advance score and
+    // would let the kid shuffle indefinitely; excluded.
+    return slidingMoves(board, [[0, 1]], SLIDE_MAX)
+  }
+  // queen — bishop + rook combined.
+  return slidingMoves(board, [[-1, 1], [0, 1], [+1, 1]], SLIDE_MAX)
 }
 
 function step(
@@ -157,11 +201,46 @@ const LEVELS: Record<Piece, LevelMeta> = {
       { key: 'R', meaning: '+2 col +1 row' },
     ],
   },
+  bishop: {
+    piece: 'bishop',
+    label: 'Bishop',
+    sub: 'Slides forward on the diagonals (up to 3). Can\'t jump.',
+    legendKeys: [
+      { key: 'tap', meaning: 'any glowing diagonal square' },
+    ],
+  },
+  rook: {
+    piece: 'rook',
+    label: 'Rook',
+    sub: 'Slides straight forward (up to 3). Can\'t jump.',
+    legendKeys: [
+      { key: 'tap', meaning: 'any glowing square ahead' },
+    ],
+  },
+  queen: {
+    piece: 'queen',
+    label: 'Queen',
+    sub: 'Slides forward straight OR diagonal (up to 3). Can\'t jump.',
+    legendKeys: [
+      { key: 'tap', meaning: 'any glowing forward square' },
+    ],
+  },
+}
+
+const PIECE_ORDER: Piece[] = ['pawn', 'knight', 'bishop', 'rook', 'queen']
+
+const PIECE_SVGS: Record<Piece, string> = {
+  pawn: pawnWhite,
+  knight: knightWhite,
+  bishop: bishopWhite,
+  rook: rookWhite,
+  queen: queenWhite,
 }
 
 export function KnightsHopRoute() {
   const navigate = useNavigate()
   const { hostId } = useCastle()
+  const sound = useSound()
   const [piece, setPiece] = useState<Piece>('pawn')
   const [board, setBoard] = useState<BoardState>(() => makeInitialBoard())
   const [score, setScore] = useState(0)
@@ -180,6 +259,7 @@ export function KnightsHopRoute() {
   useEffect(() => {
     if (status.kind !== 'playing') return
     if (score >= LEVEL_GOAL) {
+      sound.play('level-up')
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus({ kind: 'cleared', score })
       return
@@ -188,7 +268,7 @@ export function KnightsHopRoute() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus({ kind: 'stuck', score })
     }
-  }, [moves, score, status.kind])
+  }, [moves, score, status.kind, sound])
 
   const start = useCallback(() => {
     setBoard(makeInitialBoard())
@@ -209,8 +289,8 @@ export function KnightsHopRoute() {
 
   const handleCellClick = useCallback(
     (col: number, rowFromBottom: number) => {
-      if (rowFromBottom < 1 || rowFromBottom > 2) return
-      handleMove({ col, rowDelta: rowFromBottom as 1 | 2 })
+      if (rowFromBottom < 1 || rowFromBottom > 3) return
+      handleMove({ col, rowDelta: rowFromBottom as 1 | 2 | 3 })
     },
     [handleMove],
   )
@@ -264,7 +344,7 @@ export function KnightsHopRoute() {
           <p className="puc-khop__sub">{meta.label} level · {meta.sub}</p>
         </div>
         <div className="puc-khop__levels" role="radiogroup" aria-label="Piece level">
-          {(['pawn', 'knight'] as Piece[]).map((p) => (
+          {PIECE_ORDER.map((p) => (
             <button
               key={p}
               type="button"
@@ -310,9 +390,7 @@ export function KnightsHopRoute() {
           <div className="puc-khop__overlay">
             <h2 className="puc-khop__overlay-title">{meta.label} level</h2>
             <p className="puc-khop__overlay-body">
-              {piece === 'pawn'
-                ? `Hop forward ${LEVEL_GOAL} rows. Empty squares ahead, or capture diagonally.`
-                : `Cover ${LEVEL_GOAL} rows in L-jumps. Knights leap over anything in between.`}{' '}
+              Cover {LEVEL_GOAL} rows. {meta.sub}{' '}
               {hostId === 'lucy' ? 'Lucy' : 'Luca'}'s cheering for you.
             </p>
             <button
@@ -330,9 +408,13 @@ export function KnightsHopRoute() {
             <h2 className="puc-khop__overlay-title">Level cleared!</h2>
             <p className="puc-khop__overlay-body">
               {status.score} rows covered.{' '}
-              {piece === 'pawn'
-                ? 'Try the Knight level next — four L-jumps per move.'
-                : 'Bishop, rook, and queen levels arrive in the next slice.'}
+              {(() => {
+                const idx = PIECE_ORDER.indexOf(piece)
+                const next = PIECE_ORDER[idx + 1]
+                return next
+                  ? `Try the ${LEVELS[next].label} level next — ${LEVELS[next].sub.toLowerCase()}`
+                  : 'You\'ve cleared every level. Try a harder personal best.'
+              })()}
             </p>
             <button
               type="button"
@@ -379,8 +461,8 @@ function renderBoard(
   status: GameStatus,
   onClick: (col: number, rowFromBottom: number) => void,
 ) {
-  const playerSvg = piece === 'pawn' ? pawnWhite : knightWhite
-  const playerLabel = piece === 'pawn' ? 'Your pawn' : 'Your knight'
+  const playerSvg = PIECE_SVGS[piece]
+  const playerLabel = `Your ${LEVELS[piece].label.toLowerCase()}`
   const cells: ReactElement[] = []
   for (let visualRow = 0; visualRow < VISIBLE_ROWS; visualRow++) {
     const rowFromBottom = VISIBLE_ROWS - 1 - visualRow
