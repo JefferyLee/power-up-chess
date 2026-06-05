@@ -49,6 +49,8 @@ import {
   readSolvedToday,
   todaysMystery,
 } from './mysteries'
+import { LORE, findLore } from './lore'
+import { loadVisited } from './world'
 
 export type CommandTier = 'basic' | 'advanced' | 'hidden'
 
@@ -192,7 +194,7 @@ export async function dispatchCommand(
 // later; the key thing is /help only shows what the kid has actually
 // earned, so the world keeps unfolding.
 const ADVANCED_UNLOCK_CP = 50
-const HIDDEN_UNLOCK_CP = 200
+const HIDDEN_UNLOCK_CP = 100
 
 const isAdvancedUnlocked = (id: CastleIdentity | null) =>
   !!id && !id.isBypass && id.castlePoints >= ADVANCED_UNLOCK_CP
@@ -1012,6 +1014,42 @@ registerCommand({
   },
 })
 
+// ─── Basic: /stats — explorer progress ────────────────────────────
+
+registerCommand({
+  name: 'stats',
+  tier: 'basic',
+  description: 'Show your exploration progress — rooms visited, items found, /play state.',
+  handle: (_args, ctx) => {
+    const id = ctx.identity
+    const visitedCount = loadVisited().size
+    // 7 = the rooms in ROOMS that are currently part of the map.
+    const totalRooms = Object.keys(ROOMS).length
+    const carried = [...loadInventory()]
+    const itemsTotal = Object.keys(ITEMS).filter((iid) => ITEMS[iid as 'lantern'].takeable).length
+    const itemsFound = carried.length
+    const play = loadPlayState()
+    const cellar = isCellarOpen()
+    const solved = readSolvedToday()
+
+    const lines = ['── YOUR PROGRESS ──']
+    lines.push(`Rooms visited:   ${visitedCount} / ${totalRooms}${cellar ? ' (Cellar unlocked)' : ''}`)
+    lines.push(`Items pocketed:  ${itemsFound} / ${itemsTotal}`)
+    if (id) {
+      lines.push(`Castle points:   ${id.castlePoints}`)
+    }
+    if (play) {
+      const turnNumber = Math.floor(play.game.history().length / 2) + 1
+      lines.push(`Current game:    ${play.status} · move ${turnNumber} · rating ~${play.rating}`)
+    } else {
+      lines.push(`Current game:    none`)
+    }
+    lines.push(`Today's mystery: ${solved ? 'solved ✓' : 'unsolved — try /daily'}`)
+
+    pushPrivate('reply', lines.join('\n'))
+  },
+})
+
 // ─── Basic: /take /drop /examine /use ─────────────────────────────
 
 registerCommand({
@@ -1518,6 +1556,35 @@ function tryUserMove(game: Chess, input: string): { san: string } | null {
   }
   return null
 }
+
+// ─── Hidden: /lore — hand-written castle + chess lore ────────────
+
+registerCommand({
+  name: 'lore',
+  tier: 'hidden',
+  description: 'Read a snippet of castle or chess lore, e.g. /lore knight. /lore alone lists topics.',
+  unlockedFor: isHiddenUnlocked,
+  handle: (args) => {
+    const q = args.trim()
+    if (!q) {
+      const lines = ['── LORE TOPICS ──']
+      for (const e of LORE) {
+        lines.push(`  /lore ${e.key.padEnd(16)} ${e.title}`)
+      }
+      lines.push('')
+      lines.push(`${LORE.length} entries. Lucy and Luca wrote them.`)
+      pushPrivate('reply', lines.join('\n'))
+      return
+    }
+    const entry = findLore(q)
+    if (!entry) {
+      pushPrivate('reply', `No lore on "${q}". Type /lore to see topics.`)
+      return
+    }
+    const voice = entry.voice === 'lucy' ? 'Lucy' : 'Luca'
+    pushPrivate('reply', `── ${entry.title} · ${voice} ──\n${entry.body}`)
+  },
+})
 
 // ─── Hidden: /ask Lucy|Luca <question> ────────────────────────────
 // Wires to a Cloud Function (gemini-3.5-flash) — see functions/src/castle/askHost.ts.
