@@ -8,7 +8,7 @@
 //
 // ESC or /exit closes.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
@@ -94,13 +94,27 @@ export function TerminalOverlay({ onClose }: Props) {
     }
   }, [privateEntries])
 
-  // ESC closes; focus the input on mount.
-  useEffect(() => {
+  // Focus the input the moment the DOM is committed (layout effect
+  // runs synchronously after paint — stays in the gesture chain that
+  // opened the terminal, so iOS Safari pops the keyboard).
+  useLayoutEffect(() => {
     inputRef.current?.focus()
+  }, [])
+
+  // ESC closes.
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  // Re-focus on every new private-stream entry. Command output landing
+  // is a strong signal that the kid is about to type the next command,
+  // and any tap that scrolled the page during the wait shouldn't have
+  // robbed the prompt of focus.
+  useEffect(() => {
+    inputRef.current?.focus({ preventScroll: true })
+  }, [privateEntries.length])
 
   // First-open auto-look: when the kid opens a fresh terminal session
   // (empty private stream), describe the room they're in so they get
@@ -168,10 +182,6 @@ export function TerminalOverlay({ onClose }: Props) {
       console.warn('terminal submit failed', err)
     } finally {
       setBusy(false)
-      // Snap focus back to the prompt so the next command can be
-      // typed without a click. Defer one tick so React re-enables the
-      // input first (busy flag toggles disabled).
-      requestAnimationFrame(() => inputRef.current?.focus())
     }
   }
 
@@ -221,7 +231,6 @@ export function TerminalOverlay({ onClose }: Props) {
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
-          disabled={busy}
           placeholder="type /help to begin"
         />
       </form>
