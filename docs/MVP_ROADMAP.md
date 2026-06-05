@@ -105,6 +105,17 @@ Target scope:
 
 Phases A–E (~17–21 days end-to-end). See `docs/MVP2_PLAN.md` §11.
 
+## Post-MVP2: Castle Terminal (Hidden Text World)
+
+A `⛶` toggle in the Hall chat opens a fullscreen MUD-style terminal
+with a 6-room castle map, item collection, daily mystery riddles,
+hand-written lore, real Stockfish play (`/play <rating>` with built-in
+coach labels), tactical puzzles drawn from the lichess bank, four text
+mini-games (`/guess`, `/hangman`, `/wordle`, `/24`), and `/ask
+Lucy|Luca` queries against `gemini-3.5-flash`. Built on top of MVP2
+infrastructure (castle points, invites, presence, public chat) without
+changing any existing surface. Full spec: `docs/TERMINAL_TEXT_WORLD.md`.
+
 Possible later scope (MVP3+):
 - Animated Lucy and Luca avatars + voices.
 - AI opponent with adaptive strength.

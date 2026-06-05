@@ -151,6 +151,10 @@ Server-side Cloud Function (so the API key stays off the client):
 
 Persona blocks live in `src/hosts/personas.ts` and are derived from `docs/HOST_PERSONAS.md` truthfulness and tone rules.
 
+### Terminal `/ask` callable
+
+Post-MVP2, the Castle Terminal adds a `/ask Lucy|Luca <question>` command backed by `functions/src/castle/askHost.ts`. Same `gemini-3.5-flash` model, but with a stricter child-safe system suffix, a `BLOCKED` short-circuit token for unsafe questions, profanity/PII scrub on both ends, a 20/uid/day cap (`ask-day` bucket in `chatRateLimit.ts`), and `thinkingBudget: 0` so the model doesn't burn its 200-token budget on internal reasoning. Auth + non-bypass required. See `docs/TERMINAL_TEXT_WORLD.md` for the full surface.
+
 ### Caching
 
 Key by `(host, classification, fenBefore, moveUci, playerName)`. Cache hits are fine because the same position+move+host should produce equivalent praise.

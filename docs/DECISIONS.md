@@ -54,6 +54,8 @@ Last updated: 2026-05-31
 29. **Hosts tell ambient chess stories** every ~3 minutes in the Hall when ≥1 guest present, capped at 6 stories/hour. Story content is extracted offline from `docs/books_and_references/` via `tools/story-import/`. Rights model mirrors puzzles (engineering stores `rightsStatus`; user reviews; anti-verbatim guardrail enforced in the pipeline). Runtime cost: zero LLM calls for ambient stories.
 30. **Forest Adventure** is folded in as the fifth Hall door, ported from `../ada-advanture`. Always playable; its scores live in their own leaderboard separate from castle points.
 31. **Themes are now bound to hosts.** Lucy ↔ Magic Forest, Luca ↔ Starry Universe. The standalone theme picker is removed. Host is rolled once per `sessionStorage` instance.
+32. **Castle Terminal** (post-MVP2) is an optional fullscreen MUD-style command surface launched from a `⛶` toggle in the Hall chat panel. Includes a 6-room world map (+ unlockable Cellar), items, daily mystery riddles, hand-written lore, four text mini-games, `/play` vs Stockfish with built-in coach labels, `/puzzle` from the lichess bank, and `/ask Lucy|Luca` via `gemini-3.5-flash`. Reuses all existing castle infrastructure (castle points, invites, presence, public chat) without changing any other surface. Full spec: `docs/TERMINAL_TEXT_WORLD.md`.
+33. **No DMs holds through the Terminal.** `/say` posts to the public Hall (tagged "🌀 from the secret tunnel"), `/me` is public, plain typed text in the Terminal becomes a private "mumble" the Hall does not see. No command sends a message to a specific user only.
 
 ## Implications
 
