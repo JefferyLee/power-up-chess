@@ -19,6 +19,10 @@ import type { ChatMessageDoc, QuizState } from './chatTypes'
 
 export const RECENT_MEMORY = 40
 export const HOUR_MS = 60 * 60 * 1000
+/** Retention for postedAt entries on the ambient state doc. Must be
+ *  ≥ the longest window any caller looks back over — hostAmbientStory
+ *  now needs 24h for its daily cap. */
+export const POSTED_AT_RETENTION_MS = 24 * 60 * 60 * 1000
 
 export interface AmbientState {
   recentIds: string[]
@@ -111,7 +115,7 @@ export async function pickAndPostStory(args: Args): Promise<PostStoryResult | nu
     })
   }
 
-  const recentPostedAt = state.postedAt.filter((t) => now - t < HOUR_MS)
+  const recentPostedAt = state.postedAt.filter((t) => now - t < POSTED_AT_RETENTION_MS)
   const nextRecent = [story.id, ...state.recentIds.filter((id) => id !== story.id)].slice(0, RECENT_MEMORY)
   // Plain set() (no merge) replaces the whole doc, so omitting
   // lastQuizMessageId when there's no quiz naturally removes the old one.

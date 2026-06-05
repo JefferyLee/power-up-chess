@@ -7,14 +7,16 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { GEMINI_API_KEY } from './hostChatReply'
-import { HOUR_MS, pickAndPostStory, type AmbientState } from './pickAndPostStory'
+import { pickAndPostStory, type AmbientState } from './pickAndPostStory'
 import type { PresenceDoc } from './chatTypes'
 
 const PRESENCE_TTL_MS = 60 * 1000
-// 6 stories per hour — one every ~10 minutes during a busy stretch.
-// Was temporarily 30/hr during quiz-generation debugging; restored
-// now that the explain-mode generation is stable.
-const MAX_PER_HOUR = 6
+const DAY_MS = 24 * 60 * 60 * 1000
+// 4 stories per 24h total — enough to feel alive, sparse enough that
+// the Hall isn't a fire hose. Also enforce a minimum gap so the day's
+// quota doesn't burst in a 10-minute window.
+const MAX_PER_DAY = 4
+const MIN_GAP_MS = 90 * 60 * 1000  // 90 minutes between stories
 
 export const hostAmbientStory = onSchedule(
   { schedule: 'every 3 minutes', timeoutSeconds: 60, secrets: [GEMINI_API_KEY] },
@@ -38,13 +40,20 @@ export const hostAmbientStory = onSchedule(
       return
     }
 
-    // Hourly cap (ambient only — on-demand has its own per-uid cap).
+    // Daily cap + minimum-gap throttle (ambient only — the on-demand
+    // hostTellStory callable has its own per-uid cap).
     const stateRef = db.doc('castle_ambient_state/main')
     const stateSnap = await stateRef.get()
     const state = (stateSnap.data() as AmbientState | undefined) ?? { recentIds: [], postedAt: [] }
-    const recentPostedAt = state.postedAt.filter((t) => now - t < HOUR_MS)
-    if (recentPostedAt.length >= MAX_PER_HOUR) {
-      console.log(`hostAmbientStory: hourly cap (${MAX_PER_HOUR}) reached`)
+    const recentPostedAt = state.postedAt.filter((t) => now - t < DAY_MS)
+    if (recentPostedAt.length >= MAX_PER_DAY) {
+      console.log(`hostAmbientStory: daily cap (${MAX_PER_DAY}) reached`)
+      return
+    }
+    const lastPosted = recentPostedAt.length > 0 ? Math.max(...recentPostedAt) : 0
+    if (lastPosted > 0 && now - lastPosted < MIN_GAP_MS) {
+      const waitMin = Math.ceil((MIN_GAP_MS - (now - lastPosted)) / 60_000)
+      console.log(`hostAmbientStory: gap not met, ${waitMin}min remaining`)
       return
     }
 
