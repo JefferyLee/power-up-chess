@@ -71,3 +71,5 @@ Brilliant is a separate heuristic (best/near-best + sacrifice + sacrifice not tr
 - `docs/books_and_references/` contains ~440 MB of source PDFs/EPUBs and is **git-ignored**. Only its `README.md` is committed.
 - When introducing copy/UI text, match host voice rules: warm, specific, not babyish, no false praise, no unsourced chess history. Examples in `docs/HOST_PERSONAS.md`.
 - The `data/puzzles/*.json` paths referenced in `docs/PUZZLE_CONTENT_PIPELINE.md` are target schemas, not existing files yet.
+- For audits / MVP acceptance checks / multi-screen sweeps, fan out one agent per dimension and synthesize. Don't grep + read serially in the main loop — burn through context for no reason. See `docs/WORKFLOWS.md` for the project's common workflow shapes.
+- When generating content (riddles, lore, puzzles, stories, host lines): use LLM agents for *candidate generation* only — child-safety rules in `docs/DECISIONS.md` mean every shipped string passes through a human gate. Adversarial-verification can pre-filter (chess legality, age-appropriateness, host voice), but the keepers are picked by Jeff, not the model.
