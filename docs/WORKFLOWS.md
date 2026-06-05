@@ -113,3 +113,65 @@ adding "and also refactor X" mid-loop.
 
 The shape rule: if the task is "do X" and X is concrete, just do it.
 If the task is "figure out what's true about a sprawling thing", agents.
+
+---
+
+## Considered, not adopted (with trigger conditions)
+
+A running ledger of community skills/workflows we've evaluated and
+chosen NOT to install. The decision and the condition under which we'd
+revisit are both written down so we don't re-evaluate from scratch
+later.
+
+### Taste-Skill — *not now*
+
+[github.com/leonxlnx/taste-skill](https://github.com/leonxlnx/taste-skill).
+Anti-slop frontend skill: reads brief → infers design direction →
+sets variance / motion / density dials → enforces a style contract
+(em-dash ban, GSAP skeletons, redesign audit, pre-flight check).
+
+**Reason not adopted:**
+1. Power Up Castle already has a strong hand-built brand (Cinzel,
+   gold-on-midnight, Lucy/Luca palette, HallAmbient flames). Taste
+   Skill solves the "from nothing" problem; we're past that.
+2. **Concrete conflict**: it bans em-dashes. Lucy/Luca's voice and
+   most of the codebase's English copy use em-dashes deliberately
+   for rhythm. Installing would fight our existing style.
+
+**Revisit when:** building a marketing campaign page or a blog
+theme that's *intentionally* off-brand from the main app. Then
+install at project scope only.
+
+### Darwin-Skill v2.0 — *not yet*
+
+[github.com/alchaincyf/darwin-skill](https://github.com/alchaincyf/darwin-skill).
+Autonomous skill optimizer inspired by Karpathy's autoresearch:
+evaluates `SKILL.md` files on a 9-dimension rubric (incl. Failure
+Mechanism Encoding, Actionable Specificity, High-Risk Action
+Blacklist), hill-climbs improvements with git ratchet, validates
+via test prompts, generates result cards.
+
+**Reason not adopted yet:**
+1. We have ~5 workflows in this file plus a handful of project
+   skills — too few for Darwin's optimization loop to amortize.
+2. v2.0 only released 2026-05-28; ecosystem still settling.
+
+**Revisit when:** the combined count of `~/.claude/skills/` +
+`~/.claude/workflows/` + this repo's `docs/WORKFLOWS.md` entries
+exceeds ~10, OR when we notice a workflow being manually rewritten
+more than 3 times.
+
+---
+
+## Tracking the ecosystem
+
+Two awesome-lists worth pulling from periodically (e.g. once a
+month) without subscribing to a feed:
+
+- **[hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)** — quality-focused curated list of skills, hooks, slash-commands, agent orchestrators, applications, and plugins. Closest thing to a canonical index.
+- **[sickn33/antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills)** — 1,500+ skill library with `npx antigravity-awesome-skills` installer, bundles + role-based packs. Skip the full-library install; pick focused plugins per domain.
+
+Browsing rule: when checking these, scan for new entries in domains
+we actually use (frontend, audit, testing, content workflows) — not
+the entire catalogue. Add anything promising to the "Considered, not
+adopted" section above with a trigger condition; don't impulse-install.
