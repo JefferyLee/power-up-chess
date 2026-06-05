@@ -389,81 +389,190 @@ function ago(ms: number): string {
   return '1+ month ago'
 }
 
+const TEAMS_PAGE_SIZE = 15
+const TEAMS_FETCH_CAP = 120
+
+/** Look up a team by its case-insensitive name. Returns null if no
+ *  match. Used by /team <name>, /team apply, /team join. */
+async function findTeamByName(name: string): Promise<TeamLite | null> {
+  const { db } = await import('../../firebase/app')
+  const { collection, getDocs, query, where, limit } = await import('firebase/firestore')
+  const slug = name.trim().toLowerCase()
+  const snap = await getDocs(
+    query(collection(db, 'teams'), where('normalizedName', '==', slug), limit(1)),
+  )
+  if (snap.empty) return null
+  return snap.docs[0]!.data() as TeamLite
+}
+
+function renderTeamDetail(t: TeamLite): string {
+  const lines = [`── ${t.name} ──`]
+  if (t.motto) lines.push(`"${t.motto}"`)
+  lines.push(`Captain: ${t.captainDisplayName}`)
+  lines.push(`Born ${ago(t.createdAt)} · last change ${ago(t.lastChangeAt)}`)
+  lines.push('')
+  lines.push(`Members (${t.memberCount} of 20):`)
+  const captainName = t.captainNormalizedName
+  const sortedMembers = [...t.members].sort((a, b) => {
+    if (a.normalizedName === captainName) return -1
+    if (b.normalizedName === captainName) return 1
+    return b.joinedAt - a.joinedAt
+  })
+  for (const m of sortedMembers) {
+    const star = m.normalizedName === captainName ? ' ★' : ''
+    lines.push(`  ${m.displayName}${star}  · joined ${ago(m.joinedAt)}`)
+  }
+  return lines.join('\n')
+}
+
+/** Page of the full team list. Fetches once (capped at TEAMS_FETCH_CAP)
+ *  and slices client-side; the castle isn't expected to outgrow that
+ *  cap any time soon and offset-based UX is easier to reason about
+ *  than Firestore cursors for a kid scrolling through pages. */
+async function listTeamsPage(page: number): Promise<string> {
+  const { db } = await import('../../firebase/app')
+  const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore')
+  const snap = await getDocs(
+    query(collection(db, 'teams'), orderBy('memberCount', 'desc'), limit(TEAMS_FETCH_CAP)),
+  )
+  if (snap.empty) {
+    return 'No teams yet. The castle is wide open — start one from the Hall.'
+  }
+  const docs = snap.docs
+  const totalPages = Math.max(1, Math.ceil(docs.length / TEAMS_PAGE_SIZE))
+  const clamped = Math.max(1, Math.min(totalPages, page))
+  const start = (clamped - 1) * TEAMS_PAGE_SIZE
+  const slice = docs.slice(start, start + TEAMS_PAGE_SIZE)
+  const nameWidth = Math.min(
+    24,
+    Math.max(...slice.map((d) => (d.data() as TeamLite).name.length), 4),
+  )
+  const lines = [`── TEAMS · page ${clamped}/${totalPages} · ${docs.length}${docs.length === TEAMS_FETCH_CAP ? '+' : ''} total ──`]
+  for (const d of slice) {
+    const t = d.data() as TeamLite
+    const name = t.name.length > nameWidth ? t.name.slice(0, nameWidth - 1) + '…' : t.name
+    lines.push(`  ${name.padEnd(nameWidth)}  ${String(t.memberCount).padStart(3)} / 20 · captain ${t.captainDisplayName}`)
+  }
+  lines.push('')
+  if (clamped < totalPages) {
+    lines.push(`/team ${clamped + 1} for the next page.`)
+  }
+  lines.push('Use /team <name> for the full roster, or /team join <name> to apply.')
+  return lines.join('\n')
+}
+
+/** Apply / join sugar. Looks the team up by name, then calls the
+ *  existing applyToTeam callable with its teamId. */
+async function applyToTeamByName(
+  name: string,
+  pitch: string | undefined,
+  identity: CastleIdentity | null,
+): Promise<string> {
+  if (!identity || identity.isBypass) {
+    return 'Sign in with a magic word first — visitors cannot apply to teams.'
+  }
+  const team = await findTeamByName(name)
+  if (!team) return `No team called "${name}". Try /team to see what is around.`
+  if (team.members.some((m) => m.normalizedName === identity.normalizedName)) {
+    return `You're already a member of ${team.name}.`
+  }
+  const { callApplyToTeam } = await import('../../firebase/callables')
+  try {
+    await callApplyToTeam({
+      teamId: team.teamId,
+      ...(pitch ? { pitch } : {}),
+    })
+    return `Application sent to ${team.name}. Captain ${team.captainDisplayName} will see it in their inbox.`
+  } catch (err) {
+    return err instanceof Error
+      ? err.message.replace(/^FirebaseError: /, '')
+      : 'Could not send the application.'
+  }
+}
+
+/** /team mine / /myteam — show the kid's own team memberships via
+ *  getPublicProfile (which already returns inlined team summaries). */
+async function showMyTeams(identity: CastleIdentity | null): Promise<string> {
+  if (!identity || identity.isBypass) {
+    return "You haven't a name in the castle yet — sign in with a magic word first."
+  }
+  const { callGetPublicProfile } = await import('../../firebase/callables')
+  try {
+    const profile = await callGetPublicProfile({ normalizedName: identity.normalizedName })
+    if (profile.teams.length === 0) {
+      return "You're not on a team yet. Browse with /team, then /team join <name>."
+    }
+    const lines = [`── YOUR TEAMS · ${profile.teams.length} ──`]
+    for (const t of profile.teams) {
+      const role = t.captain ? '★ captain' : 'member'
+      lines.push(`  ${t.name}  · ${role}`)
+    }
+    lines.push('')
+    lines.push('Use /team <name> to see a roster.')
+    return lines.join('\n')
+  } catch (err) {
+    return err instanceof Error ? err.message : 'Could not load your teams.'
+  }
+}
+
 registerCommand({
   name: 'team',
   tier: 'basic',
-  description: 'List teams in the castle. /team <name> for that team\'s roster.',
-  handle: async (args) => {
-    // Lazy-import Firestore primitives so the rest of the bundle isn't
-    // pulled in for guests who never open the terminal.
-    const { db } = await import('../../firebase/app')
-    const { collection, getDocs, orderBy, query, limit, where } = await import('firebase/firestore')
-
-    const sub = args.trim()
-    if (!sub) {
-      // List all teams, biggest first. Cap at 30 — past that the
-      // castle is bigger than I expect, and we can paginate later.
-      try {
-        const snap = await getDocs(
-          query(collection(db, 'teams'), orderBy('memberCount', 'desc'), limit(30)),
-        )
-        if (snap.empty) {
-          pushPrivate('reply', 'No teams yet. The castle is wide open — start one from the Hall.')
-          return
-        }
-        const lines = [`── TEAMS · ${snap.size} ──`]
-        const nameWidth = Math.min(
-          24,
-          Math.max(...snap.docs.map((d) => (d.data() as TeamLite).name.length), 4),
-        )
-        for (const d of snap.docs) {
-          const t = d.data() as TeamLite
-          const name = t.name.length > nameWidth ? t.name.slice(0, nameWidth - 1) + '…' : t.name
-          lines.push(`  ${name.padEnd(nameWidth)}  ${String(t.memberCount).padStart(3)} / 20 · captain ${t.captainDisplayName}`)
-        }
-        lines.push('')
-        lines.push('Use /team <name> for the full roster.')
-        pushPrivate('reply', lines.join('\n'))
-      } catch (err) {
-        pushPrivate('reply', err instanceof Error ? err.message : 'Could not list teams.')
-      }
+  description: 'List teams (/team, /team 2), show a roster (/team Wizards), apply (/team join Wizards), or see yours (/team mine).',
+  handle: async (args, ctx) => {
+    const trimmed = args.trim()
+    if (!trimmed) {
+      pushPrivate('reply', await listTeamsPage(1))
+      return
+    }
+    // Pure integer = page number.
+    if (/^\d+$/.test(trimmed)) {
+      pushPrivate('reply', await listTeamsPage(Number(trimmed)))
       return
     }
 
-    // /team <name> — exact match on normalizedName.
-    const slug = sub.toLowerCase()
-    try {
-      const snap = await getDocs(
-        query(collection(db, 'teams'), where('normalizedName', '==', slug), limit(1)),
-      )
-      if (snap.empty) {
-        pushPrivate('reply', `No team called "${sub}". Try /team to list them all.`)
+    // Subcommands: apply / join / mine. Everything else falls through
+    // to "look up this team by name".
+    const [head, ...rest] = trimmed.split(/\s+/)
+    const sub = head!.toLowerCase()
+    if (sub === 'mine') {
+      pushPrivate('reply', await showMyTeams(ctx.identity))
+      return
+    }
+    if (sub === 'apply' || sub === 'join') {
+      if (rest.length === 0) {
+        pushPrivate('reply', `Use /team ${sub} <name> [optional pitch], e.g. /team join Wizards Guild.`)
         return
       }
-      const t = snap.docs[0]!.data() as TeamLite
-      const lines = [`── ${t.name} ──`]
-      if (t.motto) lines.push(`"${t.motto}"`)
-      lines.push(`Captain: ${t.captainDisplayName}`)
-      lines.push(`Born ${ago(t.createdAt)} · last change ${ago(t.lastChangeAt)}`)
-      lines.push('')
-      lines.push(`Members (${t.memberCount} of 20):`)
-      // Captain first, then newest joiners after — t.members is
-      // already newest-first per the server schema; we just hoist
-      // the captain to the top of the list for readability.
-      const captainName = t.captainNormalizedName
-      const sortedMembers = [...t.members].sort((a, b) => {
-        if (a.normalizedName === captainName) return -1
-        if (b.normalizedName === captainName) return 1
-        return b.joinedAt - a.joinedAt
-      })
-      for (const m of sortedMembers) {
-        const star = m.normalizedName === captainName ? ' ★' : ''
-        lines.push(`  ${m.displayName}${star}  · joined ${ago(m.joinedAt)}`)
-      }
-      pushPrivate('reply', lines.join('\n'))
-    } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'Could not load that team.')
+      // Treat the LAST token as the team name unless we see a long tail,
+      // in which case interpret the head as name and the rest as a pitch.
+      // Simpler heuristic: take all tokens up to "by"/"because"/colon as
+      // name; remainder as pitch. For V1, just join the whole tail as
+      // the team name and ask for a separate /team apply <name> followup
+      // for pitch. Pitches stay optional, no second arg parsing.
+      const name = rest.join(' ')
+      pushPrivate('reply', await applyToTeamByName(name, undefined, ctx.identity))
+      return
     }
+
+    // Bare /team <name> — look up by case-insensitive name.
+    const team = await findTeamByName(trimmed)
+    if (!team) {
+      pushPrivate('reply', `No team called "${trimmed}". Try /team to list them all.`)
+      return
+    }
+    pushPrivate('reply', renderTeamDetail(team))
+  },
+})
+
+// ─── Basic: /myteam — shortcut for /team mine ─────────────────────
+
+registerCommand({
+  name: 'myteam',
+  tier: 'basic',
+  description: 'Show your own team membership(s).',
+  handle: async (_args, ctx) => {
+    pushPrivate('reply', await showMyTeams(ctx.identity))
   },
 })
 
