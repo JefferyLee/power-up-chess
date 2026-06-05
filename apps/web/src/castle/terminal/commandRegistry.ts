@@ -1122,6 +1122,14 @@ registerCommand({
   description: 'Play vs the Castle. /play 1200 to start at rating, /play e4 to move, /play board, /play new, /play resign.',
   unlockedFor: isAdvancedUnlocked,
   handle: async (args, ctx) => {
+    // Auto-wipe the private stream before any /play output. The board
+    // is 11 lines tall and various scroll-anchor heuristics still let
+    // it clip on phones. Clearing first guarantees the board renders
+    // at the TOP of a fresh viewport with nothing above it. The kid's
+    // previous /play output is gone, but the persisted game state
+    // (PGN, rating, status) is untouched in localStorage — so this
+    // only resets the visual log, not the game itself.
+    clearPrivate()
     // The duel board lives in the Wizard's Antechamber. Allow status
     // checks (/play board / /play resign) from anywhere so a kid who
     // wanders off mid-game can still take stock of it.
