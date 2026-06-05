@@ -541,17 +541,22 @@ registerCommand({
     }
     if (sub === 'apply' || sub === 'join') {
       if (rest.length === 0) {
-        pushPrivate('reply', `Use /team ${sub} <name> [optional pitch], e.g. /team join Wizards Guild.`)
+        pushPrivate('reply', `Use /team ${sub} <name> [: optional pitch], e.g. /team join Wizards Guild : I love knight forks.`)
         return
       }
-      // Treat the LAST token as the team name unless we see a long tail,
-      // in which case interpret the head as name and the rest as a pitch.
-      // Simpler heuristic: take all tokens up to "by"/"because"/colon as
-      // name; remainder as pitch. For V1, just join the whole tail as
-      // the team name and ask for a separate /team apply <name> followup
-      // for pitch. Pitches stay optional, no second arg parsing.
-      const name = rest.join(' ')
-      pushPrivate('reply', await applyToTeamByName(name, undefined, ctx.identity))
+      // Team names can have spaces, so we can't just take the last
+      // token as a pitch. Convention: a colon (or "--") separates the
+      // name from an optional pitch. Without a separator, the whole
+      // tail is the name and no pitch is sent.
+      const tail = rest.join(' ')
+      const sepMatch = /\s*(?::|--)\s*/.exec(tail)
+      const name = sepMatch ? tail.slice(0, sepMatch.index).trim() : tail
+      const pitch = sepMatch ? tail.slice(sepMatch.index + sepMatch[0].length).trim() : ''
+      if (!name) {
+        pushPrivate('reply', `Use /team ${sub} <name> [: optional pitch].`)
+        return
+      }
+      pushPrivate('reply', await applyToTeamByName(name, pitch || undefined, ctx.identity))
       return
     }
 

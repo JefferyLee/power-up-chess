@@ -58,15 +58,32 @@ export function TerminalOverlay({ onClose }: Props) {
     return () => unsub()
   }, [hostId])
 
-  // Stick to bottom on new content. The previous scrollTop = scrollHeight
-  // approach read the container height BEFORE the just-pushed ASCII
-  // board (a multi-line <pre>) had finished laying out, so the board
-  // clipped at the first line. scrollIntoView on a bottom-anchor
-  // element is layout-aware — the browser computes the right offset
-  // including the new block. rAF + setTimeout fallback covers iOS
-  // Safari's occasional miss when the keyboard is mid-animation.
+  // Auto-scroll strategy:
+  //  - If the LAST new entry is an ASCII block (the chess board is 11
+  //    lines tall and dwarfs a phone viewport), scroll that block to
+  //    the TOP of view so the whole board is visible. The trailing
+  //    "Make a move" reply line ends up below the fold; the kid
+  //    scrolls down to find it, which feels natural.
+  //  - Otherwise, anchor to the bottom so the latest reply is in view.
+  //
+  // rAF + setTimeout fallback covers iOS Safari's occasional miss
+  // when the keyboard is mid-animation.
+  const lastSeenCountRef = useRef(0)
   useEffect(() => {
+    const newEntries = privateEntries.slice(lastSeenCountRef.current)
+    lastSeenCountRef.current = privateEntries.length
+    // Walk back to find the most recent ascii entry in the new batch.
+    // /play's batch is (reply, ascii, reply) — the ascii is the second
+    // entry, not the last, so we have to look explicitly.
+    const newAscii = [...newEntries].reverse().find((e) => e.kind === 'ascii')
     const scroll = () => {
+      if (newAscii) {
+        const el = scrollRef.current?.querySelector(`[data-entry-id="${newAscii.id}"]`)
+        if (el) {
+          ;(el as HTMLElement).scrollIntoView({ block: 'start', behavior: 'auto' })
+          return
+        }
+      }
       bottomRef.current?.scrollIntoView({ block: 'end', behavior: 'auto' })
     }
     const frame = requestAnimationFrame(scroll)
@@ -75,7 +92,7 @@ export function TerminalOverlay({ onClose }: Props) {
       cancelAnimationFrame(frame)
       window.clearTimeout(timer)
     }
-  }, [privateEntries.length])
+  }, [privateEntries])
 
   // ESC closes; focus the input on mount.
   useEffect(() => {
@@ -226,7 +243,7 @@ function PrivateLine({ entry }: { entry: PrivateEntry }) {
     return <div className="puc-term__line puc-term__line--whisper">{entry.text}</div>
   }
   if (entry.kind === 'ascii') {
-    return <pre className="puc-term__ascii">{entry.text}</pre>
+    return <pre className="puc-term__ascii" data-entry-id={entry.id}>{entry.text}</pre>
   }
   return <div className="puc-term__line puc-term__line--reply">{entry.text}</div>
 }
