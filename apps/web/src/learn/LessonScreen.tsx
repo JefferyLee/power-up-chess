@@ -210,7 +210,20 @@ export function LessonScreen() {
         <aside className="puc-lesson__side">
           <div className="puc-lesson__host">
             <div className="puc-lesson__portrait">
-              <HostPortrait hostId={lesson.hostId} variant="lobby" />
+              <HostPortrait
+                hostId={lesson.hostId}
+                variant="lobby"
+                mood={
+                  // Outro celebrates; a solved try-move also cheers;
+                  // an unsolved try-move shows the host "thinking"
+                  // alongside the kid. Default happy for narration steps.
+                  isOutro || state.succeeded
+                    ? 'cheering'
+                    : step.kind === 'try-move'
+                      ? 'thinking'
+                      : 'happy'
+                }
+              />
             </div>
             <span className="puc-lesson__hostname">{hostName}</span>
           </div>

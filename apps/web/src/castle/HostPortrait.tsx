@@ -4,15 +4,24 @@
 // has its own colour palette + a couple of host-specific touches (Lucy
 // carries a tiny leaf; Luca's hair has a star). The component layout makes
 // the swap to a PNG/WEBP trivial later — just replace the SVG with <img>.
+//
+// Mood overlays: the base art is "happy" by default. For 'thinking' and
+// 'cheering' we overdraw the mouth/eyes/effects on top of the base, so
+// the heavy hair + face + accessory artwork is reused unchanged. This
+// keeps the three moods visually consistent — same character, different
+// expression — without needing six full PNGs.
 
 import type { HostId } from '../hosts/hosts'
+
+export type HostMood = 'happy' | 'thinking' | 'cheering'
 
 interface Props {
   hostId: HostId
   variant?: 'lobby' | 'chip'
+  mood?: HostMood
 }
 
-export function HostPortrait({ hostId, variant = 'lobby' }: Props) {
+export function HostPortrait({ hostId, variant = 'lobby', mood = 'happy' }: Props) {
   const isLucy = hostId === 'lucy'
   // Lobby portrait was 220 — too dominant in the Hall's host column.
   // 120 reads as ambient support; the hero doors row above the host
@@ -23,12 +32,113 @@ export function HostPortrait({ hostId, variant = 'lobby' }: Props) {
       width={size}
       height={size}
       viewBox="0 0 240 240"
-      className={`puc-portrait puc-portrait--${variant} puc-portrait--${hostId}`}
+      className={`puc-portrait puc-portrait--${variant} puc-portrait--${hostId} puc-portrait--${mood}`}
       role="img"
-      aria-label={isLucy ? 'Lucy, host' : 'Luca, host'}
+      aria-label={`${isLucy ? 'Lucy' : 'Luca'}, host${mood === 'happy' ? '' : ` (${mood})`}`}
     >
       {isLucy ? <LucyArt /> : <LucaArt />}
+      {mood !== 'happy' && (
+        isLucy
+          ? <LucyMoodOverlay mood={mood} />
+          : <LucaMoodOverlay mood={mood} />
+      )}
     </svg>
+  )
+}
+
+/** Mood overlay for Lucy. Overdraws the default mouth (in skin colour
+ *  to mask it) then redraws the mouth + eyes for thinking/cheering. */
+function LucyMoodOverlay({ mood }: { mood: 'thinking' | 'cheering' }) {
+  return (
+    <g>
+      {/* Mask the default smile + lower-lip blush with a face-tone wash. */}
+      <ellipse cx="120" cy="170" rx="20" ry="8" fill="#f4d5bb" />
+      {mood === 'thinking' ? (
+        <>
+          {/* Pursed mouth — a small upside-down comma to one side. */}
+          <path d="M 114 170 Q 118 168 120 171" stroke="#5a2818" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          {/* Eyes look up + to the side. Mask + redraw irises shifted up-left. */}
+          <ellipse cx="102" cy="132" rx="10" ry="13" fill="#fffbe8" />
+          <ellipse cx="138" cy="132" rx="10" ry="13" fill="#fffbe8" />
+          <ellipse cx="100" cy="130" rx="6.5" ry="8" fill="#7a3e1a" />
+          <ellipse cx="136" cy="130" rx="6.5" ry="8" fill="#7a3e1a" />
+          <circle cx="102" cy="127" r="2" fill="#fff" />
+          <circle cx="138" cy="127" r="2" fill="#fff" />
+          {/* One brow lifted asymmetrically — the "hm…" tell. */}
+          <path d="M 127 110 Q 138 105 149 112" stroke="#3a1c08" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          {/* Hand near chin tucked off-canvas — represent by tiny chin dot finger. */}
+          <circle cx="134" cy="185" r="3" fill="#f3c9a7" stroke="#a07050" strokeWidth="0.6" />
+        </>
+      ) : (
+        <>
+          {/* Open mouth — wide cheery O. */}
+          <ellipse cx="120" cy="172" rx="8" ry="8" fill="#5a2818" />
+          <ellipse cx="120" cy="174" rx="5" ry="4" fill="#c3525a" />
+          {/* Eyes scrunched happy — replace round eyes with curved arcs. */}
+          <ellipse cx="102" cy="134" rx="11" ry="13" fill="#f4d5bb" />
+          <ellipse cx="138" cy="134" rx="11" ry="13" fill="#f4d5bb" />
+          <path d="M 94 134 Q 102 124 110 134" stroke="#3a1c08" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M 130 134 Q 138 124 146 134" stroke="#3a1c08" strokeWidth="3" fill="none" strokeLinecap="round" />
+          {/* Sparkle bursts top-left + top-right of the face. */}
+          <g fill="#fff7d8">
+            <polygon points="50,40 52,46 58,48 52,50 50,56 48,50 42,48 48,46" />
+            <polygon points="194,46 196,52 202,54 196,56 194,62 192,56 186,54 192,52" />
+            <circle cx="40" cy="100" r="2" />
+            <circle cx="200" cy="106" r="2" />
+          </g>
+        </>
+      )}
+    </g>
+  )
+}
+
+/** Mood overlay for Luca. Same pattern. */
+function LucaMoodOverlay({ mood }: { mood: 'thinking' | 'cheering' }) {
+  return (
+    <g>
+      <ellipse cx="120" cy="173" rx="20" ry="8" fill="#e8c0a0" />
+      {mood === 'thinking' ? (
+        <>
+          {/* Quiet considering line — slightly asymmetrical. */}
+          <path d="M 110 172 Q 120 170 132 174" stroke="#3a1838" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+          {/* Eyes look up-right — chess-position-evaluation tell. */}
+          <ellipse cx="103" cy="138" rx="9.5" ry="10" fill="#fffbe8" />
+          <ellipse cx="137" cy="138" rx="9.5" ry="10" fill="#fffbe8" />
+          <ellipse cx="106" cy="135" rx="6.5" ry="8" fill="#5e3aa0" />
+          <ellipse cx="140" cy="135" rx="6.5" ry="8" fill="#5e3aa0" />
+          <circle cx="107" cy="133" r="2.4" fill="#1a0830" />
+          <circle cx="141" cy="133" r="2.4" fill="#1a0830" />
+          {/* One brow furrowed. */}
+          <path d="M 90 119 Q 102 122 114 119" stroke="#0c0820" strokeWidth="3" fill="none" strokeLinecap="round" />
+          {/* Thought sparkle near temple — Luca's "I see it" gesture. */}
+          <g fill="#c8b6ff">
+            <circle cx="50" cy="110" r="2" />
+            <circle cx="46" cy="120" r="1.4" />
+            <circle cx="54" cy="124" r="1.2" />
+          </g>
+        </>
+      ) : (
+        <>
+          {/* Bigger smile — straighter teeth, still composed. */}
+          <path d="M 102 169 Q 120 184 138 165" stroke="#3a1838" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+          <path d="M 108 172 Q 120 178 132 170" fill="rgba(180,80,80,0.4)" />
+          {/* Eyes brighter, slightly wider — Luca's quiet "I knew you could". */}
+          <ellipse cx="103" cy="138" rx="10" ry="11" fill="#fffbe8" />
+          <ellipse cx="137" cy="138" rx="10" ry="11" fill="#fffbe8" />
+          <ellipse cx="103" cy="140" rx="7" ry="9" fill="#5e3aa0" />
+          <ellipse cx="137" cy="140" rx="7" ry="9" fill="#5e3aa0" />
+          <circle cx="106" cy="135" r="3" fill="#fff" />
+          <circle cx="140" cy="135" r="3" fill="#fff" />
+          <circle cx="103" cy="142" r="2.4" fill="#1a0830" />
+          <circle cx="137" cy="142" r="2.4" fill="#1a0830" />
+          {/* Star burst near each shoulder — Luca's signature cheer. */}
+          <g fill="#fff7d8" stroke="#a87a18" strokeWidth="0.6">
+            <polygon points="46,52 49,60 56,62 49,64 46,72 43,64 36,62 43,60" />
+            <polygon points="194,58 197,66 204,68 197,70 194,78 191,70 184,68 191,66" />
+          </g>
+        </>
+      )}
+    </g>
   )
 }
 
