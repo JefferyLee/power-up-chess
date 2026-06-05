@@ -18,6 +18,7 @@ export type RoomId =
   | 'garden'
   | 'tower-foot'
   | 'study'
+  | 'cellar'
 
 export type Direction = 'n' | 's' | 'e' | 'w' | 'up' | 'down'
 
@@ -86,6 +87,14 @@ export const ROOMS: Record<RoomId, Room> = {
     occupant: 'Luca is at his charts, marking something with a slow finger.',
     firstVisit: 'Luca slides a chair toward you with his foot, never lifting his eyes from the page.',
   },
+  cellar: {
+    id: 'cellar',
+    name: 'the Cellar',
+    description:
+      'Cool air. The smell of old wood. Wine racks line the walls — most empty, a few wrapped in cloth. The lantern throws long, lazy shadows.',
+    exits: { up: 'tower-foot' },
+    firstVisit: 'You hold your breath, listening. Something soft, somewhere — water? a draft? You can\'t quite tell.',
+  },
 }
 
 // ─── Location (per-browser) ──────────────────────────────────────────
@@ -151,9 +160,21 @@ const DIRECTION_LABEL: Record<Direction, string> = {
   down: 'down',
 }
 
+/** Live exits — same as room.exits, but with state-gated additions
+ *  layered on top. Currently only Tower Foot gains a `s` exit to the
+ *  Cellar once the lantern has unlocked the south door. Caller passes
+ *  the cellar-open flag so this stays a pure function. */
+export function liveExits(room: Room, cellarOpen: boolean): Partial<Record<Direction, RoomId>> {
+  const exits = { ...room.exits }
+  if (room.id === 'tower-foot' && cellarOpen) {
+    exits.s = 'cellar'
+  }
+  return exits
+}
+
 /** Human-readable list of exits for the current room, e.g. "north, east, up". */
-export function describeExits(room: Room): string {
-  const dirs = (Object.keys(room.exits) as Direction[])
+export function describeExits(room: Room, cellarOpen = false): string {
+  const dirs = (Object.keys(liveExits(room, cellarOpen)) as Direction[])
     .map((d) => DIRECTION_LABEL[d])
   if (dirs.length === 0) return 'No obvious exits.'
   return dirs.join(', ')

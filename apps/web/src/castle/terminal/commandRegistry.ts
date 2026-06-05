@@ -24,12 +24,25 @@ import { bestReplyUci } from './playEngine'
 import {
   ROOMS,
   describeExits,
+  liveExits,
   markVisited,
   parseDirection,
   saveCurrentRoom,
   type Direction,
   type RoomId,
 } from './world'
+import {
+  ITEMS,
+  dropItem,
+  findItemByName,
+  isCarried,
+  isCellarOpen,
+  itemsInRoom,
+  loadInventory,
+  markCellarOpen,
+  takeItem,
+  type Item,
+} from './items'
 
 export type CommandTier = 'basic' | 'advanced' | 'hidden'
 
@@ -224,7 +237,12 @@ registerCommand({
         lines.push(`On the lectern lies a tale: "${ctx.world.currentStoryTitle}".`)
       }
     }
-    lines.push(`Exits: ${describeExits(room)}`)
+    // Items lying here.
+    const here = itemsInRoom(room.id)
+    if (here.length > 0) {
+      lines.push(`You can see: ${here.map((it) => it.longName).join(', ')}.`)
+    }
+    lines.push(`Exits: ${describeExits(room, isCellarOpen())}`)
     pushPrivate('reply', lines.join('\n'))
   },
 })
@@ -233,7 +251,9 @@ registerCommand({
 
 function move(direction: Direction, ctx: CommandContext): void {
   const room = ROOMS[ctx.world.currentRoom]
-  const nextId = room.exits[direction]
+  const cellarOpen = isCellarOpen()
+  const exits = liveExits(room, cellarOpen)
+  const nextId = exits[direction]
   if (!nextId) {
     pushPrivate('reply', `No exit ${directionWord(direction)} from here.`)
     return
@@ -249,7 +269,11 @@ function move(direction: Direction, ctx: CommandContext): void {
   // Auto-look on arrival so the kid doesn't have to type /look every step.
   const lines = [`── ${next.name} ──`, next.description]
   if (next.occupant) lines.push(next.occupant)
-  lines.push(`Exits: ${describeExits(next)}`)
+  const here = itemsInRoom(next.id)
+  if (here.length > 0) {
+    lines.push(`You can see: ${here.map((it) => it.longName).join(', ')}.`)
+  }
+  lines.push(`Exits: ${describeExits(next, cellarOpen)}`)
   pushPrivate('reply', lines.join('\n'))
 }
 
@@ -960,7 +984,7 @@ registerCommand({
 registerCommand({
   name: 'inv',
   tier: 'basic',
-  description: 'Check what you carry.',
+  description: 'Check what you carry — identity, points, gear, and pocket items.',
   handle: (_args, ctx) => {
     const id = ctx.identity
     if (!id) {
@@ -976,7 +1000,137 @@ registerCommand({
     if (id.cosmetics?.avatar) {
       lines.push(`Avatar:  a small heraldic badge of your own design`)
     }
+    const carried = [...loadInventory()].map((iid) => ITEMS[iid].name)
+    lines.push(`Pocket:  ${carried.length > 0 ? carried.join(', ') : '(empty)'}`)
     pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /take /drop /examine /use ─────────────────────────────
+
+registerCommand({
+  name: 'take',
+  tier: 'basic',
+  description: 'Pick up something from the room, e.g. /take lantern.',
+  handle: (args, ctx) => {
+    const name = args.trim()
+    if (!name) { pushPrivate('reply', 'Use /take <thing>, e.g. /take lantern.'); return }
+    const item = findItemByName(name)
+    if (!item) {
+      pushPrivate('reply', `There's no "${name}" here. /look to see what's around.`)
+      return
+    }
+    const here = itemsInRoom(ctx.world.currentRoom).some((it) => it.id === item.id)
+    if (!here) {
+      pushPrivate('reply', `${item.longName} isn't here.`)
+      return
+    }
+    if (!item.takeable) {
+      pushPrivate('reply', `${item.longName} isn't yours to take.`)
+      return
+    }
+    if (takeItem(item.id)) {
+      pushPrivate('reply', `You pocket ${item.longName}.`)
+    } else {
+      pushPrivate('reply', `You already have ${item.longName}.`)
+    }
+  },
+})
+
+registerCommand({
+  name: 'drop',
+  tier: 'basic',
+  description: 'Leave a pocketed item in the current room, e.g. /drop lantern.',
+  handle: (args) => {
+    const name = args.trim()
+    if (!name) { pushPrivate('reply', 'Use /drop <thing>.'); return }
+    const item = findItemByName(name)
+    if (!item || !isCarried(item.id)) {
+      pushPrivate('reply', `You aren't carrying any "${name}".`)
+      return
+    }
+    dropItem(item.id)
+    pushPrivate('reply', `You set ${item.longName} down.`)
+  },
+})
+
+registerCommand({
+  name: 'examine',
+  tier: 'basic',
+  description: 'Look closely at something, e.g. /examine compass.',
+  handle: (args, ctx) => {
+    const name = args.trim()
+    if (!name) { pushPrivate('reply', 'Use /examine <thing>.'); return }
+    const item = findItemByName(name)
+    if (!item) {
+      pushPrivate('reply', `You don't see any "${name}".`)
+      return
+    }
+    const here = itemsInRoom(ctx.world.currentRoom).some((it) => it.id === item.id)
+    if (!here && !isCarried(item.id)) {
+      pushPrivate('reply', `${item.longName} isn't here.`)
+      return
+    }
+    pushPrivate('reply', item.description)
+  },
+})
+
+/** Use-effects. Lives outside the items registry because a use can
+ *  mutate game state (unlocking the Cellar door). */
+function useItem(item: Item, target: string, ctx: CommandContext): string {
+  const room = ctx.world.currentRoom
+  switch (item.id) {
+    case 'lantern':
+      if (room === 'tower-foot' && (target === '' || /door|south/.test(target))) {
+        if (isCellarOpen()) {
+          return 'You hold the lantern up. The south door is already open — the stair drops away into the dark.'
+        }
+        markCellarOpen()
+        return 'You hold the lantern up to the south door. The lock clicks. The door swings inward — a stone stair drops away. (You can /s now.)'
+      }
+      return 'You strike a small flame. The lantern glows softly. Nothing here needs lighting.'
+    case 'bookmark':
+      if (room === 'nook') {
+        return 'You hand the bookmark back to Lucy. "Oh — I was looking for that everywhere," she says, tucking it into her book.'
+      }
+      return 'A pressed-flower bookmark. Probably belongs somewhere reading happens.'
+    case 'feather':
+      if (room === 'study' && (target === '' || /chart|map|desk/.test(target))) {
+        return 'You set the feather on Luca\'s charts. He picks it up, turns it over, and laughs softly. "From the night-bird. They only drop these on lucky nights."'
+      }
+      return 'You twirl the feather. It tickles your nose. You sneeze.'
+    case 'compass':
+      return 'You spin the dial. The needle drifts the long way around. It does not point to anything in particular.'
+  }
+}
+
+registerCommand({
+  name: 'use',
+  tier: 'basic',
+  description: 'Use an item. /use lantern, /use lantern on door, /use bookmark.',
+  handle: (args, ctx) => {
+    const trimmed = args.trim()
+    if (!trimmed) {
+      pushPrivate('reply', 'Use /use <thing> [on <target>].')
+      return
+    }
+    // Split on "on" — natural English. /use lantern on door
+    const m = /^(.+?)(?:\s+on\s+(.+))?$/i.exec(trimmed)
+    const name = m?.[1]?.trim() ?? ''
+    const target = m?.[2]?.trim() ?? ''
+    const item = findItemByName(name)
+    if (!item) {
+      pushPrivate('reply', `You don't see a "${name}".`)
+      return
+    }
+    // Have to be carrying it OR have it in the room (so the kid can
+    // /use the compass without taking it).
+    const here = itemsInRoom(ctx.world.currentRoom).some((it) => it.id === item.id)
+    if (!here && !isCarried(item.id)) {
+      pushPrivate('reply', `You don't have ${item.longName}.`)
+      return
+    }
+    pushPrivate('reply', useItem(item, target.toLowerCase(), ctx))
   },
 })
 
