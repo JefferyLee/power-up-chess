@@ -116,6 +116,22 @@ Lucy|Luca` queries against `gemini-3.5-flash`. Built on top of MVP2
 infrastructure (castle points, invites, presence, public chat) without
 changing any existing surface. Full spec: `docs/TERMINAL_TEXT_WORLD.md`.
 
+## Post-MVP3: Brand-v1 + Workflows methodology
+
+After MVP3 wrapped, two non-feature things shipped under the
+`brand-v1` tag:
+
+- **Visual identity refresh** — candidate-4 logo (heraldic gold rook
+  with inset shield + lightning) becomes the canonical mark: new
+  `favicon.svg` for both the app and landing site, plus
+  apple-touch-icon / icon-192 / icon-512 PNGs sliced from a single
+  source via `tools/brand/slice-icons.sh`.
+- **Workflow methodology** — `docs/WORKFLOWS.md` names the project's
+  common fan-out / adversarial-verification / generate-and-filter /
+  loop-until-done patterns (puc-audit-and-tag, puc-mvp-acceptance,
+  puc-screenshot-tour, puc-content-pass, puc-ship-feature). Adopted
+  after reviewing Anthropic's June 2026 Dynamic Workflows article.
+
 Possible later scope (MVP3+):
 - Animated Lucy and Luca avatars + voices.
 - AI opponent with adaptive strength.
