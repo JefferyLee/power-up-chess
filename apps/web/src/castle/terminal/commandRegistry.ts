@@ -142,6 +142,12 @@ const EASTER_EGGS: Record<string, (ctx: CommandContext) => string> = {
     'Chess is the slowest brawl in history. Pieces remember which squares you trust.',
   '42': () =>
     'The Castle nods. "The answer," it says, "but to which question?"',
+  // "67" / "six seven" — the basketball/song meme that took over
+  // playgrounds in 2025. The Castle is tired of it.
+  '67': () =>
+    'You yell "six… seven!" The Castle blinks. "You are old, friend. That was a 2025 thing."',
+  'six seven': () =>
+    'You yell "six… seven!" The Castle blinks. "You are old, friend. That was a 2025 thing."',
 }
 
 /** Parse + dispatch. Returns true when the input was handled by the
