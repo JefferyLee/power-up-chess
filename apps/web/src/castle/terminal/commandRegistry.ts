@@ -1116,20 +1116,23 @@ registerCommand({
 
 // ─── Advanced: /play vs the Castle ────────────────────────────────
 
+/** Single helper for ALL board paints. Clears the private stream
+ *  first so the board always lands at the top of a fresh viewport
+ *  with at most one short intro line above it. This sidesteps the
+ *  scroll-anchor problems on phones — there's simply nothing to
+ *  scroll past. */
+function showBoard(intro: string, game: Chess): void {
+  clearPrivate()
+  if (intro) pushPrivate('reply', intro)
+  pushPrivate('ascii', renderAsciiBoard(game))
+}
+
 registerCommand({
   name: 'play',
   tier: 'advanced',
   description: 'Play vs the Castle. /play 1200 to start at rating, /play e4 to move, /play board, /play new, /play resign.',
   unlockedFor: isAdvancedUnlocked,
   handle: async (args, ctx) => {
-    // Auto-wipe the private stream before any /play output. The board
-    // is 11 lines tall and various scroll-anchor heuristics still let
-    // it clip on phones. Clearing first guarantees the board renders
-    // at the TOP of a fresh viewport with nothing above it. The kid's
-    // previous /play output is gone, but the persisted game state
-    // (PGN, rating, status) is untouched in localStorage — so this
-    // only resets the visual log, not the game itself.
-    clearPrivate()
     // The duel board lives in the Wizard's Antechamber. Allow status
     // checks (/play board / /play resign) from anywhere so a kid who
     // wanders off mid-game can still take stock of it.
@@ -1153,15 +1156,7 @@ registerCommand({
       const clamped = Math.max(300, Math.min(2800, requestedRating))
       const game = new Chess()
       savePlayState(game, 'w', 'active', clamped)
-      pushPrivate(
-        'reply',
-        `A new board is set. You play White. The Castle plays at rating ~${clamped}.`,
-      )
-      pushPrivate('ascii', renderAsciiBoard(game))
-      pushPrivate(
-        'reply',
-        'Make a move with /play e4 or /play Nf3. Try /play 800 or /play 1800 for a different opponent. /play resign to give up.',
-      )
+      showBoard(`New board at ~${clamped}. You play White. Move with /play e4.`, game)
       return
     }
 
@@ -1171,10 +1166,10 @@ registerCommand({
     }
 
     if (sub === 'board' || sub === '') {
-      pushPrivate('ascii', renderAsciiBoard(state.game))
-      if (state.status !== 'active') {
-        pushPrivate('reply', `(Game over — ${describeStatus(state.status)}. /play new for another.)`)
-      }
+      const intro = state.status !== 'active'
+        ? `Game over — ${describeStatus(state.status)}. /play new for another.`
+        : ''
+      showBoard(intro, state.game)
       return
     }
 
@@ -1203,22 +1198,22 @@ registerCommand({
       pushPrivate('reply', `"${sub}" is not a legal move here. Try e4, Nf3, or a UCI like e2e4.`)
       return
     }
-    pushPrivate('reply', `You play ${kidMove.san}.`)
 
+    // Game-end on kid's move alone — no engine reply needed.
     if (state.game.isCheckmate()) {
       savePlayState(state.game, state.kidSide, 'kid-won', state.rating)
-      pushPrivate('ascii', renderAsciiBoard(state.game))
-      pushPrivate('reply', 'Checkmate. You win. The hearth crackles approvingly.')
+      showBoard(`Checkmate! You played ${kidMove.san}. You win.`, state.game)
       return
     }
     if (state.game.isDraw() || state.game.isStalemate()) {
       savePlayState(state.game, state.kidSide, 'drawn', state.rating)
-      pushPrivate('ascii', renderAsciiBoard(state.game))
-      pushPrivate('reply', 'The game is drawn.')
+      showBoard(`Drawn after ${kidMove.san}.`, state.game)
       return
     }
 
-    pushPrivate('reply', 'The Castle ponders…')
+    // Show a brief intermediate line while the engine thinks. Gets
+    // wiped along with everything else by the next showBoard call.
+    pushPrivate('reply', `You played ${kidMove.san}. The Castle is thinking…`)
     let uci: string
     try {
       uci = await bestReplyUci(state.game.fen(), state.rating)
@@ -1234,7 +1229,7 @@ registerCommand({
     }
     if (!uci || uci === '(none)') {
       savePlayState(state.game, state.kidSide, 'kid-won', state.rating)
-      pushPrivate('reply', 'The Castle has no reply. You win!')
+      showBoard(`You: ${kidMove.san} · The Castle has no reply. You win!`, state.game)
       return
     }
     const engineMove = state.game.move({
@@ -1242,23 +1237,21 @@ registerCommand({
       to: uci.slice(2, 4),
       promotion: uci.length === 5 ? uci[4]!.toLowerCase() : undefined,
     })
-    pushPrivate('reply', `The Castle plays ${engineMove?.san ?? uci}.`)
+    const exchange = `You: ${kidMove.san}  ·  Castle: ${engineMove?.san ?? uci}`
 
     if (state.game.isCheckmate()) {
       savePlayState(state.game, state.kidSide, 'kid-lost', state.rating)
-      pushPrivate('ascii', renderAsciiBoard(state.game))
-      pushPrivate('reply', 'Checkmate. The Castle wins this round. /play new to try again.')
+      showBoard(`${exchange}  ·  Checkmate! /play new to try again.`, state.game)
       return
     }
     if (state.game.isDraw() || state.game.isStalemate()) {
       savePlayState(state.game, state.kidSide, 'drawn', state.rating)
-      pushPrivate('ascii', renderAsciiBoard(state.game))
-      pushPrivate('reply', 'The game is drawn.')
+      showBoard(`${exchange}  ·  Drawn.`, state.game)
       return
     }
 
     savePlayState(state.game, state.kidSide, 'active', state.rating)
-    pushPrivate('ascii', renderAsciiBoard(state.game))
+    showBoard(exchange, state.game)
   },
 })
 
