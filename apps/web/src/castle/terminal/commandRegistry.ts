@@ -355,6 +355,118 @@ registerCommand({
   },
 })
 
+// ─── Basic: /team — list teams or show a single team ─────────────
+
+interface TeamMemberLite {
+  normalizedName: string
+  displayName: string
+  joinedAt: number
+}
+
+interface TeamLite {
+  teamId: string
+  name: string
+  normalizedName: string
+  motto?: string
+  captainDisplayName: string
+  captainNormalizedName: string
+  memberCount: number
+  members: TeamMemberLite[]
+  createdAt: number
+  lastChangeAt: number
+}
+
+/** Friendly relative-time, kid-shaped. Never goes past "1 month ago".
+ *  Good enough for a roster display; pings the eye but doesn't lie. */
+function ago(ms: number): string {
+  const delta = Date.now() - ms
+  if (delta < 60_000) return 'just now'
+  if (delta < 3_600_000) return `${Math.floor(delta / 60_000)} min ago`
+  if (delta < 86_400_000) return `${Math.floor(delta / 3_600_000)}h ago`
+  const days = Math.floor(delta / 86_400_000)
+  if (days < 14) return `${days} day${days === 1 ? '' : 's'} ago`
+  if (days < 60) return `${Math.floor(days / 7)} week${Math.floor(days / 7) === 1 ? '' : 's'} ago`
+  return '1+ month ago'
+}
+
+registerCommand({
+  name: 'team',
+  tier: 'basic',
+  description: 'List teams in the castle. /team <name> for that team\'s roster.',
+  handle: async (args) => {
+    // Lazy-import Firestore primitives so the rest of the bundle isn't
+    // pulled in for guests who never open the terminal.
+    const { db } = await import('../../firebase/app')
+    const { collection, getDocs, orderBy, query, limit, where } = await import('firebase/firestore')
+
+    const sub = args.trim()
+    if (!sub) {
+      // List all teams, biggest first. Cap at 30 — past that the
+      // castle is bigger than I expect, and we can paginate later.
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'teams'), orderBy('memberCount', 'desc'), limit(30)),
+        )
+        if (snap.empty) {
+          pushPrivate('reply', 'No teams yet. The castle is wide open — start one from the Hall.')
+          return
+        }
+        const lines = [`── TEAMS · ${snap.size} ──`]
+        const nameWidth = Math.min(
+          24,
+          Math.max(...snap.docs.map((d) => (d.data() as TeamLite).name.length), 4),
+        )
+        for (const d of snap.docs) {
+          const t = d.data() as TeamLite
+          const name = t.name.length > nameWidth ? t.name.slice(0, nameWidth - 1) + '…' : t.name
+          lines.push(`  ${name.padEnd(nameWidth)}  ${String(t.memberCount).padStart(3)} / 20 · captain ${t.captainDisplayName}`)
+        }
+        lines.push('')
+        lines.push('Use /team <name> for the full roster.')
+        pushPrivate('reply', lines.join('\n'))
+      } catch (err) {
+        pushPrivate('reply', err instanceof Error ? err.message : 'Could not list teams.')
+      }
+      return
+    }
+
+    // /team <name> — exact match on normalizedName.
+    const slug = sub.toLowerCase()
+    try {
+      const snap = await getDocs(
+        query(collection(db, 'teams'), where('normalizedName', '==', slug), limit(1)),
+      )
+      if (snap.empty) {
+        pushPrivate('reply', `No team called "${sub}". Try /team to list them all.`)
+        return
+      }
+      const t = snap.docs[0]!.data() as TeamLite
+      const lines = [`── ${t.name} ──`]
+      if (t.motto) lines.push(`"${t.motto}"`)
+      lines.push(`Captain: ${t.captainDisplayName}`)
+      lines.push(`Born ${ago(t.createdAt)} · last change ${ago(t.lastChangeAt)}`)
+      lines.push('')
+      lines.push(`Members (${t.memberCount} of 20):`)
+      // Captain first, then newest joiners after — t.members is
+      // already newest-first per the server schema; we just hoist
+      // the captain to the top of the list for readability.
+      const captainName = t.captainNormalizedName
+      const sortedMembers = [...t.members].sort((a, b) => {
+        if (a.normalizedName === captainName) return -1
+        if (b.normalizedName === captainName) return 1
+        return b.joinedAt - a.joinedAt
+      })
+      for (const m of sortedMembers) {
+        const star = m.normalizedName === captainName ? ' ★' : ''
+        lines.push(`  ${m.displayName}${star}  · joined ${ago(m.joinedAt)}`)
+      }
+      pushPrivate('reply', lines.join('\n'))
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'Could not load that team.')
+    }
+  },
+})
+
 // ─── Basic: /users — paginated list of everyone present ───────────
 
 function describeLocation(loc: LocationTag | undefined): string {
