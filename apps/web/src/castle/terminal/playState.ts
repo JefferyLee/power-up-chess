@@ -20,6 +20,11 @@ interface StoredState {
   status: PlayStatus
   /** Engine rating chosen for this game, e.g. 1500. */
   rating: number
+  /** Coach reference eval (white-POV centipawns) at the start of the
+   *  kid's next turn — set after the engine plays and persisted so
+   *  we can label the kid's NEXT move's cp loss against it. Null
+   *  means "no reference yet, use 0" (start of game). */
+  prevEvalCp?: number | null
 }
 
 export interface LoadedPlayState {
@@ -27,6 +32,7 @@ export interface LoadedPlayState {
   kidSide: 'w' | 'b'
   status: PlayStatus
   rating: number
+  prevEvalCp: number | null
 }
 
 export function loadPlayState(): LoadedPlayState | null {
@@ -43,6 +49,7 @@ export function loadPlayState(): LoadedPlayState | null {
       kidSide: stored.kidSide === 'b' ? 'b' : 'w',
       status: (stored.status as PlayStatus | undefined) ?? 'active',
       rating: typeof stored.rating === 'number' && stored.rating > 0 ? stored.rating : DEFAULT_RATING,
+      prevEvalCp: typeof stored.prevEvalCp === 'number' ? stored.prevEvalCp : null,
     }
   } catch {
     return null
@@ -54,9 +61,10 @@ export function savePlayState(
   kidSide: 'w' | 'b',
   status: PlayStatus,
   rating: number,
+  prevEvalCp: number | null = null,
 ): void {
   if (typeof window === 'undefined') return
-  const stored: StoredState = { pgn: game.pgn(), kidSide, status, rating }
+  const stored: StoredState = { pgn: game.pgn(), kidSide, status, rating, prevEvalCp }
   window.localStorage.setItem(KEY, JSON.stringify(stored))
 }
 

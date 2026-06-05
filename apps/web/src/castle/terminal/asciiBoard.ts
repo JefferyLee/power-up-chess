@@ -1,37 +1,70 @@
 // Render a chess.js position as a monospace ASCII board for the
-// terminal. The terminal already wraps lines in a monospaced <pre>,
-// so we just need to emit 8 rows of 8 squares with rank/file labels.
+// terminal.
 //
-// Layout:
-//      a b c d e f g h
-//   8  r n b q k b n r
-//   7  p p p p p p p p
-//   …
-//   1  R N B Q K B N R
+// Design notes:
 //
-// Capital letters are White, lowercase Black, '·' is an empty square.
-// (Standard "FEN-style" letters — readable to a kid who's seen PGN.)
+//   • Unicode chess glyphs, REVERSED from the print convention:
+//     white pieces are filled (♚♛♜♝♞♟), black pieces are outlined
+//     (♔♕♖♗♘♙). The standard convention assumes a light page, where
+//     filled = dark = black. Our terminal is dark — flip it so "the
+//     visually heavy side is the player I am."
+//
+//   • Each cell is 3 columns wide so the brackets used for last-move
+//     highlighting (`[♛]`) don't break alignment.
+//
+//   • Last move is marked by bracketing both the from-square (now
+//     empty) and the to-square (now has the piece).
+//
+//   • A "+ Check" line is appended when the side-to-move is in check.
 
-import type { Chess } from 'chess.js'
+import type { Chess, Square } from 'chess.js'
 
 const RANK_TOP = 8
 
-export function renderAsciiBoard(game: Chess): string {
-  const board = game.board() // 8x8 from rank 8 down to rank 1
+const FILLED: Record<string, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+const OUTLINED: Record<string, string> = { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' }
+
+const EMPTY = '·'
+
+export interface BoardRenderOpts {
+  /** Square the most recent move started on — bracketed in the render. */
+  lastFrom?: Square | null
+  /** Square the most recent move landed on — bracketed in the render. */
+  lastTo?: Square | null
+}
+
+export function renderAsciiBoard(game: Chess, opts: BoardRenderOpts = {}): string {
+  const board = game.board()
+  const from = opts.lastFrom ?? null
+  const to = opts.lastTo ?? null
+
   const lines: string[] = []
-  lines.push('     a b c d e f g h')
+  lines.push('     a  b  c  d  e  f  g  h')
+
   for (let r = 0; r < 8; r++) {
     const rank = RANK_TOP - r
     const row = board[r]!
-    const cells = row.map((sq) => {
-      if (!sq) return '·'
-      const letter = sq.type
-      return sq.color === 'w' ? letter.toUpperCase() : letter
-    })
-    lines.push(`  ${rank}  ${cells.join(' ')}`)
+    const cells: string[] = []
+    for (let f = 0; f < 8; f++) {
+      const sq = row[f]
+      const squareName = `${'abcdefgh'[f]}${rank}` as Square
+      const highlighted = squareName === from || squareName === to
+      const glyph = sq
+        ? (sq.color === 'w' ? FILLED[sq.type]! : OUTLINED[sq.type]!)
+        : EMPTY
+      // 3-col cells: bracketed when highlighted, padded otherwise.
+      cells.push(highlighted ? `[${glyph}]` : ` ${glyph} `)
+    }
+    lines.push(`  ${rank} ${cells.join('')} ${rank}`)
   }
+  lines.push('     a  b  c  d  e  f  g  h')
   lines.push('')
+
   const turn = game.turn() === 'w' ? 'White' : 'Black'
-  lines.push(`  ${turn} to move.`)
+  if (game.inCheck()) {
+    lines.push(`  + ${turn} is in check.`)
+  } else {
+    lines.push(`  ${turn} to move.`)
+  }
   return lines.join('\n')
 }

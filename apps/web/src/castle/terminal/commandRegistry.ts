@@ -20,7 +20,7 @@ import { pushPrivate, clearPrivate } from './privateStream'
 import { setClearedAtNow } from '../clearedAt'
 import { renderAsciiBoard } from './asciiBoard'
 import { loadPlayState, savePlayState, clearPlayState, DEFAULT_RATING } from './playState'
-import { bestReplyUci } from './playEngine'
+import { bestReplyUci, coachEval } from './playEngine'
 import {
   ROOMS,
   describeExits,
@@ -1397,11 +1397,35 @@ registerCommand({
  *  first so the board always lands at the top of a fresh viewport
  *  with at most one short intro line above it. This sidesteps the
  *  scroll-anchor problems on phones — there's simply nothing to
- *  scroll past. */
+ *  scroll past.
+ *
+ *  Pass the chess.js `game` (post-last-move) and we'll auto-mark the
+ *  most recent move's from/to squares in the rendered board. */
 function showBoard(intro: string, game: Chess): void {
   clearPrivate()
   if (intro) pushPrivate('reply', intro)
-  pushPrivate('ascii', renderAsciiBoard(game))
+  const last = game.history({ verbose: true }).at(-1)
+  pushPrivate('ascii', renderAsciiBoard(game, {
+    lastFrom: last?.from ?? null,
+    lastTo: last?.to ?? null,
+  }))
+}
+
+/** Coach label for a kid move, given the cp difference between the
+ *  best continuation and what the kid actually played (both in the
+ *  kid's POV). Returns null for "fine" moves — we only flag misses
+ *  worth a friendly nudge. */
+function coachLabel(cpLoss: number): string | null {
+  if (cpLoss >= 400) return '?? Blunder'
+  if (cpLoss >= 200) return '? Mistake'
+  return null
+}
+
+/** Convert a white-POV eval into the kid's POV. mate magnitudes are
+ *  already baked in by the stockfish wrapper as ±MATE_CP, so the
+ *  flip works correctly on those too. */
+function kidPOV(cpFromWhite: number, kidSide: 'w' | 'b'): number {
+  return kidSide === 'w' ? cpFromWhite : -cpFromWhite
 }
 
 registerCommand({
@@ -1491,6 +1515,22 @@ registerCommand({
     // Show a brief intermediate line while the engine thinks. Gets
     // wiped along with everything else by the next showBoard call.
     pushPrivate('reply', `You played ${kidMove.san}. The Castle is thinking…`)
+
+    // Coach pass: evaluate the position the kid landed in vs the
+    // reference eval we stored at the start of their turn (i.e. the
+    // engine's post-move eval from last round, or 0 at the very
+    // start). Loss is in the kid's POV.
+    let coachTag: string | null = null
+    let evalAfterKid: number | null = null
+    try {
+      evalAfterKid = await coachEval(state.game.fen())
+      const refEval = state.prevEvalCp ?? 0
+      const cpLoss = Math.max(0, kidPOV(refEval, state.kidSide) - kidPOV(evalAfterKid, state.kidSide))
+      coachTag = coachLabel(cpLoss)
+    } catch {
+      // Coach is best-effort — silent failure beats blocking the game.
+    }
+
     let uci: string
     try {
       uci = await bestReplyUci(state.game.fen(), state.rating)
@@ -1498,7 +1538,7 @@ registerCommand({
       // Roll back the kid's move so they can try again rather than
       // losing tempo to an engine hiccup.
       state.game.undo()
-      savePlayState(state.game, state.kidSide, 'active', state.rating)
+      savePlayState(state.game, state.kidSide, 'active', state.rating, state.prevEvalCp)
       pushPrivate('reply', err instanceof Error
         ? `The Castle stumbled: ${err.message}. Your move was undone — try again.`
         : 'The Castle stumbled. Your move was undone — try again.')
@@ -1514,7 +1554,8 @@ registerCommand({
       to: uci.slice(2, 4),
       promotion: uci.length === 5 ? uci[4]!.toLowerCase() : undefined,
     })
-    const exchange = `You: ${kidMove.san}  ·  Castle: ${engineMove?.san ?? uci}`
+    const kidPart = coachTag ? `You: ${kidMove.san} ${coachTag}` : `You: ${kidMove.san}`
+    const exchange = `${kidPart}  ·  Castle: ${engineMove?.san ?? uci}`
 
     if (state.game.isCheckmate()) {
       savePlayState(state.game, state.kidSide, 'kid-lost', state.rating)
@@ -1527,7 +1568,11 @@ registerCommand({
       return
     }
 
-    savePlayState(state.game, state.kidSide, 'active', state.rating)
+    // Refresh the reference eval for the NEXT coach pass. Best-effort
+    // — if this fails, next turn just starts from the stale ref or 0.
+    let newRef: number | null = evalAfterKid
+    try { newRef = await coachEval(state.game.fen()) } catch { /* keep evalAfterKid */ }
+    savePlayState(state.game, state.kidSide, 'active', state.rating, newRef)
     showBoard(exchange, state.game)
   },
 })

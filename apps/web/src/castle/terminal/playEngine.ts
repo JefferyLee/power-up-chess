@@ -47,3 +47,14 @@ export async function bestReplyUci(fen: string, rating: number): Promise<string>
   const res = await engine.analyze(fen, depth, skillLevel)
   return res.bestMoveUci
 }
+
+/** Coach-grade eval (white-POV centipawns, mate baked in as a very
+ *  large magnitude per the stockfish wrapper). Always full-strength
+ *  (skill 20) at modest depth — used to label kid moves as Best /
+ *  Mistake / Blunder rather than to pick moves. */
+const COACH_DEPTH = 10
+export async function coachEval(fen: string): Promise<number> {
+  const engine = await getEngine()
+  const res = await engine.analyze(fen, COACH_DEPTH, 20)
+  return res.evalCp
+}
