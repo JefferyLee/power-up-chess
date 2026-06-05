@@ -455,7 +455,7 @@ async function listTeamsPage(page: number): Promise<string> {
   }
   lines.push('')
   if (clamped < totalPages) {
-    lines.push(`/team ${clamped + 1} for the next page.`)
+    lines.push(`/teams ${clamped + 1} for the next page.`)
   }
   lines.push('Use /team <name> for the full roster, or /team join <name> to apply.')
   return lines.join('\n')
@@ -472,7 +472,7 @@ async function applyToTeamByName(
     return 'Sign in with a magic word first — visitors cannot apply to teams.'
   }
   const team = await findTeamByName(name)
-  if (!team) return `No team called "${name}". Try /team to see what is around.`
+  if (!team) return `No team called "${name}". Try /teams to see what is around.`
   if (team.members.some((m) => m.normalizedName === identity.normalizedName)) {
     return `You're already a member of ${team.name}.`
   }
@@ -500,7 +500,7 @@ async function showMyTeams(identity: CastleIdentity | null): Promise<string> {
   try {
     const profile = await callGetPublicProfile({ normalizedName: identity.normalizedName })
     if (profile.teams.length === 0) {
-      return "You're not on a team yet. Browse with /team, then /team join <name>."
+      return "You're not on a team yet. Browse with /teams, then /team join <name>."
     }
     const lines = [`── YOUR TEAMS · ${profile.teams.length} ──`]
     for (const t of profile.teams) {
@@ -516,18 +516,23 @@ async function showMyTeams(identity: CastleIdentity | null): Promise<string> {
 }
 
 registerCommand({
+  name: 'teams',
+  tier: 'basic',
+  description: 'List teams in the castle. /teams 2 for the next page.',
+  handle: async (args) => {
+    const page = /^\d+$/.test(args.trim()) ? Number(args.trim()) : 1
+    pushPrivate('reply', await listTeamsPage(page))
+  },
+})
+
+registerCommand({
   name: 'team',
   tier: 'basic',
-  description: 'List teams (/team, /team 2), show a roster (/team Wizards), apply (/team join Wizards), or see yours (/team mine).',
+  description: 'Team details, applications, and your own teams. /team Wizards, /team join Wizards, /team mine. Use /teams to list them all.',
   handle: async (args, ctx) => {
     const trimmed = args.trim()
     if (!trimmed) {
-      pushPrivate('reply', await listTeamsPage(1))
-      return
-    }
-    // Pure integer = page number.
-    if (/^\d+$/.test(trimmed)) {
-      pushPrivate('reply', await listTeamsPage(Number(trimmed)))
+      pushPrivate('reply', 'Use /team <name> for a roster, /team join <name> to apply, /team mine for your own teams. /teams lists every team in the castle.')
       return
     }
 
@@ -563,7 +568,7 @@ registerCommand({
     // Bare /team <name> — look up by case-insensitive name.
     const team = await findTeamByName(trimmed)
     if (!team) {
-      pushPrivate('reply', `No team called "${trimmed}". Try /team to list them all.`)
+      pushPrivate('reply', `No team called "${trimmed}". Try /teams to list them all.`)
       return
     }
     pushPrivate('reply', renderTeamDetail(team))
