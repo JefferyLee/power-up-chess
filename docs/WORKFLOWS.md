@@ -1,177 +1,66 @@
-# Workflows
+# Workflows (PUC overrides)
 
-When to spawn what, in this project. References the six Dynamic-Workflow
-patterns from Anthropic engineering practice (classify-and-act,
-fan-out-and-synthesize, adversarial verification, generate-and-filter,
-tournament, loop-until-done).
-
-Naming convention: prefix project workflows with `puc-` when saving
-them to `~/.claude/workflows/` so they don't collide with general ones.
+See `~/Workplace/WORKFLOWS.md` for the cross-project patterns. This
+file only documents Power-Up-Chess-specific overrides on top of them.
 
 ---
 
-## `puc-audit-and-tag`
+## `content-pass` — child-safety override
 
-**Pattern:** fan-out-and-synthesize + adversarial verification
+PUC ships LLM-touched content in `data/mysteries.ts`, lore entries,
+hangman words, and host story snippets imported from
+`docs/books_and_references/`. Every shipped string passes through a
+human gate (Jeff picks keepers; the model never auto-merges).
+See `docs/DECISIONS.md` on child-safety constraints and
+`docs/MVP2_PLAN.md` §6.5 on the story-import pipeline.
 
-**When:** Before bumping any MVP tag, or any time the code has drifted
-from the docs (a session of feature work that doesn't update plans).
+Constraints baked into the generate step's prompt: audience age
+8–12, host voice (Lucy / Luca per `docs/HOST_PERSONAS.md`), no PII,
+no scary themes, no fabricated chess history.
 
-**Shape:**
-- Fan out three Explore agents:
-  - Source audit — orphans, stale comments referencing paused work,
-    unused exports
-  - Docs vs code — claims in `MVP_ROADMAP.md` / `MVP*_PLAN.md` /
-    `TECHNICAL_ARCHITECTURE.md` / `DECISIONS.md` that no longer match
-    the code; new code with no doc cross-reference
-  - Tag spec — what's a fair name for the new tag, what does it
-    cover, what doesn't it
-- Synthesize one report in under 600 words with: actions to take,
-  exact file paths + line numbers, recommended tag name
-
-**Output goes to:** the conversation. Then I read it, you confirm,
-I execute the cleanup + write the new tag.
+Adversarial-filter step adds an **anti-verbatim check** when source
+material lives in `docs/books_and_references/` (~440 MB of
+copyrighted PDFs/EPUBs, git-ignored). Original retellings only.
 
 ---
 
-## `puc-mvp-acceptance`
+## `audit-and-tag` — PUC docs + tag sequence
 
-**Pattern:** fan-out (one agent per plan item)
+The "docs vs code" agent specifically cross-checks:
+- `docs/MVP_ROADMAP.md`
+- `docs/MVP*_PLAN.md` (currently MVP0 / MVP1 / MVP2)
+- `docs/TECHNICAL_ARCHITECTURE.md`
+- `docs/DECISIONS.md` (authoritative — don't relitigate)
 
-**When:** Closing out an MVP — does every item in the plan actually
-work end-to-end, or did we drift?
+Current tag sequence: `mvp0 → mvp1 → mvp2 → mvp2-terminal → mvp3 →
+brand-v1`. The "tag spec" agent should propose a name that fits
+this progression.
 
-**Shape:** Each agent reads the plan section for one item, finds the
-code that should implement it, opens the relevant screen (via the
-`run-power-up-chess` skill if it's a route), reports one of:
-`done | partial | missing | unverifiable`. Report under 100 words
-per item.
-
-**Note:** A single sweep is not enough — agents have *self-preferential
-bias*. If the same agent both implemented and verified an item, run
-the verification with a fresh sub-agent.
+Saved invocation: `~/.claude/workflows/audit-and-tag.md` (the
+cross-project version takes `$PROJECT_ROOT` as a placeholder).
 
 ---
 
-## `puc-screenshot-tour`
+## `mvp-acceptance` — launch via run-power-up-chess
 
-**Pattern:** fan-out (viewport × route)
-
-**When:** Mobile responsive regression check, especially before a
-release or after a CSS pass.
-
-**Shape:** For each (viewport ∈ {320, 375, 414, 768}, route ∈ all
-top-level routes), drive the headless screenshot script and flag
-overflow / clipped text / touch-targets <44px. Synthesize a gallery
-+ a punch list.
+When an acceptance item requires actually exercising a route, the
+verification agent uses the `run-power-up-chess` skill (boots the
+local app, opens the route headless). Pure-logic items — engine
+classification thresholds, room-state transitions — skip the
+launch.
 
 ---
 
-## `puc-content-pass`
+## `ship-feature` — PUC pipeline
 
-**Pattern:** generate-and-filter → adversarial verification → human gate
-
-**When:** Adding new riddles to `mysteries.ts`, lore entries to
-`lore.ts`, hangman words, etc.
-
-**Shape:**
-1. **Generate**: one agent produces ~50 candidates with explicit
-   constraints (age 8-12, host voice, no PII, no scary themes)
-2. **Adversarial filter**: a separate agent checks each candidate
-   against the rubric and drops violators — chess legality if it's a
-   puzzle, ambiguous answers if it's a riddle, factual claims that
-   need sourcing if it's lore
-3. **Human gate**: Jeff picks the keepers. The model never auto-merges
-   content. See `docs/DECISIONS.md` on child-safety constraints.
+| Stage | Command |
+|---|---|
+| Build | `pnpm build` (from repo root, builds both apps via pnpm-workspace) |
+| Test | `pnpm test --run` |
+| Deploy | `firebase deploy --only hosting` (or named functions) |
+| Commit | follow `docs/MVP_ROADMAP.md` conventional-commit style (e.g. `feat(mvp2): ...`, `docs(workflows): ...`) |
 
 ---
 
-## `puc-ship-feature`
-
-**Pattern:** loop-until-done with explicit goal
-
-**When:** Standard "I just wrote code" pipeline.
-
-**Shape:** code → `pnpm build` → `pnpm test --run` → `firebase deploy
---only hosting` (or named functions) → `git commit` → optional screenshot
-verify. Pair with `/goal` to pin success: "all tests pass + the change
-visible on deployed URL + commit message follows
-docs/MVP_ROADMAP.md style".
-
-**Anti-pattern to watch:** *agentic laziness* — stopping after the
-build passes but before the deploy succeeds. *goal drift* — silently
-adding "and also refactor X" mid-loop.
-
----
-
-## When NOT to spawn agents
-
-- One-file bug fix
-- One-line copy change
-- Asking a clarifying question (just ask)
-- Anything where you already know the answer
-
-The shape rule: if the task is "do X" and X is concrete, just do it.
-If the task is "figure out what's true about a sprawling thing", agents.
-
----
-
-## Considered, not adopted (with trigger conditions)
-
-A running ledger of community skills/workflows we've evaluated and
-chosen NOT to install. The decision and the condition under which we'd
-revisit are both written down so we don't re-evaluate from scratch
-later.
-
-### Taste-Skill — *not now*
-
-[github.com/leonxlnx/taste-skill](https://github.com/leonxlnx/taste-skill).
-Anti-slop frontend skill: reads brief → infers design direction →
-sets variance / motion / density dials → enforces a style contract
-(em-dash ban, GSAP skeletons, redesign audit, pre-flight check).
-
-**Reason not adopted:**
-1. Power Up Castle already has a strong hand-built brand (Cinzel,
-   gold-on-midnight, Lucy/Luca palette, HallAmbient flames). Taste
-   Skill solves the "from nothing" problem; we're past that.
-2. **Concrete conflict**: it bans em-dashes. Lucy/Luca's voice and
-   most of the codebase's English copy use em-dashes deliberately
-   for rhythm. Installing would fight our existing style.
-
-**Revisit when:** building a marketing campaign page or a blog
-theme that's *intentionally* off-brand from the main app. Then
-install at project scope only.
-
-### Darwin-Skill v2.0 — *not yet*
-
-[github.com/alchaincyf/darwin-skill](https://github.com/alchaincyf/darwin-skill).
-Autonomous skill optimizer inspired by Karpathy's autoresearch:
-evaluates `SKILL.md` files on a 9-dimension rubric (incl. Failure
-Mechanism Encoding, Actionable Specificity, High-Risk Action
-Blacklist), hill-climbs improvements with git ratchet, validates
-via test prompts, generates result cards.
-
-**Reason not adopted yet:**
-1. We have ~5 workflows in this file plus a handful of project
-   skills — too few for Darwin's optimization loop to amortize.
-2. v2.0 only released 2026-05-28; ecosystem still settling.
-
-**Revisit when:** the combined count of `~/.claude/skills/` +
-`~/.claude/workflows/` + this repo's `docs/WORKFLOWS.md` entries
-exceeds ~10, OR when we notice a workflow being manually rewritten
-more than 3 times.
-
----
-
-## Tracking the ecosystem
-
-Two awesome-lists worth pulling from periodically (e.g. once a
-month) without subscribing to a feed:
-
-- **[hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)** — quality-focused curated list of skills, hooks, slash-commands, agent orchestrators, applications, and plugins. Closest thing to a canonical index.
-- **[sickn33/antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills)** — 1,500+ skill library with `npx antigravity-awesome-skills` installer, bundles + role-based packs. Skip the full-library install; pick focused plugins per domain.
-
-Browsing rule: when checking these, scan for new entries in domains
-we actually use (frontend, audit, testing, content workflows) — not
-the entire catalogue. Add anything promising to the "Considered, not
-adopted" section above with a trigger condition; don't impulse-install.
+`screenshot-tour` uses the standard breakpoints from the workspace
+file; no PUC-specific override.
