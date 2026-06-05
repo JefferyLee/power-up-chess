@@ -1,6 +1,18 @@
 // castSkill — kid spends castle points to broadcast a visual effect
 // (firework, battle) to everyone currently in the Hall.
 //
+// ─── PAUSED ────────────────────────────────────────────────────────
+// This was Slice 2 of the chat-command sequence; superseded for now
+// by the Castle Terminal direction. The callable is fully written
+// but intentionally NOT exported from functions/src/index.ts, so it
+// doesn't deploy. The ChatMessageAction 'skill' variant in chatTypes
+// only exists to let this file compile in the meantime.
+//
+// To revive: re-export from index.ts, add the client overlay
+// renderer, and wire up /cast firework / /cast battle commands in
+// the terminal's commandRegistry.
+// ───────────────────────────────────────────────────────────────────
+//
 // Server-side gate:
 //   • Caster must be non-bypass, signed-in.
 //   • Caster must have enough castle points.

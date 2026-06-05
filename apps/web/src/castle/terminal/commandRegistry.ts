@@ -1412,14 +1412,15 @@ registerCommand({
 registerCommand({
   name: 'guess',
   tier: 'basic',
-  description: `Castle picks 1-${GUESS_LIMITS.max}. /guess <n> to try, ${GUESS_LIMITS.tries} tries.`,
+  description: `Lucy or Luca picks 1-${GUESS_LIMITS.max}. /guess <n> to try, ${GUESS_LIMITS.tries} tries.`,
   handle: (args, ctx) => {
     let game = loadGuess()
     const arg = args.trim()
+    const hostName = ctx.world.hostOnDuty === 'lucy' ? 'Lucy' : 'Luca'
     if (arg === 'new' || (!game && !arg)) {
       game = newGuessGame()
       saveGuess(game)
-      pushPrivate('reply', `Castle picks a number 1-${GUESS_LIMITS.max}. You have ${game.triesLeft} guesses. /guess <n>.`)
+      pushPrivate('reply', `${hostName} picks a number 1-${GUESS_LIMITS.max}. You have ${game.triesLeft} guesses. /guess <n>.`)
       return
     }
     if (!game) {
