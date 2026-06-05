@@ -49,6 +49,39 @@ import {
   readSolvedToday,
   todaysMystery,
 } from './mysteries'
+import {
+  GUESS_LIMITS,
+  HANGMAN_LIMITS,
+  HANGMAN_WORDS,
+  TWENTYFOUR_PUZZLES,
+  WORDLE_BANK,
+  WORDLE_LIMITS,
+  checkTwentyFour,
+  clearGuess,
+  clearHangman,
+  clearTwentyFour,
+  isHangmanWon,
+  loadGuess,
+  loadHangman,
+  loadTwentyFour,
+  loadWordle,
+  newGuessGame,
+  newHangmanGame,
+  newTwentyFour,
+  renderHangmanWord,
+  saveGuess,
+  saveHangman,
+  saveTwentyFour,
+  saveWordle,
+  scoreWordle,
+  todaysWordle,
+} from './games'
+import {
+  PUZZLE_MAX_ATTEMPTS,
+  clearPuzzle,
+  loadPuzzle,
+  savePuzzle,
+} from './puzzleState'
 import { LORE, findLore } from './lore'
 import { loadVisited } from './world'
 
@@ -1371,6 +1404,390 @@ registerCommand({
       'Come back tomorrow for a new mystery.',
     ].filter(Boolean)
     pushPrivate('reply', lines.join('\n'))
+  },
+})
+
+// ─── Basic: /guess — higher / lower 1-100 ────────────────────────
+
+registerCommand({
+  name: 'guess',
+  tier: 'basic',
+  description: `Castle picks 1-${GUESS_LIMITS.max}. /guess <n> to try, ${GUESS_LIMITS.tries} tries.`,
+  handle: (args, ctx) => {
+    let game = loadGuess()
+    const arg = args.trim()
+    if (arg === 'new' || (!game && !arg)) {
+      game = newGuessGame()
+      saveGuess(game)
+      pushPrivate('reply', `Castle picks a number 1-${GUESS_LIMITS.max}. You have ${game.triesLeft} guesses. /guess <n>.`)
+      return
+    }
+    if (!game) {
+      pushPrivate('reply', `No game in progress. /guess to start (or just /guess <n> on a running one).`)
+      return
+    }
+    if (!arg) {
+      pushPrivate('reply', `Game in progress: ${game.triesLeft} tries left. /guess <n>.`)
+      return
+    }
+    const n = Number.parseInt(arg, 10)
+    if (!Number.isFinite(n) || n < 1 || n > GUESS_LIMITS.max) {
+      pushPrivate('reply', `Pick a whole number between 1 and ${GUESS_LIMITS.max}.`)
+      return
+    }
+    if (n === game.secret) {
+      clearGuess()
+      // Tiny CP nod for non-bypass.
+      const id = ctx.identity
+      if (id && !id.isBypass) {
+        // Reuse the mystery award path — same daily-cap shape, harmless extra source-of-points.
+        // For V1 we just send a flavor reply; awarding for guess game is optional and we skip it
+        // to avoid expanding AwardSource further.
+      }
+      pushPrivate('reply', `Got it — ${game.secret}! /guess new for another.`)
+      return
+    }
+    game.triesLeft -= 1
+    if (game.triesLeft <= 0) {
+      clearGuess()
+      pushPrivate('reply', `Out of tries. The number was ${game.secret}. /guess for a new round.`)
+      return
+    }
+    saveGuess(game)
+    pushPrivate('reply', n < game.secret
+      ? `Higher. ${game.triesLeft} tries left.`
+      : `Lower. ${game.triesLeft} tries left.`,
+    )
+  },
+})
+
+// ─── Basic: /hangman — word, 6 wrong tries ────────────────────────
+
+registerCommand({
+  name: 'hangman',
+  tier: 'basic',
+  description: `Guess the castle word. /hangman to start, /hangman <letter> to try, ${HANGMAN_LIMITS.maxWrong} wrong = lose.`,
+  handle: (args) => {
+    let game = loadHangman()
+    const arg = args.trim().toLowerCase()
+    if (arg === 'new' || (!game && !arg)) {
+      game = newHangmanGame()
+      saveHangman(game)
+      pushPrivate('reply', [
+        `── HANGMAN ──`,
+        `Word: ${renderHangmanWord(game)}  (${game.word.length} letters)`,
+        ``,
+        `Try a letter with /hangman a (one letter at a time). ${HANGMAN_LIMITS.maxWrong} wrong tries.`,
+      ].join('\n'))
+      return
+    }
+    if (!game) {
+      pushPrivate('reply', `No game in progress. /hangman to start.`)
+      return
+    }
+    if (!arg) {
+      pushPrivate('reply', [
+        `── HANGMAN ──`,
+        `Word: ${renderHangmanWord(game)}`,
+        `Wrong: ${game.wrong}/${HANGMAN_LIMITS.maxWrong}.  Guessed: ${game.guessed.join(' ') || '—'}`,
+      ].join('\n'))
+      return
+    }
+    if (!/^[a-z]$/.test(arg)) {
+      pushPrivate('reply', 'Use a single letter, e.g. /hangman a.')
+      return
+    }
+    if (game.guessed.includes(arg)) {
+      pushPrivate('reply', `You already tried "${arg}". /hangman to see your progress.`)
+      return
+    }
+    game.guessed = [...game.guessed, arg]
+    const hit = game.word.includes(arg)
+    if (!hit) game.wrong += 1
+
+    if (isHangmanWon(game)) {
+      clearHangman()
+      pushPrivate('reply', `You solved it: ${game.word}. /hangman new for another.`)
+      return
+    }
+    if (game.wrong >= HANGMAN_LIMITS.maxWrong) {
+      const word = game.word
+      clearHangman()
+      pushPrivate('reply', `Out of tries. The word was "${word}". /hangman new to try a new one.`)
+      return
+    }
+    saveHangman(game)
+    pushPrivate('reply', [
+      hit ? `"${arg}" is in the word.` : `"${arg}" is not in the word.`,
+      `Word: ${renderHangmanWord(game)}`,
+      `Wrong: ${game.wrong}/${HANGMAN_LIMITS.maxWrong}.  Guessed: ${game.guessed.join(' ')}`,
+    ].join('\n'))
+  },
+})
+
+// ─── Basic: /wordle — daily 5-letter ─────────────────────────────
+
+registerCommand({
+  name: 'wordle',
+  tier: 'basic',
+  description: `Today's 5-letter word. ${WORDLE_LIMITS.tries} guesses, ${WORDLE_LIMITS.len} letters each.`,
+  handle: (args) => {
+    const today = todaysWordle()
+    let game = loadWordle()
+    if (!game) {
+      game = { dayKey: today.dayKey, word: today.word, guesses: [] }
+      saveWordle(game)
+    }
+    const arg = args.trim().toLowerCase()
+    if (!arg) {
+      const board = game.guesses.length === 0
+        ? '(no guesses yet)'
+        : game.guesses.map((g) => `${g}   ${scoreWordle(g, game.word)}`).join('\n')
+      pushPrivate('reply', [
+        `── WORDLE · today ──`,
+        board,
+        ``,
+        `${WORDLE_LIMITS.tries - game.guesses.length} guesses left.  /wordle <word>`,
+      ].join('\n'))
+      return
+    }
+    const solvedAlready = game.guesses.some((g) => g === game.word)
+    if (solvedAlready) {
+      pushPrivate('reply', `You already solved today's wordle ("${game.word}"). Come back tomorrow.`)
+      return
+    }
+    if (game.guesses.length >= WORDLE_LIMITS.tries) {
+      pushPrivate('reply', `Out of tries today. The word was "${game.word}". Come back tomorrow.`)
+      return
+    }
+    if (!/^[a-z]{5}$/.test(arg)) {
+      pushPrivate('reply', `Use a 5-letter word, e.g. /wordle smile.`)
+      return
+    }
+    game.guesses = [...game.guesses, arg]
+    saveWordle(game)
+    const score = scoreWordle(arg, game.word)
+    if (arg === game.word) {
+      pushPrivate('reply', [
+        `${arg}   ${score}`,
+        ``,
+        `Solved! Come back tomorrow for the next word.`,
+      ].join('\n'))
+      return
+    }
+    if (game.guesses.length >= WORDLE_LIMITS.tries) {
+      pushPrivate('reply', [
+        `${arg}   ${score}`,
+        ``,
+        `Out of tries. The word was "${game.word}".`,
+      ].join('\n'))
+      return
+    }
+    pushPrivate('reply', [
+      `${arg}   ${score}`,
+      `${WORDLE_LIMITS.tries - game.guesses.length} guesses left.`,
+    ].join('\n'))
+    void WORDLE_BANK
+  },
+})
+
+// ─── Basic: /24 — make 24 from four digits ────────────────────────
+
+registerCommand({
+  name: '24',
+  tier: 'basic',
+  description: '/24 to see today\'s digits, /24 <expr> to solve (use each digit once with + - * / and parens).',
+  handle: (args) => {
+    let game = loadTwentyFour()
+    const arg = args.trim()
+    if (arg === 'new' || !game) {
+      game = newTwentyFour()
+      saveTwentyFour(game)
+      pushPrivate('reply', [
+        `── TWENTY-FOUR ──`,
+        `Make 24 from: ${game.digits.join('   ')}`,
+        ``,
+        `Use each digit exactly once. Operators: + - * / and ( ).`,
+        `Example: /24 (3+5)*3  →  if those digits matched.`,
+      ].join('\n'))
+      return
+    }
+    if (!arg) {
+      pushPrivate('reply', `Current digits: ${game.digits.join(' ')}.  /24 <expr>  or  /24 new.`)
+      return
+    }
+    if (arg === 'skip') {
+      clearTwentyFour()
+      pushPrivate('reply', `Skipped. /24 for a fresh round.`)
+      return
+    }
+    const result = checkTwentyFour(arg, game.digits)
+    if (!result.ok) {
+      pushPrivate('reply', result.reason)
+      return
+    }
+    clearTwentyFour()
+    pushPrivate('reply', `${arg} = 24. /24 new for the next puzzle.`)
+    void TWENTYFOUR_PUZZLES
+    void HANGMAN_WORDS
+  },
+})
+
+// ─── Basic: /puzzle — real tactical puzzle from the bank ─────────
+
+registerCommand({
+  name: 'puzzle',
+  tier: 'basic',
+  description: 'Solve a tactical puzzle. /puzzle to start, /puzzle <move> to play, /puzzle skip to give up.',
+  handle: async (args, ctx) => {
+    const { Chess } = await import('chess.js')
+    const { ALL_PUZZLES } = await import('../../puzzles/loader')
+
+    const arg = args.trim()
+    let session = loadPuzzle()
+
+    if (arg === 'new' || (!session && !arg)) {
+      // Pick a fresh easy puzzle (difficulty ≤ 800) — keeps Ada in zone.
+      const easy = ALL_PUZZLES.filter((p) => p.difficulty <= 800)
+      const p = easy[Math.floor(Math.random() * easy.length)]!
+      const game = new Chess(p.fen)
+      session = {
+        puzzleId: p.id,
+        solution: [...p.solution],
+        idx: 0,
+        pgn: game.pgn(),
+        wrong: 0,
+        startedAt: Date.now(),
+      }
+      savePuzzle(session)
+      clearPrivate()
+      pushPrivate('reply', [
+        `── PUZZLE ──  ${p.id}  (≈ ${p.difficulty})`,
+        `${game.turn() === 'w' ? 'White' : 'Black'} to move. Find the best move.`,
+      ].join('\n'))
+      pushPrivate('ascii', renderAsciiBoard(game))
+      pushPrivate('reply', `/puzzle <move> (e.g. e4 or e2e4).  ${PUZZLE_MAX_ATTEMPTS} tries before reveal.`)
+      return
+    }
+
+    if (!session) {
+      pushPrivate('reply', `No puzzle in progress. /puzzle to start.`)
+      return
+    }
+
+    if (arg === 'skip' || arg === 'reveal') {
+      const game = new Chess()
+      game.loadPgn(session.pgn)
+      const sol = session.solution.slice(session.idx).join(' ')
+      clearPuzzle()
+      pushPrivate('reply', `Solution from here: ${sol}. /puzzle new for another.`)
+      return
+    }
+
+    if (!arg) {
+      const game = new Chess()
+      game.loadPgn(session.pgn)
+      clearPrivate()
+      pushPrivate('reply', `In progress: ${game.turn() === 'w' ? 'White' : 'Black'} to move.  ${session.wrong}/${PUZZLE_MAX_ATTEMPTS} wrong.`)
+      pushPrivate('ascii', renderAsciiBoard(game))
+      pushPrivate('reply', `/puzzle <move> to try.  /puzzle skip to reveal.`)
+      return
+    }
+
+    // Validate the kid's move against the next solution step.
+    const game = new Chess()
+    game.loadPgn(session.pgn)
+    const expectedUci = session.solution[session.idx]
+    if (!expectedUci) {
+      clearPuzzle()
+      pushPrivate('reply', `That puzzle is already solved. /puzzle new for another.`)
+      return
+    }
+
+    // Try kid's move (SAN or UCI).
+    let kidMove: { san: string; from: string; to: string; promotion?: string } | null = null
+    try {
+      const m = game.move(arg)
+      if (m) kidMove = m
+    } catch { /* fall through */ }
+    if (!kidMove && /^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(arg)) {
+      try {
+        const m = game.move({
+          from: arg.slice(0, 2).toLowerCase(),
+          to: arg.slice(2, 4).toLowerCase(),
+          promotion: arg.length === 5 ? arg[4]!.toLowerCase() : undefined,
+        })
+        if (m) kidMove = m
+      } catch { /* fall through */ }
+    }
+    if (!kidMove) {
+      pushPrivate('reply', `"${arg}" isn't a legal move here. Try again.`)
+      return
+    }
+
+    const playedUci = `${kidMove.from}${kidMove.to}${kidMove.promotion ?? ''}`
+    if (playedUci !== expectedUci) {
+      // Wrong — roll back, count an attempt.
+      game.undo()
+      session.wrong += 1
+      if (session.wrong >= PUZZLE_MAX_ATTEMPTS) {
+        const sol = session.solution.slice(session.idx).join(' ')
+        clearPuzzle()
+        pushPrivate('reply', `Out of tries. The right line from here is ${sol}. /puzzle new for another.`)
+        return
+      }
+      savePuzzle(session)
+      pushPrivate('reply', `Not the best move. ${PUZZLE_MAX_ATTEMPTS - session.wrong} tries left.`)
+      return
+    }
+
+    // Correct kid move. Apply opponent's reply if any.
+    session.idx += 1
+    if (session.idx < session.solution.length) {
+      const oppUci = session.solution[session.idx]!
+      try {
+        game.move({
+          from: oppUci.slice(0, 2),
+          to: oppUci.slice(2, 4),
+          promotion: oppUci.length === 5 ? oppUci[4]!.toLowerCase() : undefined,
+        })
+      } catch {
+        // Stored puzzle inconsistent — bail gracefully.
+        clearPuzzle()
+        pushPrivate('reply', `Solved.`)
+        return
+      }
+      session.idx += 1
+    }
+    session.pgn = game.pgn()
+
+    if (session.idx >= session.solution.length) {
+      // Puzzle complete — award + clean.
+      clearPuzzle()
+      let awardLine = ''
+      const id = ctx.identity
+      if (id && !id.isBypass) {
+        try {
+          const { callAwardCastlePoints } = await import('../../firebase/callables')
+          const res = await callAwardCastlePoints({
+            normalizedName: id.normalizedName,
+            award: { source: 'puzzle', puzzleId: session.puzzleId, scorePoints: 10, isFirstSolve: false },
+          })
+          if (res.added > 0) awardLine = `  +${res.added} castle points.`
+        } catch { /* silent */ }
+      }
+      clearPrivate()
+      pushPrivate('reply', `You played ${kidMove.san}.  Solved!${awardLine}  /puzzle new for another.`)
+      pushPrivate('ascii', renderAsciiBoard(game))
+      return
+    }
+
+    // More moves to come — show the next position.
+    savePuzzle(session)
+    clearPrivate()
+    pushPrivate('reply', `You played ${kidMove.san}.  Opponent replies.  ${game.turn() === 'w' ? 'White' : 'Black'} to move.`)
+    pushPrivate('ascii', renderAsciiBoard(game))
+    pushPrivate('reply', `/puzzle <move> to continue.`)
   },
 })
 
