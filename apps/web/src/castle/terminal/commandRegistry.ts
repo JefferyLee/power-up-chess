@@ -377,34 +377,95 @@ function describeLocation(loc: LocationTag | undefined): string {
 
 const USERS_PAGE_SIZE = 12
 
+/** Predicate for a /users filter token. Returns null if the token
+ *  isn't recognised — caller can then decide whether to treat it as
+ *  a roomId or reject. */
+function makeUsersFilter(filter: string): ((row: PresenceRow) => boolean) | null {
+  const f = filter.toLowerCase()
+  switch (f) {
+    case 'hall':
+      return (p) => !p.location || p.location.kind === 'hall'
+    case 'chess':
+      return (p) => p.location?.kind === 'chess'
+    case 'wizard':
+      return (p) => p.location?.kind === 'wizard'
+    case 'playing':
+      return (p) => p.location?.kind === 'chess' || p.location?.kind === 'wizard'
+    case 'garden':
+      return (p) =>
+        p.location?.kind === 'puzzle-garden' ||
+        p.location?.kind === 'puzzle-plot' ||
+        p.location?.kind === 'puzzle-daily' ||
+        p.location?.kind === 'puzzle-legends'
+    case 'forest':
+      return (p) => p.location?.kind === 'forest'
+    case 'puzzle':
+      return (p) =>
+        p.location?.kind === 'puzzle-garden' ||
+        p.location?.kind === 'puzzle-plot' ||
+        p.location?.kind === 'puzzle-daily' ||
+        p.location?.kind === 'puzzle-legends' ||
+        p.location?.kind === 'puzzle-calibration' ||
+        p.location?.kind === 'puzzle-leaderboard'
+    case 'practice':
+      return (p) => p.location?.kind === 'practice'
+  }
+  // Anything else — treat as an exact roomId match (chess or wizard).
+  return (p) =>
+    (p.location?.kind === 'chess' || p.location?.kind === 'wizard') &&
+    p.location.roomId === filter
+}
+
+const KNOWN_FILTERS = ['hall', 'chess', 'wizard', 'playing', 'garden', 'forest', 'puzzle', 'practice']
+
 registerCommand({
   name: 'users',
   tier: 'basic',
-  description: 'List everyone in the castle with their current status. /users 2 for next page.',
+  description: 'List everyone in the castle. /users hall, /users playing, or /users ABC12 to filter; /users 2 for next page.',
   handle: (args, ctx) => {
-    const all = ctx.world.presence
-    if (all.length === 0) {
+    if (ctx.world.presence.length === 0) {
       pushPrivate('reply', 'No one is in the castle right now. Strange.')
       return
     }
-    const requested = Number.parseInt(args.trim(), 10)
-    const totalPages = Math.max(1, Math.ceil(all.length / USERS_PAGE_SIZE))
-    const page = Number.isFinite(requested)
-      ? Math.max(1, Math.min(totalPages, requested))
-      : 1
+
+    // Token order is forgiving: /users [filter] [page] in any order.
+    // A bare integer is the page; anything else is the filter.
+    const tokens = args.trim().split(/\s+/).filter(Boolean)
+    let filterToken: string | null = null
+    let pageToken: number | null = null
+    for (const t of tokens) {
+      if (/^\d+$/.test(t)) pageToken = Number(t)
+      else if (filterToken === null) filterToken = t
+    }
+
+    const filter = filterToken ? makeUsersFilter(filterToken) : null
+    const filtered = filter ? ctx.world.presence.filter(filter) : ctx.world.presence
+    if (filtered.length === 0) {
+      pushPrivate('reply',
+        `No one matches "${filterToken}" right now. Try one of: ${KNOWN_FILTERS.join(', ')}, or a specific roomId.`,
+      )
+      return
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / USERS_PAGE_SIZE))
+    const page = pageToken !== null ? Math.max(1, Math.min(totalPages, pageToken)) : 1
     const start = (page - 1) * USERS_PAGE_SIZE
-    const slice = all.slice(start, start + USERS_PAGE_SIZE)
-    // Even column width keeps the location chunk aligned.
+    const slice = filtered.slice(start, start + USERS_PAGE_SIZE)
     const nameWidth = Math.max(...slice.map((p) => p.displayName.length), 4)
-    const lines = [`── ADVENTURERS · page ${page}/${totalPages} · ${all.length} present ──`]
+
+    const header = filterToken
+      ? `── ADVENTURERS · ${filterToken} · page ${page}/${totalPages} · ${filtered.length} match${filtered.length === 1 ? '' : 'es'} ──`
+      : `── ADVENTURERS · page ${page}/${totalPages} · ${ctx.world.presence.length} present ──`
+    const lines = [header]
     for (const p of slice) {
       lines.push(`  ${p.displayName.padEnd(nameWidth)}  ${describeLocation(p.location)}`)
     }
     lines.push('')
     if (page < totalPages) {
-      lines.push(`/users ${page + 1} for the next page.`)
+      const nextHint = filterToken ? `/users ${filterToken} ${page + 1}` : `/users ${page + 1}`
+      lines.push(`${nextHint} for the next page.`)
     } else if (totalPages > 1) {
-      lines.push(`(last page — /users 1 to start over)`)
+      lines.push('(last page)')
     }
     pushPrivate('reply', lines.join('\n'))
   },
@@ -460,39 +521,135 @@ registerCommand({
 registerCommand({
   name: 'watch',
   tier: 'basic',
-  description: 'Spectate a live game by room id, e.g. /watch ABC123.',
-  handle: (args, ctx) => {
-    const id = args.trim()
-    if (!id) {
-      pushPrivate('reply', 'Use /watch <roomId>, e.g. /watch ABC123. Type /games to see what is live.')
+  description: 'Spectate a live game (/watch ABC123) or peek a guest profile (/watch Ada).',
+  handle: async (args, ctx) => {
+    const target = args.trim()
+    if (!target) {
+      pushPrivate('reply', 'Use /watch <roomId-or-name>. /games shows what is live; /find <name> looks up a guest.')
       return
     }
-    // Disambiguate chess vs wizard from presence. Same roomId can't
-    // collide across collections in practice but we still scan both.
-    const target = ctx.world.presence.find(
-      (p) => (p.location?.kind === 'chess' || p.location?.kind === 'wizard') && p.location.roomId === id,
+    // 1) Direct roomId match — anyone in this exact room.
+    const inRoom = ctx.world.presence.find(
+      (p) => (p.location?.kind === 'chess' || p.location?.kind === 'wizard') && p.location.roomId === target,
     )
-    if (!target || (target.location?.kind !== 'chess' && target.location?.kind !== 'wizard')) {
-      pushPrivate('reply', `No live game called "${id}". Type /games to see active rooms.`)
+    if (inRoom && (inRoom.location?.kind === 'chess' || inRoom.location?.kind === 'wizard')) {
+      const path = inRoom.location.kind === 'wizard' ? `/wizard/${target}` : `/r/${target}`
+      pushPrivate('reply', `Heading to ${inRoom.location.kind} room ${target}…`)
+      ctx.exitTerminal()
+      ctx.navigate(path)
       return
     }
-    const path = target.location.kind === 'wizard' ? `/wizard/${id}` : `/r/${id}`
-    pushPrivate('reply', `Heading to ${target.location.kind} room ${id}…`)
-    ctx.exitTerminal()
-    ctx.navigate(path)
+    // 2) Name match — if online and in a game, route to that game.
+    const normalized = target.toLowerCase()
+    const onlineUser = ctx.world.presence.find(
+      (p) => p.normalizedName === normalized || p.displayName.toLowerCase() === normalized,
+    )
+    if (onlineUser?.location?.kind === 'chess' || onlineUser?.location?.kind === 'wizard') {
+      const loc = onlineUser.location
+      const path = loc.kind === 'wizard' ? `/wizard/${loc.roomId}` : `/r/${loc.roomId}`
+      pushPrivate('reply', `${onlineUser.displayName} is in ${loc.kind} room ${loc.roomId} — heading there…`)
+      ctx.exitTerminal()
+      ctx.navigate(path)
+      return
+    }
+    // 3) Fall back to a profile preview. Try the live name first, then
+    //    the directory; covers offline guests and slight spelling drift.
+    let nameToFetch = onlineUser?.normalizedName ?? normalized
+    if (!onlineUser) {
+      try {
+        const { callFindPlayer } = await import('../../firebase/callables')
+        const { matches } = await callFindPlayer({ query: normalized })
+        if (matches.length === 0) {
+          pushPrivate('reply', `Nothing to watch by "${target}". No live game and no castle guest by that name.`)
+          return
+        }
+        nameToFetch = matches[0]!.normalizedName
+      } catch (err) {
+        pushPrivate('reply', err instanceof Error ? err.message : 'Could not look that name up.')
+        return
+      }
+    }
+    try {
+      const { callGetPublicProfile } = await import('../../firebase/callables')
+      const profile = await callGetPublicProfile({ normalizedName: nameToFetch })
+      pushPrivate('reply', formatProfilePreview(profile))
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'Could not fetch that profile.')
+    }
   },
 })
 
+interface ProfilePreview {
+  displayName: string
+  title: { label: string } | null
+  chessRating: number | null
+  chessRatingDelta: number | null
+  chessGames: number
+  bestPuzzleRating: number | null
+  todaysFiveSolved: number | null
+  todaysFiveTotal: number | null
+  booksRead: number | null
+  equippedPieceSet: string | null
+  teams: Array<{ name: string; captain: boolean }>
+  currentLocation: LocationTag | null
+  inGame: boolean
+}
+
+function formatProfilePreview(p: ProfilePreview): string {
+  const lines: string[] = []
+  const titleSuffix = p.title ? ` · ${p.title.label}` : ''
+  lines.push(`── ${p.displayName}${titleSuffix} ──`)
+  if (p.chessRating != null) {
+    const delta = p.chessRatingDelta != null
+      ? ` (${p.chessRatingDelta >= 0 ? '+' : ''}${p.chessRatingDelta})`
+      : ''
+    lines.push(`Chess: ${p.chessRating}${delta} over ${p.chessGames} games`)
+  } else {
+    lines.push(`Chess: not yet rated`)
+  }
+  if (p.bestPuzzleRating != null) lines.push(`Puzzle best: ${p.bestPuzzleRating}`)
+  if (p.todaysFiveSolved != null && p.todaysFiveTotal != null) {
+    lines.push(`Today's Five: ${p.todaysFiveSolved}/${p.todaysFiveTotal}`)
+  }
+  if (typeof p.booksRead === 'number' && p.booksRead > 0) lines.push(`Books read: ${p.booksRead}`)
+  if (p.equippedPieceSet) lines.push(`Pieces: ${p.equippedPieceSet}`)
+  if (p.teams.length > 0) {
+    const teamLabel = p.teams.map((t) => t.captain ? `${t.name} (captain)` : t.name).join(', ')
+    lines.push(`Team: ${teamLabel}`)
+  }
+  lines.push('')
+  if (p.inGame && p.currentLocation && (p.currentLocation.kind === 'chess' || p.currentLocation.kind === 'wizard')) {
+    lines.push(`In a ${p.currentLocation.kind} game right now — /watch ${p.currentLocation.roomId} to spectate.`)
+  } else if (p.currentLocation) {
+    lines.push(`Online now — invite with /invite ${p.displayName}.`)
+  } else {
+    lines.push(`Offline. /invite ${p.displayName} will wait for them to return.`)
+  }
+  return lines.join('\n')
+}
+
 // ─── Basic: /invite <name> — invite an online guest to play ───────
+
+/** Parse "5+3" / "10+0" / "5" → { initialMs, incrementMs }. Bare
+ *  number is taken as minutes with 0 increment. Returns null on shapes
+ *  the server wouldn't accept anyway (server clamps further). */
+function parseTimeControl(raw: string): { initialMs: number; incrementMs: number } | null {
+  const m = /^(\d{1,2})(?:\+(\d{1,2}))?$/.exec(raw)
+  if (!m) return null
+  const minutes = Number(m[1])
+  const inc = m[2] ? Number(m[2]) : 0
+  if (!Number.isFinite(minutes) || minutes <= 0) return null
+  return { initialMs: minutes * 60_000, incrementMs: inc * 1_000 }
+}
 
 registerCommand({
   name: 'invite',
   tier: 'basic',
-  description: 'Invite a castle guest to a chess game, e.g. /invite Ada. Costs 5 castle points.',
+  description: 'Invite a castle guest to chess, e.g. /invite Ada or /invite Ada 5+3. Costs 5 castle points.',
   handle: async (args, ctx) => {
-    const name = args.trim()
-    if (!name) {
-      pushPrivate('reply', 'Use /invite <name>, e.g. /invite Ada. Costs 5 castle points.')
+    const tokens = args.trim().split(/\s+/).filter(Boolean)
+    if (tokens.length === 0) {
+      pushPrivate('reply', 'Use /invite <name> [time], e.g. /invite Ada 5+3. Costs 5 castle points.')
       return
     }
     const me = ctx.identity
@@ -500,6 +657,26 @@ registerCommand({
       pushPrivate('reply', 'Sign in with a magic word first — visitors cannot send invitations.')
       return
     }
+
+    // Optional second token can be a time-control like "5+3" or "10".
+    let name = tokens[0]!
+    let timeControl: { initialMs: number; incrementMs: number } | null = null
+    if (tokens.length >= 2) {
+      const tc = parseTimeControl(tokens[1]!)
+      if (!tc) {
+        pushPrivate('reply', `"${tokens[1]}" isn't a valid time control. Use minutes+seconds, e.g. 5+3 (or just 10 for 10 min no increment).`)
+        return
+      }
+      timeControl = tc
+    } else {
+      // Maybe the user wrote `/invite ada5+3` with no space — best-effort split.
+      const m = /^([A-Za-z][^\d+]*)(\d{1,2}(?:\+\d{1,2})?)$/.exec(name)
+      if (m) {
+        name = m[1]!
+        timeControl = parseTimeControl(m[2]!)
+      }
+    }
+
     const normalized = name.toLowerCase()
     if (normalized === me.normalizedName) {
       pushPrivate('reply', "You can't invite yourself, adventurer.")
@@ -530,13 +707,14 @@ registerCommand({
       const res = await callSendInvite({
         fromNormalizedName: me.normalizedName,
         toNormalizedName: toNormalized,
-        // Untimed by default — kids can use the Hall's normal invite UI
-        // for time-control choices. Keeps the terminal command simple.
-        timeControl: null,
+        timeControl,
         ...(me.cosmetics?.pieceSet ? { pieceSetId: me.cosmetics.pieceSet } : {}),
       })
       const minutes = Math.max(0, Math.round((res.expiresAt - Date.now()) / 60_000))
-      pushPrivate('reply', `Invitation sent to ${name} (5 castle points spent). It will wait ${minutes} minute${minutes === 1 ? '' : 's'} for a reply.`)
+      const tcLabel = timeControl
+        ? ` (${timeControl.initialMs / 60_000}+${timeControl.incrementMs / 1_000})`
+        : ' (untimed)'
+      pushPrivate('reply', `Invitation sent to ${name}${tcLabel} — 5 castle points spent. It will wait ${minutes} minute${minutes === 1 ? '' : 's'} for a reply.`)
     } catch (err) {
       const msg = err instanceof Error
         ? err.message.replace(/^FirebaseError: /, '')
