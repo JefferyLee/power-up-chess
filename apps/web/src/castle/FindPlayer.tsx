@@ -44,20 +44,10 @@ export function FindPlayer() {
   }, [query])
 
   // Click outside / Escape closes the dropdown.
-  //
-  // UserCard is rendered by the NameLink that lives INSIDE the dropdown
-  // (see NameLink.tsx → UserCard portal). Closing the dropdown unmounts
-  // the NameLink, which unmounts the UserCard mid-interaction — so any
-  // click the user makes inside an open UserCard would yank the plaque
-  // out from under them (this happened for taps on the new origin pill).
-  // Treat clicks inside a UserCard overlay as "still interacting" so
-  // the dropdown (and therefore NameLink + UserCard) stays mounted.
   useEffect(() => {
     if (!open) return
     const onDoc = (e: MouseEvent) => {
-      const target = e.target as Node | null
-      if (target instanceof Element && target.closest('.puc-user-card-overlay')) return
-      if (!wrapRef.current?.contains(target)) setOpen(false)
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('mousedown', onDoc)

@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
 import { InviteDialog } from '../invitations/InviteDialog'
 import { INVITE_COST_CP } from '../invitations/types'
-import { UserCard } from '../invitations/UserCard'
+import { useUserCard } from '../invitations/UserCardHost'
 import { useLobbyPresence, type LocationTag, type PresenceRow } from './useLobbyChat'
 import { countryFlag } from '../me/origin'
 import './OnlineList.css'
@@ -114,7 +114,7 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
   const navigate = useNavigate()
   const rows = useLobbyPresence()
   const { identity } = useCastle()
-  const [openCardFor, setOpenCardFor] = useState<string | null>(null)
+  const userCard = useUserCard()
   /** Shortcut: clicking the inline ✦ icon opens InviteDialog directly,
    *  skipping the User Card. Kid power-user move. */
   const [quickInviteRow, setQuickInviteRow] = useState<PresenceRow | null>(null)
@@ -141,7 +141,7 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
             onNav={(href) => navigate(href)}
             onNameClick={(normalizedName) => {
               if (!normalizedName) return // bypass guests have no normalizedName
-              setOpenCardFor(normalizedName)
+              userCard.open(normalizedName)
             }}
             onQuickInvite={(row) => setQuickInviteRow(row)}
             selfCanInvite={
@@ -152,14 +152,6 @@ export function OnlineList({ youUid }: { youUid: string | null }) {
           />
         ))}
       </ul>
-      {openCardFor && identity && (
-        <UserCard
-          normalizedName={openCardFor}
-          selfNormalizedName={identity.normalizedName}
-          selfCastlePoints={identity.castlePoints ?? 0}
-          onClose={() => setOpenCardFor(null)}
-        />
-      )}
       {quickInviteRow && identity && (
         <InviteDialog
           toNormalizedName={quickInviteRow.normalizedName}

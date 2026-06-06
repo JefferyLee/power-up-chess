@@ -39,6 +39,7 @@ import { trackScreen } from './firebase/analytics'
 import { InviteInbox } from './invitations/InviteInbox'
 import { OutgoingInviteProvider } from './invitations/OutgoingInviteContext'
 import { SentInviteToast } from './invitations/SentInviteToast'
+import { UserCardHost } from './invitations/UserCardHost'
 
 /** Single source of truth for presence — runs at the App root so every
  *  authenticated route auto-publishes a location to lobby/presence
@@ -83,6 +84,7 @@ export function App() {
     <BrowserRouter>
       <CastleIdentityProvider>
         <OutgoingInviteProvider>
+        <UserCardHost>
         <GlobalPresenceHeartbeat />
         <GlobalScreenTracker />
         <InviteInbox />
@@ -122,6 +124,7 @@ export function App() {
           <Route path="/team/:teamId" element={<TeamPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </UserCardHost>
         </OutgoingInviteProvider>
       </CastleIdentityProvider>
     </BrowserRouter>

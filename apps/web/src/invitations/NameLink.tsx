@@ -1,14 +1,21 @@
-// NameLink — tappable display name that opens the player's plaque
-// (UserCard) in a modal portal. Single helper used from every
-// surface that shows a name: Hall of Champions, ChatPanel,
-// Tournament standings, InviteInbox, future Recently Played list.
+// NameLink — tappable display name that opens the player's plaque.
+// Single helper used from every surface that shows a name: Hall of
+// Champions, ChatPanel, Tournament standings, InviteInbox, FindPlayer
+// results, future Recently Played list.
+//
+// The actual UserCard is mounted at the app root (see UserCardHost);
+// this component is now just a trigger. The earlier shape rendered
+// <UserCard> inline, which tied the modal's lifetime to NameLink's
+// — when NameLink's container unmounted mid-interaction (FindPlayer
+// dropdown collapsing, chat scrollback dropping a message), the
+// plaque vanished. UserCardHost is the load-bearing fix.
 //
 // Falls back to a plain span when normalizedName is missing (bypass
 // guests, or signed-out viewers) so the UI still reads sensibly.
 
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useCastle } from '../castle/useCastle'
-import { UserCard } from './UserCard'
+import { useUserCard } from './UserCardHost'
 
 interface Props {
   /** The lookup key. Omit / pass empty string to render a non-link. */
@@ -26,7 +33,7 @@ interface Props {
 
 export function NameLink({ normalizedName, displayName, children, className }: Props) {
   const { identity } = useCastle()
-  const [open, setOpen] = useState(false)
+  const userCard = useUserCard()
   const label = children ?? displayName
   // Bypass guests + signed-out viewers can't open the plaque (the
   // getPublicProfile callable requires auth + a normalizedName).
@@ -34,23 +41,13 @@ export function NameLink({ normalizedName, displayName, children, className }: P
     return <span className={className}>{label}</span>
   }
   return (
-    <>
-      <button
-        type="button"
-        className={className}
-        onClick={(e) => { e.stopPropagation(); setOpen(true) }}
-        title={`View ${displayName}'s plaque`}
-      >
-        {label}
-      </button>
-      {open && (
-        <UserCard
-          normalizedName={normalizedName}
-          selfNormalizedName={identity.normalizedName}
-          selfCastlePoints={identity.castlePoints ?? 0}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </>
+    <button
+      type="button"
+      className={className}
+      onClick={(e) => { e.stopPropagation(); userCard.open(normalizedName) }}
+      title={`View ${displayName}'s plaque`}
+    >
+      {label}
+    </button>
   )
 }
