@@ -298,12 +298,21 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   const turn = localGame.turn()
   const inCheck = positionStatus.kind === 'in_progress' && positionStatus.inCheck
 
-  // Resignation isn't visible in the position; the room doc carries it.
-  // Layer it on top so the UI treats resign as a real terminal state.
+  // Resignation and flag-fall aren't visible in the position; the room doc
+  // carries them. Layer them on top so the UI treats each as a real terminal
+  // state instead of falling back to in_progress.
   const effectiveStatus: GameStatus = useMemo(() => {
     if (room.status === 'completed' && room.endReason === 'resign') {
       const winner: Color = room.result === 'white' ? 'w' : 'b'
       return { kind: 'resign', winner, resigner: winner === 'w' ? 'b' : 'w' }
+    }
+    if (
+      room.status === 'completed' &&
+      room.endReason === 'timeout' &&
+      (room.result === 'white' || room.result === 'black')
+    ) {
+      const winner: Color = room.result === 'white' ? 'w' : 'b'
+      return { kind: 'timeout', winner, loser: winner === 'w' ? 'b' : 'w' }
     }
     return positionStatus
   }, [room.status, room.endReason, room.result, positionStatus])
