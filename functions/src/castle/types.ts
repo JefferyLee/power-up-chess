@@ -364,6 +364,36 @@ export interface GuestDoc {
   quizCorrect?: number
   /** Total story-quiz attempts (write side TODO). */
   quizAttempted?: number
+
+  // ── Origin tracking (MVP3 plaque tier display) ───────────────────────
+  //
+  // Captured on castleEnter from the request IP. Three-tier visibility
+  // enforced by getPublicProfile — public shows country only; the owner
+  // sees city + exact times; admin (Jeff) additionally sees raw IPs for
+  // abuse investigation. The hash is kept alongside the raw IP so
+  // "same source?" comparisons keep working even after the raw value
+  // is rotated out (e.g. by a future redaction sweep).
+  //
+  // Firestore rules already deny client reads of guests/{otherName}, so
+  // raw IPs only ever surface via the admin tier of getPublicProfile.
+  // Never expose firstIp / recentIp in any other callable.
+
+  /** ISO 2-char country code at first registration. */
+  firstCountry?: string
+  /** City name at first registration (may be inaccurate behind VPN/NAT). */
+  firstCity?: string
+  /** Raw first-seen IP (v4 or v6). Admin-only on getPublicProfile. */
+  firstIp?: string
+  /** HMAC-SHA256 hex of the first-seen IP. */
+  firstIpHash?: string
+  /** ISO 2-char country code from the most recent visit. */
+  recentCountry?: string
+  /** City name from the most recent visit. */
+  recentCity?: string
+  /** Raw most-recent IP. Admin-only on getPublicProfile. */
+  recentIp?: string
+  /** HMAC-SHA256 hex of the most recent IP. */
+  recentIpHash?: string
 }
 
 /** Cap for recentlyPlayedWith — newest 12 entries. Keeps the guest

@@ -1200,7 +1200,12 @@ export interface GetPublicProfileResponse {
   booksRead: number | null
   quizCorrect: number | null
   quizAttempted: number | null
-  equippedPieceSet: string | null
+  /** Currently-equipped piece-set id. Always a concrete id (defaults to
+   *  'classic' server-side when the guest has no cosmetics). The non-null
+   *  guarantee is load-bearing: passing null/undefined to <Piece
+   *  pieceSetIdOverride> makes it render the VIEWER's set, leaking the
+   *  viewer's cosmetic state into the profile being inspected. */
+  equippedPieceSet: string
   avatar: TeamBadge | null
   teams: Array<{
     teamId: string
@@ -1212,6 +1217,20 @@ export interface GetPublicProfileResponse {
   todaysFiveTotal: number | null
   todaysFiveDone: boolean
   todaysFiveResults: Array<boolean | null> | null
+  // Origin — tiered by viewerTier; see functions/src/castle/getPublicProfile.ts.
+  firstCountry: string | null
+  recentCountry: string | null
+  joinedMonth: string | null
+  onlineStatus: 'online' | 'today' | 'away'
+  firstCity: string | null
+  recentCity: string | null
+  joinedAt: number | null
+  lastSeenAt: number | null
+  firstIp: string | null
+  recentIp: string | null
+  firstIpHash: string | null
+  recentIpHash: string | null
+  viewerTier: 'public' | 'self' | 'admin'
 }
 
 const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfileResponse>(

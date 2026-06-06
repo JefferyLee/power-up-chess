@@ -79,7 +79,10 @@ export function AdventurerPlaqueScreen() {
       if (!data) return
       setState((prev) => {
         if (prev.kind !== 'ready') return prev
-        const nextEquipped = data.cosmetics?.pieceSet ?? null
+        // Same 'classic' default the server returns — keeps the field
+        // non-nullable so <Piece pieceSetIdOverride> never falls
+        // through to the viewer's cosmetic (see PlaqueCard).
+        const nextEquipped = data.cosmetics?.pieceSet ?? 'classic'
         const nextPoints = typeof data.castlePoints === 'number'
           ? data.castlePoints
           : prev.profile.castlePoints

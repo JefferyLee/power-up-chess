@@ -138,6 +138,11 @@ export interface PresenceDoc {
    *  Absent when the guest hasn't started today's set yet (or for
    *  bypass guests). Drives the inline HP-bar in the OnlineList. */
   todaysFive?: Array<boolean | null>
+  /** ISO 2-char country code (uppercase) from the guest's most recent
+   *  castleEnter. Projected on every heartbeat so the OnlineList can
+   *  render a flag without an extra read per row. Absent for bypass
+   *  guests + accounts pre-dating origin tracking. */
+  country?: string
 }
 
 // ─── Callables ─────────────────────────────────────────────────────────────

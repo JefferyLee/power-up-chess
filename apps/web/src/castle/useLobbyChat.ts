@@ -90,6 +90,8 @@ export interface PresenceRow {
    *  true=solved, false=failed, null=pending. Absent when the guest
    *  hasn't started today's set. Refreshed every heartbeat (~20s). */
   todaysFive?: Array<boolean | null>
+  /** ISO 2-char country code from the guest's most recent castleEnter. */
+  country?: string
 }
 
 const MAX_VISIBLE = 80

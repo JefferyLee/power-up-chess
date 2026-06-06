@@ -10,6 +10,12 @@ import { getPieceSet, isPieceSetId } from '../cosmetics/pieceSets'
 import type { PieceSymbol } from '../chess/types'
 import { useCastle } from '../castle/useCastle'
 import { TeamBadge as TeamBadgeView } from '../teams/TeamBadge'
+import {
+  countryFlag,
+  formatJoinedMonth,
+  shortenIpHash,
+  statusBadge,
+} from './origin'
 import './AdventurerPlaqueScreen.css'
 
 const DASH = '—'
@@ -19,8 +25,12 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
   const navigate = useNavigate()
   const { identity } = useCastle()
   const isSelf = !!identity && identity.normalizedName === profile.normalizedName
+  // Server guarantees a concrete piece-set id (defaults to 'classic') —
+  // see GetPublicProfileResponse.equippedPieceSet. Critical for the
+  // <Piece pieceSetIdOverride> below: passing undefined would make it
+  // render the VIEWER's set, not the profile owner's.
   const pieceSetId = profile.equippedPieceSet
-  const set = isPieceSetId(pieceSetId ?? '') ? getPieceSet(pieceSetId!) : getPieceSet(undefined)
+  const set = isPieceSetId(pieceSetId) ? getPieceSet(pieceSetId) : getPieceSet(undefined)
   // Pick a random piece type once per mount so the showcase changes
   // between visits but doesn't shuffle mid-view (e.g. on a focus
   // refetch). normalizedName seeds the choice loosely to keep it
@@ -79,7 +89,7 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
               : "Today's Five not started — finish it to brighten your gear"
           }
         >
-          <Piece piece={{ type: showcasePiece, color: 'w' }} pieceSetIdOverride={pieceSetId ?? undefined} />
+          <Piece piece={{ type: showcasePiece, color: 'w' }} pieceSetIdOverride={pieceSetId} />
         </span>
         <p className="puc-plaque-equipment__label">{set.label}</p>
         <button
@@ -155,8 +165,100 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
             <PlaqueTeamsRow teams={profile.teams} />
           </Section>
         )}
+
+        <OriginSection profile={profile} />
       </div>
     </div>
+  )
+}
+
+function OriginSection({ profile }: { profile: GetPublicProfileResponse }) {
+  const status = statusBadge(profile.onlineStatus)
+  const firstFlag = countryFlag(profile.firstCountry)
+  const recentFlag = countryFlag(profile.recentCountry)
+  const showJourney =
+    !!profile.firstCountry
+    && !!profile.recentCountry
+    && profile.firstCountry !== profile.recentCountry
+  const hasAnyCountry = !!profile.firstCountry || !!profile.recentCountry
+  const tier = profile.viewerTier
+  return (
+    <Section title="Origin">
+      {hasAnyCountry && (
+        <Row label={showJourney ? 'Journey' : 'From'}>
+          <span className="puc-plaque-origin">
+            <span className="puc-plaque-origin__leg" title={status.title}>
+              {firstFlag || DASH}
+              {profile.firstCity && (
+                <span className="puc-plaque-origin__city">{profile.firstCity}</span>
+              )}
+            </span>
+            {showJourney && (
+              <>
+                <span className="puc-plaque-origin__arrow" aria-hidden="true">→</span>
+                <span className="puc-plaque-origin__leg">
+                  {recentFlag || DASH}
+                  {profile.recentCity && (
+                    <span className="puc-plaque-origin__city">{profile.recentCity}</span>
+                  )}
+                </span>
+              </>
+            )}
+          </span>
+        </Row>
+      )}
+      <Row label="Joined">
+        <span>
+          {formatJoinedMonth(profile.joinedMonth)}
+          {profile.joinedAt !== null && (
+            <span className="puc-plaque-aside">
+              {' · '}
+              {new Date(profile.joinedAt).toLocaleDateString(undefined, {
+                year: 'numeric', month: 'short', day: 'numeric',
+              })}
+            </span>
+          )}
+        </span>
+      </Row>
+      <Row label="Status">
+        <span title={status.title}>
+          <span className="puc-plaque-origin__dot" aria-hidden="true">{status.dot}</span>
+          {' '}{status.label}
+          {profile.lastSeenAt !== null && profile.onlineStatus !== 'online' && (
+            <span className="puc-plaque-aside">
+              {' · last seen '}
+              {new Date(profile.lastSeenAt).toLocaleString(undefined, {
+                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+              })}
+            </span>
+          )}
+        </span>
+      </Row>
+      {tier === 'admin' && (profile.firstIp || profile.recentIp) && (
+        <>
+          <Row label="First IP">
+            <code className="puc-plaque-iphash">{profile.firstIp ?? DASH}</code>
+            {profile.firstIpHash && (
+              <span className="puc-plaque-aside"> · {shortenIpHash(profile.firstIpHash)}</span>
+            )}
+          </Row>
+          <Row label="Recent IP">
+            <code className="puc-plaque-iphash">{profile.recentIp ?? DASH}</code>
+            {profile.firstIpHash && profile.recentIpHash
+              && profile.firstIpHash === profile.recentIpHash && (
+              <span className="puc-plaque-aside"> · same source</span>
+            )}
+          </Row>
+        </>
+      )}
+      {tier !== 'public' && (
+        <p className="puc-plaque-origin__hint">
+          {tier === 'admin'
+            ? 'IPs and city info are visible to admins.'
+            : 'City info and exact times are visible only to you.'}
+        </p>
+      )}
+    </Section>
   )
 }
 

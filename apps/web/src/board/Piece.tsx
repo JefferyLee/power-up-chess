@@ -11,7 +11,13 @@ interface Props {
   /** Override the rendered set for this specific piece. Used in online
    *  rooms where each side's pieces should render in that player's
    *  equipped set, regardless of who's viewing. Falls back to the
-   *  viewer's own local default when undefined or invalid. */
+   *  viewer's own local default when undefined or invalid.
+   *
+   *  ⚠️  Identity-bearing contexts (plaques, user cards) MUST pass a
+   *  concrete id — never undefined. With undefined the viewer's set
+   *  bleeds through and you'll see your OWN cosmetic on a stranger's
+   *  card. Server-side, GetPublicProfileResponse.equippedPieceSet is
+   *  typed `string` (defaults to 'classic') for exactly this reason. */
   pieceSetIdOverride?: string
 }
 

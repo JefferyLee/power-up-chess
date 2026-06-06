@@ -18,6 +18,7 @@ import { InviteDialog } from '../invitations/InviteDialog'
 import { INVITE_COST_CP } from '../invitations/types'
 import { UserCard } from '../invitations/UserCard'
 import { useLobbyPresence, type LocationTag, type PresenceRow } from './useLobbyChat'
+import { countryFlag } from '../me/origin'
 import './OnlineList.css'
 
 interface LocationView {
@@ -221,6 +222,11 @@ function OnlineRow({
         {cosmetic && (
           <span className="puc-online__cosmetic" title={cosmetic.title}>
             {cosmetic.icon}
+          </span>
+        )}
+        {row.country && (
+          <span className="puc-online__flag" title={row.country} aria-hidden="true">
+            {countryFlag(row.country)}
           </span>
         )}
         {row.displayName}

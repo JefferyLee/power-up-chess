@@ -9,8 +9,9 @@
 // What we return is a deliberately small subset of the GuestDoc plus a
 // peek into the user's current presence so the spectator button can
 // link straight to whatever room they're in. NEVER returns magic-word
-// hashes, uids, IP, full puzzle stats, or anything that could enable
-// tracking / harassment beyond what the OnlineList already shows.
+// hashes or uids. Origin/geo fields are tiered: country + joined-month
+// + online bucket are public; exact times + city are owner-only; IP
+// hash is admin-only.
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
@@ -20,6 +21,15 @@ import type { LocationTag, PresenceDoc } from './chatTypes'
 import { laDayKey } from '../puzzles/dailyFive'
 
 const PRESENCE_FRESH_MS = 45_000 // matches the heartbeat cadence + a little slack
+
+/** Owner of the admin tier — sees IP hashes on other guests' profiles. */
+const ADMIN_NORMALIZED_NAME = 'jeff'
+
+/** Bucket boundary: a guest visited within this window without being
+ *  "online right now" is shown as 🟡 active today. */
+const ACTIVE_TODAY_MS = 24 * 60 * 60 * 1000
+
+export type OnlineBucket = 'online' | 'today' | 'away'
 
 export interface GetPublicProfileRequest {
   normalizedName: string
@@ -68,8 +78,12 @@ export interface GetPublicProfileResponse {
   booksRead: number | null
   quizCorrect: number | null
   quizAttempted: number | null
-  /** Currently-equipped piece-set id (used to render mini-pieces on the plaque). */
-  equippedPieceSet: string | null
+  /** Currently-equipped piece-set id (used to render mini-pieces on the
+   *  plaque). NEVER null — defaults to 'classic' for guests with no
+   *  cosmetics set. This guarantee is what stops <Piece pieceSetIdOverride>
+   *  from falling through to the VIEWER's equipped set when rendering
+   *  another guest's plaque (the leak we shipped before this fix). */
+  equippedPieceSet: string
   /** Heraldic avatar config — drives the avatar render across the app. */
   avatar: import('./types').TeamBadge | null
   /** Teams this guest is a current member of. Inlined name + badge
@@ -96,6 +110,36 @@ export interface GetPublicProfileResponse {
    *  null = not yet attempted. Drives the HP-bar segments + brightness
    *  mask on the plaque. */
   todaysFiveResults: Array<boolean | null> | null
+
+  // ── Origin tracking (tiered) ───────────────────────────────────────
+  /** ISO 2-char country code where this user first registered. Always public. */
+  firstCountry: string | null
+  /** ISO 2-char country code of the most recent visit. Always public. */
+  recentCountry: string | null
+  /** Month-of-registration, "YYYY-MM" in UTC. Always public. */
+  joinedMonth: string | null
+  /** Coarse online-status bucket. Always public. */
+  onlineStatus: OnlineBucket
+  /** City of registration. Owner + admin only (null for public viewers). */
+  firstCity: string | null
+  /** City of most recent visit. Owner + admin only. */
+  recentCity: string | null
+  /** Exact registration timestamp (ms). Owner + admin only. */
+  joinedAt: number | null
+  /** Exact most-recent-visit timestamp (ms). Owner + admin only. */
+  lastSeenAt: number | null
+  /** Raw first-seen IP. Admin only (Jeff investigates abuse). */
+  firstIp: string | null
+  /** Raw most-recent IP. Admin only. */
+  recentIp: string | null
+  /** HMAC-SHA256 hex of first-seen IP. Admin only — handy for
+   *  "same source as later visit?" comparisons without re-reading IP. */
+  firstIpHash: string | null
+  /** HMAC-SHA256 hex of most-recent IP. Admin only. */
+  recentIpHash: string | null
+  /** Which tier the response was rendered at — clients use this to
+   *  decide whether to render "(visible only to you)" hints. */
+  viewerTier: 'public' | 'self' | 'admin'
 }
 
 export const getPublicProfile = onCall<
@@ -194,6 +238,33 @@ export const getPublicProfile = onCall<
     }
   }
 
+  // ── Viewer tier ──────────────────────────────────────────────────
+  // Self = caller's uid is one of the guest's bound uids. Admin = Jeff
+  // (matched the same way as feedback.ts) but only when not self —
+  // Jeff viewing his own plaque is just "self".
+  const isSelf = Array.isArray(guest.uids) && guest.uids.includes(req.auth.uid)
+  let isAdmin = false
+  if (!isSelf && normalized !== ADMIN_NORMALIZED_NAME) {
+    const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
+    const admin = adminSnap.data() as GuestDoc | undefined
+    isAdmin = !!admin && Array.isArray(admin.uids) && admin.uids.includes(req.auth.uid)
+  }
+  const viewerTier: 'public' | 'self' | 'admin' = isSelf ? 'self' : isAdmin ? 'admin' : 'public'
+
+  // ── Online bucket — coarser than the precise lastSeenAt that owner/
+  // admin viewers receive. Public viewers only see the bucket. ─────
+  let onlineStatus: OnlineBucket = 'away'
+  if (freshest) {
+    onlineStatus = 'online'
+  } else if (typeof guest.lastVisitAt === 'number' && now - guest.lastVisitAt < ACTIVE_TODAY_MS) {
+    onlineStatus = 'today'
+  }
+
+  // joinedMonth — "YYYY-MM" UTC. Public-safe (no day or hour leak).
+  const joinedMonth = typeof guest.createdAt === 'number'
+    ? new Date(guest.createdAt).toISOString().slice(0, 7)
+    : null
+
   return {
     displayName: guest.displayName,
     normalizedName: normalized,
@@ -219,12 +290,28 @@ export const getPublicProfile = onCall<
     booksRead: typeof guest.booksRead === 'number' ? guest.booksRead : null,
     quizCorrect: typeof guest.quizCorrect === 'number' ? guest.quizCorrect : null,
     quizAttempted: typeof guest.quizAttempted === 'number' ? guest.quizAttempted : null,
-    equippedPieceSet: guest.cosmetics?.pieceSet ?? null,
+    equippedPieceSet: guest.cosmetics?.pieceSet ?? 'classic',
     avatar: guest.cosmetics?.avatar ?? null,
     teams,
     todaysFiveSolved,
     todaysFiveTotal,
     todaysFiveDone,
     todaysFiveResults,
+    // Origin — public fields
+    firstCountry: guest.firstCountry ?? null,
+    recentCountry: guest.recentCountry ?? null,
+    joinedMonth,
+    onlineStatus,
+    // Origin — owner + admin fields
+    firstCity: viewerTier !== 'public' ? (guest.firstCity ?? null) : null,
+    recentCity: viewerTier !== 'public' ? (guest.recentCity ?? null) : null,
+    joinedAt: viewerTier !== 'public' ? (guest.createdAt ?? null) : null,
+    lastSeenAt: viewerTier !== 'public' ? (guest.lastVisitAt ?? null) : null,
+    // Origin — admin-only
+    firstIp: viewerTier === 'admin' ? (guest.firstIp ?? null) : null,
+    recentIp: viewerTier === 'admin' ? (guest.recentIp ?? null) : null,
+    firstIpHash: viewerTier === 'admin' ? (guest.firstIpHash ?? null) : null,
+    recentIpHash: viewerTier === 'admin' ? (guest.recentIpHash ?? null) : null,
+    viewerTier,
   }
 })

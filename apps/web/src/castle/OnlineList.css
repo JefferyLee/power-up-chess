@@ -152,6 +152,15 @@
   filter: drop-shadow(0 0 5px rgba(255, 140, 70, 0.85));
 }
 
+/* Country flag — small badge before the display name, no special hover. */
+.puc-online__flag {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 13px;
+  line-height: 1;
+  vertical-align: -1px;
+}
+
 /* Watch / Join action pill. */
 .puc-online__follow {
   appearance: none;

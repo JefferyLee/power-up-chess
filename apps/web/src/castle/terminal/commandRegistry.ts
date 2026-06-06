@@ -891,7 +891,7 @@ interface ProfilePreview {
   todaysFiveSolved: number | null
   todaysFiveTotal: number | null
   booksRead: number | null
-  equippedPieceSet: string | null
+  equippedPieceSet: string
   teams: Array<{ name: string; captain: boolean }>
   currentLocation: LocationTag | null
   inGame: boolean

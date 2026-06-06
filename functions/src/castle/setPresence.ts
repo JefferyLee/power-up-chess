@@ -40,6 +40,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     let hasTournamentCrown = false
     let title: string | null = null
     let todaysFive: Array<boolean | null> | null = null
+    let country: string | null = null
     // Verify non-bypass identity against the guest doc + read cosmetic state.
     if (!isBypass) {
       if (!normalizedName) throw new HttpsError('invalid-argument', 'normalizedName required for non-bypass guests.')
@@ -80,6 +81,9 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
           r === true ? true : r === false ? false : null,
         )
       }
+      if (typeof guest.recentCountry === 'string' && guest.recentCountry.length === 2) {
+        country = guest.recentCountry
+      }
     }
 
     const now = Date.now()
@@ -98,6 +102,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       ...(hasTournamentCrown ? { hasTournamentCrown: true } : {}),
       ...(title ? { title } : {}),
       ...(todaysFive ? { todaysFive } : {}),
+      ...(country ? { country } : {}),
     }
     await db.doc(`lobby/presence/items/${sessionId}`).set(presence)
 
