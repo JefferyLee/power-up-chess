@@ -11,6 +11,8 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 import {
   DEFAULT_RATING,
   ELO_K,
@@ -38,6 +40,7 @@ export const submitPuzzleAttempt = onCall<
   if (!puzzleId) throw new HttpsError('invalid-argument', 'puzzleId required.')
 
   const db = getFirestore()
+  const callerIp = extractIp(req)
   const puzzleSnap = await db.doc(`puzzles/${puzzleId}`).get()
   const puzzle = puzzleSnap.data() as PuzzleDoc | undefined
   if (!puzzle) throw new HttpsError('not-found', 'Puzzle not found.')
@@ -189,6 +192,22 @@ export const submitPuzzleAttempt = onCall<
     if (totalPoints > 0) {
       update.castlePoints = FieldValue.increment(totalPoints)
       update.lifetimeEarned = FieldValue.increment(totalPoints)
+      const before = guest.castlePoints
+      appendAuditTx(tx, {
+        normalizedName,
+        uid: req.auth!.uid,
+        delta: totalPoints,
+        before,
+        after: before + totalPoints,
+        source: dailyBonusAdded > 0 ? 'puzzle:daily-bonus' : 'puzzle:solve',
+        metadata: {
+          puzzleId,
+          success,
+          plot: puzzle.plot,
+          ...(dailyBonusAdded > 0 ? { dailyBonusAdded } : {}),
+        },
+        ...(callerIp ? { ip: callerIp } : {}),
+      })
     }
     tx.update(guestRef, update)
 

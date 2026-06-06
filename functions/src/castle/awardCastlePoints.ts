@@ -24,6 +24,8 @@ import {
   type GuestDailyEarn,
   type GuestDoc,
 } from './types'
+import { appendAuditTx } from './audit'
+import { extractIp } from './ipGeo'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -109,6 +111,7 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
     // concurrent puzzle solves from each blowing past the cap by 1.
     const { key: bucketKey, cap } = dailyCapFor(award.source)
     const todayKey = Math.floor(Date.now() / DAY_MS)
+    const ip = extractIp(req)
 
     return db.runTransaction(async (tx) => {
       const snap = await tx.get(guestRef)
@@ -149,6 +152,28 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
         castlePoints: after,
         dailyEarn: earn,
         lifetimeEarned: lifetimeAfter,
+      })
+      const sourceLabel = award.source === 'chess-win' && award.opponent
+        ? `award:chess-win:${award.opponent}`
+        : `award:${award.source}`
+      const metadata: Record<string, string | number | boolean> = {}
+      if (award.source === 'puzzle') {
+        metadata.puzzleId = award.puzzleId
+        metadata.isFirstSolve = award.isFirstSolve
+      } else if (award.source === 'chess-win' || award.source === 'chess-review') {
+        metadata.gameId = award.gameId
+      } else if (award.source === 'mystery') {
+        metadata.mysteryId = award.mysteryId
+      }
+      appendAuditTx(tx, {
+        normalizedName,
+        uid,
+        delta: grantedAmount,
+        before,
+        after,
+        source: sourceLabel,
+        metadata,
+        ...(ip ? { ip } : {}),
       })
       return { castlePoints: after, added: grantedAmount, unlockedJustNow }
     })

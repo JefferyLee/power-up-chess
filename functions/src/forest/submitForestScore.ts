@@ -12,6 +12,8 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { AWARD_CAPS, UNLOCK_THRESHOLD, type GuestDailyEarn, type GuestDoc } from '../castle/types'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 const MAX_SCORE = 200       // hard ceiling so a malicious client can't inflate
 const MIN_SCORE = 0
@@ -83,6 +85,7 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
     const runRef = db.doc(`forest_runs/${uid}/runs/${runId}`)
     const now = Date.now()
     const todayKey = Math.floor(now / DAY_MS)
+    const callerIp = extractIp(req)
 
     return db.runTransaction(async (tx) => {
       // ── Phase 1: reads ──────────────────────────────────────────────
@@ -136,6 +139,16 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
           castlePoints,
           dailyEarn: earnBucket,
           lifetimeEarned: lifetimePrev + castlePointsAdded,
+        })
+        appendAuditTx(tx, {
+          normalizedName,
+          uid,
+          delta: castlePointsAdded,
+          before,
+          after: castlePoints,
+          source: 'forest:run',
+          metadata: { runId, score, improved },
+          ...(callerIp ? { ip: callerIp } : {}),
         })
       } else if (guest.dailyEarn?.dayKey !== todayKey) {
         // Roll the bucket over to today even though no payout this run,

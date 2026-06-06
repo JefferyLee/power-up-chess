@@ -25,6 +25,8 @@ import {
   type GuestDoc,
 } from '../../castle/types'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
+import { appendAuditTx } from '../../castle/audit'
+import { extractIp } from '../../castle/ipGeo'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -113,6 +115,7 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
     const now = Date.now()
     const guestRef = db.doc(`guests/${slot.normalizedName}`)
     const cost = AWARD_CAPS.wizardRoomOpenCost
+    const callerIp = extractIp(req)
 
     for (let i = 0; i < MAX_TRIES; i++) {
       const roomId = generateRoomId()
@@ -164,6 +167,16 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
         if (roomSnap.exists) return false
         tx.create(ref, doc)
         tx.update(guestRef, { castlePoints: FieldValue.increment(-cost) })
+        appendAuditTx(tx, {
+          normalizedName: slot.normalizedName!,
+          uid: req.auth!.uid,
+          delta: -cost,
+          before: guest.castlePoints,
+          after: guest.castlePoints - cost,
+          source: 'room-open:wizard',
+          metadata: { roomId },
+          ...(callerIp ? { ip: callerIp } : {}),
+        })
         return true
       })
 
@@ -333,6 +346,7 @@ export const submitWizardSpell = onCall<
     spellById(spellId)  // sanity check that the id is known
     const db = getFirestore()
     const roomRef = db.doc(`wizard_rooms/${roomId}`)
+    const spellCallerIp = extractIp(req)
 
     return db.runTransaction(async (tx) => {
       // ── Phase 1: all reads ────────────────────────────────────────────
@@ -405,6 +419,21 @@ export const submitWizardSpell = onCall<
       // ── Phase 2: remaining writes ─────────────────────────────────────
       const nextPoints = guest.castlePoints - pricing.effectiveCost
       tx.update(guestRef, { castlePoints: nextPoints })
+      appendAuditTx(tx, {
+        normalizedName: callerSlot.normalizedName!,
+        uid,
+        delta: -pricing.effectiveCost,
+        before: guest.castlePoints,
+        after: nextPoints,
+        source: `wizard-spell:${spellId}`,
+        metadata: {
+          roomId,
+          spellId,
+          baseCost: pricing.baseCost,
+          effectiveCost: pricing.effectiveCost,
+        },
+        ...(spellCallerIp ? { ip: spellCallerIp } : {}),
+      })
 
       const next = engine.toState()
       const update: Partial<WizardRoomDoc> = {
@@ -583,6 +612,17 @@ async function applyDuelPayouts(
       updates['cosmetics.winStreakCrownExpiresAt'] = now + crownExtensionMs
     }
     tx.update(winnerRef, updates)
+    appendAuditTx(tx, {
+      normalizedName: winnerSlot!.normalizedName!,
+      // No specific actor — payout fires from the room's terminal state
+      // (timeout / resign / checkmate). The caller varies per code path.
+      uid: null,
+      delta: AWARD_CAPS.duelWinner,
+      before: winnerDoc.castlePoints,
+      after: winnerDoc.castlePoints + AWARD_CAPS.duelWinner,
+      source: 'duel:winner',
+      metadata: { streak: nextStreak },
+    })
   }
   if (loserRef && loserSnap && loserSnap.exists) {
     const loserDoc = loserSnap.data() as GuestDoc
@@ -592,6 +632,14 @@ async function applyDuelPayouts(
       lifetimeEarned: lifetimePrev + AWARD_CAPS.duelLoser,
       // Loss resets the streak; the crown lives out its natural expiry.
       'cosmetics.winStreak': 0,
+    })
+    appendAuditTx(tx, {
+      normalizedName: loserSlot!.normalizedName!,
+      uid: null,
+      delta: AWARD_CAPS.duelLoser,
+      before: loserDoc.castlePoints,
+      after: loserDoc.castlePoints + AWARD_CAPS.duelLoser,
+      source: 'duel:loser',
     })
   }
 }

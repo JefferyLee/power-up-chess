@@ -9,6 +9,8 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
 import { isKnownPieceSet, priceFor } from './registry'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 export interface PurchaseCosmeticRequest {
   normalizedName: string
@@ -61,6 +63,7 @@ export const purchaseCosmetic = onCall<
 
   const db = getFirestore()
   const guestRef = db.doc(`guests/${normalizedName}`)
+  const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(guestRef)
@@ -109,6 +112,16 @@ export const purchaseCosmetic = onCall<
       castlePoints: after,
       cosmetics: nextCosmetics,
       lastVisitAt: Date.now(),
+    })
+    appendAuditTx(tx, {
+      normalizedName,
+      uid,
+      delta: -price,
+      before: guest.castlePoints,
+      after,
+      source: `purchase:${pieceSetId}`,
+      metadata: { pieceSetId, price },
+      ...(callerIp ? { ip: callerIp } : {}),
     })
 
     return {

@@ -103,6 +103,15 @@ service cloud.firestore {
     match /castle_enter_attempts/{uid} {
       allow read, write: if false;
     }
+
+    // Castle point audit ledger — every CP balance change is appended
+    // here in-transaction by the callable that made the change. Used by
+    // Jeff for abuse investigation. Function-only at the rules layer;
+    // future admin UI will read it via a dedicated callable that
+    // re-checks the admin claim.
+    match /castle_point_audit/{entryId} {
+      allow read, write: if false;
+    }
     match /castle_enter_attempts_daily/{key} {
       allow read, write: if false;
     }

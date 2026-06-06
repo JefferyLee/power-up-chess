@@ -6,6 +6,8 @@ import type { CreateRoomRequest, CreateRoomResponse, RoomDoc } from './types'
 import { postRoomInvite } from '../castle/postRoomInvite'
 import { AWARD_CAPS, type GuestDoc } from '../castle/types'
 import { sanitisePieceSetId } from '../cosmetics/registry'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -47,6 +49,7 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
     const now = Date.now()
     const guestRef = db.doc(`guests/${normalizedName}`)
     const cost = AWARD_CAPS.chessRoomOpenCost
+    const callerIp = extractIp(req)
 
     // Charge + create atomically. Tx retries on collision OR contention; we
     // pre-generate room IDs per attempt so the whole transaction either
@@ -94,6 +97,16 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
         if (roomSnap.exists) return false
         tx.create(ref, doc)
         tx.update(guestRef, { castlePoints: FieldValue.increment(-cost) })
+        appendAuditTx(tx, {
+          normalizedName,
+          uid: req.auth!.uid,
+          delta: -cost,
+          before: guest.castlePoints,
+          after: guest.castlePoints - cost,
+          source: 'room-open:chess',
+          metadata: { roomId },
+          ...(callerIp ? { ip: callerIp } : {}),
+        })
         return true
       })
 

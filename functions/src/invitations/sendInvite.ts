@@ -20,6 +20,8 @@ import { consumeDailyQuota } from '../llm/rateLimit'
 import { sanitiseTimeControl } from '../rooms/sanitiseTimeControl'
 import type { TimeControl } from '../rooms/types'
 import { INVITE_COST_CP, INVITE_DAILY_LIMIT, INVITE_TTL_MS, type InvitationDoc } from './types'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 export interface SendInviteRequest {
   fromNormalizedName: string
@@ -75,6 +77,7 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     const expiresAt = now + INVITE_TTL_MS
     // Pick the host server-side so neither client can spoof a preference.
     const hostMode: 'lucy' | 'luca' = Math.random() < 0.5 ? 'lucy' : 'luca'
+    const callerIp = extractIp(req)
 
     const result = await db.runTransaction(async (tx) => {
       const fromSnap = await tx.get(fromRef)
@@ -129,6 +132,16 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
 
       tx.update(fromRef, { castlePoints: FieldValue.increment(-INVITE_COST_CP) })
       tx.create(inviteRef, doc)
+      appendAuditTx(tx, {
+        normalizedName: fromNormalized,
+        uid: req.auth!.uid,
+        delta: -INVITE_COST_CP,
+        before: fromGuest.castlePoints,
+        after: fromGuest.castlePoints - INVITE_COST_CP,
+        source: 'invite:send',
+        metadata: { inviteId: inviteRef.id, toNormalizedName: toNormalized },
+        ...(callerIp ? { ip: callerIp } : {}),
+      })
       return { inviteId: inviteRef.id, expiresAt }
     })
 

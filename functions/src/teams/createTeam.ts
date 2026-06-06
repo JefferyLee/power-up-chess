@@ -20,6 +20,8 @@ import type { ChatMessageDoc } from '../castle/chatTypes'
 import { hostOnDuty } from '../shared/hostOnDuty'
 import { generateTeamId, normalizeTeamName } from './teamId'
 import { sanitiseBadge } from './sanitiseBadge'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 const NAME_MIN = 2
 const NAME_MAX = 30
@@ -79,6 +81,7 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
     const teamRef = db.doc(`teams/${teamId}`)
 
     const now = Date.now()
+    const callerIp = extractIp(req)
     return db.runTransaction(async (tx) => {
       const [guestSnap, lockSnap, teamSnap] = await Promise.all([
         tx.get(guestRef),
@@ -138,6 +141,16 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
       tx.update(guestRef, {
         castlePoints: guest.castlePoints - TEAM_CREATE_COST_CP,
         teamIds: FieldValue.arrayUnion(teamId),
+      })
+      appendAuditTx(tx, {
+        normalizedName: idData.normalizedName,
+        uid,
+        delta: -TEAM_CREATE_COST_CP,
+        before: guest.castlePoints,
+        after: guest.castlePoints - TEAM_CREATE_COST_CP,
+        source: 'team:create',
+        metadata: { teamId, teamName: name },
+        ...(callerIp ? { ip: callerIp } : {}),
       })
 
       // Auto-post a recruit card to the Hall chat so the Castle

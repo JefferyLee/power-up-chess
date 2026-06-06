@@ -12,6 +12,8 @@ import {
   OPENING_POSITION_REWARD_PTS,
   isKnownOpeningPosition,
 } from './lessonsServer'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 export interface SubmitOpeningClearRequest {
   normalizedName: string
@@ -62,6 +64,7 @@ export const submitOpeningClear = onCall<
   const total = OPENING_POSITION_COUNT[openingId]!
   const db = getFirestore()
   const guestRef = db.doc(`guests/${normalizedName}`)
+  const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(guestRef)
@@ -123,6 +126,18 @@ export const submitOpeningClear = onCall<
     }
     if (Object.keys(update).length > 1) {
       tx.update(guestRef, update)
+      if (pointsAdded > 0) {
+        appendAuditTx(tx, {
+          normalizedName,
+          uid,
+          delta: pointsAdded,
+          before: guest.castlePoints,
+          after: guest.castlePoints + pointsAdded,
+          source: lessonMasteredNow ? 'opening:lesson-master' : 'opening:position',
+          metadata: { openingId, positionIndex, lessonMasteredNow },
+          ...(callerIp ? { ip: callerIp } : {}),
+        })
+      }
     }
 
     return {

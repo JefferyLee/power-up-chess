@@ -9,6 +9,8 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { TUTORIAL_COMPLETE_REWARD, type GuestDoc } from './types'
+import { appendAuditTx } from './audit'
+import { extractIp } from './ipGeo'
 
 export interface AwardTutorialCompleteRequest {
   normalizedName: string
@@ -35,6 +37,7 @@ export const awardTutorialComplete = onCall<
 
   const db = getFirestore()
   const guestRef = db.doc(`guests/${normalizedName}`)
+  const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(guestRef)
@@ -59,6 +62,15 @@ export const awardTutorialComplete = onCall<
       lifetimeEarned: FieldValue.increment(reward),
       learnedBasicsAt: Date.now(),
       lastVisitAt: Date.now(),
+    })
+    appendAuditTx(tx, {
+      normalizedName,
+      uid,
+      delta: reward,
+      before: guest.castlePoints,
+      after: guest.castlePoints + reward,
+      source: 'tutorial:complete',
+      ...(callerIp ? { ip: callerIp } : {}),
     })
     return {
       ok: true,

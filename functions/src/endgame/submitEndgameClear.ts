@@ -17,6 +17,8 @@ import {
   POSITION_REWARD_PTS,
   isKnownEndgamePosition,
 } from './lessonsServer'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 export interface SubmitEndgameClearRequest {
   normalizedName: string
@@ -72,6 +74,7 @@ export const submitEndgameClear = onCall<
   const db = getFirestore()
   const guestRef = db.doc(`guests/${normalizedName}`)
   const lessonPositions = ENDGAME_LESSONS[lessonId]!.positions
+  const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(guestRef)
@@ -135,6 +138,18 @@ export const submitEndgameClear = onCall<
     }
     if (Object.keys(update).length > 1) {
       tx.update(guestRef, update)
+      if (pointsAdded > 0) {
+        appendAuditTx(tx, {
+          normalizedName,
+          uid,
+          delta: pointsAdded,
+          before: guest.castlePoints,
+          after: guest.castlePoints + pointsAdded,
+          source: lessonMasteredNow ? 'endgame:lesson-master' : 'endgame:position',
+          metadata: { lessonId, positionLabel, lessonMasteredNow },
+          ...(callerIp ? { ip: callerIp } : {}),
+        })
+      }
     }
 
     return {

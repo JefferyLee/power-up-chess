@@ -13,6 +13,8 @@ import {
   type TournamentDoc,
 } from './types'
 import { tournamentWeekKey } from './weekKey'
+import { appendAuditTx } from '../castle/audit'
+import { extractIp } from '../castle/ipGeo'
 
 export interface CloseTournamentRequest {
   normalizedName: string
@@ -46,6 +48,7 @@ export const closeTournament = onCall<
   const db = getFirestore()
   const tournamentRef = db.doc(`tournaments/${tournamentWeekKey()}`)
   const guestRef = db.doc(`guests/${normalizedName}`)
+  const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
     const [tSnap, gSnap] = await Promise.all([
@@ -138,6 +141,19 @@ export const closeTournament = onCall<
         castlePoints: FieldValue.increment(TOURNAMENT_WINNER_REWARD_PTS),
         lifetimeEarned: lifetimePrev + TOURNAMENT_WINNER_REWARD_PTS,
         'cosmetics.tournamentCrownExpiresAt': now + TOURNAMENT_CROWN_MS,
+      })
+      appendAuditTx(tx, {
+        normalizedName: winner.normalizedName,
+        // uid is the caller closing the tournament, not necessarily the
+        // winner. Stamp as the caller's uid for traceability (who triggered
+        // this payout); the winner identity is in normalizedName.
+        uid,
+        delta: TOURNAMENT_WINNER_REWARD_PTS,
+        before: winnerGuest.castlePoints,
+        after: winnerGuest.castlePoints + TOURNAMENT_WINNER_REWARD_PTS,
+        source: 'tournament:winner',
+        metadata: { weekKey: tournamentWeekKey(), closedBy: normalizedName },
+        ...(callerIp ? { ip: callerIp } : {}),
       })
     }
 
