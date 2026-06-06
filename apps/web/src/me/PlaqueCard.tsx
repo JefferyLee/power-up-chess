@@ -2,7 +2,7 @@
 // the click-to-open UserCard popover so a guest sees the same engraved
 // stats whether they're looking at themselves or someone else.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { GetPublicProfileResponse } from '../firebase/callables'
 import { Piece } from '../board/Piece'
@@ -25,6 +25,7 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
   const navigate = useNavigate()
   const { identity } = useCastle()
   const isSelf = !!identity && identity.normalizedName === profile.normalizedName
+  const [originExpanded, setOriginExpanded] = useState(false)
   // Server guarantees a concrete piece-set id (defaults to 'classic') —
   // see GetPublicProfileResponse.equippedPieceSet. Critical for the
   // <Piece pieceSetIdOverride> below: passing undefined would make it
@@ -73,6 +74,12 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
           <p className="puc-plaque-card__subtitle">
             {profile.title?.label ?? 'Visitor'} · {profile.castlePoints.toLocaleString()} castle points
           </p>
+          <OriginPill
+            profile={profile}
+            expanded={originExpanded}
+            onToggle={() => setOriginExpanded((v) => !v)}
+          />
+          {originExpanded && <OriginDetail profile={profile} />}
         </div>
       </header>
 
@@ -165,14 +172,61 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
             <PlaqueTeamsRow teams={profile.teams} />
           </Section>
         )}
-
-        <OriginSection profile={profile} />
       </div>
     </div>
   )
 }
 
-function OriginSection({ profile }: { profile: GetPublicProfileResponse }) {
+/** Compact one-line origin summary that lives under the subtitle in
+ *  the plaque header. Clickable: toggles the OriginDetail panel below.
+ *  Always rendered so the chevron is discoverable even before any
+ *  geo data exists for this guest (the dot + status still mean
+ *  something on day one). */
+function OriginPill({
+  profile,
+  expanded,
+  onToggle,
+}: {
+  profile: GetPublicProfileResponse
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const status = statusBadge(profile.onlineStatus)
+  const firstFlag = countryFlag(profile.firstCountry)
+  const recentFlag = countryFlag(profile.recentCountry)
+  const sameOrSingleFlag = firstFlag && recentFlag
+    ? (profile.firstCountry === profile.recentCountry ? firstFlag : null)
+    : (firstFlag || recentFlag || null)
+  return (
+    <button
+      type="button"
+      className="puc-plaque-pill"
+      onClick={onToggle}
+      aria-expanded={expanded}
+      aria-label={expanded ? 'Hide origin details' : 'Show origin details'}
+      title={expanded ? 'Hide details' : 'Show origin details'}
+    >
+      {sameOrSingleFlag
+        ? <span className="puc-plaque-pill__flag">{sameOrSingleFlag}</span>
+        : firstFlag && recentFlag && (
+          <>
+            <span className="puc-plaque-pill__flag">{firstFlag}</span>
+            <span className="puc-plaque-pill__arrow" aria-hidden="true">→</span>
+            <span className="puc-plaque-pill__flag">{recentFlag}</span>
+          </>
+        )}
+      <span className="puc-plaque-pill__dot" aria-hidden="true">{status.dot}</span>
+      <span className="puc-plaque-pill__chevron" aria-hidden="true">
+        {expanded ? '⌃' : '⌄'}
+      </span>
+    </button>
+  )
+}
+
+/** Expanded origin panel — slides in below the header when the pill
+ *  is tapped. Same content as before; tier filtering happens server-
+ *  side so we just render whatever fields came back. */
+function OriginDetail({ profile }: { profile: GetPublicProfileResponse }) {
   const status = statusBadge(profile.onlineStatus)
   const firstFlag = countryFlag(profile.firstCountry)
   const recentFlag = countryFlag(profile.recentCountry)
@@ -183,11 +237,11 @@ function OriginSection({ profile }: { profile: GetPublicProfileResponse }) {
   const hasAnyCountry = !!profile.firstCountry || !!profile.recentCountry
   const tier = profile.viewerTier
   return (
-    <Section title="Origin">
+    <div className="puc-plaque-origin-detail">
       {hasAnyCountry && (
-        <Row label={showJourney ? 'Journey' : 'From'}>
+        <DetailRow label={showJourney ? 'Journey' : 'From'}>
           <span className="puc-plaque-origin">
-            <span className="puc-plaque-origin__leg" title={status.title}>
+            <span className="puc-plaque-origin__leg">
               {firstFlag || DASH}
               {profile.firstCity && (
                 <span className="puc-plaque-origin__city">{profile.firstCity}</span>
@@ -205,50 +259,44 @@ function OriginSection({ profile }: { profile: GetPublicProfileResponse }) {
               </>
             )}
           </span>
-        </Row>
+        </DetailRow>
       )}
-      <Row label="Joined">
+      <DetailRow label="Joined">
         <span>
           {formatJoinedMonth(profile.joinedMonth)}
           {profile.joinedAt !== null && (
             <span className="puc-plaque-aside">
-              {' · '}
-              {new Date(profile.joinedAt).toLocaleDateString(undefined, {
-                year: 'numeric', month: 'short', day: 'numeric',
-              })}
+              {' · '}{formatExactDate(profile.joinedAt)}
             </span>
           )}
         </span>
-      </Row>
-      <Row label="Status">
+      </DetailRow>
+      <DetailRow label="Status">
         <span title={status.title}>
           <span className="puc-plaque-origin__dot" aria-hidden="true">{status.dot}</span>
           {' '}{status.label}
           {profile.lastSeenAt !== null && profile.onlineStatus !== 'online' && (
             <span className="puc-plaque-aside">
-              {' · last seen '}
-              {new Date(profile.lastSeenAt).toLocaleString(undefined, {
-                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-              })}
+              {' · last seen '}{formatExactDateTime(profile.lastSeenAt)}
             </span>
           )}
         </span>
-      </Row>
+      </DetailRow>
       {tier === 'admin' && (profile.firstIp || profile.recentIp) && (
         <>
-          <Row label="First IP">
+          <DetailRow label="First IP">
             <code className="puc-plaque-iphash">{profile.firstIp ?? DASH}</code>
             {profile.firstIpHash && (
               <span className="puc-plaque-aside"> · {shortenIpHash(profile.firstIpHash)}</span>
             )}
-          </Row>
-          <Row label="Recent IP">
+          </DetailRow>
+          <DetailRow label="Recent IP">
             <code className="puc-plaque-iphash">{profile.recentIp ?? DASH}</code>
             {profile.firstIpHash && profile.recentIpHash
               && profile.firstIpHash === profile.recentIpHash && (
               <span className="puc-plaque-aside"> · same source</span>
             )}
-          </Row>
+          </DetailRow>
         </>
       )}
       {tier !== 'public' && (
@@ -258,8 +306,37 @@ function OriginSection({ profile }: { profile: GetPublicProfileResponse }) {
             : 'City info and exact times are visible only to you.'}
         </p>
       )}
-    </Section>
+    </div>
   )
+}
+
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="puc-plaque-origin-detail__row">
+      <span className="puc-plaque-origin-detail__label">{label}</span>
+      <span className="puc-plaque-origin-detail__value">{children}</span>
+    </div>
+  )
+}
+
+/** Date-only formatter that still surfaces the viewer's timezone, so
+ *  "Jun 5, 2026 PDT" vs "Jun 6, 2026 GMT+8" disambiguates a
+ *  near-midnight join from across the date line. */
+function formatExactDate(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    timeZoneName: 'short',
+  })
+}
+
+/** Date + time-of-day formatter — always include timeZoneName so a
+ *  "last seen at 5:30 PM" is unambiguous when viewer and guest are
+ *  in different timezones. */
+function formatExactDateTime(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    timeZoneName: 'short',
+  })
 }
 
 function PlaqueTeamsRow({ teams }: { teams: GetPublicProfileResponse['teams'] }) {
