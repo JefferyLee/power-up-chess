@@ -539,4 +539,8 @@
   border-radius: 4px;
   padding: 1px 6px;
   letter-spacing: 0.4px;
+  /* IPv6 can be 39 chars and has no spaces — let it wrap at any
+   * character so the value cell never overflows on narrow screens. */
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
