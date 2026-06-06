@@ -1169,7 +1169,14 @@ export async function callCancelInvite(req: CancelInviteRequest): Promise<Cancel
 }
 
 // Public profile read for the User Card popover.
-export interface GetPublicProfileRequest { normalizedName: string }
+export interface GetPublicProfileRequest {
+  normalizedName: string
+  /** Optional identity proof for tier resolution. callGetPublicProfile
+   *  fills these from the active CastleIdentity automatically — callers
+   *  don't normally need to supply them, but explicit values override. */
+  selfNormalizedName?: string
+  selfSessionId?: string
+}
 export type ProfileTitleRank = {
   id: 'apprentice' | 'adept' | 'sorcerer' | 'archmage'
   label: string
@@ -1240,7 +1247,24 @@ const getPublicProfileFn = httpsCallable<GetPublicProfileRequest, GetPublicProfi
 export async function callGetPublicProfile(
   req: GetPublicProfileRequest,
 ): Promise<GetPublicProfileResponse> {
-  const { data } = await getPublicProfileFn(req)
+  // Auto-attach identity proof so every caller gets correct tier
+  // checks without having to thread the active CastleIdentity through.
+  // Skip for bypass guests (no normalizedName) and when the caller
+  // explicitly passes their own selfNormalizedName (e.g. tests).
+  // Dynamic import avoids a circular dep with the castle module.
+  let augmented: GetPublicProfileRequest = req
+  if (!req.selfNormalizedName) {
+    const { loadIdentity } = await import('../castle/identity')
+    const id = loadIdentity()
+    if (id && !id.isBypass && id.normalizedName && id.sessionId) {
+      augmented = {
+        ...req,
+        selfNormalizedName: id.normalizedName,
+        selfSessionId: id.sessionId,
+      }
+    }
+  }
+  const { data } = await getPublicProfileFn(augmented)
   return data
 }
 

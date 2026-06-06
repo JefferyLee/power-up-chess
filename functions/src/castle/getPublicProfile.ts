@@ -32,7 +32,19 @@ const ACTIVE_TODAY_MS = 24 * 60 * 60 * 1000
 export type OnlineBucket = 'online' | 'today' | 'away'
 
 export interface GetPublicProfileRequest {
+  /** Whose plaque to fetch. */
   normalizedName: string
+  /** The caller's CURRENTLY signed-in identity. Used to determine the
+   *  viewer tier (self / admin / public). Optional — omit for an
+   *  anonymous / bypass viewer; they get public tier. */
+  selfNormalizedName?: string
+  /** The caller's current session token (H.7). Must match the stored
+   *  guests/{selfNormalizedName}.activeSessionId, otherwise the caller
+   *  is signed in on a DIFFERENT account on this device (Anonymous
+   *  Auth reuses the same uid across accounts, so a uid-only check
+   *  would over-grant 'self' for every account ever signed in here).
+   *  When omitted or mismatched, viewer falls back to public tier. */
+  selfSessionId?: string
 }
 
 export interface GetPublicProfileResponse {
@@ -239,17 +251,41 @@ export const getPublicProfile = onCall<
   }
 
   // ── Viewer tier ──────────────────────────────────────────────────
-  // Self = caller's uid is one of the guest's bound uids. Admin = Jeff
-  // (matched the same way as feedback.ts) but only when not self —
-  // Jeff viewing his own plaque is just "self".
-  const isSelf = Array.isArray(guest.uids) && guest.uids.includes(req.auth.uid)
-  let isAdmin = false
-  if (!isSelf && normalized !== ADMIN_NORMALIZED_NAME) {
-    const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
-    const admin = adminSnap.data() as GuestDoc | undefined
-    isAdmin = !!admin && Array.isArray(admin.uids) && admin.uids.includes(req.auth.uid)
+  // The caller PROVES who they currently are by sending
+  // (selfNormalizedName, selfSessionId). Server-side we load that
+  // self's guest doc and verify:
+  //   • caller's auth uid is bound to that account, AND
+  //   • the supplied sessionId still matches activeSessionId.
+  // Both checks must pass before we trust the claim. Without them, the
+  // viewer is treated as a public guest — required because Anonymous
+  // Auth reuses the same uid across every account ever signed in from
+  // this device, so a uid-only check leaks 'self' tier to anyone who
+  // ever signed in to the target account here. activeSessionId is
+  // re-minted on every castleEnter, so older devices and stale tabs
+  // automatically lose 'self' tier the moment a fresh sign-in happens
+  // elsewhere.
+  let viewerTier: 'public' | 'self' | 'admin' = 'public'
+  const selfNormalizedName = String(req.data?.selfNormalizedName ?? '').trim().toLowerCase()
+  const selfSessionId = String(req.data?.selfSessionId ?? '').trim()
+  if (selfNormalizedName && selfSessionId) {
+    const selfRef =
+      selfNormalizedName === normalized
+        ? guestSnap
+        : await db.doc(`guests/${selfNormalizedName}`).get()
+    const selfDoc = selfRef.data() as GuestDoc | undefined
+    const verified =
+      !!selfDoc
+      && Array.isArray(selfDoc.uids)
+      && selfDoc.uids.includes(req.auth.uid)
+      && selfDoc.activeSessionId === selfSessionId
+    if (verified) {
+      if (selfNormalizedName === normalized) {
+        viewerTier = 'self'
+      } else if (selfNormalizedName === ADMIN_NORMALIZED_NAME) {
+        viewerTier = 'admin'
+      }
+    }
   }
-  const viewerTier: 'public' | 'self' | 'admin' = isSelf ? 'self' : isAdmin ? 'admin' : 'public'
 
   // ── Online bucket — coarser than the precise lastSeenAt that owner/
   // admin viewers receive. Public viewers only see the bucket. ─────
