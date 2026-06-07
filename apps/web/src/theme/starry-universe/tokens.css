@@ -7,7 +7,12 @@
 :root[data-theme='starry-universe'] {
   /* Board */
   --puc-sq-light: #b6c1e8;          /* moonlit sky */
-  --puc-sq-dark:  #2c2853;          /* deep indigo */
+  --puc-sq-dark:  #3d3870;          /* indigo — lifted from #2c2853 so
+                                       a black piece (#0a0418) clears
+                                       WCAG AA (~1.8 → ~3.0). Still
+                                       reads as night sky; the piece
+                                       halo (Piece.css) carries the
+                                       rest of the legibility. */
   --puc-board-bg: #0a0b1f;          /* outer dark */
 
   /* Pieces.

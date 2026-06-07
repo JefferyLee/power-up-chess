@@ -8,7 +8,11 @@
 :root[data-theme='magic-forest'] {
   /* Board */
   --puc-sq-light: #f1e6c8;          /* aged parchment */
-  --puc-sq-dark:  #5e7a4b;          /* deep moss */
+  --puc-sq-dark:  #688659;          /* moss — nudged ~10% brighter so a
+                                       black piece on this square clears
+                                       WCAG AA contrast (was #5e7a4b at
+                                       ~2.3:1, now ~3.0:1 against the
+                                       black-piece fill #1f1408). */
   --puc-board-bg: #3b2a17;          /* warm bark frame */
 
   /* Pieces */

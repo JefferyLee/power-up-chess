@@ -11,15 +11,30 @@
   transition: transform 120ms ease-out;
 }
 
+/* Contrast halo: a thin contrasting drop-shadow rendered as a filter
+ * on the piece wrapper so it composes over Unicode text, SVG <img>,
+ * and PNG <img> alike. Was added to fix the "black piece on dark
+ * square" readability gap — Unicode had a stroke, SVG had its own
+ * baked outline, but black pieces on every board theme dropped to
+ * ~2:1 contrast (well below WCAG AA). The halo gives every piece a
+ * subtle ~1px outline of the OPPOSITE shade regardless of theme.
+ *
+ * Per-element filter, so `.puc-piece--dragging` (also filter-based)
+ * overrides while a piece is being dragged — by then the larger drop-
+ * shadow + scale-up are doing the legibility work, and the halo is
+ * redundant. */
 .puc-piece--w {
   color: var(--puc-piece-white-fill, #fbfaf3);
   -webkit-text-stroke: 1.4px var(--puc-piece-white-stroke, #2b1d10);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  filter: drop-shadow(0 0 0.8px rgba(0, 0, 0, 0.45));
 }
 
 .puc-piece--b {
   color: var(--puc-piece-black-fill, #1d1208);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+  filter: drop-shadow(0 0 1.2px rgba(255, 255, 255, 0.85))
+          drop-shadow(0 0 0.4px rgba(255, 255, 255, 0.95));
 }
 
 .puc-piece--dragging {
