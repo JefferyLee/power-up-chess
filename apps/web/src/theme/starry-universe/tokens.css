@@ -7,12 +7,12 @@
 :root[data-theme='starry-universe'] {
   /* Board */
   --puc-sq-light: #b6c1e8;          /* moonlit sky */
-  --puc-sq-dark:  #3d3870;          /* indigo — lifted from #2c2853 so
-                                       a black piece (#0a0418) clears
-                                       WCAG AA (~1.8 → ~3.0). Still
-                                       reads as night sky; the piece
-                                       halo (Piece.css) carries the
-                                       rest of the legibility. */
+  --puc-sq-dark:  #524a8d;          /* indigo — second lift after Ada
+                                       still found #3d3870 too black.
+                                       Now ~4.6:1 against the black-
+                                       piece fill (#0a0418), comfortably
+                                       past AA. Stays cosmic indigo,
+                                       not lavender. */
   --puc-board-bg: #0a0b1f;          /* outer dark */
 
   /* Pieces.
