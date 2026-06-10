@@ -20,6 +20,7 @@ import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
 import { WizardV2Route } from './games/wizardv2/WizardV2Route'
+import { WizardWarningGate } from './games/wizard/WizardWarningGate'
 import { ShopScreen } from './cosmetics/ShopScreen'
 import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
@@ -110,9 +111,9 @@ export function App() {
           <Route path="/puzzles/plot/:plot" element={<PlotScreen />} />
           <Route path="/puzzles/:id" element={<PuzzleScreen />} />
           <Route path="/forest" element={<ForestRoute />} />
-          <Route path="/wizard" element={<WizardDuelRoute />} />
-          <Route path="/wizard/:roomId" element={<WizardRoomRoute />} />
-          <Route path="/wizard/v2/:roomId" element={<WizardV2Route />} />
+          <Route path="/wizard" element={<WizardWarningGate><WizardDuelRoute /></WizardWarningGate>} />
+          <Route path="/wizard/:roomId" element={<WizardWarningGate><WizardRoomRoute /></WizardWarningGate>} />
+          <Route path="/wizard/v2/:roomId" element={<WizardWarningGate><WizardV2Route /></WizardWarningGate>} />
           <Route path="/shop" element={<ShopScreen />} />
           <Route path="/library" element={<LibraryRoute />} />
           <Route path="/knights-hop" element={<KnightsHopRoute />} />

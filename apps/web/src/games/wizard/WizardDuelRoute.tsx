@@ -33,7 +33,10 @@ export function WizardDuelRoute() {
           isBypass: identity.isBypass,
           pieceSetId: cosmetics.pieceSetId,
         })
-        navigate(`/wizard/${roomId}`, { replace: true })
+        // Carry the acknowledgement forward — the opener already passed
+        // the warning gate at /wizard, so the room route shouldn't warn
+        // them again.
+        navigate(`/wizard/${roomId}`, { replace: true, state: { wizardWarned: true } })
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e))
         creatingRef.current = false

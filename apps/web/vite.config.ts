@@ -43,14 +43,12 @@ export default defineConfig({
       workbox: {
         // Precache the Vite asset bundle so the shell is offline-ready.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // 25 MB of audio + the 96 KB stories bundle + the 14 lintel
-        // bas-relief sprites (~4-5 MB each = ~60 MB total) are too
-        // heavy for the SW precache. Fetch on demand and let the
-        // runtime cache pick them up after the first visit.
+        // 25 MB of audio + the 96 KB stories bundle + the 14 Hall
+        // door PNGs (~110 KB each) are kept out of the SW precache.
+        // Fetch on demand and let the runtime cache pick them up.
         globIgnores: [
           '**/audio/**',
           '**/stories.bundle.json',
-          '**/sprites/lintel/**',
           '**/sprites/doors/**',
         ],
         // Lift the precache file-size cap so the biggest JS chunk fits.
@@ -66,12 +64,11 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            // Hall door art (full-door PNGs) + legacy lintel sprites.
-            // Visited once when the kid opens the Hall, then static.
-            // Pattern is NOT end-anchored so it still matches the
-            // ?v=N cache-buster query the doors carry (see
-            // DOOR_ART_VERSION in RoomDoor.tsx).
-            urlPattern: /\/sprites\/(doors|lintel)\/.*\.png(\?.*)?$/,
+            // Hall door art (full-door PNGs). Visited once when the
+            // kid opens the Hall, then static. Pattern is NOT end-
+            // anchored so it still matches the ?v=N cache-buster query
+            // the doors carry (see DOOR_ART_VERSION in RoomDoor.tsx).
+            urlPattern: /\/sprites\/doors\/.*\.png(\?.*)?$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-doors-v2',

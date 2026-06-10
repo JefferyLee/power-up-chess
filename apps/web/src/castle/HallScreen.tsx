@@ -29,7 +29,6 @@ import { CurrentStoryPanel } from './CurrentStoryPanel'
 import { ChampionBanner } from '../tournament/ChampionBanner'
 import { useWaitingRooms, formatRoomCount } from './useWaitingRooms'
 import { RoomChooserDialog } from './RoomChooserDialog'
-import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
 import { FeedbackButton } from './FeedbackButton'
@@ -164,7 +163,6 @@ export function HallScreen() {
 
   const handlePuzzles = () => navigate('/puzzles')
   const handleForest = () => navigate('/forest')
-  const [wizardWarnOpen, setWizardWarnOpen] = useState(false)
 
   // Door chooser: when the kid taps Online Chess or Wizard's Duel,
   // show the list of currently-open rooms first. They can join one,
@@ -180,10 +178,12 @@ export function HallScreen() {
     setChooserKind('wizard')
   }
   // Opening a new room from the chooser hands control to the existing
-  // open-room flows (TC dialog for chess, wizard warning for wizard).
+  // open-room flows. Chess shows the time-control dialog; Wizard's Duel
+  // navigates to /wizard, where the WizardWarningGate shows the magical
+  // warning before the room is created (and before any points are spent).
   const handleChooserOpenNew = (kind: 'chess' | 'wizard') => {
     if (kind === 'chess') openTcDialog('online')
-    else setWizardWarnOpen(true)
+    else navigate('/wizard')
   }
 
   if (!identity) return null
@@ -420,13 +420,6 @@ export function HallScreen() {
           />
         </div>
       </section>
-
-      {wizardWarnOpen && (
-        <WizardWarningDialog
-          onCancel={() => setWizardWarnOpen(false)}
-          onConfirm={() => { setWizardWarnOpen(false); navigate('/wizard') }}
-        />
-      )}
 
       {tcTarget !== null && (
         <TimeControlDialog
