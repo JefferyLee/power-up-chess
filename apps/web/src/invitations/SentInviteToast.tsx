@@ -34,7 +34,10 @@ export function SentInviteToast() {
   useEffect(() => {
     if (!invite) return
     if (invite.status === 'accepted' && invite.roomId) {
-      navigate(`/r/${invite.roomId}`)
+      const path = invite.kind === 'wizard'
+        ? `/wizard/${invite.roomId}`
+        : `/r/${invite.roomId}`
+      navigate(path)
       setInviteId(null)
       return
     }

@@ -74,7 +74,15 @@ async function runBgRemove(srcPath: string, label: string, token: string): Promi
   const data = readFileSync(srcPath)
   const b64 = data.toString('base64')
   const dataUrl = `data:image/png;base64,${b64}`
-  const output = await replicate.run('851-labs/background-remover', {
+  // Pin to a specific version — Replicate's SDK v1 routes versionless
+  // slugs through the official-models endpoint, which 404s for
+  // community models like this one. Refresh via:
+  //   curl -H "Authorization: Bearer $TOKEN" \
+  //     https://api.replicate.com/v1/models/851-labs/background-remover \
+  //   | jq -r '.latest_version.id'
+  const BG_REMOVER_SLUG =
+    '851-labs/background-remover:a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc'
+  const output = await replicate.run(BG_REMOVER_SLUG as `${string}/${string}:${string}`, {
     input: { image: dataUrl, format: 'png' },
   })
   const url = await resolveUrl(output)

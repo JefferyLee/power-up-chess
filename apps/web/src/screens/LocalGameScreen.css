@@ -116,6 +116,12 @@
   cursor: not-allowed;
 }
 
+.puc-local__face-toggle--on {
+  background: rgba(231, 184, 65, 0.22);
+  border-color: rgba(231, 184, 65, 0.7);
+  color: var(--puc-text-accent);
+}
+
 .puc-local__main {
   flex: 1;
   display: grid;
@@ -282,6 +288,12 @@
   .puc-local__host-name { font-size: 16px; }
   .puc-local__actions { gap: 6px; flex-wrap: wrap; }
   .puc-local__actions button { padding: 8px 10px; font-size: 12px; min-height: 36px; }
+  /* Face-to-face toggle: phone widths show the icon only, the text
+   * label hides — keeps the actions row from wrapping to two lines
+   * (which would push the board down past useResponsiveSquareSize's
+   * chrome estimate). */
+  .puc-local__face-toggle-label { display: none; }
+  .puc-local__face-toggle { padding: 8px 10px; }
   .puc-local__diff-chip { font-size: 10px; padding: 4px 6px; }
   .puc-local__main { padding: 12px; gap: 10px 12px; }
   .puc-player { padding: 10px 12px; gap: 10px; }

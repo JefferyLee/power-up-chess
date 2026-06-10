@@ -1,0 +1,9 @@
+A single game-icon illustration in the visual style of a sandstone bas-relief carving — the subject looks chiselled out of warm sandstone with raised highlights along the upper-left edges and deep crisp shadows falling to the lower-right. Treat this as a STAND-ALONE game asset, not a photo of a wall.
+
+Subject: two facing chess knight pieces (horse heads with manes) crossed at the muzzle like heraldic horses meeting nose-to-nose. Between them at the bottom, three short concentric arcs rising upward — a stylised herald's signal.
+
+Composition: centred, fills 75% of the frame.
+
+Background: ABSOLUTELY pure flat solid black (#000000), no texture, no stone wall, no surrounding frame, no border, no ledge, no scene, no environment around the subject. The carved subject is the ONLY thing in the frame — pretend it's a sticker on a void. DO NOT add a stone tablet, a frame, an inset panel, a cobblestone wall, or any architectural surroundings.
+
+Output: 1:1 square, 1024×1024 PNG. Edges of the subject must be high contrast against the background so an automatic cutout pass can extract a clean transparent silhouette.

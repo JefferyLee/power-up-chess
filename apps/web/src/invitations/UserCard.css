@@ -175,6 +175,8 @@
 .puc-user-card__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .puc-user-card__btn {
   padding: 9px 14px;
@@ -198,3 +200,10 @@
   font-weight: 600;
 }
 .puc-user-card__btn--primary:hover:not(:disabled) { filter: brightness(1.05); }
+.puc-user-card__btn--wizard:not(:disabled) {
+  background: linear-gradient(135deg, #8d6fd9, #5e3aa0);
+  color: #fff;
+  border-color: rgba(180, 150, 255, 0.4);
+  font-weight: 600;
+}
+.puc-user-card__btn--wizard:hover:not(:disabled) { filter: brightness(1.08); }

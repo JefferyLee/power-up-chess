@@ -30,6 +30,36 @@ export type ChatMessageAction =
       casterBadge?: TeamBadge
       targetBadge?: TeamBadge
     }
+  | {
+      /** Posted by registerForTournament when a kid signs up. The CTA
+       *  takes other kids straight to /tournament so they can sign up
+       *  too. weekKey is for traceability; the route always lands on
+       *  the current week's bracket regardless. */
+      kind: 'join-tournament'
+      weekKey: string
+    }
+  | {
+      /** Posted when both players are in and a chess/wizard game just
+       *  went live. Replaces the old "X opened a room" pre-start posts
+       *  — the new CTA is for ONLOOKERS to spectate (read-only view at
+       *  /r/<roomId> or /wizard/<roomId>), not to join a slot. */
+      kind: 'spectate-room'
+      roomKind: 'chess' | 'wizard'
+      roomId: string
+      whiteName: string
+      blackName: string
+    }
+  | {
+      /** Posted by the scheduled herald sweep when a room has been
+       *  sitting in `waiting` status for >30s. CTA opens the room as
+       *  the second player. Door badges + chooser surface the same
+       *  rooms in the Hall; this chat fallback exists so a kid who's
+       *  busy in chat doesn't miss someone waiting alone. */
+      kind: 'join-open-room'
+      roomKind: 'chess' | 'wizard'
+      roomId: string
+      openerName: string
+    }
 
 /** Visible-only state for the story-comprehension quiz attached to a
  *  host's ambient story. The secret answer key lives in a separate

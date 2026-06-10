@@ -7,6 +7,13 @@
   padding: 24px 24px 40px;
   position: relative;
   isolation: isolate;
+  /* Safety net against horizontal overflow caused by long words /
+   * lazy-loaded wide elements in the host card / chat / online list.
+   * Without this, ONE overflowing child grows the page beyond the
+   * viewport, our @media breakpoints stop matching, and the whole
+   * Hall flips to desktop layout (doors shrink, chat widens). */
+  overflow-x: clip;
+  max-width: 100vw;
 }
 /* Lift every Hall content section above the ambient decor without
  * having to touch each section individually. */
@@ -66,7 +73,7 @@
   max-width: 1200px;
   margin: 0 auto 32px;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 240px;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 240px);
   gap: 18px;
   align-items: stretch;
 }
@@ -81,6 +88,10 @@
   align-items: center;
   gap: 10px;
   text-align: center;
+  /* Stops a long welcome line / decay-note paragraph from stretching
+   * the column past its grid share, which would horizontally widen
+   * the page on phones. */
+  min-width: 0;
 }
 
 .puc-hall__portrait { flex-shrink: 0; }
@@ -136,6 +147,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
 }
 
 .puc-hall__chatcol > * {
@@ -149,6 +161,7 @@
   flex-direction: column;
   gap: 14px;
   min-height: 0;
+  min-width: 0;
 }
 
 .puc-hall__sidecol > *:last-child {
@@ -214,6 +227,16 @@
   .puc-hall__learn-icon { font-size: 24px; }
   .puc-hall__learn-title { font-size: 13.5px; }
   .puc-hall__learn-blurb { font-size: 11.5px; }
+  /* Trim the outer hall gutter on phones so the doors + chat get the
+   * full viewport width instead of being squeezed inside a 24px-each-
+   * side margin. */
+  .puc-hall { padding: 16px 12px 32px; }
+  /* Header is left-aligned title + right-aligned link cluster on
+   * desktop. On phones let the cluster wrap below the title rather
+   * than fight for horizontal space. */
+  .puc-hall__header { flex-wrap: wrap; gap: 10px 14px; }
+  .puc-hall__header-right { flex-wrap: wrap; }
+  .puc-hall__title { font-size: 22px; letter-spacing: 1.4px; }
 }
 
 /* ── Doors row — hero CTA, lives directly under the header so a new
@@ -289,6 +312,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
   }
+  /* Doors fill their cell on phone widths so the row uses the full
+   * viewport instead of two 110px tiles centred with empty space on
+   * either side. The label still wraps two lines max thanks to
+   * line-height 1.25. */
+  .puc-hall__doors-grid > .puc-roomdoor {
+    width: 100%;
+    max-width: 160px;
+    justify-self: center;
+  }
+  .puc-hall__doors-grid--fun > .puc-roomdoor {
+    max-width: 180px;
+  }
 }
 
 .puc-hall__error {
@@ -353,4 +388,48 @@
  * convey what each door is. */
 .puc-roomdoor__blurb {
   display: none;
+}
+
+/* Wooden notice rendered as an SVG overlay on top of the door PNG
+ * (see RoomDoor.tsx). Sways like a sign hanging from the door's
+ * nail — pivot is the nail point (50, 64 in the 100×150 viewBox). */
+.puc-roomdoor {
+  position: relative;
+}
+.puc-roomdoor__sign {
+  transform-box: view-box;
+  transform-origin: 50px 64px;
+  animation: puc-roomdoor-sign-sway 5.6s ease-in-out infinite;
+  filter: drop-shadow(0 1.2px 1.4px rgba(0, 0, 0, 0.55));
+}
+@keyframes puc-roomdoor-sign-sway {
+  0%, 100% { transform: rotate(0deg); }
+  30%      { transform: rotate(1.8deg); }
+  72%      { transform: rotate(-1.8deg); }
+}
+
+/* Firelight flicker — a warm, brightened duplicate of the door image
+ * (see RoomDoor.tsx) screen-blended on top. The filter pushes it warm
+ * + bright so screen-blending makes the door's lit areas glow; the
+ * opacity oscillates on an irregular beat so it reads as a restless
+ * hearth rather than a clean pulse. Visible but not garish. */
+.puc-roomdoor__firelight {
+  mix-blend-mode: screen;
+  filter: brightness(1.5) saturate(1.5) sepia(0.45) hue-rotate(-12deg);
+  animation: puc-roomdoor-firelight 4.8s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes puc-roomdoor-firelight {
+  0%   { opacity: 0.18; }
+  21%  { opacity: 0.42; }
+  37%  { opacity: 0.14; }
+  55%  { opacity: 0.48; }
+  72%  { opacity: 0.26; }
+  87%  { opacity: 0.40; }
+  100% { opacity: 0.18; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puc-roomdoor__sign { animation: none; }
+  .puc-roomdoor__firelight { animation: none; opacity: 0.22; }
 }

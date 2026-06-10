@@ -26,6 +26,8 @@ import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
+import { ChampionCrown } from '../tournament/ChampionCrown'
+import '../invitations/NameLink.css'
 import './LocalGameScreen.css'
 
 function newLocalGameId(): string {
@@ -110,6 +112,13 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   const [savedThisGame, setSavedThisGame] = useState(false)
   const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl))
   const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
+  // Face-to-face mode: rotate black's pieces 180° so the player sitting
+  // across the table reads their pieces the same way as their opponent.
+  // Pure cosmetic — board orientation and legal moves are untouched.
+  // Defaults to ON since local play is almost always pass-and-play; the
+  // toggle in the header flips it off for a single player using both
+  // sides themselves.
+  const [faceToFace, setFaceToFace] = useState(true)
   const sound = useSound()
   const { identity, setCastlePoints } = useCastle()
 
@@ -407,6 +416,19 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           <MuteButton />
           <button
             type="button"
+            className={'puc-local__face-toggle' + (faceToFace ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => setFaceToFace((v) => !v)}
+            aria-pressed={faceToFace}
+            aria-label={faceToFace ? 'Face-to-face on' : 'Face-to-face off'}
+            title="Rotate black's pieces 180° for face-to-face play"
+          >
+            <span aria-hidden="true">↕</span>
+            <span className="puc-local__face-toggle-label">
+              {faceToFace ? ' Face-to-face on' : ' Face-to-face'}
+            </span>
+          </button>
+          <button
+            type="button"
             onClick={() => setResignDialogOpen(true)}
             disabled={gameOver}
           >
@@ -432,6 +454,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
             clockMs={timeControl ? clocks.blackMs : null}
             clockRunning={clocks.running === 'b'}
             clockTickAt={clocks.lastTickAt}
+            normalizedName={null}
           />
         </aside>
 
@@ -445,6 +468,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
               lastMove={lastMove}
               checkSquare={checkSquare}
               squareSize={SQUARE_SIZE}
+              flipBlackPieces={faceToFace}
             />
             {sparks.map((s) => (
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
@@ -469,6 +493,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
             clockMs={timeControl ? clocks.whiteMs : null}
             clockRunning={clocks.running === 'w'}
             clockTickAt={clocks.lastTickAt}
+            normalizedName={identity?.normalizedName ?? null}
           />
         </aside>
 
@@ -516,6 +541,7 @@ function PlayerCard({
   clockMs,
   clockRunning,
   clockTickAt,
+  normalizedName,
 }: {
   name: string
   color: Color
@@ -525,11 +551,15 @@ function PlayerCard({
   clockMs: number | null
   clockRunning: boolean
   clockTickAt: number | null
+  normalizedName: string | null
 }) {
   return (
     <div className={`puc-player ${isTurn ? 'puc-player--active' : ''}`}>
       <span className={`puc-player__dot puc-player__dot--${color}`} aria-hidden="true" />
-      <span className="puc-player__name">{name}</span>
+      <span className="puc-player__name">
+        {name}
+        <ChampionCrown normalizedName={normalizedName} />
+      </span>
       {clockMs !== null && (
         <Clock baseMs={clockMs} lastTickAt={clockTickAt} running={clockRunning} />
       )}

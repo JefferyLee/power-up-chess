@@ -41,6 +41,10 @@ export interface BoardProps {
    *  local cosmetic when omitted. */
   whitePieceSetId?: string
   blackPieceSetId?: string
+  /** Local face-to-face mode: render black pieces rotated 180° so two
+   *  humans sitting across the device both see their own pieces upright.
+   *  No effect on legal moves or orientation; visual only. */
+  flipBlackPieces?: boolean
 }
 
 interface DragState {
@@ -63,6 +67,7 @@ export function Board({
   squareSize = 64,
   whitePieceSetId,
   blackPieceSetId,
+  flipBlackPieces = false,
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
   const [selected, setSelected] = useState<SquareName | null>(null)
@@ -260,6 +265,7 @@ export function Board({
               <Piece
                 piece={piece}
                 justMoved={lastMove?.to === sq}
+                flipped={flipBlackPieces && piece.color === 'b'}
                 pieceSetIdOverride={piece.color === 'w' ? whitePieceSetId : blackPieceSetId}
                 // Re-key on lastMove so the animation re-fires when the same piece
                 // makes consecutive moves to different squares.
@@ -281,6 +287,7 @@ export function Board({
           <Piece
             piece={pieceOn(drag.from)!}
             dragging
+            flipped={flipBlackPieces && pieceOn(drag.from)!.color === 'b'}
             pieceSetIdOverride={pieceOn(drag.from)!.color === 'w' ? whitePieceSetId : blackPieceSetId}
           />
         </div>

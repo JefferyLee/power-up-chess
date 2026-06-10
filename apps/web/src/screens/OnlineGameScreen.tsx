@@ -22,6 +22,8 @@ import { track } from '../firebase/analytics'
 import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
+import { ChampionCrown } from '../tournament/ChampionCrown'
+import '../invitations/NameLink.css'
 import { useRoom } from '../rooms/useRoom'
 import type { RoomDoc } from '../rooms/types'
 import { loadProfile, addCrowns } from '../storage/profile'
@@ -646,6 +648,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         <aside className="puc-local__side puc-local__side--top">
           <OpponentCard
             name={orientation === 'w' ? room.black?.displayName ?? 'Waiting…' : room.white.displayName}
+            normalizedName={orientation === 'w' ? room.black?.normalizedName ?? null : room.white.normalizedName ?? null}
             color={orientation === 'w' ? 'b' : 'w'}
             isTurn={room.status === 'live' && (orientation === 'w' ? turn === 'b' : turn === 'w')}
             captured={orientation === 'w' ? lostByWhite : lostByBlack}
@@ -709,6 +712,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         <aside className="puc-local__side puc-local__side--bottom">
           <OpponentCard
             name={orientation === 'w' ? room.white.displayName : room.black?.displayName ?? '—'}
+            normalizedName={orientation === 'w' ? room.white.normalizedName ?? null : room.black?.normalizedName ?? null}
             color={orientation === 'w' ? 'w' : 'b'}
             isTurn={room.status === 'live' && (orientation === 'w' ? turn === 'w' : turn === 'b')}
             captured={orientation === 'w' ? lostByBlack : lostByWhite}
@@ -760,6 +764,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
 
 function OpponentCard({
   name,
+  normalizedName,
   color,
   isTurn,
   captured,
@@ -771,6 +776,7 @@ function OpponentCard({
   clockTickAt,
 }: {
   name: string
+  normalizedName?: string | null
   color: Color
   isTurn: boolean
   captured: PieceSymbol[]
@@ -784,7 +790,11 @@ function OpponentCard({
   return (
     <div className={`puc-player ${isTurn ? 'puc-player--active' : ''}`}>
       <span className={`puc-player__dot puc-player__dot--${color}`} aria-hidden="true" />
-      <span className="puc-player__name">{name}{isYou ? ' (you)' : ''}{waiting ? ' (waiting for opponent…)' : ''}</span>
+      <span className="puc-player__name">
+        {name}
+        <ChampionCrown normalizedName={normalizedName} />
+        {isYou ? ' (you)' : ''}{waiting ? ' (waiting for opponent…)' : ''}
+      </span>
       {clockMs !== null && (
         <Clock baseMs={clockMs} lastTickAt={clockTickAt} running={clockRunning} />
       )}

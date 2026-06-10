@@ -9,7 +9,7 @@ import { FieldValue, getFirestore, type Firestore, type Transaction } from 'fire
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from '../../rooms/roomId'
 import { sanitisePieceSetId } from '../../cosmetics/registry'
-import { postRoomInvite } from '../../castle/postRoomInvite'
+import { postGameStarted } from '../../castle/postGameStarted'
 import { WizardChess, type SerializedEffect, type WizardRoomState } from './WizardChess'
 import { EXTRA_TIME_BONUS_MS, spellById } from './spells'
 import { reserveAndPriceSpell, type SpellPricing } from './wizardSpellPricing'
@@ -20,10 +20,9 @@ import {
   CROWN_HOURS,
   CROWN_THRESHOLD,
   DUEL_HALO_HOURS,
-  WIZARD_ABSOLUTE_FLOOR,
-  type CastlePublicStats,
   type GuestDoc,
 } from '../../castle/types'
+import { wizardGateMinPoints } from './wizardGate'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
 import { appendAuditTx } from '../../castle/audit'
 import { extractIp } from '../../castle/ipGeo'
@@ -181,7 +180,8 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
       })
 
       if (committed) {
-        void postRoomInvite({ roomKind: 'wizard', roomId, openerName: slot.displayName })
+        // Hall post moved to the live-transition site (joinDuel below)
+        // so we don't advertise duels that the opener walks away from.
         return { roomId }
       }
     }
@@ -222,13 +222,13 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
       )
     }
 
-    return db.runTransaction(async (tx) => {
+    const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref)
       if (!snap.exists) throw new HttpsError('not-found', 'Room not found.')
       const room = snap.data() as WizardRoomDoc
 
-      if (room.white.uid === uid) return { color: 'w' as const }
-      if (room.black?.uid === uid) return { color: 'b' as const }
+      if (room.white.uid === uid) return { color: 'w' as const, justWentLive: false as const }
+      if (room.black?.uid === uid) return { color: 'b' as const, justWentLive: false as const }
       if (room.black) throw new HttpsError('failed-precondition', 'Room is full.')
 
       // H.7 — refuse self-vs-self even from a second device of the same
@@ -245,23 +245,25 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
       // White's clock starts ticking now — that's the side-to-move when
       // the room flips to live.
       tx.update(ref, { black: slot, status: 'live', updatedAt: now, lastTickServerTs: now })
-      return { color: 'b' as const }
+      return {
+        color: 'b' as const,
+        justWentLive: true as const,
+        whiteName: room.white.displayName,
+        blackName: slot.displayName,
+      }
     })
+
+    if (result.justWentLive) {
+      void postGameStarted({
+        roomKind: 'wizard',
+        roomId,
+        whiteName: result.whiteName,
+        blackName: result.blackName,
+      })
+    }
+    return { color: result.color }
   },
 )
-
-/** Resolve the current wizard-gate min castle-points from the public
- *  stats doc; falls back to the absolute floor if the doc is missing
- *  or hasn't been refreshed yet. */
-async function wizardGateMinPoints(db: Firestore): Promise<number> {
-  const snap = await db.doc('castle_public/stats').get()
-  const stats = snap.data() as CastlePublicStats | undefined
-  const v = stats?.wizardGateMinPoints
-  if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-    return Math.min(WIZARD_ABSOLUTE_FLOOR, v)
-  }
-  return WIZARD_ABSOLUTE_FLOOR
-}
 
 // ── submitWizardMove ────────────────────────────────────────────────────
 

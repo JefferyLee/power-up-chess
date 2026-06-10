@@ -61,7 +61,12 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
         ...(response === 'accept' ? { pieceSetId: cosmetics.pieceSetId } : {}),
       })
       if (response === 'accept' && res.roomId) {
-        navigate(`/r/${res.roomId}`)
+        // Wizard invites spawn into wizard_rooms — route accordingly.
+        // Default to chess for back-compat with docs missing `kind`.
+        const path = invite.kind === 'wizard'
+          ? `/wizard/${res.roomId}`
+          : `/r/${res.roomId}`
+        navigate(path)
       }
       // Listener will drop the invite from the inbox now that status != pending,
       // unmounting this modal.
@@ -71,24 +76,31 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
     }
   }
 
+  const isWizard = invite.kind === 'wizard'
   const tcLabel = invite.timeControl
     ? `${Math.round(invite.timeControl.initialMs / 60000)} min${invite.timeControl.incrementMs > 0 ? ` + ${invite.timeControl.incrementMs / 1000}s` : ''}`
-    : 'No clock'
+    : isWizard ? '8 min fixed' : 'No clock'
 
   return createPortal(
-    <div className="puc-inbox-overlay" role="dialog" aria-label="Chess invitation">
+    <div
+      className="puc-inbox-overlay"
+      role="dialog"
+      aria-label={isWizard ? 'Wizard\'s Duel invitation' : 'Chess invitation'}
+    >
       <div className="puc-inbox__card">
-        <p className="puc-inbox__eyebrow">Chess invitation</p>
+        <p className="puc-inbox__eyebrow">
+          {isWizard ? "Wizard's Duel invitation" : 'Chess invitation'}
+        </p>
         <h2 className="puc-inbox__title">
           <NameLink
             normalizedName={invite.fromNormalizedName}
             displayName={invite.fromName}
             className="puc-inbox__from-link"
           />
-          {' '}wants to play.
+          {' '}{isWizard ? 'challenges you to a duel.' : 'wants to play.'}
         </h2>
         <p className="puc-inbox__sub">
-          Time control: <b>{tcLabel}</b>
+          {isWizard ? 'Clock: ' : 'Time control: '}<b>{tcLabel}</b>
         </p>
         <div className="puc-inbox__countdown">
           <div className="puc-inbox__countdown-bar" style={{ width: `${pct}%` }} />

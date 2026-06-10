@@ -26,6 +26,9 @@ import { RecentlyPlayedList } from './RecentlyPlayedList'
 import { FindPlayer } from './FindPlayer'
 import { MyTeamsList } from '../teams/MyTeamsList'
 import { CurrentStoryPanel } from './CurrentStoryPanel'
+import { ChampionBanner } from '../tournament/ChampionBanner'
+import { useWaitingRooms, formatRoomCount } from './useWaitingRooms'
+import { RoomChooserDialog } from './RoomChooserDialog'
 import { WizardWarningDialog } from '../games/wizard/WizardWarningDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
 import type { TimeControlPreset } from '../clock/timeControl'
@@ -110,7 +113,6 @@ export function HallScreen() {
     if (creating || !identity) return
     setTcTarget(target)
   }
-  const handleOnline = () => openTcDialog('online')
   const handleConfirmTimeControl = async (preset: TimeControlPreset) => {
     if (!identity || tcTarget === null) return
     if (tcTarget === 'local') {
@@ -163,7 +165,26 @@ export function HallScreen() {
   const handlePuzzles = () => navigate('/puzzles')
   const handleForest = () => navigate('/forest')
   const [wizardWarnOpen, setWizardWarnOpen] = useState(false)
-  const handleWizard = () => setWizardWarnOpen(true)
+
+  // Door chooser: when the kid taps Online Chess or Wizard's Duel,
+  // show the list of currently-open rooms first. They can join one,
+  // or open a new room (which kicks off the original flow).
+  const waiting = useWaitingRooms()
+  const [chooserKind, setChooserKind] = useState<null | 'chess' | 'wizard'>(null)
+  const handleOnlineDoor = () => {
+    if (creating || !isUnlocked) return
+    setChooserKind('chess')
+  }
+  const handleWizardDoor = () => {
+    if (!isWizardUnlocked) return
+    setChooserKind('wizard')
+  }
+  // Opening a new room from the chooser hands control to the existing
+  // open-room flows (TC dialog for chess, wizard warning for wizard).
+  const handleChooserOpenNew = (kind: 'chess' | 'wizard') => {
+    if (kind === 'chess') openTcDialog('online')
+    else setWizardWarnOpen(true)
+  }
 
   if (!identity) return null
 
@@ -203,6 +224,7 @@ export function HallScreen() {
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
           <RoomDoor
             icon="📖"
+            iconKey="learn"
             label="Learn chess"
             blurb="Five short lessons. Start here if you're new."
             variant="mossy"
@@ -210,6 +232,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="🌱"
+            iconKey="puzzles"
             label="Puzzle Garden"
             blurb="Tactical puzzles, your own pace."
             variant="mossy"
@@ -217,27 +240,33 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="🏰"
+            iconKey="online"
             label={creating ? 'Opening…' : 'Online Chess'}
             blurb={isUnlocked ? 'Play a friend with a private link.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
             variant="oak"
             locked={!isUnlocked}
             loading={creating}
-            onClick={handleOnline}
+            onClick={handleOnlineDoor}
             disabled={creating || !isUnlocked}
             title={!isUnlocked ? lockedTitle : undefined}
+            badge={waiting.chess.length > 0 ? formatRoomCount(waiting.chess.length) : undefined}
+            badgeTitle={
+              waiting.chess.length > 0
+                ? `${waiting.chess.length} chess room${waiting.chess.length === 1 ? '' : 's'} waiting`
+                : undefined
+            }
           />
           <RoomDoor
             icon="👥"
+            iconKey="local"
             label="Local Chess"
-            blurb={isUnlocked ? 'Pass-and-play at one device.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
+            blurb="Pass-and-play at one device."
             variant="oak"
-            locked={!isUnlocked}
             onClick={handleLocal}
-            disabled={!isUnlocked}
-            title={!isUnlocked ? lockedTitle : undefined}
           />
           <RoomDoor
             icon="♞"
+            iconKey="practice-ai"
             label={`Practice with ${host.name}`}
             blurb={isUnlocked ? 'Gentle AI sparring.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
             variant={hostId === 'lucy' ? 'mossy' : 'starry'}
@@ -248,6 +277,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="♞"
+            iconKey="knights-hop"
             label="Knight's Hop"
             blurb="Move like a real chess piece. Pawn + Knight levels."
             variant="mossy"
@@ -255,6 +285,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="♔"
+            iconKey="endgame"
             label="Endgame Drills"
             blurb="Classic checkmates against a stubborn defender."
             variant="oak"
@@ -262,6 +293,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="♕"
+            iconKey="opening"
             label="Opening Trainer"
             blurb="Italian, Spanish, Queen's Gambit — principled moves."
             variant="starry"
@@ -270,6 +302,8 @@ export function HallScreen() {
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
+
+      <ChampionBanner />
 
       {/* Social row below the doors — host on the left, chat in the
        *  middle (the most vertical real-estate), passive info on the
@@ -321,6 +355,7 @@ export function HallScreen() {
         <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
           <RoomDoor
             icon="🌲"
+            iconKey="forest"
             label="Forest Adventure"
             blurb="Dodge red, collect gold, jump trees."
             variant="forest"
@@ -328,6 +363,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="✨"
+            iconKey="wizard"
             label="Wizard's Duel"
             blurb={
               isWizardUnlocked
@@ -336,16 +372,23 @@ export function HallScreen() {
             }
             variant="starry"
             locked={!isWizardUnlocked}
-            onClick={handleWizard}
+            onClick={handleWizardDoor}
             disabled={!isWizardUnlocked}
             title={
               isWizardUnlocked
                 ? undefined
                 : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
             }
+            badge={waiting.wizard.length > 0 ? formatRoomCount(waiting.wizard.length) : undefined}
+            badgeTitle={
+              waiting.wizard.length > 0
+                ? `${waiting.wizard.length} duel${waiting.wizard.length === 1 ? '' : 's'} waiting`
+                : undefined
+            }
           />
           <RoomDoor
             icon="🎨"
+            iconKey="shop"
             label="Theme Shop"
             blurb="Pick the look of your chess pieces. New sets unlock soon."
             variant="parchment"
@@ -353,6 +396,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="📚"
+            iconKey="library"
             label="Story Library"
             blurb="108 chess stories — read with Lucy or Luca."
             variant="parchment"
@@ -360,6 +404,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="🏆"
+            iconKey="tournament"
             label="Weekly Tournament"
             blurb="Sign up Mon–Sun. Pairings + play coming soon."
             variant="oak"
@@ -367,6 +412,7 @@ export function HallScreen() {
           />
           <RoomDoor
             icon="🐎"
+            iconKey="knights-run"
             label="Knight's Run"
             blurb="Auto-runner — jump over pieces and rack up distance. NEW."
             variant="starry"
@@ -387,6 +433,16 @@ export function HallScreen() {
           busy={creating}
           onCancel={() => setTcTarget(null)}
           onConfirm={handleConfirmTimeControl}
+        />
+      )}
+
+      {chooserKind && (
+        <RoomChooserDialog
+          kind={chooserKind}
+          rooms={chooserKind === 'chess' ? waiting.chess : waiting.wizard}
+          selfNormalizedName={identity.normalizedName}
+          onOpenNew={() => handleChooserOpenNew(chooserKind)}
+          onClose={() => setChooserKind(null)}
         />
       )}
     </div>

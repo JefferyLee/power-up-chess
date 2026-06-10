@@ -300,6 +300,45 @@ function ActionButton({ action }: { action: ChatMessageAction }) {
       </button>
     )
   }
+  if (action.kind === 'join-tournament') {
+    return (
+      <button
+        type="button"
+        className="puc-chat__action puc-chat__action--tournament"
+        onClick={() => navigate('/tournament')}
+      >
+        ▸ Sign up too
+      </button>
+    )
+  }
+  if (action.kind === 'spectate-room') {
+    const path = action.roomKind === 'wizard'
+      ? `/wizard/${action.roomId}`
+      : `/r/${action.roomId}`
+    return (
+      <button
+        type="button"
+        className={`puc-chat__action puc-chat__action--${action.roomKind}`}
+        onClick={() => navigate(path)}
+      >
+        ▸ Spectate
+      </button>
+    )
+  }
+  if (action.kind === 'join-open-room') {
+    const path = action.roomKind === 'wizard'
+      ? `/wizard/${action.roomId}`
+      : `/r/${action.roomId}`
+    return (
+      <button
+        type="button"
+        className={`puc-chat__action puc-chat__action--${action.roomKind}`}
+        onClick={() => navigate(path)}
+      >
+        {action.roomKind === 'wizard' ? '▸ Enter duel' : '▸ Join room'}
+      </button>
+    )
+  }
   if (action.kind === 'team-recruit') {
     return (
       <div className="puc-chat__teamcard">

@@ -36,6 +36,10 @@
   font-size: 14px;
   line-height: 1.4;
   background: rgba(255, 255, 255, 0.04);
+  /* Don't let one wide bubble (long URL, long username, story title)
+   * blow past the chat column on phones. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .puc-chat__quiz {
@@ -187,6 +191,17 @@
   box-shadow: 0 6px 14px rgba(141, 111, 217, 0.4);
 }
 
+/* Tournament CTA — brass-gold (matches the champion banner palette)
+ * so kids associate it with the 🏆 tournament surfaces elsewhere. */
+.puc-chat__action--tournament {
+  border-color: rgba(244, 194, 102, 0.7);
+  background: linear-gradient(180deg, #f4c266, #ef9a3f);
+  color: #1f1408;
+}
+.puc-chat__action--tournament:hover {
+  box-shadow: 0 6px 14px rgba(244, 194, 102, 0.4);
+}
+
 /* Team recruit card — inline within a system chat message. */
 .puc-chat__teamcard {
   margin-top: 6px;
@@ -327,8 +342,14 @@
 
 .puc-chat__text {
   color: var(--puc-text);
-  word-wrap: break-word;
+  /* `anywhere` (vs the legacy `break-word`) lets the browser break
+   * inside any token — long URLs, usernames, hyphenated proper nouns —
+   * which previously could push the chat column past the viewport on
+   * iPhone and break the Hall layout. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
   white-space: pre-wrap;
+  min-width: 0;
 }
 
 /* Host stories get a fancier, larger serif treatment with paragraph

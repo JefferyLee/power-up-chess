@@ -1,6 +1,7 @@
 // reportTournamentResult — one of the two players reports the
-// outcome of their pairing. First report wins; the other side's
-// dispute mechanism arrives in a later slice.
+// outcome of their pairing. First report wins. The opposing player
+// can flag a wrong result via disputeTournamentResult; an admin
+// settles it via overrideTournamentResult.
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'

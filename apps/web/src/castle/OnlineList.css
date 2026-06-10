@@ -226,3 +226,15 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Wizard variant — purple to match the duel theming everywhere else
+ * (ChampionBanner isn't this colour but the duel announcements and
+ * Wizard's Duel button on the User Card are). */
+.puc-online__invite--wizard {
+  background: rgba(141, 111, 217, 0.16);
+  border-color: rgba(180, 150, 255, 0.55);
+  color: #cdb6ff;
+}
+.puc-online__invite--wizard:hover:not(:disabled) {
+  background: rgba(141, 111, 217, 0.32);
+}

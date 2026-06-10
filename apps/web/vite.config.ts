@@ -43,12 +43,42 @@ export default defineConfig({
       workbox: {
         // Precache the Vite asset bundle so the shell is offline-ready.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // 25 MB of audio + the 96 KB stories bundle are large — fetch
-        // on demand and let the runtime cache pick them up.
-        globIgnores: ['**/audio/**', '**/stories.bundle.json'],
+        // 25 MB of audio + the 96 KB stories bundle + the 14 lintel
+        // bas-relief sprites (~4-5 MB each = ~60 MB total) are too
+        // heavy for the SW precache. Fetch on demand and let the
+        // runtime cache pick them up after the first visit.
+        globIgnores: [
+          '**/audio/**',
+          '**/stories.bundle.json',
+          '**/sprites/lintel/**',
+          '**/sprites/doors/**',
+        ],
         // Lift the precache file-size cap so the biggest JS chunk fits.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // Make new deploys take effect on next visit instead of waiting
+        // for every tab to close. Without these, iPhone Safari can keep
+        // serving the previous shell indefinitely from the old SW.
+        // skipWaiting: new SW activates the moment install finishes.
+        // clientsClaim: that SW immediately controls open pages too.
+        // cleanupOutdatedCaches: prune precache entries from prior builds.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // Hall door art (full-door PNGs) + legacy lintel sprites.
+            // Visited once when the kid opens the Hall, then static.
+            // Pattern is NOT end-anchored so it still matches the
+            // ?v=N cache-buster query the doors carry (see
+            // DOOR_ART_VERSION in RoomDoor.tsx).
+            urlPattern: /\/sprites\/(doors|lintel)\/.*\.png(\?.*)?$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'puc-doors-v2',
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // Pre-generated TTS mp3s. Cache-first so repeat plays are
             // instant and survive offline use. Range-aware so seek works.

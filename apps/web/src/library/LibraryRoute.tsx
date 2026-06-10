@@ -16,6 +16,7 @@ import {
   callSynthesizeStoryAudio,
   type LibraryShelfEntry,
 } from '../firebase/callables'
+import { speakLong, type SpeakLongHandle } from '../audio/speakLong'
 import './LibraryRoute.css'
 
 interface BundledStory {
@@ -76,6 +77,7 @@ export function LibraryRoute() {
 
   const audioCacheRef = useRef<Map<string, string>>(new Map())
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const speechRef = useRef<SpeakLongHandle | null>(null)
 
   // Load story bundle + shelf stats in parallel. Bundle drives the
   // drawer contents; shelves drive the spine sizing/heat/progress.
@@ -107,9 +109,8 @@ export function LibraryRoute() {
     return () => {
       audioRef.current?.pause()
       audioRef.current = null
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
+      speechRef.current?.cancel()
+      speechRef.current = null
       for (const url of cache.values()) URL.revokeObjectURL(url)
       cache.clear()
     }
@@ -118,9 +119,8 @@ export function LibraryRoute() {
   useEffect(() => {
     audioRef.current?.pause()
     audioRef.current = null
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
+    speechRef.current?.cancel()
+    speechRef.current = null
     speakingRef.current = null
     setSpeakingId(null)
     setLoadingId(null)
@@ -182,36 +182,34 @@ export function LibraryRoute() {
   const stopAll = () => {
     audioRef.current?.pause()
     audioRef.current = null
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
+    speechRef.current?.cancel()
+    speechRef.current = null
     speakingRef.current = null
     setSpeakingId(null)
   }
 
   const speakViaBrowser = (story: BundledStory) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
-    const synth = window.speechSynthesis
-    synth.cancel()
-    const utterance = new SpeechSynthesisUtterance(story.variants[voice])
-    utterance.lang = 'en-US'
-    utterance.rate = 0.95
-    const allVoices = synth.getVoices()
     const wantedMatch = voice === 'lucy'
       ? /female|samantha|victoria|karen|moira|tessa|kathy|allison|ava/i
       : /male|alex|fred|daniel|oliver|tom|aaron/i
-    const picked = allVoices.find((v) => v.lang.startsWith('en') && wantedMatch.test(v.name))
-    if (picked) utterance.voice = picked
-    utterance.onend = () => {
+    speakingRef.current = story.id
+    setSpeakingId(story.id)
+    const finish = () => {
       if (speakingRef.current === story.id) {
         speakingRef.current = null
         setSpeakingId(null)
       }
+      speechRef.current = null
     }
-    utterance.onerror = utterance.onend
-    speakingRef.current = story.id
-    setSpeakingId(story.id)
-    synth.speak(utterance)
+    speechRef.current = speakLong({
+      text: story.variants[voice],
+      lang: 'en-US',
+      rate: 0.95,
+      pickVoice: (voices) => voices.find((v) => v.lang.startsWith('en') && wantedMatch.test(v.name)),
+      onEnd: finish,
+      onError: finish,
+    })
   }
 
   const playFromUrl = (story: BundledStory, url: string) => {

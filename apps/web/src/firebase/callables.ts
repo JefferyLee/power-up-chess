@@ -881,6 +881,18 @@ export interface Pairing {
   /** P2.H Slice 4 — game room minted by the white player; both kids
    *  play through /r/{roomId}. */
   roomId?: string
+  /** P2.H Slice 5 — opposing player flagged the reported result. */
+  disputed?: {
+    byNormalizedName: string
+    at: number
+    reason?: string
+  }
+  /** Admin override stamp. */
+  overriddenBy?: {
+    normalizedName: string
+    at: number
+    previousResult?: PairingResult
+  }
 }
 export interface TournamentRound {
   index: number
@@ -911,6 +923,15 @@ export interface RegisterForTournamentResponse {
   tournament: TournamentDoc
   alreadyRegistered: boolean
 }
+export interface UnregisterFromTournamentRequest {
+  normalizedName: string
+  sessionId: string
+}
+export interface UnregisterFromTournamentResponse {
+  ok: true
+  tournament: TournamentDoc
+  wasNotRegistered: boolean
+}
 export interface StartNextRoundRequest {
   normalizedName: string
   sessionId: string
@@ -940,6 +961,28 @@ export interface CloseTournamentResponse {
   winnerName?: string
   yourCastlePoints?: number
 }
+export interface DisputeTournamentResultRequest {
+  normalizedName: string
+  sessionId: string
+  roundIndex: number
+  pairingIndex: number
+  reason?: string
+}
+export interface DisputeTournamentResultResponse {
+  ok: true
+  tournament: TournamentDoc
+}
+export interface OverrideTournamentResultRequest {
+  normalizedName: string
+  sessionId: string
+  roundIndex: number
+  pairingIndex: number
+  result: Exclude<PairingResult, 'bye-white'>
+}
+export interface OverrideTournamentResultResponse {
+  ok: true
+  tournament: TournamentDoc
+}
 const getCurrentTournamentFn = httpsCallable<
   Record<string, never>,
   GetCurrentTournamentResponse
@@ -948,6 +991,10 @@ const registerForTournamentFn = httpsCallable<
   RegisterForTournamentRequest,
   RegisterForTournamentResponse
 >(functions, 'registerForTournament')
+const unregisterFromTournamentFn = httpsCallable<
+  UnregisterFromTournamentRequest,
+  UnregisterFromTournamentResponse
+>(functions, 'unregisterFromTournament')
 const startNextRoundFn = httpsCallable<
   StartNextRoundRequest,
   StartNextRoundResponse
@@ -975,6 +1022,14 @@ const createTournamentRoomFn = httpsCallable<
   CreateTournamentRoomRequest,
   CreateTournamentRoomResponse
 >(functions, 'createTournamentRoom')
+const disputeTournamentResultFn = httpsCallable<
+  DisputeTournamentResultRequest,
+  DisputeTournamentResultResponse
+>(functions, 'disputeTournamentResult')
+const overrideTournamentResultFn = httpsCallable<
+  OverrideTournamentResultRequest,
+  OverrideTournamentResultResponse
+>(functions, 'overrideTournamentResult')
 
 export async function callGetNextPuzzle(
   req: GetNextPuzzleRequest,
@@ -1082,6 +1137,12 @@ export async function callRegisterForTournament(
   const { data } = await registerForTournamentFn(req)
   return data
 }
+export async function callUnregisterFromTournament(
+  req: UnregisterFromTournamentRequest,
+): Promise<UnregisterFromTournamentResponse> {
+  const { data } = await unregisterFromTournamentFn(req)
+  return data
+}
 export async function callStartNextRound(
   req: StartNextRoundRequest,
 ): Promise<StartNextRoundResponse> {
@@ -1106,6 +1167,18 @@ export async function callCreateTournamentRoom(
   const { data } = await createTournamentRoomFn(req)
   return data
 }
+export async function callDisputeTournamentResult(
+  req: DisputeTournamentResultRequest,
+): Promise<DisputeTournamentResultResponse> {
+  const { data } = await disputeTournamentResultFn(req)
+  return data
+}
+export async function callOverrideTournamentResult(
+  req: OverrideTournamentResultRequest,
+): Promise<OverrideTournamentResultResponse> {
+  const { data } = await overrideTournamentResultFn(req)
+  return data
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Chess invitations (Phase B). User-to-user invites; server charges 5 CP at
@@ -1120,6 +1193,9 @@ export interface SendInviteRequest {
   /** Sender's equipped piece-set id; flows through to the spawned
    *  room's white.pieceSetId on accept. */
   pieceSetId?: string
+  /** Game variant to spawn on accept. Omitted = 'chess' (default).
+   *  Server enforces the wizard cost (10 ✦) when set to 'wizard'. */
+  kind?: 'chess' | 'wizard'
 }
 export interface SendInviteResponse {
   ok: true

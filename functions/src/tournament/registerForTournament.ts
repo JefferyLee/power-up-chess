@@ -4,6 +4,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { postTournamentRegistration } from '../castle/postTournamentRegistration'
 import {
   TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES,
   TOURNAMENT_ENTRY_WEEKLY_SOLVES,
@@ -43,7 +44,7 @@ export const registerForTournament = onCall<
   const tournamentRef = db.doc(`tournaments/${weekKey}`)
   const guestRef = db.doc(`guests/${normalizedName}`)
 
-  return db.runTransaction(async (tx) => {
+  const result = await db.runTransaction<RegisterForTournamentResponse>(async (tx) => {
     const [tSnap, gSnap] = await Promise.all([
       tx.get(tournamentRef),
       tx.get(guestRef),
@@ -134,4 +135,21 @@ export const registerForTournament = onCall<
     }
     return { ok: true, tournament: next, alreadyRegistered: false }
   })
+
+  // Fire-and-forget Hall hype post on first-time registrations only.
+  // Re-registers (race conditions, re-clicks) stay silent so chat
+  // doesn't spam.
+  if (!result.alreadyRegistered) {
+    const newcomer =
+      result.tournament.participants[result.tournament.participants.length - 1]
+    if (newcomer) {
+      void postTournamentRegistration({
+        displayName: newcomer.displayName,
+        participantCount: result.tournament.participants.length,
+        weekKey,
+      })
+    }
+  }
+
+  return result
 })

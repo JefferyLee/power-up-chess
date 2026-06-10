@@ -1,7 +1,15 @@
-// RoomDoor — small arched-top "door" tile that links to one Hall
-// destination. Replaces the wide card-style buttons. The art is a
-// stylised oak door with iron studs, hinges, and a brass knob; the
-// label sits under the door, not on it.
+// RoomDoor — a castle-door tile linking to one Hall destination.
+//
+// The door art is a generated painterly PNG (sandstone arch + carved
+// lintel emblem + dark oak + iron hardware + baked hearth light),
+// one per destination under /sprites/doors/<iconKey>.png. Only the
+// genuinely dynamic bits are drawn as a lightweight SVG overlay on
+// top: the waiting-room notice (count changes + sways) and the
+// locked padlock. The firelight is baked into the PNG.
+//
+// When iconKey is absent (or its image hasn't shipped) the door
+// falls back to a simple arched tile with the emoji glyph so nothing
+// breaks mid-rollout.
 
 interface Props {
   icon: string
@@ -9,21 +17,35 @@ interface Props {
   blurb: string
   locked?: boolean
   loading?: boolean
-  /** When set, overrides the default door color (oak brown). */
+  /** Retained for the emoji fallback's tint; the generated door PNGs
+   *  bake their own wood colour, so this is unused on the image path. */
   variant?: 'oak' | 'mossy' | 'forest' | 'starry' | 'parchment'
   onClick: () => void
   disabled?: boolean
   title?: string
+  /** Count badge — hangs the wooden notice from the door's nail when
+   *  present. Use formatRoomCount() to clamp. */
+  badge?: string
+  badgeTitle?: string
+  /** Door art key — selects /sprites/doors/<iconKey>.png. Omit to
+   *  fall back to the emoji tile. */
+  iconKey?: string
 }
 
-const VARIANT_COLORS: Record<NonNullable<Props['variant']>, [string, string, string]> = {
-  // [fill, plank-stroke, frame]
-  oak:       ['#3a2410', '#180c04', '#5a3a18'],
-  mossy:     ['#264028', '#0c1208', '#3a5a3a'],
-  forest:    ['#1f2a18', '#0a0e08', '#3a5028'],
-  starry:    ['#1c1338', '#0a061a', '#3a2a78'],
-  parchment: ['#7a4a1a', '#3a1c08', '#caa14a'],
+const FALLBACK_WOOD: Record<NonNullable<Props['variant']>, string> = {
+  oak:       '#3a2410',
+  mossy:     '#264028',
+  forest:    '#1f2a18',
+  starry:    '#1c1338',
+  parchment: '#7a4a1a',
 }
+
+/** Cache-buster for the door PNGs. These live in /public with stable
+ *  filenames (no content hash), so replacing a door's art in place
+ *  would otherwise be masked by the service-worker CacheFirst cache
+ *  and Cloudflare's edge cache. Bump this whenever any door PNG's
+ *  pixels change so every layer treats it as a fresh URL. */
+const DOOR_ART_VERSION = '2'
 
 export function RoomDoor({
   icon,
@@ -35,8 +57,10 @@ export function RoomDoor({
   onClick,
   disabled = false,
   title,
+  badge,
+  badgeTitle,
+  iconKey,
 }: Props) {
-  const [fill, planks, frame] = VARIANT_COLORS[variant]
   return (
     <button
       type="button"
@@ -45,55 +69,128 @@ export function RoomDoor({
       disabled={disabled}
       title={title}
     >
-      <svg viewBox="0 0 100 160" className="puc-roomdoor__art" aria-hidden="true">
+      {/* viewBox 100×150 (2:3) matches the generated door PNG ratio. */}
+      <svg viewBox="0 0 100 150" className="puc-roomdoor__art" aria-hidden="true">
         <defs>
-          <linearGradient id={`puc-door-${variant}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={fill} stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#0a0604" />
+          <linearGradient id="puc-roomdoor-sign-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#ffe6a5" />
+            <stop offset="45%"  stopColor="#f4c266" />
+            <stop offset="100%" stopColor="#b8821e" />
           </linearGradient>
         </defs>
-        {/* Stone frame */}
-        <path
-          d="M 4 158 L 4 50 Q 4 8 50 8 Q 96 8 96 50 L 96 158 Z"
-          fill={frame}
-          stroke="#0a0604"
-          strokeWidth="2"
-        />
-        {/* Door panel inside */}
-        <path
-          d="M 14 154 L 14 52 Q 14 16 50 16 Q 86 16 86 52 L 86 154 Z"
-          fill={`url(#puc-door-${variant})`}
-          stroke={planks}
-          strokeWidth="1.5"
-        />
-        {/* Plank seam down the middle */}
-        <line x1="50" y1="16" x2="50" y2="154" stroke={planks} strokeWidth="1" opacity="0.7" />
-        {/* Iron bands */}
-        <path d="M 14 60 Q 50 52 86 60" stroke="#1a120a" strokeWidth="2.5" fill="none" />
-        <path d="M 14 110 Q 50 104 86 110" stroke="#1a120a" strokeWidth="2.5" fill="none" />
-        {/* Iron studs */}
-        {[40, 90, 140].map((y) =>
-          [22, 78].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.6" fill="#0a0604" />),
+
+        {iconKey ? (
+          <image
+            href={`/sprites/doors/${iconKey}.png?v=${DOOR_ART_VERSION}`}
+            x="0" y="0" width="100" height="150"
+            preserveAspectRatio="xMidYMid meet"
+          />
+        ) : (
+          /* — Emoji fallback: plain arched tile + glyph. — */
+          <>
+            <path
+              d="M 8 148 L 8 48 Q 8 10 50 10 Q 92 10 92 48 L 92 148 Z"
+              fill={FALLBACK_WOOD[variant]}
+              stroke="#0a0604"
+              strokeWidth="1.5"
+            />
+            <text
+              x="50" y="84"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize="30"
+              fill="#fff6dc"
+            >
+              {icon}
+            </text>
+          </>
         )}
-        {/* Knob */}
-        <circle cx="72" cy="100" r="2.8" fill="#caa14a" stroke="#3a1c08" strokeWidth="0.6" />
-        {/* Decoration: icon overlay in a small inset */}
-        <g transform="translate(50, 78)">
-          <text
-            textAnchor="middle"
-            fontSize="22"
-            fill="#fff6dc"
-            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }}
-          >
-            {icon}
-          </text>
-        </g>
-        {/* Lock overlay */}
+
+        {/* — Firelight flicker — a warm, brightened duplicate of the
+         *    door image screen-blended on top of itself. Because it's
+         *    the same PNG it shares the exact arch silhouette (no halo,
+         *    no mask needed); the CSS filter pushes it warm + bright so
+         *    screen-blending makes the lit areas glow, and the opacity
+         *    flicker animates the hearth's restless light. */}
+        {iconKey && (
+          <image
+            href={`/sprites/doors/${iconKey}.png?v=${DOOR_ART_VERSION}`}
+            x="0" y="0" width="100" height="150"
+            preserveAspectRatio="xMidYMid meet"
+            className="puc-roomdoor__firelight"
+            pointerEvents="none"
+          />
+        )}
+
+        {/* — Locked padlock — centred on the wood so it doesn't depend
+         *    on the baked ring's exact position. The whole tile is also
+         *    dimmed via the .puc-roomdoor--locked CSS filter. A locked
+         *    door always shows the lock (never the waiting notice) — a
+         *    waiting count is irrelevant on a door you can't enter. */}
         {locked && (
-          <g transform="translate(50, 130)">
-            <rect x="-9" y="-4" width="18" height="14" rx="2" fill="#caa14a" stroke="#1a120a" strokeWidth="1" />
-            <path d="M -5 -4 V -10 a 5 5 0 0 1 10 0 V -4" fill="none" stroke="#1a120a" strokeWidth="1.8" />
-            <circle cx="0" cy="4" r="2" fill="#1a120a" />
+          <g transform="translate(50, 96)">
+            <rect x="-6" y="-3.5" width="12" height="10" rx="1.2" fill="#241a0f" stroke="#0a0604" strokeWidth="0.7" />
+            <path d="M -3.6 -3.5 V -10 a 3.6 3.6 0 0 1 7.2 0 V -3.5" fill="none" stroke="#0a0604" strokeWidth="1.5" />
+            <circle cx="0" cy="0.8" r="1" fill="#0a0604" />
+            <rect x="-0.45" y="0.8" width="0.9" height="2.3" fill="#0a0604" />
+          </g>
+        )}
+
+        {/* — Waiting notice — wooden plank hung from the door's nail by
+         *    two iron chains converging from the plank's upper corners,
+         *    forming a stable triangular suspension. Sways (CSS) about
+         *    the nail point. */}
+        {badge && !locked && (
+          <g className="puc-roomdoor__sign">
+            <title>{badgeTitle ?? `${badge} waiting`}</title>
+            {/* Whole notice scaled to ~2/3 around the nail point so it
+             *  reads as a small plaque on the door rather than a slab.
+             *  The nail stays put at (50, 64); everything below shrinks
+             *  toward it. Font sizes are pre-bumped so the count stays
+             *  legible after the scale. */}
+            <g transform="translate(50 64) scale(0.67) translate(-50 -64)">
+              {/* Forged nail head at the convergence point (aligns with
+               *  the nail baked into the door PNG's upper-centre). */}
+              <circle cx="50" cy="64" r="1.8" fill="#100b07" stroke="#000" strokeWidth="0.3" />
+              <circle cx="49.3" cy="63.3" r="0.55" fill="rgba(220, 180, 130, 0.45)" />
+              {/* Left chain — links from the plank's upper-left corner up
+               *  to the nail. */}
+              <g stroke="#0a0604" strokeWidth="0.5" fill="none">
+                <ellipse cx="42" cy="74.5" rx="1.2" ry="0.7" />
+                <ellipse cx="45" cy="71"   rx="0.7" ry="1.2" />
+                <ellipse cx="47.5" cy="67.5" rx="1.2" ry="0.7" />
+                {/* Right chain — mirror up to the same nail. */}
+                <ellipse cx="58" cy="74.5" rx="1.2" ry="0.7" />
+                <ellipse cx="55" cy="71"   rx="0.7" ry="1.2" />
+                <ellipse cx="52.5" cy="67.5" rx="1.2" ry="0.7" />
+              </g>
+              {/* Plank */}
+              <rect
+                x="28" y="76" width="44" height="22" rx="2.5"
+                fill="url(#puc-roomdoor-sign-fill)"
+                stroke="#3a2208"
+                strokeWidth="1.2"
+              />
+              <circle cx="31" cy="79" r="1" fill="#1a0a02" />
+              <circle cx="69" cy="79" r="1" fill="#1a0a02" />
+              <text
+                x="50" y="89.5"
+                textAnchor="middle"
+                fontFamily="Cinzel, Georgia, serif"
+                fontSize="13"
+                fontWeight="800"
+                fill="#1f1408"
+              >{badge}</text>
+              <text
+                x="50" y="95"
+                textAnchor="middle"
+                fontFamily="Cinzel, Georgia, serif"
+                fontSize="4.5"
+                fontWeight="700"
+                fill="#3a2208"
+                letterSpacing="0.4"
+              >WAITING</text>
+            </g>
           </g>
         )}
       </svg>

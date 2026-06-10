@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { JoinRoomRequest, JoinRoomResponse, RoomDoc } from './types'
 import { sanitisePieceSetId } from '../cosmetics/registry'
+import { postGameStarted } from '../castle/postGameStarted'
 
 /**
  * Adds the caller as the black player and flips the room to `live`, OR
@@ -113,8 +114,24 @@ export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async
       updatedAt: now,
     }
     tx.set(ref, updated)
-    return updated
+    return { room: updated, justWentLive: true as const }
   })
 
-  return { roomId, status: result.status }
+  // Reclaim + idempotent re-joins don't carry the flag (they return
+  // a raw RoomDoc), only the genuine black-joining path does. That's
+  // the moment to fire the Hall "X vs Y just started" post.
+  if ('justWentLive' in result && result.justWentLive) {
+    const r = result.room
+    if (r.white?.displayName && r.black?.displayName) {
+      void postGameStarted({
+        roomKind: 'chess',
+        roomId,
+        whiteName: r.white.displayName,
+        blackName: r.black.displayName,
+      })
+    }
+  }
+
+  const status = ('room' in result ? result.room : result).status
+  return { roomId, status }
 })

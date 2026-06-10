@@ -23,16 +23,23 @@ import {
   BYE_OPPONENT,
   callCloseTournament,
   callCreateTournamentRoom,
+  callDisputeTournamentResult,
   callGetCurrentTournament,
+  callOverrideTournamentResult,
   callRegisterForTournament,
   callReportTournamentResult,
   callStartNextRound,
+  callUnregisterFromTournament,
   type Pairing,
   type PairingResult,
   type TournamentDoc,
   type TournamentRound,
 } from '../firebase/callables'
 import './TournamentRoute.css'
+
+/** Single-admin gate — keep this in sync with the server-side guard
+ *  in overrideTournamentResult.ts. */
+const ADMIN_NORMALIZED_NAME = 'jeff'
 
 export function TournamentRoute() {
   const navigate = useNavigate()
@@ -97,6 +104,26 @@ export function TournamentRoute() {
     }
   }, [identity, tournament])
 
+  const onUnregister = useCallback(async () => {
+    if (!identity || identity.isBypass || !identity.sessionId) return
+    if (!confirm('Cancel your registration? You can sign up again before round 1 starts.')) {
+      return
+    }
+    setBusy('unregister')
+    setActionError(null)
+    try {
+      const res = await callUnregisterFromTournament({
+        normalizedName: identity.normalizedName,
+        sessionId: identity.sessionId,
+      })
+      setTournament(normalizeTournament(res.tournament))
+    } catch (err) {
+      setActionError(messageFor(err))
+    } finally {
+      setBusy(null)
+    }
+  }, [identity])
+
   const onStartRound = useCallback(async () => {
     if (!identity || identity.isBypass || !identity.sessionId) return
     setBusy('round')
@@ -143,6 +170,56 @@ export function TournamentRoute() {
       setActionError(null)
       try {
         const res = await callReportTournamentResult({
+          normalizedName: identity.normalizedName,
+          sessionId: identity.sessionId,
+          roundIndex,
+          pairingIndex,
+          result,
+        })
+        setTournament(normalizeTournament(res.tournament))
+      } catch (err) {
+        setActionError(messageFor(err))
+      } finally {
+        setBusy(null)
+      }
+    },
+    [identity],
+  )
+
+  const onDispute = useCallback(
+    async (roundIndex: number, pairingIndex: number, reason?: string) => {
+      if (!identity || identity.isBypass || !identity.sessionId) return
+      setBusy(`dispute-${roundIndex}-${pairingIndex}`)
+      setActionError(null)
+      try {
+        const res = await callDisputeTournamentResult({
+          normalizedName: identity.normalizedName,
+          sessionId: identity.sessionId,
+          roundIndex,
+          pairingIndex,
+          ...(reason ? { reason } : {}),
+        })
+        setTournament(normalizeTournament(res.tournament))
+      } catch (err) {
+        setActionError(messageFor(err))
+      } finally {
+        setBusy(null)
+      }
+    },
+    [identity],
+  )
+
+  const onOverride = useCallback(
+    async (
+      roundIndex: number,
+      pairingIndex: number,
+      result: Exclude<PairingResult, 'bye-white'>,
+    ) => {
+      if (!identity || identity.isBypass || !identity.sessionId) return
+      setBusy(`override-${roundIndex}-${pairingIndex}`)
+      setActionError(null)
+      try {
+        const res = await callOverrideTournamentResult({
           normalizedName: identity.normalizedName,
           sessionId: identity.sessionId,
           roundIndex,
@@ -236,8 +313,10 @@ export function TournamentRoute() {
                 identity={identity}
                 isRegistered={isRegistered}
                 busy={busy === 'register'}
+                unregistering={busy === 'unregister'}
                 error={actionError}
                 onRegister={onRegister}
+                onUnregister={onUnregister}
               />
             )}
 
@@ -247,9 +326,16 @@ export function TournamentRoute() {
                 <Rounds
                   tournament={tournament}
                   identity={identity}
+                  isAdmin={
+                    !!identity &&
+                    !identity.isBypass &&
+                    identity.normalizedName === ADMIN_NORMALIZED_NAME
+                  }
                   busy={busy}
                   onReport={onReport}
                   onOpenRoom={onOpenRoom}
+                  onDispute={onDispute}
+                  onOverride={onOverride}
                 />
               </>
             )}
@@ -273,14 +359,6 @@ export function TournamentRoute() {
           </>
         )}
 
-        <aside className="puc-tour__roadmap">
-          <h3 className="puc-tour__roadmap-title">Coming soon</h3>
-          <ul>
-            <li>Auto-generated private game rooms per pairing</li>
-            <li>Result disputes + admin override</li>
-            <li>Champion crown badge surfaced in the Hall + chess screens</li>
-          </ul>
-        </aside>
       </main>
     </div>
   )
@@ -312,6 +390,10 @@ function TournamentHeader({ tournament }: { tournament: TournamentDoc }) {
           <>Registration closes <strong>{formatDate(tournament.closesAt)}</strong></>
         )}
       </p>
+      <p className="puc-tour__tz-hint">
+        All tournament times are Pacific Time (Los Angeles); the week
+        rolls over at Monday 00:00 PT.
+      </p>
     </section>
   )
 }
@@ -320,14 +402,18 @@ function RegistrationPanel({
   identity,
   isRegistered,
   busy,
+  unregistering,
   error,
   onRegister,
+  onUnregister,
 }: {
   identity: ReturnType<typeof useCastle>['identity']
   isRegistered: boolean
   busy: boolean
+  unregistering: boolean
   error: string | null
   onRegister: () => void
+  onUnregister: () => void
 }) {
   if (!identity) return <p className="puc-tour__hint">Sign in to register.</p>
   if (identity.isBypass) {
@@ -340,9 +426,20 @@ function RegistrationPanel({
   }
   if (isRegistered) {
     return (
-      <p className="puc-tour__registered">
-        ✓ You&apos;re registered for this week.
-      </p>
+      <div className="puc-tour__register">
+        <p className="puc-tour__registered">
+          ✓ You&apos;re registered for this week.
+        </p>
+        <button
+          type="button"
+          className="puc-tour__btn puc-tour__btn--ghost"
+          onClick={onUnregister}
+          disabled={unregistering}
+        >
+          {unregistering ? 'Cancelling…' : 'Cancel registration'}
+        </button>
+        {error && <p className="puc-tour__error">{error}</p>}
+      </div>
     )
   }
   return (
@@ -445,15 +542,21 @@ function Standings({
 function Rounds({
   tournament,
   identity,
+  isAdmin,
   busy,
   onReport,
   onOpenRoom,
+  onDispute,
+  onOverride,
 }: {
   tournament: TournamentDoc
   identity: ReturnType<typeof useCastle>['identity']
+  isAdmin: boolean
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
   onOpenRoom: (r: number, p: number) => void
+  onDispute: (r: number, p: number, reason?: string) => void
+  onOverride: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
 }) {
   if (tournament.rounds.length === 0) {
     return (
@@ -474,10 +577,13 @@ function Rounds({
           key={round.index}
           round={round}
           me={me}
+          isAdmin={isAdmin}
           nameMap={nameMap}
           busy={busy}
           onReport={onReport}
           onOpenRoom={onOpenRoom}
+          onDispute={onDispute}
+          onOverride={onOverride}
           locked={tournament.status === 'closed'}
         />
       ))}
@@ -488,18 +594,24 @@ function Rounds({
 function RoundCard({
   round,
   me,
+  isAdmin,
   nameMap,
   busy,
   onReport,
   onOpenRoom,
+  onDispute,
+  onOverride,
   locked,
 }: {
   round: TournamentRound
   me: string
+  isAdmin: boolean
   nameMap: Map<string, string>
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
   onOpenRoom: (r: number, p: number) => void
+  onDispute: (r: number, p: number, reason?: string) => void
+  onOverride: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
   locked: boolean
 }) {
   return (
@@ -512,10 +624,13 @@ function RoundCard({
             roundIndex={round.index}
             pairing={p}
             me={me}
+            isAdmin={isAdmin}
             nameMap={nameMap}
             busy={busy}
             onReport={onReport}
             onOpenRoom={onOpenRoom}
+            onDispute={onDispute}
+            onOverride={onOverride}
             locked={locked}
           />
         ))}
@@ -528,19 +643,25 @@ function PairingRow({
   roundIndex,
   pairing,
   me,
+  isAdmin,
   nameMap,
   busy,
   onReport,
   onOpenRoom,
+  onDispute,
+  onOverride,
   locked,
 }: {
   roundIndex: number
   pairing: Pairing
   me: string
+  isAdmin: boolean
   nameMap: Map<string, string>
   busy: string | null
   onReport: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
   onOpenRoom: (r: number, p: number) => void
+  onDispute: (r: number, p: number, reason?: string) => void
+  onOverride: (r: number, p: number, result: Exclude<PairingResult, 'bye-white'>) => void
   locked: boolean
 }) {
   const whiteName = nameMap.get(pairing.white) ?? pairing.white
@@ -549,15 +670,31 @@ function PairingRow({
   const mine = !locked && (pairing.white === me || pairing.black === me)
   const busyKey = `report-${roundIndex}-${pairing.index}`
   const roomBusyKey = `room-${roundIndex}-${pairing.index}`
+  const disputeBusyKey = `dispute-${roundIndex}-${pairing.index}`
+  const overrideBusyKey = `override-${roundIndex}-${pairing.index}`
   const isBye = pairing.black === BYE_OPPONENT
   const iAmWhite = mine && pairing.white === me
   const showRoomCta = mine && !isBye && !pairing.result
+  // Whoever's posted result the viewer should be able to flag: must
+  // be a participant, must not be the reporter, must not be bye, must
+  // have a result, must not already be disputed or overridden, and
+  // tournament must still be active (not locked).
+  const canDispute =
+    mine &&
+    !isBye &&
+    !!pairing.result &&
+    !pairing.disputed &&
+    !pairing.overriddenBy &&
+    pairing.reportedBy &&
+    pairing.reportedBy !== me
   return (
     <li
       className={
         'puc-tour__pairing ' +
         (mine ? 'puc-tour__pairing--mine ' : '') +
-        (isBye ? 'puc-tour__pairing--bye' : '')
+        (isBye ? 'puc-tour__pairing--bye ' : '') +
+        (pairing.disputed ? 'puc-tour__pairing--disputed ' : '') +
+        (pairing.overriddenBy ? 'puc-tour__pairing--overridden' : '')
       }
     >
       <div className="puc-tour__pairing-players">
@@ -594,9 +731,47 @@ function PairingRow({
       )}
       <div className="puc-tour__pairing-result">
         {pairing.result ? (
-          <span className={`puc-tour__pairing-outcome puc-tour__pairing-outcome--${pairing.result}`}>
-            {labelForResult(pairing.result, whiteName, blackName)}
-          </span>
+          <div className="puc-tour__pairing-result-line">
+            <span className={`puc-tour__pairing-outcome puc-tour__pairing-outcome--${pairing.result}`}>
+              {labelForResult(pairing.result, whiteName, blackName)}
+            </span>
+            {pairing.disputed && (
+              <span
+                className="puc-tour__pairing-flag"
+                title={
+                  pairing.disputed.reason
+                    ? `Flagged by ${nameMap.get(pairing.disputed.byNormalizedName) ?? pairing.disputed.byNormalizedName}: "${pairing.disputed.reason}"`
+                    : `Flagged by ${nameMap.get(pairing.disputed.byNormalizedName) ?? pairing.disputed.byNormalizedName}`
+                }
+              >
+                🚩 Disputed
+              </span>
+            )}
+            {pairing.overriddenBy && (
+              <span className="puc-tour__pairing-flag puc-tour__pairing-flag--admin">
+                ✓ Settled by admin
+              </span>
+            )}
+            {canDispute && (
+              <button
+                type="button"
+                className="puc-tour__btn puc-tour__btn--tiny puc-tour__btn--dispute"
+                onClick={() => {
+                  // Prompt — keeps the UI dead simple for a slice. A
+                  // dedicated dialog is the obvious follow-up if kids
+                  // start writing real essays here.
+                  const reason = window.prompt(
+                    'What actually happened? (optional, 140 chars)',
+                  )
+                  if (reason === null) return
+                  onDispute(roundIndex, pairing.index, reason.trim() || undefined)
+                }}
+                disabled={busy === disputeBusyKey}
+              >
+                {busy === disputeBusyKey ? 'Flagging…' : '🚩 Dispute'}
+              </button>
+            )}
+          </div>
         ) : isBye ? null : mine ? (
           <div className="puc-tour__report">
             <button
@@ -628,6 +803,35 @@ function PairingRow({
           <span className="puc-tour__pairing-pending">awaiting result…</span>
         )}
       </div>
+      {isAdmin && !isBye && pairing.result && (
+        <div className="puc-tour__pairing-admin">
+          <span className="puc-tour__pairing-admin-label">Admin override:</span>
+          <button
+            type="button"
+            className="puc-tour__btn puc-tour__btn--tiny"
+            onClick={() => onOverride(roundIndex, pairing.index, 'white-wins')}
+            disabled={busy === overrideBusyKey}
+          >
+            {whiteName} won
+          </button>
+          <button
+            type="button"
+            className="puc-tour__btn puc-tour__btn--tiny"
+            onClick={() => onOverride(roundIndex, pairing.index, 'black-wins')}
+            disabled={busy === overrideBusyKey}
+          >
+            {blackName} won
+          </button>
+          <button
+            type="button"
+            className="puc-tour__btn puc-tour__btn--tiny"
+            onClick={() => onOverride(roundIndex, pairing.index, 'draw')}
+            disabled={busy === overrideBusyKey}
+          >
+            Draw
+          </button>
+        </div>
+      )}
     </li>
   )
 }
@@ -743,6 +947,13 @@ function formatScore(s: number): string {
   return s % 1 === 0 ? `${s}` : `${s.toFixed(1)}`
 }
 
+/** Tournament weeks are keyed off America/Los_Angeles (see
+ *  functions/src/tournament/weekKey.ts). Render every tournament
+ *  timestamp in that zone — and let the formatter append PST/PDT —
+ *  so all participants see the same canonical wall-clock regardless
+ *  of where they're sitting. */
+const TOURNAMENT_TZ = 'America/Los_Angeles'
+
 function formatDate(epochMs: number): string {
   return new Date(epochMs).toLocaleString(undefined, {
     weekday: 'short',
@@ -750,6 +961,8 @@ function formatDate(epochMs: number): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: TOURNAMENT_TZ,
+    timeZoneName: 'short',
   })
 }
 

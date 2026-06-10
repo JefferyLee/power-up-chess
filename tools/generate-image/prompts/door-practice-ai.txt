@@ -1,0 +1,15 @@
+A single ornate medieval castle door, viewed straight on from the front, centered, the complete arched door filling the frame from top to bottom.
+
+Architecture: a rounded Romanesque archway of rough, weathered sandstone framing the door. A carved trapezoidal keystone at the apex. Visible ashlar masonry block joints and a chiseled, pitted, sun-bleached, genuinely ANCIENT rustic stone surface with chips and cracks — heavily textured, NOT smooth or clean.
+
+Set into the stone directly above the door, within the arched lintel, a single PROMINENT sandstone BAS-RELIEF EMBLEM carved into the rock — the clear focal point: a friendly hooded clockwork chess automaton (a Mechanical Turk figure) seated at a small chess board, its open chest panel revealing interlocking brass gears with a softly glowing rune, one mechanical hand lifting a knight chess piece mid-move. The emblem is unmistakably chiseled into the stone in raised relief, catching the warm light.
+
+The door itself: a single heavy slab of dark aged oak, deep warm brown, with a few simple geometric carved grooves and scattered rows of black iron studs. Black wrought-iron strap hinges along the LEFT edge. A single round black iron knocker-ring mounted on the RIGHT edge of the door at exactly mid-height. A single forged iron nail driven into the upper-center of the wooden door, about one-fifth of the way down from the top of the wood, bare with nothing hanging from it yet. The wood is worn, scratched, full of character.
+
+Lighting: warm directional firelight coming from the LOWER-RIGHT, casting a soft orange glow and deep shadows, the upper-left falling into cooler shadow — one coherent cozy light source. Do NOT draw a fireplace, torch, or any light-source object anywhere; render ONLY the light it casts on the door and stone.
+
+Style: painterly, richly textured storybook fantasy game art for children ages 8 to 10. Warm, inviting, magical — NOT grim, NOT scary. High detail in the stone pitting and the oak grain.
+
+Background: plain near-black void. The arched door is fully isolated, no surrounding castle wall or scenery beyond the stone arch itself, so it can be cleanly cut out.
+
+Output: tall portrait orientation, high quality PNG.

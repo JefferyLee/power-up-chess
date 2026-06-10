@@ -113,6 +113,13 @@
   color: var(--puc-text-muted);
 }
 .puc-tour__closes strong { color: var(--puc-text); }
+.puc-tour__tz-hint {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--puc-text-muted);
+  opacity: 0.75;
+  font-style: italic;
+}
 
 .puc-tour__register {
   display: flex;
@@ -155,6 +162,19 @@
   font-weight: 600;
 }
 .puc-tour__btn--primary:hover:not(:disabled) { filter: brightness(1.05); }
+/* Ghost variant — used for the Cancel-registration button so it sits
+ * next to the "✓ registered" line without competing with the primary
+ * actions elsewhere on the page. */
+.puc-tour__btn--ghost {
+  background: transparent;
+  color: var(--puc-text-muted);
+  border: 1px dashed rgba(180, 180, 200, 0.45);
+}
+.puc-tour__btn--ghost:hover:not(:disabled) {
+  color: var(--puc-text);
+  border-color: rgba(220, 220, 240, 0.7);
+  background: rgba(255, 255, 255, 0.04);
+}
 .puc-tour__btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .puc-tour__list {
@@ -206,31 +226,6 @@
 .puc-tour__list-time {
   font-size: 12px;
   color: var(--puc-text-muted);
-}
-
-.puc-tour__roadmap {
-  padding: 18px 20px;
-  border-radius: 12px;
-  background: var(--puc-surface);
-  border: 1px solid var(--puc-surface-edge);
-}
-.puc-tour__roadmap-title {
-  margin: 0 0 8px;
-  font-family: var(--puc-font-display);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--puc-text-accent);
-}
-.puc-tour__roadmap ul {
-  margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: var(--puc-text);
-  font-size: 13px;
-  line-height: 1.45;
 }
 
 .puc-tour__actions {
@@ -436,6 +431,63 @@
 }
 .puc-tour__pairing-room .puc-tour__btn {
   text-decoration: none;
+}
+
+/* Result line is now a flex row so the outcome chip + flag chips +
+ * dispute button can sit side-by-side and wrap on phones. */
+.puc-tour__pairing-result-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.puc-tour__pairing-flag {
+  display: inline-block;
+  font-family: var(--puc-font-display);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(232, 110, 90, 0.16);
+  color: #f4a89a;
+  border: 1px solid rgba(232, 110, 90, 0.45);
+}
+.puc-tour__pairing-flag--admin {
+  background: rgba(120, 90, 200, 0.18);
+  color: #cdb6ff;
+  border-color: rgba(180, 150, 255, 0.45);
+}
+.puc-tour__btn--dispute {
+  background: transparent;
+  color: var(--puc-text-muted);
+  border: 1px dashed rgba(232, 110, 90, 0.45);
+}
+.puc-tour__btn--dispute:hover:not(:disabled) {
+  color: #f4a89a;
+  border-color: rgba(232, 110, 90, 0.85);
+}
+.puc-tour__pairing--disputed {
+  background: rgba(232, 110, 90, 0.06);
+}
+.puc-tour__pairing--overridden {
+  background: rgba(120, 90, 200, 0.06);
+}
+.puc-tour__pairing-admin {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(180, 150, 255, 0.32);
+}
+.puc-tour__pairing-admin-label {
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(180, 150, 255, 0.85);
+  font-family: var(--puc-font-display);
+  margin-right: 4px;
 }
 
 @media (max-width: 540px) {

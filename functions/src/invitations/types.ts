@@ -25,6 +25,11 @@ export interface InvitationDoc {
   /** Mirrors the Firestore document id; redundant but convenient on reads. */
   inviteId: string
 
+  /** Which kind of game this invite spawns on accept. Defaults to
+   *  'chess' for docs written before this field existed — clients +
+   *  server must read with `invite.kind ?? 'chess'`. */
+  kind?: 'chess' | 'wizard'
+
   fromUid: string
   /** Display name at send time — snapshot so historical lists render correctly. */
   fromName: string
@@ -65,10 +70,16 @@ export interface InvitationDoc {
  *  short enough that a forgotten invite doesn't sit in the inbox. */
 export const INVITE_TTL_MS = 60_000
 
-/** 5 castle points to send — same as the chess room open cost, charged
- *  whether the invitation is accepted, declined, ignored, or expires.
- *  On accept the room itself is free since the sender already paid. */
+/** 5 castle points to send a chess invite — same as the chess room
+ *  open cost, charged whether the invitation is accepted, declined,
+ *  ignored, or expires. On accept the room itself is free since the
+ *  sender already paid. */
 export const INVITE_COST_CP = 5
+
+/** 10 castle points to send a Wizard's Duel invite — mirrors the
+ *  wizardRoomOpenCost so inviting and just opening a duel cost the
+ *  sender the same. Spawned wizard room is free on accept. */
+export const WIZARD_INVITE_COST_CP = 10
 
 /** Per-uid daily cap. The 5 CP cost is the primary throttle; this is a
  *  hard ceiling that catches stuck retry loops. */

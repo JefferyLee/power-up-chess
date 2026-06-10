@@ -46,6 +46,25 @@
   animation: puc-piece-settle 220ms ease-out;
 }
 
+/* Face-to-face mode: rotate a piece 180° so the player sitting on the
+ * opposite side of the device sees their pieces right-way-up. The
+ * dragging + settle rules below recompose the rotation with their own
+ * scale so the flip doesn't blink off mid-animation. */
+.puc-piece--flipped {
+  transform: rotate(180deg);
+}
+.puc-piece--flipped.puc-piece--dragging {
+  transform: scale(1.06) rotate(180deg);
+}
+.puc-piece--flipped.puc-piece--just-moved {
+  animation: puc-piece-settle-flipped 220ms ease-out;
+}
+@keyframes puc-piece-settle-flipped {
+  0%   { transform: scale(1.18) rotate(180deg); }
+  60%  { transform: scale(0.96) rotate(180deg); }
+  100% { transform: scale(1.00) rotate(180deg); }
+}
+
 /* SVG-based piece sets (cburnett etc.) render an <img> inside the piece
  * slot. Fill the slot, ignore drags, keep CSS colour/stroke out of the
  * picture — the artwork supplies its own colour. */

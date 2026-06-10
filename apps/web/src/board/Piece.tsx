@@ -8,6 +8,10 @@ interface Props {
   piece: PieceModel
   dragging?: boolean
   justMoved?: boolean
+  /** Rotate this piece 180°. Used by local face-to-face mode so the two
+   *  players sitting across from each other both see their own pieces
+   *  upright. */
+  flipped?: boolean
   /** Override the rendered set for this specific piece. Used in online
    *  rooms where each side's pieces should render in that player's
    *  equipped set, regardless of who's viewing. Falls back to the
@@ -21,7 +25,7 @@ interface Props {
   pieceSetIdOverride?: string
 }
 
-export function Piece({ piece, dragging = false, justMoved = false, pieceSetIdOverride }: Props) {
+export function Piece({ piece, dragging = false, justMoved = false, flipped = false, pieceSetIdOverride }: Props) {
   const local = useCosmetics()
   const effectiveSetId = isPieceSetId(pieceSetIdOverride) ? pieceSetIdOverride : local.pieceSetId
   const effectiveSet =
@@ -34,6 +38,7 @@ export function Piece({ piece, dragging = false, justMoved = false, pieceSetIdOv
         `puc-piece--set-${effectiveSetId}`,
         dragging && 'puc-piece--dragging',
         justMoved && 'puc-piece--just-moved',
+        flipped && 'puc-piece--flipped',
       )}
       aria-hidden="true"
     >

@@ -3,7 +3,6 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { generateRoomId } from './roomId'
 import { sanitiseTimeControl } from './sanitiseTimeControl'
 import type { CreateRoomRequest, CreateRoomResponse, RoomDoc } from './types'
-import { postRoomInvite } from '../castle/postRoomInvite'
 import { AWARD_CAPS, type GuestDoc } from '../castle/types'
 import { sanitisePieceSetId } from '../cosmetics/registry'
 import { appendAuditTx } from '../castle/audit'
@@ -111,7 +110,10 @@ export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>
       })
 
       if (committed) {
-        void postRoomInvite({ roomKind: 'chess', roomId, openerName: displayName })
+        // Intentionally NO Hall post here. The "X just started a chess
+        // game — watch them play" message fires from joinRoom once
+        // both players are in, so the Hall doesn't fill with dead
+        // links to never-joined rooms.
         return { roomId }
       }
     }

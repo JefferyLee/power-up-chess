@@ -1,0 +1,184 @@
+/* RoomChooserDialog — list of currently-waiting rooms with Join
+ * buttons + an "Open new" CTA. Two variants (chess = gold, wizard
+ * = purple) so the kid recognises which surface they're on without
+ * reading. */
+.puc-chooser {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(8, 6, 4, 0.65);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.puc-chooser__card {
+  width: min(560px, 100%);
+  max-height: min(80dvh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.puc-chooser__card--chess { border-top: 4px solid var(--puc-accent, #f1c34c); }
+.puc-chooser__card--wizard { border-top: 4px solid #8d6fd9; }
+
+.puc-chooser__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 8px;
+}
+.puc-chooser__title {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: var(--puc-text-accent);
+}
+.puc-chooser__close {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--puc-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.puc-chooser__close:hover { color: var(--puc-text); }
+
+.puc-chooser__sub {
+  margin: 0 18px 10px;
+  font-size: 13px;
+  color: var(--puc-text-muted);
+}
+
+.puc-chooser__empty {
+  margin: 16px 18px;
+  font-size: 13.5px;
+  color: var(--puc-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 18px 12px;
+  border: 1px dashed rgba(180, 180, 200, 0.25);
+  border-radius: 10px;
+}
+
+.puc-chooser__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+.puc-chooser__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+.puc-chooser__row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.puc-chooser__opener {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 14px;
+  color: var(--puc-text);
+}
+.puc-chooser__opener-link {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-underline-offset: 3px;
+}
+.puc-chooser__opener-link:hover {
+  color: var(--puc-text-accent);
+  text-decoration-color: var(--puc-text-accent);
+}
+.puc-chooser__meta {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+}
+
+.puc-chooser__join {
+  flex-shrink: 0;
+  appearance: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.puc-chooser__join--chess {
+  background: linear-gradient(180deg, var(--puc-accent, #f1c34c), var(--puc-accent-strong, #e8a429));
+  color: #1f1408;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+.puc-chooser__join--wizard {
+  background: linear-gradient(180deg, #8d6fd9, #5e3aa0);
+  color: #fff;
+  border-color: rgba(180, 150, 255, 0.45);
+}
+.puc-chooser__join:hover { filter: brightness(1.08); }
+
+.puc-chooser__actions {
+  padding: 12px 18px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: flex-end;
+}
+.puc-chooser__btn {
+  appearance: none;
+  border: 1px solid rgba(120, 120, 140, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-chooser__btn--primary.puc-chooser__btn--chess {
+  background: linear-gradient(135deg, #f4c266, #ef9a3f);
+  color: #1a1a1f;
+  border-color: rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+}
+.puc-chooser__btn--primary.puc-chooser__btn--wizard {
+  background: linear-gradient(135deg, #8d6fd9, #5e3aa0);
+  color: #fff;
+  border-color: rgba(180, 150, 255, 0.45);
+  font-weight: 600;
+}
+.puc-chooser__btn--primary:hover { filter: brightness(1.06); }
+
+@media (max-width: 540px) {
+  .puc-chooser { padding: 12px; }
+  .puc-chooser__title { font-size: 16px; }
+  .puc-chooser__row { padding: 10px; gap: 8px; }
+  .puc-chooser__btn { width: 100%; }
+  .puc-chooser__actions { padding: 12px; }
+}

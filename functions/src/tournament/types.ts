@@ -33,6 +33,22 @@ export interface Pairing {
   /** P2.H Slice 4 — private game room minted by the white player.
    *  Both kids click into /r/{roomId} to play. */
   roomId?: string
+  /** P2.H Slice 5 — opposing player has flagged the reported result.
+   *  Result still counts for standings until an admin overrides; the
+   *  flag is what surfaces the row to the admin's override pane. */
+  disputed?: {
+    byNormalizedName: string
+    at: number
+    /** Short, free-text. Trimmed + clamped to 140 chars server-side. */
+    reason?: string
+  }
+  /** Admin override stamp. Locks the row from further disputes once set. */
+  overriddenBy?: {
+    normalizedName: string
+    at: number
+    /** What the result was before override — for the audit trail. */
+    previousResult?: PairingResult
+  }
 }
 
 export interface TournamentRound {

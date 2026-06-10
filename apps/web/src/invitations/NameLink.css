@@ -1,0 +1,14 @@
+/* Tournament champion crown inline next to a NameLink label. Sits
+ * inline rather than absolutely positioned so it never overlaps
+ * surrounding chips / chevrons regardless of where the name renders
+ * (chat bubble, standings row, OnlineList chip, lobby plaque). */
+.puc-name-link__crown {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.9em;
+  vertical-align: baseline;
+  /* Anchor the emoji's baseline a touch above the text baseline so it
+   * doesn't drop the line height on a single-line label. */
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 4px rgba(241, 195, 76, 0.55));
+}

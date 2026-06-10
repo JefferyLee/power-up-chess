@@ -1,0 +1,95 @@
+/* Champion banner — sits under the Hall doors row. Compact, warm
+ * brass-gold accent so it reads as celebratory but doesn't pull
+ * focus from the play doors above. Hidden when no current champion. */
+.puc-champion-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 10px 16px;
+  background:
+    linear-gradient(135deg, rgba(244, 194, 102, 0.16), rgba(180, 130, 50, 0.08));
+  border: 1px solid rgba(244, 194, 102, 0.5);
+  border-radius: 12px;
+  color: var(--puc-text);
+  min-width: 0;
+}
+
+.puc-champion-banner__icon {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(244, 194, 102, 0.55));
+  flex-shrink: 0;
+}
+
+.puc-champion-banner__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  row-gap: 2px;
+}
+
+.puc-champion-banner__label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--puc-text-muted);
+}
+
+.puc-champion-banner__name {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  color: var(--puc-text-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 194, 102, 0.35);
+  text-underline-offset: 3px;
+}
+.puc-champion-banner__name:hover {
+  color: var(--puc-accent);
+  text-decoration-color: var(--puc-accent);
+}
+.puc-champion-banner__name--plain {
+  cursor: default;
+  text-decoration: none;
+}
+
+.puc-champion-banner__meta {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+}
+
+.puc-champion-banner__cta {
+  appearance: none;
+  background: rgba(244, 194, 102, 0.16);
+  border: 1px solid rgba(244, 194, 102, 0.5);
+  color: var(--puc-text-accent);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: var(--puc-font-display);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.puc-champion-banner__cta:hover {
+  background: rgba(244, 194, 102, 0.28);
+}
+
+@media (max-width: 540px) {
+  .puc-champion-banner { padding: 8px 12px; gap: 8px; }
+  .puc-champion-banner__icon { font-size: 22px; }
+  .puc-champion-banner__name { font-size: 14px; }
+  .puc-champion-banner__cta { padding: 5px 10px; font-size: 11px; }
+}

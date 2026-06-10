@@ -17,6 +17,8 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
 import { appendRecentlyPlayedTx } from '../castle/recentlyPlayed'
+import { postGameStarted } from '../castle/postGameStarted'
+import { wizardGateMinPoints } from '../games/wizard/wizardGate'
 import { sanitisePieceSetId } from '../cosmetics/registry'
 import { generateRoomId } from '../rooms/roomId'
 import type { RoomDoc } from '../rooms/types'
@@ -24,6 +26,9 @@ import type { InvitationDoc, InvitationStatus } from './types'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_ROOM_ID_TRIES = 5
+/** Wizard duel clock — kept in sync with createWizardRoom's constants. */
+const WIZARD_INITIAL_MS = 8 * 60 * 1000
+const WIZARD_INCREMENT_MS = 0
 
 export type InviteResponseKind = 'accept' | 'decline' | 'ignore'
 
@@ -63,6 +68,12 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
     // pick one inside the txn without a query (txn reads can't be done after
     // a single failed create).
     const roomIdCandidates = Array.from({ length: MAX_ROOM_ID_TRIES }, () => generateRoomId())
+
+    // Pre-fetch the wizard gate threshold once, outside the txn. Cheap
+    // single-doc read; lets the accept path enforce the gate without
+    // a mid-txn dependent read. Unused for chess invites but the cost
+    // of the unconditional fetch is negligible vs the branchy code.
+    const wizardGate = await wizardGateMinPoints(db)
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(inviteRef)
@@ -106,12 +117,36 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
       const accepter = accepterSnap.data() as GuestDoc
       const sender = senderSnap.exists ? (senderSnap.data() as GuestDoc) : null
 
+      const inviteKind: 'chess' | 'wizard' = invite.kind ?? 'chess'
+
+      // Both sides must clear the wizard gate. Accepter is checked
+      // here (defence in depth — sendInvite already checked the
+      // sender + a snapshot of the recipient's balance, but a kid
+      // could have spent points between the invite and the accept).
+      if (inviteKind === 'wizard') {
+        if (accepter.castlePoints < wizardGate) {
+          throw new HttpsError(
+            'failed-precondition',
+            `Wizard's Duel unlocks at ${wizardGate} castle points; you have ${accepter.castlePoints}.`,
+          )
+        }
+        if (sender && sender.castlePoints < wizardGate) {
+          throw new HttpsError(
+            'failed-precondition',
+            `${invite.fromName} dropped below the ${wizardGate}-point duel threshold; the invite can no longer be accepted.`,
+          )
+        }
+      }
+
+      const roomCollection = inviteKind === 'wizard' ? 'wizard_rooms' : 'rooms'
       // Find an unused room id. Reading until we hit a free slot — Firestore
       // refuses to .create() over an existing doc, but we use .get() in the
-      // txn so we can branch.
+      // txn so we can branch. Probe the same collection we're about to
+      // write into so a chess id can't collide with a wizard id and
+      // vice-versa.
       let chosenRoomId: string | null = null
       for (const candidate of roomIdCandidates) {
-        const r = await tx.get(db.doc(`rooms/${candidate}`))
+        const r = await tx.get(db.doc(`${roomCollection}/${candidate}`))
         if (!r.exists) { chosenRoomId = candidate; break }
       }
       if (!chosenRoomId) {
@@ -120,32 +155,70 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
 
       const now = Date.now()
       const accepterPieceSetId = sanitisePieceSetId(req.data?.pieceSetId)
-      const roomDoc: RoomDoc = {
-        white: {
-          playerId: invite.fromUid,
-          displayName: invite.fromName,
-          ...(invite.fromPieceSetId ? { pieceSetId: invite.fromPieceSetId } : {}),
-        },
-        black: {
-          playerId: req.auth!.uid,
-          displayName: accepter.displayName,
-          ...(accepterPieceSetId ? { pieceSetId: accepterPieceSetId } : {}),
-        },
-        status: 'live',
-        currentFen: STARTING_FEN,
-        hostMode: invite.hostMode,
-        theme: 'magic-forest',
-        moves: [],
-        timeControl: invite.timeControl,
-        whiteTimeMs: invite.timeControl ? invite.timeControl.initialMs : null,
-        blackTimeMs: invite.timeControl ? invite.timeControl.initialMs : null,
-        // Clocks haven't started ticking; set on the FIRST move.
-        lastTickServerTs: null,
-        createdAt: now,
-        updatedAt: now,
+
+      if (inviteKind === 'wizard') {
+        // Wizard rooms live in a sibling collection with a different
+        // PlayerSlot shape (uid + isBypass) and a fixed clock. Spawn
+        // directly as 'live' with both sides filled.
+        const wizardRoomDoc = {
+          white: {
+            uid: invite.fromUid,
+            displayName: invite.fromName,
+            normalizedName: invite.fromNormalizedName,
+            isBypass: false,
+            ...(invite.fromPieceSetId ? { pieceSetId: invite.fromPieceSetId } : {}),
+          },
+          black: {
+            uid: req.auth!.uid,
+            displayName: accepter.displayName,
+            normalizedName: invite.toNormalizedName,
+            isBypass: false,
+            ...(accepterPieceSetId ? { pieceSetId: accepterPieceSetId } : {}),
+          },
+          status: 'live' as const,
+          fen: STARTING_FEN,
+          currentTurn: 'w' as const,
+          plyCount: 0,
+          effects: [],
+          actions: [],
+          winner: null,
+          endReason: null,
+          timeControl: { initialMs: WIZARD_INITIAL_MS, incrementMs: WIZARD_INCREMENT_MS },
+          whiteTimeMs: WIZARD_INITIAL_MS,
+          blackTimeMs: WIZARD_INITIAL_MS,
+          lastTickServerTs: now,
+          createdAt: now,
+          updatedAt: now,
+        }
+        tx.create(db.doc(`wizard_rooms/${chosenRoomId}`), wizardRoomDoc)
+      } else {
+        const roomDoc: RoomDoc = {
+          white: {
+            playerId: invite.fromUid,
+            displayName: invite.fromName,
+            ...(invite.fromPieceSetId ? { pieceSetId: invite.fromPieceSetId } : {}),
+          },
+          black: {
+            playerId: req.auth!.uid,
+            displayName: accepter.displayName,
+            ...(accepterPieceSetId ? { pieceSetId: accepterPieceSetId } : {}),
+          },
+          status: 'live',
+          currentFen: STARTING_FEN,
+          hostMode: invite.hostMode,
+          theme: 'magic-forest',
+          moves: [],
+          timeControl: invite.timeControl,
+          whiteTimeMs: invite.timeControl ? invite.timeControl.initialMs : null,
+          blackTimeMs: invite.timeControl ? invite.timeControl.initialMs : null,
+          // Clocks haven't started ticking; set on the FIRST move.
+          lastTickServerTs: null,
+          createdAt: now,
+          updatedAt: now,
+        }
+        tx.create(db.doc(`rooms/${chosenRoomId}`), roomDoc)
       }
 
-      tx.create(db.doc(`rooms/${chosenRoomId}`), roomDoc)
       tx.update(inviteRef, {
         status: 'accepted' as InvitationStatus,
         roomId: chosenRoomId,
@@ -166,9 +239,28 @@ export const respondInvite = onCall<RespondInviteRequest, Promise<RespondInviteR
         }, now)
       }
 
-      return { status: 'accepted' as InvitationStatus, roomId: chosenRoomId }
+      return {
+        status: 'accepted' as InvitationStatus,
+        roomId: chosenRoomId,
+        justAccepted: true as const,
+        roomKind: inviteKind,
+        whiteName: invite.fromName,
+        blackName: accepter.displayName,
+      }
     })
 
-    return { ok: true, ...result }
+    // Only post the Hall message on a fresh accept (the create-the-room
+    // path). Idempotent re-calls of an already-accepted invite carry
+    // `justAccepted: false` and stay silent so retries don't spam.
+    if ('justAccepted' in result && result.justAccepted && result.roomId) {
+      void postGameStarted({
+        roomKind: result.roomKind,
+        roomId: result.roomId,
+        whiteName: result.whiteName,
+        blackName: result.blackName,
+      })
+    }
+
+    return { ok: true, status: result.status, roomId: result.roomId }
   },
 )

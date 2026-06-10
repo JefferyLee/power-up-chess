@@ -15,7 +15,9 @@
 
 import type { ReactNode } from 'react'
 import { useCastle } from '../castle/useCastle'
+import { useIsCurrentChampion } from '../tournament/useCurrentChampion'
 import { useUserCard } from './UserCardHost'
+import './NameLink.css'
 
 interface Props {
   /** The lookup key. Omit / pass empty string to render a non-link. */
@@ -34,7 +36,22 @@ interface Props {
 export function NameLink({ normalizedName, displayName, children, className }: Props) {
   const { identity } = useCastle()
   const userCard = useUserCard()
-  const label = children ?? displayName
+  const isChampion = useIsCurrentChampion(normalizedName)
+  // The crown rides next to the label, not inside it — keeps the
+  // children override clean (some callers nest the label in chips).
+  const labelInner = children ?? displayName
+  const label = isChampion ? (
+    <>
+      {labelInner}
+      <span
+        className="puc-name-link__crown"
+        aria-label="Weekly tournament champion"
+        title="Weekly tournament champion"
+      >
+        🏆
+      </span>
+    </>
+  ) : labelInner
   // Bypass guests + signed-out viewers can't open the plaque (the
   // getPublicProfile callable requires auth + a normalizedName).
   if (!normalizedName || !identity) {

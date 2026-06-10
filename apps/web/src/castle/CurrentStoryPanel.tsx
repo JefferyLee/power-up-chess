@@ -15,6 +15,7 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import type { HostId } from '../hosts/hosts'
 import { callSynthesizeStoryAudio } from '../firebase/callables'
+import { speakLong, type SpeakLongHandle } from '../audio/speakLong'
 import './CurrentStoryPanel.css'
 
 interface CurrentStory {
@@ -40,6 +41,7 @@ export function CurrentStoryPanel({ currentHostId, defaultCollapsed }: Props) {
   const [speaking, setSpeaking] = useState(false)
   const [loading, setLoading] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const speechRef = useRef<SpeakLongHandle | null>(null)
   const cacheRef = useRef<Map<string, string>>(new Map())
 
   useEffect(() => {
@@ -56,9 +58,8 @@ export function CurrentStoryPanel({ currentHostId, defaultCollapsed }: Props) {
     return () => {
       audioRef.current?.pause()
       audioRef.current = null
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
+      speechRef.current?.cancel()
+      speechRef.current = null
       for (const url of cache.values()) URL.revokeObjectURL(url)
       cache.clear()
     }
@@ -75,9 +76,8 @@ export function CurrentStoryPanel({ currentHostId, defaultCollapsed }: Props) {
   const stop = () => {
     audioRef.current?.pause()
     audioRef.current = null
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
+    speechRef.current?.cancel()
+    speechRef.current = null
     setSpeaking(false)
   }
 
@@ -96,15 +96,14 @@ export function CurrentStoryPanel({ currentHostId, defaultCollapsed }: Props) {
 
   const speakFallback = () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
-    const synth = window.speechSynthesis
-    synth.cancel()
-    const utterance = new SpeechSynthesisUtterance(story.body)
-    utterance.lang = 'en-US'
-    utterance.rate = 0.95
-    utterance.onend = () => setSpeaking(false)
-    utterance.onerror = utterance.onend
     setSpeaking(true)
-    synth.speak(utterance)
+    speechRef.current = speakLong({
+      text: story.body,
+      lang: 'en-US',
+      rate: 0.95,
+      onEnd: () => { speechRef.current = null; setSpeaking(false) },
+      onError: () => { speechRef.current = null; setSpeaking(false) },
+    })
   }
 
   const onSpeak = async () => {

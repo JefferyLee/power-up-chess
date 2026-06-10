@@ -20,7 +20,7 @@ import {
   type LocationTag,
 } from '../firebase/callables'
 import { PlaqueCard } from '../me/PlaqueCard'
-import { INVITE_COST_CP } from './types'
+import { INVITE_COST_CP, WIZARD_INVITE_COST_CP } from './types'
 import { InviteDialog } from './InviteDialog'
 import './UserCard.css'
 
@@ -40,7 +40,7 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
     | { kind: 'ready'; profile: GetPublicProfileResponse }
     | { kind: 'error'; message: string }
   >({ kind: 'loading' })
-  const [inviteOpen, setInviteOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState<null | 'chess' | 'wizard'>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -90,15 +90,25 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
         {state.kind === 'ready' && (() => {
           const p = state.profile
           const locView = locationView(p.currentLocation)
-          const inviteDisabled =
+          const chessInviteDisabled =
             isSelf || p.inGame || selfCastlePoints < INVITE_COST_CP
-          const inviteTitle = isSelf
+          const chessInviteTitle = isSelf
             ? "That's you."
             : p.inGame
               ? `${p.displayName} is in a game right now.`
               : selfCastlePoints < INVITE_COST_CP
                 ? `Sending an invite costs ${INVITE_COST_CP} castle points; you have ${selfCastlePoints}.`
                 : `Invite ${p.displayName} to play (${INVITE_COST_CP} ✦)`
+
+          const wizardInviteDisabled =
+            isSelf || p.inGame || selfCastlePoints < WIZARD_INVITE_COST_CP
+          const wizardInviteTitle = isSelf
+            ? "That's you."
+            : p.inGame
+              ? `${p.displayName} is in a game right now.`
+              : selfCastlePoints < WIZARD_INVITE_COST_CP
+                ? `Sending a Wizard's Duel invite costs ${WIZARD_INVITE_COST_CP} castle points; you have ${selfCastlePoints}.`
+                : `Challenge ${p.displayName} to a Wizard's Duel (${WIZARD_INVITE_COST_CP} ✦)`
 
           return (
             <>
@@ -123,11 +133,20 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
                   <button
                     type="button"
                     className="puc-user-card__btn puc-user-card__btn--primary"
-                    onClick={() => setInviteOpen(true)}
-                    disabled={inviteDisabled}
-                    title={inviteTitle}
+                    onClick={() => setInviteOpen('chess')}
+                    disabled={chessInviteDisabled}
+                    title={chessInviteTitle}
                   >
                     Invite to play ({INVITE_COST_CP} ✦)
+                  </button>
+                  <button
+                    type="button"
+                    className="puc-user-card__btn puc-user-card__btn--wizard"
+                    onClick={() => setInviteOpen('wizard')}
+                    disabled={wizardInviteDisabled}
+                    title={wizardInviteTitle}
+                  >
+                    ✨ Wizard's Duel ({WIZARD_INVITE_COST_CP} ✦)
                   </button>
                 </div>
               )}
@@ -137,9 +156,10 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
                   toNormalizedName={p.normalizedName}
                   toDisplayName={p.displayName}
                   selfNormalizedName={selfNormalizedName}
-                  onClose={() => setInviteOpen(false)}
+                  kind={inviteOpen}
+                  onClose={() => setInviteOpen(null)}
                   onSent={() => {
-                    setInviteOpen(false)
+                    setInviteOpen(null)
                     onClose()
                   }}
                 />

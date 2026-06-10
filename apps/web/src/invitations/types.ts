@@ -14,6 +14,9 @@ export type InvitationStatus =
 
 export interface InvitationDoc {
   inviteId: string
+  /** Game variant to spawn on accept. Older docs lack this field —
+   *  callers should default to 'chess'. */
+  kind?: 'chess' | 'wizard'
   fromUid: string
   fromName: string
   fromNormalizedName: string
@@ -35,4 +38,6 @@ export interface InvitationDoc {
 
 /** Server constants surfaced for client copy ("send for 5 ✦") and timer UX. */
 export const INVITE_COST_CP = 5
+/** Wizard's Duel invite — mirrors the standalone duel-open cost. */
+export const WIZARD_INVITE_COST_CP = 10
 export const INVITE_TTL_MS = 60_000

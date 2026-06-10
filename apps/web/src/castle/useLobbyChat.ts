@@ -15,6 +15,20 @@ export type ChatMessageAction =
       memberCount: number
       badge?: TeamBadge
     }
+  | { kind: 'join-tournament'; weekKey: string }
+  | {
+      kind: 'spectate-room'
+      roomKind: 'chess' | 'wizard'
+      roomId: string
+      whiteName: string
+      blackName: string
+    }
+  | {
+      kind: 'join-open-room'
+      roomKind: 'chess' | 'wizard'
+      roomId: string
+      openerName: string
+    }
 
 export interface QuizState {
   question: string

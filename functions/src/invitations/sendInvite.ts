@@ -19,7 +19,14 @@ import { sanitisePieceSetId } from '../cosmetics/registry'
 import { consumeDailyQuota } from '../llm/rateLimit'
 import { sanitiseTimeControl } from '../rooms/sanitiseTimeControl'
 import type { TimeControl } from '../rooms/types'
-import { INVITE_COST_CP, INVITE_DAILY_LIMIT, INVITE_TTL_MS, type InvitationDoc } from './types'
+import { wizardGateMinPoints } from '../games/wizard/wizardGate'
+import {
+  INVITE_COST_CP,
+  INVITE_DAILY_LIMIT,
+  INVITE_TTL_MS,
+  WIZARD_INVITE_COST_CP,
+  type InvitationDoc,
+} from './types'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
 
@@ -28,6 +35,9 @@ export interface SendInviteRequest {
   toNormalizedName: string
   timeControl: TimeControl | null
   pieceSetId?: string
+  /** Game variant to spawn on accept. Omitted = 'chess' for back-compat
+   *  with clients written before wizard invites existed. */
+  kind?: 'chess' | 'wizard'
 }
 
 export interface SendInviteResponse {
@@ -50,11 +60,15 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     if (fromNormalized === toNormalized) {
       throw new HttpsError('invalid-argument', 'You can\'t invite yourself.')
     }
-
-    // sanitiseTimeControl throws HttpsError on out-of-range values; reuse so
-    // invitations carry exactly the same TC shape as createRoom-sourced games.
-    const timeControl = sanitiseTimeControl(req.data?.timeControl ?? null)
+    const kind: 'chess' | 'wizard' =
+      req.data?.kind === 'wizard' ? 'wizard' : 'chess'
+    // Wizard duels run a fixed clock and ignore any time-control the
+    // sender passes in; chess invites carry the picked preset through.
+    const timeControl = kind === 'wizard'
+      ? null
+      : sanitiseTimeControl(req.data?.timeControl ?? null)
     const fromPieceSetId = sanitisePieceSetId(req.data?.pieceSetId)
+    const cost = kind === 'wizard' ? WIZARD_INVITE_COST_CP : INVITE_COST_CP
 
     const db = getFirestore()
     const fromRef = db.doc(`guests/${fromNormalized}`)
@@ -79,6 +93,11 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     const hostMode: 'lucy' | 'luca' = Math.random() < 0.5 ? 'lucy' : 'luca'
     const callerIp = extractIp(req)
 
+    // Wizard's Duel has its own castle-points entry threshold (1000 +
+    // dynamic top-10% floor). Pre-fetch the gate before the txn so we
+    // can fail fast — same shape as createWizardRoom does it.
+    const wizardGate = kind === 'wizard' ? await wizardGateMinPoints(db) : 0
+
     const result = await db.runTransaction(async (tx) => {
       const fromSnap = await tx.get(fromRef)
       if (!fromSnap.exists) {
@@ -88,10 +107,16 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
       if (!fromGuest.uids?.includes(req.auth!.uid)) {
         throw new HttpsError('permission-denied', 'You do not own this guest record.')
       }
-      if (fromGuest.castlePoints < INVITE_COST_CP) {
+      if (fromGuest.castlePoints < cost) {
         throw new HttpsError(
           'failed-precondition',
-          `You need ${INVITE_COST_CP} castle points to send an invitation. You have ${fromGuest.castlePoints}.`,
+          `You need ${cost} castle points to send this invitation. You have ${fromGuest.castlePoints}.`,
+        )
+      }
+      if (kind === 'wizard' && fromGuest.castlePoints < wizardGate) {
+        throw new HttpsError(
+          'failed-precondition',
+          `Wizard's Duel unlocks at ${wizardGate} castle points; you have ${fromGuest.castlePoints}. Solve puzzles or win chess games to earn more.`,
         )
       }
 
@@ -100,6 +125,15 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
         throw new HttpsError('not-found', 'That guest doesn\'t exist.')
       }
       const toGuest = toSnap.data() as GuestDoc
+      // Don't waste 10 CP on a wizard invite the recipient can't accept.
+      // Reject up-front when the target is below the gate; the same
+      // check runs again on respondInvite as defence in depth.
+      if (kind === 'wizard' && toGuest.castlePoints < wizardGate) {
+        throw new HttpsError(
+          'failed-precondition',
+          `${toGuest.displayName} needs ${wizardGate} castle points for Wizard's Duel and only has ${toGuest.castlePoints}.`,
+        )
+      }
       const allUids = toGuest.uids ?? []
       if (allUids.length === 0) {
         throw new HttpsError('failed-precondition', 'Recipient has never signed in.')
@@ -115,6 +149,7 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
 
       const doc: InvitationDoc = {
         inviteId: inviteRef.id,
+        kind,
         fromUid: req.auth!.uid,
         fromName: fromGuest.displayName,
         fromNormalizedName: fromNormalized,
@@ -130,16 +165,16 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
         ...(fromPieceSetId ? { fromPieceSetId } : {}),
       }
 
-      tx.update(fromRef, { castlePoints: FieldValue.increment(-INVITE_COST_CP) })
+      tx.update(fromRef, { castlePoints: FieldValue.increment(-cost) })
       tx.create(inviteRef, doc)
       appendAuditTx(tx, {
         normalizedName: fromNormalized,
         uid: req.auth!.uid,
-        delta: -INVITE_COST_CP,
+        delta: -cost,
         before: fromGuest.castlePoints,
-        after: fromGuest.castlePoints - INVITE_COST_CP,
-        source: 'invite:send',
-        metadata: { inviteId: inviteRef.id, toNormalizedName: toNormalized },
+        after: fromGuest.castlePoints - cost,
+        source: kind === 'wizard' ? 'invite:send:wizard' : 'invite:send',
+        metadata: { inviteId: inviteRef.id, toNormalizedName: toNormalized, kind },
         ...(callerIp ? { ip: callerIp } : {}),
       })
       return { inviteId: inviteRef.id, expiresAt }

@@ -58,6 +58,9 @@
   /* No max-height — bundled stories are short (≤500 chars), and
    * clipping them at 240px made kids think the tale was truncated.
    * Let the panel grow with its content; the page scrolls if needed. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }
 .puc-story-panel__body p {
   margin: 0 0 8px;

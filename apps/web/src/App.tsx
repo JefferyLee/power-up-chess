@@ -15,6 +15,7 @@ import { LearnRoute } from './learn/LearnRoute'
 import { LessonScreen } from './learn/LessonScreen'
 import { AiPracticeRoute } from './screens/AiPracticeRoute'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
+import { CurrentChampionProvider } from './tournament/useCurrentChampion'
 import { CastleEntry } from './castle/CastleEntry'
 import { ForestRoute } from './games/forest/ForestRoute'
 import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
@@ -83,6 +84,7 @@ export function App() {
   return (
     <BrowserRouter>
       <CastleIdentityProvider>
+        <CurrentChampionProvider>
         <OutgoingInviteProvider>
         <UserCardHost>
         <GlobalPresenceHeartbeat />
@@ -126,6 +128,7 @@ export function App() {
         </Routes>
         </UserCardHost>
         </OutgoingInviteProvider>
+        </CurrentChampionProvider>
       </CastleIdentityProvider>
     </BrowserRouter>
   )

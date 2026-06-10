@@ -17,13 +17,16 @@ import {
 import { useCosmetics } from '../cosmetics/useCosmetics'
 import { callSendInvite } from '../firebase/callables'
 import { useOutgoingInviteContext } from './OutgoingInviteContext'
-import { INVITE_COST_CP } from './types'
+import { INVITE_COST_CP, WIZARD_INVITE_COST_CP } from './types'
 import './InviteDialog.css'
 
 interface Props {
   toNormalizedName: string
   toDisplayName: string
   selfNormalizedName: string
+  /** Variant to send. Wizard invites skip the time-control picker
+   *  (fixed 8 min / 0 inc) and cost 10 ✦. */
+  kind?: 'chess' | 'wizard'
   onClose: () => void
   /** Called after the recipient accepts and the room is spawned. */
   onSent: () => void
@@ -38,9 +41,12 @@ export function InviteDialog({
   toNormalizedName,
   toDisplayName,
   selfNormalizedName,
+  kind = 'chess',
   onClose,
   onSent,
 }: Props) {
+  const isWizard = kind === 'wizard'
+  const cost = isWizard ? WIZARD_INVITE_COST_CP : INVITE_COST_CP
   const [selectedId, setSelectedId] = useState<string>(DEFAULT_TIME_CONTROL_ID)
   const [phase, setPhase] = useState<Phase>({ kind: 'compose' })
   const { setInviteId } = useOutgoingInviteContext()
@@ -58,8 +64,11 @@ export function InviteDialog({
       const res = await callSendInvite({
         fromNormalizedName: selfNormalizedName,
         toNormalizedName,
-        timeControl: preset.value,
+        // Wizard duels have a fixed clock — the picker is hidden in
+        // that branch, and the server ignores any tc passed in.
+        timeControl: isWizard ? null : preset.value,
         pieceSetId: cosmetics.pieceSetId,
+        ...(isWizard ? { kind: 'wizard' as const } : {}),
       })
       setInviteId(res.inviteId)
       onSent()
@@ -72,34 +81,43 @@ export function InviteDialog({
     <div
       className="puc-invite"
       role="dialog"
-      aria-label="Send chess invitation"
+      aria-label={isWizard ? 'Send Wizard\'s Duel invitation' : 'Send chess invitation'}
       onClick={(e) => { if (e.target === e.currentTarget && phase.kind !== 'sending') onClose() }}
     >
       <div className="puc-invite__card">
         <h2 className="puc-invite__title">
-          Invite {toDisplayName} to play
+          {isWizard
+            ? `Challenge ${toDisplayName} to a Wizard's Duel`
+            : `Invite ${toDisplayName} to play`}
         </h2>
         <p className="puc-invite__sub">
-          Pick a time control. Sending costs <b>{INVITE_COST_CP} ✦</b> whether
-          they accept, decline, or let it expire.
+          {isWizard ? (
+            <>Fixed clock — 8 min, no increment. Sending costs <b>{cost} ✦</b>{' '}
+              whether they accept, decline, or let it expire.</>
+          ) : (
+            <>Pick a time control. Sending costs <b>{cost} ✦</b> whether
+              they accept, decline, or let it expire.</>
+          )}
         </p>
-        <div className="puc-invite__grid">
-          {TIME_CONTROL_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              className={
-                'puc-invite__option'
-                + (preset.id === selectedId ? ' puc-invite__option--on' : '')
-              }
-              disabled={phase.kind === 'sending'}
-              onClick={() => setSelectedId(preset.id)}
-            >
-              <span className="puc-invite__option-short">{preset.short}</span>
-              <span className="puc-invite__option-label">{preset.label}</span>
-            </button>
-          ))}
-        </div>
+        {!isWizard && (
+          <div className="puc-invite__grid">
+            {TIME_CONTROL_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={
+                  'puc-invite__option'
+                  + (preset.id === selectedId ? ' puc-invite__option--on' : '')
+                }
+                disabled={phase.kind === 'sending'}
+                onClick={() => setSelectedId(preset.id)}
+              >
+                <span className="puc-invite__option-short">{preset.short}</span>
+                <span className="puc-invite__option-label">{preset.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {phase.kind === 'error' && (
           <p className="puc-invite__error">{phase.message}</p>
         )}
@@ -118,7 +136,7 @@ export function InviteDialog({
           >
             {phase.kind === 'sending'
               ? 'Sending…'
-              : `Send (${INVITE_COST_CP} ✦)`}
+              : `Send (${cost} ✦)`}
           </button>
         </div>
       </div>

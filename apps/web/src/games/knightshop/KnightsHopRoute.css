@@ -244,10 +244,34 @@
   .puc-khop__header { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
   .puc-khop__back { width: 44px; height: 44px; font-size: 20px; }
   .puc-khop__title { font-size: 18px; }
-  .puc-khop__sub { font-size: 11px; }
-  .puc-khop__levels { padding: 2px; }
-  .puc-khop__level-btn { padding: 6px 10px; font-size: 11px; min-height: 36px; }
-  .puc-khop__score { padding: 6px 12px; }
+  .puc-khop__sub { font-size: 11px; line-height: 1.35; }
+  /* Title claims the rest of row 1 after the back button + score —
+   * wide enough for "Knight's Hop" on one line and the subtitle to
+   * break cleanly across two lines instead of a five-line sliver. */
+  .puc-khop__title-wrap { flex: 1 1 0; min-width: 0; }
+  /* Score sits next to the title on row 1 (not under the chips). */
+  .puc-khop__score { padding: 6px 12px; order: 1; }
+  /* The 5-piece chip strip moves to its own row and scrolls
+   * horizontally if it doesn't fit, so a wide chip strip can't
+   * squeeze the title above. */
+  .puc-khop__levels {
+    order: 2;
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    justify-content: center;
+    padding: 3px;
+  }
+  .puc-khop__levels::-webkit-scrollbar { display: none; }
+  .puc-khop__level-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 11px;
+    min-height: 36px;
+  }
   .puc-khop__main { padding: 14px 8px; gap: 12px; }
   .puc-khop__board { width: min(320px, 96vw); }
   .puc-khop__overlay-title { font-size: 22px; }

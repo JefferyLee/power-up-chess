@@ -142,6 +142,17 @@ export const closeTournament = onCall<
         lifetimeEarned: lifetimePrev + TOURNAMENT_WINNER_REWARD_PTS,
         'cosmetics.tournamentCrownExpiresAt': now + TOURNAMENT_CROWN_MS,
       })
+      // Publish a singleton "current champion" snapshot the Hall + the
+      // chess screens read from. Same pattern as castle_live/current_
+      // story — one read per client, expires client-side at
+      // championUntil so we don't need a sweeper job to clear it.
+      tx.set(db.doc('castle_live/current_champion'), {
+        normalizedName: winner.normalizedName,
+        displayName: winner.displayName,
+        weekKey: tournamentWeekKey(),
+        closedAt: now,
+        championUntil: now + TOURNAMENT_CROWN_MS,
+      })
       appendAuditTx(tx, {
         normalizedName: winner.normalizedName,
         // uid is the caller closing the tournament, not necessarily the
