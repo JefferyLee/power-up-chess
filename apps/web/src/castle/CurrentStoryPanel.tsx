@@ -108,18 +108,35 @@ export function CurrentStoryPanel({ currentHostId, defaultCollapsed }: Props) {
 
   const onSpeak = async () => {
     if (speaking || loading) { stop(); setLoading(false); return }
-    // Tier 1: pre-baked static mp3 (free + instant once cached).
-    const staticUrl = `/audio/${story.storyId}-${story.hostId}.mp3`
-    try {
-      const head = await fetch(staticUrl, { method: 'HEAD' })
-      if (head.ok) { play(staticUrl); return }
-    } catch { /* fall through */ }
-    // Tier 2: in-memory cache for this session.
+    // Tier 1: in-memory blob cache for this session — holds both
+    // previously-downloaded static mp3s and synthesized audio.
     const cacheKey = `${story.storyId}:${story.hostId}`
     const cached = cacheRef.current.get(cacheKey)
     if (cached) { play(cached); return }
-    // Tier 3: Edge-TTS via Cloud Function.
     setLoading(true)
+    // Tier 2: pre-baked static mp3, downloaded IN FULL before playing.
+    // Streaming the file URL directly was the source of random
+    // mid-story cutoffs on iOS: Safari fetches media in Range chunks,
+    // and any mid-stream hiccup (iOS killing the service worker,
+    // a dropped segment request) stops playback cold. A blob in
+    // memory has nothing left to interrupt. Content-type check
+    // matters too: Firebase's SPA rewrite answers MISSING files with
+    // 200 index.html — without it we'd "play" HTML and never reach
+    // the fallbacks.
+    const staticUrl = `/audio/${story.storyId}-${story.hostId}.mp3`
+    try {
+      const res = await fetch(staticUrl)
+      const type = res.headers.get('content-type') ?? ''
+      if (res.ok && type.startsWith('audio/')) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        cacheRef.current.set(cacheKey, url)
+        setLoading(false)
+        play(url)
+        return
+      }
+    } catch { /* fall through */ }
+    // Tier 3: Edge-TTS via Cloud Function.
     try {
       const res = await callSynthesizeStoryAudio({ voice: story.hostId, text: story.body })
       const bytes = Uint8Array.from(atob(res.audioBase64), (c) => c.charCodeAt(0))

@@ -24,7 +24,7 @@
   align-items: center;
   justify-content: space-between;
   margin: 0 auto 20px;
-  max-width: 1200px;
+  max-width: 1280px;
 }
 
 .puc-hall__title {
@@ -69,38 +69,87 @@
   margin: 0 auto 12px;
 }
 
-.puc-hall__top {
-  max-width: 1200px;
-  margin: 0 auto 32px;
+/* ── Two-column page layout: left rail (<25%) + right main (~75%).
+ * The rail STRETCHES to the full row height (no align-items:start)
+ * so the sticky player card at its bottom can follow the viewport
+ * all the way down the page. */
+.puc-hall__layout {
+  max-width: 1280px;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 240px);
-  gap: 18px;
-  align-items: stretch;
+  grid-template-columns: minmax(248px, 23%) minmax(0, 1fr);
+  gap: 24px;
 }
 
-.puc-hall__host {
-  background: var(--puc-surface);
-  border: 1px solid var(--puc-surface-edge);
-  border-radius: 16px;
-  padding: 20px;
+.puc-hall__rail {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-  /* Stops a long welcome line / decay-note paragraph from stretching
-   * the column past its grid share, which would horizontally widen
-   * the page on phones. */
+  gap: 16px;
   min-width: 0;
 }
 
-.puc-hall__portrait { flex-shrink: 0; }
-.puc-hall__portrait svg { border-radius: 50%; }
+/* Host card — figure on the LEFT, name/greeting/story/buttons on the
+ * RIGHT. Scrolls with the page; the sticky element in the rail is the
+ * PLAYER's own card (see .puc-hall__visitor-pin below). */
+.puc-hall__hostcard {
+  display: grid;
+  grid-template-columns: minmax(88px, 44%) minmax(0, 1fr);
+  gap: 12px;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 16px;
+  padding: 14px;
+  min-width: 0;
+}
 
-.puc-hall__greeting {
+.puc-hall__hostfig-wrap {
+  align-self: center;
+  min-width: 0;
+}
+
+.puc-hall__hostbody {
   display: flex;
   flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* Host action buttons — span the FULL card width (grid row below the
+ * figure + text columns) and share ONE visual style. The three source
+ * components each bring their own look (green pill / gold pill /
+ * dashed box); these scoped overrides flatten them into a tidy,
+ * uniform stack so the card reads calm. */
+.puc-hall__hostbtns {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 6px;
+  margin-top: 2px;
+}
+.puc-hall__hostbtns > button {
+  align-self: stretch;
+  width: 100%;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(231, 184, 65, 0.10);
+  border: 1px solid rgba(231, 184, 65, 0.38);
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  box-shadow: none;
+  text-align: center;
+  white-space: normal;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.puc-hall__hostbtns > button:hover:not(:disabled) {
+  background: rgba(231, 184, 65, 0.2);
+  border-color: var(--puc-accent);
+  transform: none;
+  box-shadow: none;
 }
 
 .puc-hall__hostname {
@@ -143,37 +192,152 @@
   font-weight: 500;
 }
 
-.puc-hall__chatcol {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-}
-
-.puc-hall__chatcol > * {
-  flex: 1;
-  min-height: 480px;
-  max-height: 580px;
-}
-
-.puc-hall__sidecol {
+/* Social stack below the host card in the rail. flex:1 makes it
+ * extend to the rail's (full-row) bottom, giving the sticky player
+ * card the whole page height to travel. */
+.puc-hall__social {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+/* The player's own corner — VisitorCard + MyTeams + RecentlyPlayed
+ * merged into ONE visual card. The outer section carries the card
+ * chrome; the children's own backgrounds/borders are stripped and
+ * replaced with a thin divider between blocks. */
+.puc-hall__playercard {
+  position: sticky;
+  top: 12px;
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+.puc-hall__playercard > * {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 12px 0;
+  margin: 0;
+}
+.puc-hall__playercard > * + * {
+  border-top: 1px solid rgba(231, 184, 65, 0.14);
+}
+
+/* Header leave-castle button — icon + label, top right. */
+.puc-hall__leave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.35);
+  background: transparent;
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-hall__leave:hover {
+  border-color: var(--puc-accent);
+  color: var(--puc-accent);
+}
+.puc-hall__leave svg { flex-shrink: 0; }
+
+/* ── Right main column: learn doors → champion → chat → fun doors. */
+.puc-hall__main {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
   min-width: 0;
 }
 
-.puc-hall__sidecol > *:last-child {
-  flex: 1;
+/* The Hearth — the Hall's chat corner at the bottom of the main
+ * column, wrapped in the same castle chrome as the other cards so it
+ * reads as part of the room instead of a foreign widget. */
+.puc-hall__hearth {
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 16px;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Whole header row is the fold control — generous tap target. */
+.puc-hall__hearth-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -14px -16px 12px;
+  padding: 14px 16px 10px;
+  border-radius: 16px 16px 0 0;
+  cursor: pointer;
+}
+.puc-hall__hearth-head:hover {
+  background: rgba(231, 184, 65, 0.06);
+}
+.puc-hall__hearth-title {
+  margin-bottom: 0;
+}
+.puc-hall__hearth-fold {
+  display: inline-block;
+  border: 1px solid rgba(231, 184, 65, 0.35);
+  border-radius: 999px;
+  color: var(--puc-text-muted);
+  font-size: 12px;
+  padding: 4px 12px;
+}
+.puc-hall__hearth-head:hover .puc-hall__hearth-fold {
+  color: var(--puc-text-accent);
+  border-color: var(--puc-accent);
+}
+.puc-hall__hearth-body {
+  display: flex;
   min-height: 0;
 }
+.puc-hall__hearth-body > * {
+  flex: 1;
+  min-height: 420px;
+  max-height: 520px;
+  /* The hearth wrapper provides the chrome — flatten ChatPanel's own
+   * card styling so we don't get a card-in-a-card double border. */
+  background: none;
+  border: none;
+  padding: 0;
+}
 
-@media (max-width: 980px) {
-  .puc-hall__top {
-    grid-template-columns: 1fr;
+/* ── Single-column stack on phones. The rail's children flow into the
+ *    page order [host card → main content → social] via display:contents
+ *    so the doors come right after the host, and the social/nav settle
+ *    at the bottom. */
+@media (max-width: 880px) {
+  .puc-hall__layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
-  .puc-hall__chatcol > * { min-height: 380px; max-height: 480px; }
+  .puc-hall__rail { display: contents; }
+  .puc-hall__hostcard {
+    position: static;
+    order: 1;
+    grid-template-columns: minmax(76px, 34%) minmax(0, 1fr);
+  }
+  .puc-hall__main { order: 2; }
+  .puc-hall__social { order: 3; }
+  /* Compact leave button: icon only, label hidden. */
+  .puc-hall__leave span { display: none; }
+  .puc-hall__leave { padding: 8px; }
+  /* No sticky on phones — the player card sits at the page bottom
+   * there; pinning it would cover unrelated content. */
+  .puc-hall__playercard { position: static; box-shadow: none; }
 }
 
 /* ── Learn-the-basics banner (above the doors row). */
@@ -261,23 +425,19 @@
   opacity: 0.7;
 }
 
+/* Door rows — flex-wrap instead of grid so a PARTIAL last row centres
+ * itself (8 learn doors → 3+3+2 with the final pair centred, instead
+ * of left-hanging). Desktop: ~3 per row at 210px; phones: 2 per row
+ * (see the 880px query below). */
 .puc-hall__doors-grid {
-  display: grid;
-  gap: 22px;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 22px 20px;
 }
-.puc-hall__doors-grid--learn {
-  /* 8 doors above the chat — 4 across × 2 rows on desktop. */
-  grid-template-columns: repeat(4, max-content);
-}
-.puc-hall__doors-grid--fun {
-  /* 2-4 doors below the chat — always horizontal on desktop.
-   * grid-auto-flow: column makes each door a column with intrinsic
-   * (max-content) width, so 2 doors today and 4 future doors all
-   * sit side-by-side and centre nicely. */
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  grid-template-columns: none;
+.puc-hall__doors-grid > .puc-roomdoor {
+  width: 210px;
+  flex: 0 0 auto;
 }
 
 .puc-hall__doors--fun {
@@ -288,41 +448,14 @@
   opacity: 0.55;
 }
 
-/* Phones — door grids wrap rather than clip. */
-@media (max-width: 720px) {
-  .puc-hall__doors-grid--learn {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* Phones — 2 doors per row, sharing the width. */
+@media (max-width: 880px) {
+  .puc-hall__doors-grid {
     gap: 16px 14px;
-    justify-content: stretch;
-  }
-  .puc-hall__doors-grid--fun {
-    /* Reset the desktop auto-flow:column so the explicit
-     * grid-template-columns below actually applies. */
-    grid-auto-flow: row;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 12px;
-    justify-content: stretch;
   }
   .puc-hall__doors-grid > .puc-roomdoor {
-    justify-self: center;
-  }
-}
-@media (max-width: 420px) {
-  .puc-hall__doors-grid--learn {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 12px;
-  }
-  /* Doors fill their cell on phone widths so the row uses the full
-   * viewport instead of two 110px tiles centred with empty space on
-   * either side. The label still wraps two lines max thanks to
-   * line-height 1.25. */
-  .puc-hall__doors-grid > .puc-roomdoor {
-    width: 100%;
-    max-width: 160px;
-    justify-self: center;
-  }
-  .puc-hall__doors-grid--fun > .puc-roomdoor {
-    max-width: 180px;
+    width: calc(50% - 7px);
+    max-width: 200px;
   }
 }
 

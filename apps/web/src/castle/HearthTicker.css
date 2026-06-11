@@ -1,0 +1,97 @@
+/* HearthTicker — collapsed chat preview between the Today's Five
+ * strip and the door corridor. Same castle chrome as the cards;
+ * whole surface is clickable to expand. */
+.puc-ticker {
+  background: var(--puc-surface);
+  border: 1px solid var(--puc-surface-edge);
+  border-radius: 14px;
+  padding: 10px 14px 12px;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.puc-ticker:hover {
+  border-color: rgba(231, 184, 65, 0.5);
+}
+
+.puc-ticker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.puc-ticker__title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--puc-text-accent);
+  opacity: 0.85;
+}
+.puc-ticker__expand {
+  font-size: 12px;
+  color: var(--puc-text-muted);
+}
+.puc-ticker:hover .puc-ticker__expand {
+  color: var(--puc-text-accent);
+}
+
+.puc-ticker__quiet {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--puc-text-muted);
+}
+
+.puc-ticker__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.puc-ticker__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.puc-ticker__name {
+  flex-shrink: 0;
+  color: var(--puc-text-accent);
+  font-weight: 600;
+}
+.puc-ticker__row--system .puc-ticker__name { color: rgba(231, 184, 65, 0.8); }
+.puc-ticker__text {
+  flex: 1;
+  min-width: 0;
+  color: var(--puc-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.puc-ticker__row--system .puc-ticker__text { color: var(--puc-text-muted); }
+
+.puc-ticker__cta {
+  flex-shrink: 0;
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.5);
+  background: rgba(231, 184, 65, 0.12);
+  color: var(--puc-text-accent);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.puc-ticker__cta:hover { background: rgba(231, 184, 65, 0.24); }
+
+@media (max-width: 880px) {
+  /* Tighter on phones — cap visible rows via height so the ticker
+   * never dominates above-the-fold. ~3 rows. */
+  .puc-ticker__rows { max-height: 66px; overflow: hidden; }
+}

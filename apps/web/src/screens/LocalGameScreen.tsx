@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js + react-three-fiber live in their own chunk — only fetched
+ * the first time a kid flips a game into 3D view. */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
@@ -119,6 +125,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // toggle in the header flips it off for a single player using both
   // sides themselves.
   const [faceToFace, setFaceToFace] = useState(true)
+  // 3D view — same game, alternate renderer. The Board3D chunk
+  // (three.js) is lazy-loaded on first flip.
+  const [view3d, setView3d] = useState(false)
   const sound = useSound()
   const { identity, setCastlePoints } = useCastle()
 
@@ -416,17 +425,28 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           <MuteButton />
           <button
             type="button"
-            className={'puc-local__face-toggle' + (faceToFace ? ' puc-local__face-toggle--on' : '')}
-            onClick={() => setFaceToFace((v) => !v)}
-            aria-pressed={faceToFace}
-            aria-label={faceToFace ? 'Face-to-face on' : 'Face-to-face off'}
-            title="Rotate black's pieces 180° for face-to-face play"
+            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => setView3d((v) => !v)}
+            aria-pressed={view3d}
+            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
           >
-            <span aria-hidden="true">↕</span>
-            <span className="puc-local__face-toggle-label">
-              {faceToFace ? ' Face-to-face on' : ' Face-to-face'}
-            </span>
+            {view3d ? '🎲 2D' : '🎲 3D'}
           </button>
+          {!view3d && (
+            <button
+              type="button"
+              className={'puc-local__face-toggle' + (faceToFace ? ' puc-local__face-toggle--on' : '')}
+              onClick={() => setFaceToFace((v) => !v)}
+              aria-pressed={faceToFace}
+              aria-label={faceToFace ? 'Face-to-face on' : 'Face-to-face off'}
+              title="Rotate black's pieces 180° for face-to-face play"
+            >
+              <span aria-hidden="true">↕</span>
+              <span className="puc-local__face-toggle-label">
+                {faceToFace ? ' Face-to-face on' : ' Face-to-face'}
+              </span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setResignDialogOpen(true)}
@@ -460,20 +480,42 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
         <div className="puc-local__board-wrap">
           <div className="puc-local__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
-            <Board
-              pieces={pieces}
-              turn={snap.turn}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              squareSize={SQUARE_SIZE}
-              flipBlackPieces={faceToFace}
-            />
-            {sparks.map((s) => (
+            {view3d ? (
+              <Suspense
+                fallback={
+                  <div className="puc-local__board3d-loading">
+                    Carving the 3D board…
+                  </div>
+                }
+              >
+                <Board3D
+                  pieces={pieces}
+                  turn={snap.turn}
+                  legalDestinationsFrom={legalDestinationsFrom}
+                  onMove={handleMove}
+                  lastMove={lastMove}
+                  checkSquare={checkSquare}
+                />
+              </Suspense>
+            ) : (
+              <Board
+                pieces={pieces}
+                turn={snap.turn}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={handleMove}
+                lastMove={lastMove}
+                checkSquare={checkSquare}
+                squareSize={SQUARE_SIZE}
+                flipBlackPieces={faceToFace}
+              />
+            )}
+            {/* Square-anchored overlays are positioned in 2D pixel
+             *  space — skip them in 3D view. The full-screen power-up
+             *  ceremony still plays in both. */}
+            {!view3d && sparks.map((s) => (
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
             ))}
-            {blooms.map((b) => (
+            {!view3d && blooms.map((b) => (
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} onDone={handleBloomDone} />
             ))}
             {powerUps.map((p) => (

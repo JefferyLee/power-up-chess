@@ -6,6 +6,7 @@
 // the cached identity says.
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCastle } from './useCastle'
 import { AvatarEditorDialog } from '../teams/AvatarEditorDialog'
 import { TeamBadge } from '../teams/TeamBadge'
@@ -15,6 +16,7 @@ import './VisitorCard.css'
 const UNLOCK_THRESHOLD = 200
 
 export function VisitorCard() {
+  const navigate = useNavigate()
   const { identity } = useCastle()
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -65,6 +67,23 @@ export function VisitorCard() {
               )}
             </>
           )}
+          <div className="puc-visitor__links">
+            <button
+              type="button"
+              className="puc-visitor__link"
+              onClick={() => navigate('/me')}
+            >
+              My plaque
+            </button>
+            <span className="puc-visitor__link-sep" aria-hidden="true">·</span>
+            <button
+              type="button"
+              className="puc-visitor__link"
+              onClick={() => navigate('/history')}
+            >
+              Match history
+            </button>
+          </div>
         </div>
       </section>
 

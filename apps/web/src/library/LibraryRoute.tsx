@@ -240,11 +240,7 @@ export function LibraryRoute() {
     stopAll()
     markRead(story.id)
 
-    const staticUrl = `/audio/${story.id}-${voice}.mp3`
-    if (await staticExists(staticUrl)) {
-      playFromUrl(story, staticUrl)
-      return
-    }
+    // Tier 1: in-memory blob cache (downloaded statics + synthesized).
     const cacheKey = `${story.id}:${voice}`
     const cached = audioCacheRef.current.get(cacheKey)
     if (cached) {
@@ -252,6 +248,27 @@ export function LibraryRoute() {
       return
     }
     setLoadingId(story.id)
+    // Tier 2: pre-baked static mp3, downloaded IN FULL before playing.
+    // Streaming the URL directly caused random mid-story cutoffs on
+    // iOS (Safari fetches media in Range chunks; any mid-stream hiccup
+    // — iOS killing the service worker, a dropped segment — stops
+    // playback cold). A blob in memory has nothing left to interrupt.
+    // The content-type check guards against Firebase's SPA rewrite
+    // answering MISSING files with 200 index.html.
+    const staticUrl = `/audio/${story.id}-${voice}.mp3`
+    try {
+      const res = await fetch(staticUrl)
+      const type = res.headers.get('content-type') ?? ''
+      if (res.ok && type.startsWith('audio/')) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        audioCacheRef.current.set(cacheKey, url)
+        setLoadingId(null)
+        playFromUrl(story, url)
+        return
+      }
+    } catch { /* fall through to Edge-TTS */ }
+    // Tier 3: Edge-TTS via Cloud Function.
     try {
       const res = await callSynthesizeStoryAudio({ voice, text: story.variants[voice] })
       if (loadingId !== null && loadingId !== story.id) return
@@ -264,15 +281,6 @@ export function LibraryRoute() {
       console.warn('Edge-TTS callable failed, falling back to browser speech', err)
       setLoadingId(null)
       speakViaBrowser(story)
-    }
-  }
-
-  async function staticExists(url: string): Promise<boolean> {
-    try {
-      const res = await fetch(url, { method: 'HEAD' })
-      return res.ok
-    } catch {
-      return false
     }
   }
 

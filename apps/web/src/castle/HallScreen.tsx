@@ -12,7 +12,10 @@ import { db } from '../firebase/app'
 import { useCastle } from './useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
 import { DailyStrip, type DailyStripState } from '../puzzles/DailyStrip'
-import { HostPortrait } from './HostPortrait'
+import { HostFigure } from './HostFigure'
+import { useIsNarrow } from './useIsNarrow'
+import { ChatSheet } from './ChatSheet'
+import { HearthTicker } from './HearthTicker'
 import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
 import { loadProfile, pickRandomHost } from '../storage/profile'
@@ -169,6 +172,11 @@ export function HallScreen() {
   // or open a new room (which kicks off the original flow).
   const waiting = useWaitingRooms()
   const [chooserKind, setChooserKind] = useState<null | 'chess' | 'wizard'>(null)
+  // On phone widths the chat opens as a bottom sheet; on desktop the
+  // floating bubble scrolls to the hearth section at the page bottom.
+  const isNarrow = useIsNarrow(880)
+  const [chatSheetOpen, setChatSheetOpen] = useState(false)
+  const [chatExpanded, setChatExpanded] = useState(false)
   const handleOnlineDoor = () => {
     if (creating || !isUnlocked) return
     setChooserKind('chess')
@@ -197,29 +205,115 @@ export function HallScreen() {
         <h1 className="puc-hall__title">The Great Hall</h1>
         <div className="puc-hall__header-right">
           <FeedbackInbox />
-          <button type="button" className="puc-hall__link" onClick={() => navigate('/me')}>
-            My plaque
-          </button>
-          <button type="button" className="puc-hall__link" onClick={() => navigate('/history')}>
-            Match history
-          </button>
-          <button type="button" className="puc-hall__link" onClick={signOut}>
-            Leave castle
+          <button
+            type="button"
+            className="puc-hall__leave"
+            onClick={signOut}
+            title="Leave the castle"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {/* Open door + outward arrow. */}
+              <path d="M13 4 H6 a1 1 0 0 0 -1 1 v14 a1 1 0 0 0 1 1 h7" />
+              <path d="M16 8 l4 4 -4 4" />
+              <path d="M20 12 H10" />
+            </svg>
+            <span>Leave castle</span>
           </button>
         </div>
       </header>
 
-      {/* Learning + serious chess — above the chat. Hero CTA so a new
-       *  visitor sees the path to learning + playing before the social
-       *  layer pulls focus. Two visual rows of four on desktop. */}
+      <div className="puc-hall__layout">
+      {/* ── LEFT RAIL: host card (sticky figure) + social + nav ── */}
+      <aside className="puc-hall__rail">
+        <section className="puc-hall__hostcard">
+          <div className="puc-hall__hostfig-wrap">
+            <HostFigure hostId={hostId} />
+          </div>
+          <div className="puc-hall__hostbody">
+            <h2 className="puc-hall__hostname">{host.name}</h2>
+            <p className="puc-hall__welcome">
+              {identity.isFirstVisit
+                ? `Welcome to the Castle, ${identity.displayName}! I'm so glad you came.`
+                : `Welcome back, ${identity.displayName}!`}
+            </p>
+            {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
+            {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
+            <CurrentStoryPanel
+              currentHostId={hostId}
+              defaultCollapsed
+            />
+          </div>
+          {/* Buttons span the full card width below the figure+text
+           *  row so each fits on one line instead of wrapping inside
+           *  the narrow text column. */}
+          <div className="puc-hall__hostbtns">
+            <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
+            <HostInviteButton hostId={hostId} />
+            <FeedbackButton />
+          </div>
+        </section>
+
+        <div className="puc-hall__social">
+          <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
+          <FindPlayer />
+          {/* The player's own corner — identity, balance, page links,
+           *  teams and recent opponents merged into ONE card. */}
+          <section className="puc-hall__playercard">
+            <VisitorCard />
+            <MyTeamsList />
+            <RecentlyPlayedList />
+          </section>
+        </div>
+      </aside>
+
+      {/* ── RIGHT MAIN: daily strip / hearth ticker / door corridor ── */}
+      <main className="puc-hall__main">
+      {!identity.isBypass && (
+        <DailyStrip
+          daily={puzzleDaily}
+          onOpen={() => navigate('/puzzles/daily')}
+          compact
+        />
+      )}
+
+      {/* The Hearth — collapsed ticker by default (latest few chat
+       *  lines); expanding swaps in the full ChatPanel in place and
+       *  pushes the doors down. Phones open the bottom sheet instead
+       *  of expanding inline. */}
+      {chatExpanded && !isNarrow ? (
+        <section className="puc-hall__hearth">
+          {/* The whole header row folds the chat — bigger tap target
+           *  than the small button alone. */}
+          <header
+            className="puc-hall__hearth-head"
+            role="button"
+            tabIndex={0}
+            onClick={() => setChatExpanded(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setChatExpanded(false) }
+            }}
+            aria-label="Fold the chat"
+          >
+            <h2 className="puc-hall__doors-title puc-hall__hearth-title">
+              🔥 The Hearth — Great Hall chat
+            </h2>
+            <span className="puc-hall__hearth-fold">▾ fold</span>
+          </header>
+          <div className="puc-hall__hearth-body">
+            <ChatPanel canChat={auth.status === 'ready'} />
+          </div>
+        </section>
+      ) : (
+        <HearthTicker
+          onExpand={() => {
+            if (isNarrow) setChatSheetOpen(true)
+            else setChatExpanded(true)
+          }}
+        />
+      )}
+
+      {/* Learning + serious chess — the start of the door corridor. */}
       <section className="puc-hall__doors puc-hall__doors--learn">
-        {!identity.isBypass && (
-          <DailyStrip
-            daily={puzzleDaily}
-            onOpen={() => navigate('/puzzles/daily')}
-            compact
-          />
-        )}
         <h2 className="puc-hall__doors-title">Learn and play chess</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
           <RoomDoor
@@ -305,51 +399,9 @@ export function HallScreen() {
 
       <ChampionBanner />
 
-      {/* Social row below the doors — host on the left, chat in the
-       *  middle (the most vertical real-estate), passive info on the
-       *  right. */}
-      <section className="puc-hall__top">
-        <aside className="puc-hall__host">
-          <div className="puc-hall__portrait">
-            <HostPortrait hostId={hostId} variant="lobby" />
-          </div>
-          <div className="puc-hall__greeting">
-            <h2 className="puc-hall__hostname">{host.name}</h2>
-            <p className="puc-hall__welcome">
-              {identity.isFirstVisit
-                ? `Welcome to the Castle, ${identity.displayName}! I'm so glad you came.`
-                : `Welcome back, ${identity.displayName}!`}
-            </p>
-            {bonusMessage && <p className="puc-hall__bonus-note">{bonusMessage}</p>}
-            {decayMessage && <p className="puc-hall__decay-note">{decayMessage}</p>}
-            {/* Story panel — collapsed by default on phone widths so
-             *  the host card doesn't dominate the Hall above the fold. */}
-            <CurrentStoryPanel
-              currentHostId={hostId}
-              defaultCollapsed={typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches}
-            />
-            <StoryRequestButton hostId={hostId} hostName={host.name} enabled={auth.status === 'ready'} />
-            <HostInviteButton hostId={hostId} />
-            <FeedbackButton />
-          </div>
-        </aside>
-
-        <div className="puc-hall__chatcol">
-          <ChatPanel canChat={auth.status === 'ready'} />
-        </div>
-
-        <div className="puc-hall__sidecol">
-          <VisitorCard />
-          <OnlineList youUid={auth.status === 'ready' ? auth.uid : null} />
-          <FindPlayer />
-          <MyTeamsList />
-          <RecentlyPlayedList />
-        </div>
-      </section>
-
-      {/* Leisure / fun rooms — below the chat. Side games, the future
-       *  shop, and any new casual modes land here so the serious chess
-       *  doors above stay the page's primary CTA. */}
+      {/* Leisure / fun rooms — directly after the learn doors so the
+       *  two door rows read as one castle corridor. Chat lives below
+       *  them at the hearth. */}
       <section className="puc-hall__doors puc-hall__doors--fun">
         <h2 className="puc-hall__doors-title">Take a break</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
@@ -420,6 +472,16 @@ export function HallScreen() {
           />
         </div>
       </section>
+
+      </main>
+      </div>
+
+      {isNarrow && chatSheetOpen && (
+        <ChatSheet
+          canChat={auth.status === 'ready'}
+          onClose={() => setChatSheetOpen(false)}
+        />
+      )}
 
       {tcTarget !== null && (
         <TimeControlDialog

@@ -1,0 +1,10 @@
+.puc-hostfig {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* The rim-lit figure already reads as a silhouette; a soft warm
+   *  ground-shadow grounds it on the host card. */
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+  user-select: none;
+  -webkit-user-drag: none;
+}

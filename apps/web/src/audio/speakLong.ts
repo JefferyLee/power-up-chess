@@ -80,7 +80,17 @@ export function speakLong(opts: SpeakLongOptions): SpeakLongHandle {
     }
   }
 
+  // The ~15s queue-freeze bug is CHROMIUM-ONLY, and so is the
+  // pause()/resume() workaround. On Safari/iOS, pause() mid-utterance
+  // frequently stalls speech permanently (resume() never restarts it)
+  // — running the keepalive there CAUSES the very mid-story cutoff
+  // it's meant to prevent. Chrome/Edge/Opera UAs all contain
+  // "Chrome"; Safari and Firefox don't.
+  const needsKeepalive =
+    typeof navigator !== 'undefined' && /chrome/i.test(navigator.userAgent)
+
   const startKeepalive = () => {
+    if (!needsKeepalive) return
     if (keepaliveId !== null) return
     keepaliveId = window.setInterval(() => {
       if (cancelled) { stopKeepalive(); return }

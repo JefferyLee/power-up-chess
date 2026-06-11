@@ -206,3 +206,33 @@
   font-family: 'Cinzel', Georgia, serif;
   letter-spacing: 0.4px;
 }
+
+/* Quick links into the player's own pages — sit at the bottom of the
+ * card so identity + balance stay the headline. */
+.puc-visitor__links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.puc-visitor__link {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--puc-text-accent);
+  font-family: var(--puc-font-body);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+}
+.puc-visitor__link:hover {
+  color: var(--puc-accent);
+  text-decoration-color: var(--puc-accent);
+}
+.puc-visitor__link-sep {
+  color: var(--puc-text-muted);
+  font-size: 12px;
+}
