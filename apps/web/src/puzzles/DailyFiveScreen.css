@@ -173,3 +173,25 @@
   font-size: 14px;
   max-width: 380px;
 }
+
+/* --- 3D board view --- */
+.puc-daily__board--3d {
+  width: 100%;
+  height: min(64dvh, 640px);
+}
+@media (max-width: 760px) {
+  .puc-daily__board--3d { height: min(56dvh, 480px); }
+}
+.puc-daily__btn--on {
+  background: rgba(231, 184, 65, 0.18);
+  border-color: rgba(231, 184, 65, 0.6);
+  color: var(--puc-text-accent);
+}
+.puc-daily__board3d-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--puc-text-muted);
+}

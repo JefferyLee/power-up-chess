@@ -3,7 +3,6 @@ import { LocalGameRoute } from './screens/LocalGameRoute'
 import { OnlineGameScreen } from './screens/OnlineGameScreen'
 import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
-import { PuzzleScreen } from './puzzles/PuzzleScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 import { PlotScreen } from './puzzles/PlotScreen'
 import { CalibrationScreen } from './puzzles/CalibrationScreen'
@@ -109,7 +108,6 @@ export function App() {
           <Route path="/puzzles/legends" element={<LegendsHallScreen />} />
           <Route path="/puzzles/master" element={<MasterAtriumScreen />} />
           <Route path="/puzzles/plot/:plot" element={<PlotScreen />} />
-          <Route path="/puzzles/:id" element={<PuzzleScreen />} />
           <Route path="/forest" element={<ForestRoute />} />
           <Route path="/wizard" element={<WizardWarningGate><WizardDuelRoute /></WizardWarningGate>} />
           <Route path="/wizard/:roomId" element={<WizardWarningGate><WizardRoomRoute /></WizardWarningGate>} />

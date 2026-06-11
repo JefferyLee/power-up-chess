@@ -27,6 +27,9 @@ export interface Board3DProps {
   onMove: (move: MoveInput) => void
   lastMove?: { from: SquareName; to: SquareName } | null
   checkSquare?: SquareName | null
+  /** Which side the camera starts behind. Online passes the viewer's
+   *  colour so Black opens facing their own camp. Default: white. */
+  initialSide?: Color
 }
 
 /** Board-square (file, rank) → world x/z. Board is centred on the
@@ -122,10 +125,24 @@ function AnimatedPiece({
 }) {
   const ref = useRef<THREE.Mesh>(null)
   const [tx, tz] = squareToWorld(tracked.square)
-  // Initialise at the FROM square when this render is a move, so the
-  // glide starts visually where the piece stood.
-  const start = tracked.movedFrom ? squareToWorld(tracked.movedFrom) : [tx, tz]
-  const initial = useRef<[number, number]>(start as [number, number])
+  // Place the mesh ONCE when it first gets a three object — at the
+  // FROM square if it mounts mid-move, else at its own square. The
+  // position must NOT be a reactive prop: R3F re-applies prop arrays
+  // on every render, which teleported long-since-moved pieces back to
+  // their mount position before the tween dragged them home again
+  // ("uninvolved pieces wander on every move").
+  const placed = useRef(false)
+  const setRef = useCallback((m: THREE.Mesh | null) => {
+    ref.current = m
+    if (m && !placed.current) {
+      placed.current = true
+      const [sx, sz] = tracked.movedFrom
+        ? squareToWorld(tracked.movedFrom)
+        : squareToWorld(tracked.square)
+      m.position.set(sx, 0, sz)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useFrame((_, delta) => {
     const m = ref.current
@@ -140,9 +157,8 @@ function AnimatedPiece({
 
   return (
     <mesh
-      ref={ref}
+      ref={setRef}
       geometry={geometry}
-      position={[initial.current[0], 0, initial.current[1]]}
       rotation={[0, tracked.piece.color === 'b' ? Math.PI : 0, 0]}
       scale={scale}
       castShadow
@@ -220,6 +236,7 @@ export function Board3D({
   onMove,
   lastMove = null,
   checkSquare = null,
+  initialSide = 'w',
 }: Board3DProps) {
   const [selected, setSelected] = useState<SquareName | null>(null)
   // Stable per-piece identity + movedFrom diffs — drives one
@@ -261,7 +278,9 @@ export function Board3D({
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 7.2, 7.4], fov: 40 }}
+      /* Camera mounts behind the viewer's side; OrbitControls owns it
+       * from then on (initialSide never changes mid-game). */
+      camera={{ position: [0, 7.2, initialSide === 'w' ? 7.4 : -7.4], fov: 40 }}
       dpr={[1, 2]}
       style={{ touchAction: 'none' }}
     >

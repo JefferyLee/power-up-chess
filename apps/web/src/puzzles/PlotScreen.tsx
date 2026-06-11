@@ -6,9 +6,15 @@
 // shows the rating delta animation, then a "Next" CTA fetches another
 // one. Wrong moves don't penalise — Skip submits a failure.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js chunk — fetched only on first 3D flip (shared with the
+ * game screens). */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { MoveInput, Square } from '../chess/types'
@@ -58,6 +64,9 @@ export function PlotScreen() {
   const authReady = authState.status === 'ready'
 
   const validPlot = isPlot(plot) ? plot : null
+  // 3D view — same legality/judging flow, different renderer. The
+  // hint arrow has no 3D equivalent, so "Show arrow" is 2D-only.
+  const [view3d, setView3d] = useState(false)
   const plotLabel = validPlot ? PLOT_LABELS[validPlot] : 'Puzzle Garden'
 
   const [puzzle, setPuzzle] = useState<ServerPuzzle | null>(null)
@@ -312,28 +321,48 @@ export function PlotScreen() {
 
       <div className="puc-plot__main">
         <div
-          className={`puc-plot__board ${shake ? 'puc-plot__board--shake' : ''}`}
+          className={
+            'puc-plot__board' +
+            (shake ? ' puc-plot__board--shake' : '') +
+            (view3d ? ' puc-plot__board--3d' : '')
+          }
         >
-          <Board
-            pieces={pieces}
-            turn={game.turn()}
-            orientation={puzzle.sideToMove}
-            legalDestinationsFrom={legalDestinationsFrom}
-            onMove={handleMove}
-            lastMove={lastMove}
-            checkSquare={checkSquare}
-            arrows={
-              arrowOn
-                ? [
-                    {
-                      from: puzzle.solution[moveIndex]!.slice(0, 2) as Square,
-                      to: puzzle.solution[moveIndex]!.slice(2, 4) as Square,
-                    },
-                  ]
-                : undefined
-            }
-            squareSize={SQUARE_SIZE}
-          />
+          {view3d ? (
+            <Suspense
+              fallback={<div className="puc-plot__board3d-loading">Carving the 3D board…</div>}
+            >
+              <Board3D
+                pieces={pieces}
+                turn={game.turn()}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={handleMove}
+                lastMove={lastMove}
+                checkSquare={checkSquare}
+                initialSide={puzzle.sideToMove}
+              />
+            </Suspense>
+          ) : (
+            <Board
+              pieces={pieces}
+              turn={game.turn()}
+              orientation={puzzle.sideToMove}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              arrows={
+                arrowOn
+                  ? [
+                      {
+                        from: puzzle.solution[moveIndex]!.slice(0, 2) as Square,
+                        to: puzzle.solution[moveIndex]!.slice(2, 4) as Square,
+                      },
+                    ]
+                  : undefined
+              }
+              squareSize={SQUARE_SIZE}
+            />
+          )}
         </div>
 
         <aside className="puc-plot__side">
@@ -362,9 +391,19 @@ export function PlotScreen() {
             <div className="puc-plot__actions">
               <button
                 type="button"
+                className={'puc-plot__btn puc-plot__btn--ghost' + (view3d ? ' puc-plot__btn--on' : '')}
+                onClick={() => setView3d((v) => !v)}
+                aria-pressed={view3d}
+                title={view3d ? 'Back to the flat board' : 'Solve on the 3D board'}
+              >
+                {view3d ? '🎲 2D board' : '🎲 3D board'}
+              </button>
+              <button
+                type="button"
                 className="puc-plot__btn puc-plot__btn--ghost"
                 onClick={onShowArrow}
-                disabled={hintShown && !arrowOn}
+                disabled={(hintShown && !arrowOn) || view3d}
+                title={view3d ? 'The arrow only shows on the flat board' : undefined}
               >
                 {hintShown ? 'Hint shown' : 'Show arrow'}
               </button>

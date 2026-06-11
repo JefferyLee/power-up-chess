@@ -28,9 +28,7 @@ export function useRouteLocation(): LocationTag {
   if (plotMatch && plotMatch.params.plot) {
     return { kind: 'puzzle-plot', plot: plotMatch.params.plot }
   }
-  // /puzzles itself + legacy /puzzles/:id → garden landing.
   if (matchPath('/puzzles', pathname)) return { kind: 'puzzle-garden' }
-  if (matchPath('/puzzles/:id', pathname)) return { kind: 'puzzle-garden' }
 
   if (matchPath('/local', pathname)) return { kind: 'local' }
   if (matchPath('/ai', pathname)) return { kind: 'practice' }

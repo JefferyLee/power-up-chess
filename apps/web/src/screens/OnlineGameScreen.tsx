@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js chunk — fetched only on first 3D flip (shared with Local). */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { ChessGame } from '../chess/game'
@@ -338,6 +343,21 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
 
   // Resign dialog state.
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
+  // 3D view + fullscreen — local to this client; the opponent's view
+  // is unaffected. Same renderer swap as Local Chess.
+  const [view3d, setView3d] = useState(false)
+  const [fs3d, setFs3d] = useState(false)
+  useEffect(() => {
+    if (!fs3d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [fs3d])
   const [resignBusy, setResignBusy] = useState(false)
   const [resignError, setResignError] = useState<string | null>(null)
   const onConfirmResign = useCallback(async () => {
@@ -631,6 +651,20 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         </div>
         <div className="puc-local__actions">
           {yourColor && <CrownBadge variant="inline" watch={room.status} />}
+          <button
+            type="button"
+            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
+            aria-pressed={view3d}
+            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+          >
+            {view3d ? '🎲 2D' : '🎲 3D'}
+          </button>
+          {view3d && (
+            <button type="button" onClick={() => setFs3d(true)} title="Fullscreen 3D board">
+              ⛶
+            </button>
+          )}
           {yourColor && room.status === 'live' && (
             <button type="button" onClick={() => setResignDialogOpen(true)}>
               Resign
@@ -662,20 +696,45 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div className="puc-local__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
-            <Board
-              pieces={pieces}
-              turn={isMyTurn ? turn : 'w' as Color /* turn doesn't matter; isMyTurn gates dragging via legalDestinations */}
-              orientation={orientation}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              squareSize={SQUARE_SIZE}
-              whitePieceSetId={room.white.pieceSetId}
-              blackPieceSetId={room.black?.pieceSetId}
-            />
-            {sparks.map((s) => (
+          <div
+            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
+            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+          >
+            {view3d ? (
+              fs3d ? (
+                <div className="puc-local__board3d-loading">
+                  Playing fullscreen — press ESC or ✕ to return.
+                </div>
+              ) : (
+                <Suspense
+                  fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
+                >
+                  <Board3D
+                    pieces={pieces}
+                    turn={turn}
+                    legalDestinationsFrom={legalDestinationsFrom}
+                    onMove={handleMove}
+                    lastMove={lastMove}
+                    checkSquare={checkSquare}
+                    initialSide={orientation}
+                  />
+                </Suspense>
+              )
+            ) : (
+              <Board
+                pieces={pieces}
+                turn={isMyTurn ? turn : 'w' as Color /* turn doesn't matter; isMyTurn gates dragging via legalDestinations */}
+                orientation={orientation}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={handleMove}
+                lastMove={lastMove}
+                checkSquare={checkSquare}
+                squareSize={SQUARE_SIZE}
+                whitePieceSetId={room.white.pieceSetId}
+                blackPieceSetId={room.black?.pieceSetId}
+              />
+            )}
+            {!view3d && sparks.map((s) => (
               <CaptureSpark
                 key={s.id}
                 data={s}
@@ -684,7 +743,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
                 onDone={handleSparkDone}
               />
             ))}
-            {blooms.map((b) => (
+            {!view3d && blooms.map((b) => (
               <TacticBloom
                 key={b.id}
                 data={b}
@@ -730,6 +789,80 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           <OnlineMoveList moves={room.moves} />
         </aside>
       </div>
+
+      {view3d && fs3d && (
+        <div className="puc-local__fs3d">
+          <Suspense
+            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
+          >
+            <Board3D
+              pieces={pieces}
+              turn={turn}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              initialSide={orientation}
+            />
+          </Suspense>
+          {/* Top chip = the far side from the viewer's orientation. */}
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
+              (room.status === 'live' && turn !== orientation ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span
+              className={`puc-player__dot puc-player__dot--${orientation === 'w' ? 'b' : 'w'}`}
+              aria-hidden="true"
+            />
+            <span>
+              {orientation === 'w'
+                ? room.black?.displayName ?? 'Waiting…'
+                : room.white.displayName}
+            </span>
+            {room.timeControl && (
+              <Clock
+                baseMs={orientation === 'w' ? room.blackTimeMs ?? 0 : room.whiteTimeMs ?? 0}
+                lastTickAt={room.lastTickServerTs}
+                running={room.status === 'live' && turn !== orientation}
+              />
+            )}
+          </div>
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
+              (room.status === 'live' && turn === orientation ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span
+              className={`puc-player__dot puc-player__dot--${orientation}`}
+              aria-hidden="true"
+            />
+            <span>
+              {orientation === 'w'
+                ? room.white.displayName
+                : room.black?.displayName ?? '—'}
+            </span>
+            {room.timeControl && (
+              <Clock
+                baseMs={orientation === 'w' ? room.whiteTimeMs ?? 0 : room.blackTimeMs ?? 0}
+                lastTickAt={room.lastTickServerTs}
+                running={room.status === 'live' && turn === orientation}
+              />
+            )}
+          </div>
+          <button
+            type="button"
+            className="puc-local__fs3d-exit"
+            onClick={() => setFs3d(false)}
+            aria-label="Exit fullscreen"
+            title="Exit fullscreen (ESC)"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <GameEndOverlay
         status={statusForBanner}

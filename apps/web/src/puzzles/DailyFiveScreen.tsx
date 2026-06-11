@@ -8,9 +8,15 @@
 // over the server picks a fresh set; otherwise it returns the existing
 // slate + current results.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js chunk — fetched only on first 3D flip (shared with the
+ * game screens). */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { MoveInput, Square } from '../chess/types'
@@ -44,6 +50,8 @@ export function DailyFiveScreen() {
   const normalizedName = identity?.normalizedName ?? ''
   const canPlay = !!identity && !identity.isBypass
 
+  // 3D view — same legality/judging flow, different renderer.
+  const [view3d, setView3d] = useState(false)
   const [puzzles, setPuzzles] = useState<ServerPuzzle[]>([])
   const [results, setResults] = useState<Array<boolean | null>>([])
   const [completionBonusPaid, setCompletionBonusPaid] = useState(false)
@@ -320,18 +328,38 @@ export function DailyFiveScreen() {
 
       <div className="puc-daily__main">
         <div
-          className={`puc-daily__board ${shake ? 'puc-daily__board--shake' : ''}`}
+          className={
+            'puc-daily__board' +
+            (shake ? ' puc-daily__board--shake' : '') +
+            (view3d ? ' puc-daily__board--3d' : '')
+          }
         >
-          <Board
-            pieces={pieces}
-            turn={game.turn()}
-            orientation={current.sideToMove}
-            legalDestinationsFrom={legalDestinationsFrom}
-            onMove={handleMove}
-            lastMove={lastMove}
-            checkSquare={checkSquare}
-            squareSize={SQUARE_SIZE}
-          />
+          {view3d ? (
+            <Suspense
+              fallback={<div className="puc-daily__board3d-loading">Carving the 3D board…</div>}
+            >
+              <Board3D
+                pieces={pieces}
+                turn={game.turn()}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={handleMove}
+                lastMove={lastMove}
+                checkSquare={checkSquare}
+                initialSide={current.sideToMove}
+              />
+            </Suspense>
+          ) : (
+            <Board
+              pieces={pieces}
+              turn={game.turn()}
+              orientation={current.sideToMove}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              squareSize={SQUARE_SIZE}
+            />
+          )}
         </div>
 
         <aside className="puc-daily__side">
@@ -355,6 +383,16 @@ export function DailyFiveScreen() {
               <strong>{sideToMoveLabel}</strong>
             </div>
           </div>
+
+          <button
+            type="button"
+            className={'puc-daily__btn' + (view3d ? ' puc-daily__btn--on' : '')}
+            onClick={() => setView3d((v) => !v)}
+            aria-pressed={view3d}
+            title={view3d ? 'Back to the flat board' : 'Solve on the 3D board'}
+          >
+            {view3d ? '🎲 2D board' : '🎲 3D board'}
+          </button>
 
           {phase.kind === 'playing' && (
             <button

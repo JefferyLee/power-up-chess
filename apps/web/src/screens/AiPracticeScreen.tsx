@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js chunk — fetched only on first 3D flip (shared with Local). */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
@@ -111,6 +116,21 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
   const aiColor: Color = 'b'
   const whiteName = playerName
   const blackName = `AI · ${preset.label}`
+
+  // 3D view + fullscreen — same renderer swap as Local Chess.
+  const [view3d, setView3d] = useState(false)
+  const [fs3d, setFs3d] = useState(false)
+  useEffect(() => {
+    if (!fs3d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [fs3d])
 
   const [game, setGame] = useState(() => new ChessGame())
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
@@ -446,6 +466,20 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
             ))}
           </div>
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
+          <button
+            type="button"
+            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
+            aria-pressed={view3d}
+            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+          >
+            {view3d ? '🎲 2D' : '🎲 3D'}
+          </button>
+          {view3d && (
+            <button type="button" onClick={() => setFs3d(true)} title="Fullscreen 3D board">
+              ⛶
+            </button>
+          )}
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
           </button>
@@ -471,21 +505,46 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div className="puc-local__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
-            <Board
-              pieces={pieces}
-              turn={snap.turn}
-              orientation={playerColor}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleUserMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              squareSize={SQUARE_SIZE}
-            />
-            {sparks.map((s) => (
+          <div
+            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
+            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+          >
+            {view3d ? (
+              fs3d ? (
+                <div className="puc-local__board3d-loading">
+                  Playing fullscreen — press ESC or ✕ to return.
+                </div>
+              ) : (
+                <Suspense
+                  fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
+                >
+                  <Board3D
+                    pieces={pieces}
+                    turn={snap.turn}
+                    legalDestinationsFrom={legalDestinationsFrom}
+                    onMove={handleUserMove}
+                    lastMove={lastMove}
+                    checkSquare={checkSquare}
+                    initialSide={playerColor}
+                  />
+                </Suspense>
+              )
+            ) : (
+              <Board
+                pieces={pieces}
+                turn={snap.turn}
+                orientation={playerColor}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={handleUserMove}
+                lastMove={lastMove}
+                checkSquare={checkSquare}
+                squareSize={SQUARE_SIZE}
+              />
+            )}
+            {!view3d && sparks.map((s) => (
               <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
             ))}
-            {blooms.map((b) => (
+            {!view3d && blooms.map((b) => (
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} orientation={playerColor} onDone={handleBloomDone} />
             ))}
             {powerUps.map((p) => (
@@ -522,6 +581,57 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           <MoveList history={snap.history} />
         </aside>
       </div>
+
+      {view3d && fs3d && (
+        <div className="puc-local__fs3d">
+          <Suspense
+            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
+          >
+            <Board3D
+              pieces={pieces}
+              turn={snap.turn}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleUserMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              initialSide={playerColor}
+            />
+          </Suspense>
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
+              (snap.turn === 'b' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span className="puc-player__dot puc-player__dot--b" aria-hidden="true" />
+            <span>{blackName}</span>
+            {timeControl && (
+              <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
+            )}
+          </div>
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
+              (snap.turn === 'w' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span className="puc-player__dot puc-player__dot--w" aria-hidden="true" />
+            <span>{whiteName}</span>
+            {timeControl && (
+              <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
+            )}
+          </div>
+          <button
+            type="button"
+            className="puc-local__fs3d-exit"
+            onClick={() => setFs3d(false)}
+            aria-label="Exit fullscreen"
+            title="Exit fullscreen (ESC)"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <GameEndOverlay
         status={effectiveStatus}
