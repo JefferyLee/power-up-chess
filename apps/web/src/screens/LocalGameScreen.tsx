@@ -479,7 +479,12 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div className="puc-local__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
+          <div
+            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
+            /* 2D keeps the exact square-grid footprint; 3D sizes via
+             * CSS to use much more of the viewport. */
+            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+          >
             {view3d ? (
               <Suspense
                 fallback={

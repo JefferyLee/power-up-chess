@@ -32,7 +32,12 @@ const MODEL_URL: Record<PieceSymbol, string> = {
   k: '/models3d/king/scene.gltf',
 }
 
-function extractNormalized(scene: THREE.Object3D, targetHeight: number): THREE.BufferGeometry {
+function extractNormalized(
+  scene: THREE.Object3D,
+  targetHeight: number,
+  preRotateX = 0,
+  preRotateY = 0,
+): THREE.BufferGeometry {
   scene.updateWorldMatrix(true, true)
   const parts: THREE.BufferGeometry[] = []
   scene.traverse((o) => {
@@ -44,6 +49,11 @@ function extractNormalized(scene: THREE.Object3D, targetHeight: number): THREE.B
     }
   })
   const merged = mergeGeometries(parts)
+  // Axis corrections for models authored with a different "up" or
+  // facing — applied before the bbox normalisation so height/base
+  // maths see the upright shape.
+  if (preRotateX !== 0) merged.rotateX(preRotateX)
+  if (preRotateY !== 0) merged.rotateY(preRotateY)
   merged.computeBoundingBox()
   const bb = merged.boundingBox!
   const height = bb.max.y - bb.min.y || 1
@@ -67,8 +77,11 @@ export function useGltfPieceGeometries(): Record<PieceSymbol, THREE.BufferGeomet
   return useMemo(
     () => ({
       p: extractNormalized(pawn.scene, TARGET_HEIGHT.p),
-      r: extractNormalized(rook.scene, TARGET_HEIGHT.r),
-      n: extractNormalized(knight.scene, TARGET_HEIGHT.n),
+      // The rook model is authored Z-up — stand it on its base.
+      r: extractNormalized(rook.scene, TARGET_HEIGHT.r, -Math.PI / 2),
+      // Knight: Z-up AND faces sideways once upright — stand it, then
+      // turn it 90° clockwise (viewed from above) to face the enemy.
+      n: extractNormalized(knight.scene, TARGET_HEIGHT.n, -Math.PI / 2, -Math.PI / 2),
       b: extractNormalized(bishop.scene, TARGET_HEIGHT.b),
       q: extractNormalized(queen.scene, TARGET_HEIGHT.q),
       k: extractNormalized(king.scene, TARGET_HEIGHT.k),
