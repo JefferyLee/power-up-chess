@@ -2,7 +2,13 @@
 // every move and spell is submitted to a Cloud Function and we react to
 // the Firestore snapshot. Mana is the caller's live castle-points balance.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+/* three.js chunk — fetched only on first 3D flip (shared with the
+ * chess game screens). */
+const Board3D = lazy(() =>
+  import('../../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { useNavigate } from 'react-router-dom'
 import { piecesFromFen } from '../../chess/fen'
 import type { Color, Piece, Square } from '../../chess/types'
@@ -20,7 +26,7 @@ import {
 } from '../../firebase/callables'
 import { ResignDialog } from '../../powerups/ResignDialog'
 import { pickPowerUpVariant } from '../../powerups/powerUpVariant'
-import { WizardBoard, type WizardBoardMode } from './WizardBoard'
+import { effectIcon, WizardBoard, type WizardBoardMode } from './WizardBoard'
 import { WizardChat } from './WizardChat'
 import { WizardRoomOccupants } from './WizardRoomOccupants'
 import { Spellbook } from './Spellbook'
@@ -52,6 +58,19 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   // Presence ("in this wizard duel") is published by the App-level
   // GlobalPresenceHeartbeat, which derives the location from the URL.
   const [cast, setCast] = useState<CastFlow>({ stage: 'idle' })
+  const [view3d, setView3d] = useState(false)
+  const [fs3d, setFs3d] = useState(false)
+  useEffect(() => {
+    if (!fs3d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [fs3d])
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [resignOpen, setResignOpen] = useState(false)
@@ -191,6 +210,16 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     [cast, yourTurn, submitting, submitSpell],
   )
 
+  // Emoji badge strings per square for the 3D view (the 2D board
+  // renders the same icons via its own EffectStack).
+  const badges = useMemo(() => {
+    const out: Partial<Record<Square, string>> = {}
+    for (const [sq, list] of effects) {
+      if (list.length > 0) out[sq] = list.map((e) => effectIcon(e.kind)).join('')
+    }
+    return out
+  }, [effects])
+
   const boardMode: WizardBoardMode = useMemo(() => {
     if (cast.stage === 'idle') return { kind: 'move' }
     const validTargets = new Set<Square>(
@@ -327,21 +356,63 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
         </aside>
 
         <div className="puc-wd__center">
-          <div className="puc-wd__board-stage" style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}>
-            <WizardBoard
-              pieces={pieces}
-              turn={room.currentTurn}
-              effects={effects as ReadonlyMap<Square, readonly Effect[]>}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={(f, t) => { void handleMove(f, t) }}
-              onSpellTarget={(s) => { void handleSpellTarget(s) }}
-              mode={boardMode}
-              squareSize={SQUARE_SIZE}
-              lastTouched={lastTouched}
-              whitePieceSetId={room.white.pieceSetId}
-              blackPieceSetId={room.black?.pieceSetId}
-              orientation={yourColor ?? 'w'}
-            />
+          <div className="puc-wd__view-row">
+            <button
+              type="button"
+              className={'puc-wd__view-toggle' + (view3d ? ' puc-wd__view-toggle--on' : '')}
+              onClick={() => { setView3d((v) => !v); setFs3d(false) }}
+              aria-pressed={view3d}
+              title={view3d ? 'Back to the flat board' : 'Duel on the 3D board'}
+            >
+              {view3d ? '🎲 2D board' : '🎲 3D board'}
+            </button>
+            {view3d && (
+              <button
+                type="button"
+                className="puc-wd__view-toggle"
+                onClick={() => setFs3d(true)}
+                title="Fullscreen 3D board"
+              >
+                ⛶
+              </button>
+            )}
+          </div>
+          <div
+            className={'puc-wd__board-stage' + (view3d ? ' puc-wd__board-stage--3d' : '')}
+            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+          >
+            {view3d ? (
+              <Suspense
+                fallback={<div className="puc-wd__board3d-loading">Carving the 3D board…</div>}
+              >
+                <Board3D
+                  pieces={pieces}
+                  turn={room.currentTurn}
+                  legalDestinationsFrom={legalDestinationsFrom}
+                  onMove={(m) => { void handleMove(m.from, m.to) }}
+                  lastMove={lastTouched}
+                  initialSide={yourColor ?? 'w'}
+                  spellPick={boardMode.kind === 'spell-pick' ? boardMode : null}
+                  onSpellTarget={(s) => { void handleSpellTarget(s) }}
+                  badges={badges}
+                />
+              </Suspense>
+            ) : (
+              <WizardBoard
+                pieces={pieces}
+                turn={room.currentTurn}
+                effects={effects as ReadonlyMap<Square, readonly Effect[]>}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={(f, t) => { void handleMove(f, t) }}
+                onSpellTarget={(s) => { void handleSpellTarget(s) }}
+                mode={boardMode}
+                squareSize={SQUARE_SIZE}
+                lastTouched={lastTouched}
+                whitePieceSetId={room.white.pieceSetId}
+                blackPieceSetId={room.black?.pieceSetId}
+                orientation={yourColor ?? 'w'}
+              />
+            )}
             {room.status === 'waiting' && (
               <WaitingOverlay roomId={roomId} onCopy={copyLink} />
             )}
@@ -444,6 +515,67 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
           />
         </aside>
       </main>
+
+      {view3d && fs3d && (() => {
+        const pov: Color = yourColor ?? 'w'
+        return (
+          <div className="puc-wd__fs3d">
+            <Suspense
+              fallback={<div className="puc-wd__board3d-loading">Carving the 3D board…</div>}
+            >
+              <Board3D
+                pieces={pieces}
+                turn={room.currentTurn}
+                legalDestinationsFrom={legalDestinationsFrom}
+                onMove={(m) => { void handleMove(m.from, m.to) }}
+                lastMove={lastTouched}
+                initialSide={pov}
+                spellPick={boardMode.kind === 'spell-pick' ? boardMode : null}
+                onSpellTarget={(s) => { void handleSpellTarget(s) }}
+                badges={badges}
+              />
+            </Suspense>
+            <div
+              className={
+                'puc-wd__fs3d-chip puc-wd__fs3d-chip--top' +
+                (room.status === 'live' && room.currentTurn === opponent ? ' puc-wd__fs3d-chip--active' : '')
+              }
+            >
+              <span className={`puc-wd__fs3d-dot puc-wd__fs3d-dot--${opponent}`} aria-hidden="true" />
+              <span>{(opponent === 'w' ? room.white : room.black)?.displayName ?? '—'}</span>
+              <Clock
+                baseMs={(opponent === 'w' ? room.whiteTimeMs : room.blackTimeMs) ?? 0}
+                lastTickAt={room.lastTickServerTs ?? null}
+                running={room.status === 'live' && room.currentTurn === opponent}
+              />
+            </div>
+            <div
+              className={
+                'puc-wd__fs3d-chip puc-wd__fs3d-chip--bottom' +
+                (room.status === 'live' && room.currentTurn === pov ? ' puc-wd__fs3d-chip--active' : '')
+              }
+            >
+              <span className={`puc-wd__fs3d-dot puc-wd__fs3d-dot--${pov}`} aria-hidden="true" />
+              <span>{(pov === 'w' ? room.white : room.black)?.displayName ?? '—'}</span>
+              <Clock
+                baseMs={(pov === 'w' ? room.whiteTimeMs : room.blackTimeMs) ?? 0}
+                lastTickAt={room.lastTickServerTs ?? null}
+                running={room.status === 'live' && room.currentTurn === pov}
+              />
+            </div>
+            <button
+              type="button"
+              className="puc-wd__fs3d-exit"
+              onClick={() => setFs3d(false)}
+              aria-label="Exit fullscreen"
+              title="Exit fullscreen (ESC)"
+            >
+              ✕
+            </button>
+          </div>
+        )
+      })()}
+
       {resignOpen && (
         <ResignDialog
           mode="online"

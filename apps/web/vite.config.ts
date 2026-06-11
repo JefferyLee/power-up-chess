@@ -105,10 +105,11 @@ export default defineConfig({
             },
           },
           {
-            // 3D chess piece models (GLTF + bin, ~2.5 MB total).
+            // 3D assets: piece models (GLTF + bin, ~2.5 MB) plus the
+            // environment HDR + wood texture under /models3d/env/.
             // Fetched only when a kid flips to 3D view; cache-first so
             // later flips are instant and survive offline.
-            urlPattern: /\/models3d\/.*\.(gltf|bin)$/,
+            urlPattern: /\/models3d\/.*\.(gltf|bin|hdr|jpg)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-models3d-v1',

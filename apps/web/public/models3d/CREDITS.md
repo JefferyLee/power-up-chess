@@ -21,3 +21,12 @@ Modifications made for Power Up Chess:
 
 CC-BY-4.0 requires this attribution to accompany redistribution; keep
 this file and the per-piece license.txt files together with the models.
+
+## Environment assets (`env/`)
+
+- `st_fagans_interior_1k.hdr` — "St Fagans Interior" HDRI by Andreas
+  Mischok, Poly Haven, **CC0** — https://polyhaven.com/a/st_fagans_interior
+- `wood.jpg` — "Wood Table 001" diffuse map (downscaled to 512px),
+  Poly Haven, **CC0** — https://polyhaven.com/a/wood_table_001
+
+CC0 requires no attribution; credited here for provenance anyway.

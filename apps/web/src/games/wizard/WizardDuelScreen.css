@@ -408,3 +408,102 @@
   .puc-wd__overlay-sub { font-size: 13px; }
   .puc-wd__overlay-btn { padding: 12px 16px; min-height: 44px; }
 }
+
+/* --- 3D board view --- */
+.puc-wd__view-toggle {
+  align-self: flex-end;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--puc-surface-edge);
+  background: transparent;
+  color: var(--puc-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-wd__view-toggle:hover { background: rgba(255, 255, 255, 0.09); }
+.puc-wd__view-toggle--on {
+  background: rgba(231, 184, 65, 0.18);
+  border-color: rgba(231, 184, 65, 0.6);
+  color: var(--puc-text-accent);
+}
+.puc-wd__board-stage--3d {
+  width: min(64vw, 760px, calc(100vw - 420px));
+  height: min(66dvh, 640px);
+}
+@media (max-width: 880px) {
+  .puc-wd__board-stage--3d {
+    width: 100%;
+    max-width: calc(100vw - 24px);
+    height: min(56dvh, 480px);
+  }
+}
+.puc-wd__board3d-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--puc-text-muted);
+}
+
+/* --- fullscreen 3D --- */
+.puc-wd__view-row {
+  align-self: flex-end;
+  display: flex;
+  gap: 6px;
+}
+.puc-wd__view-row .puc-wd__view-toggle { align-self: auto; }
+.puc-wd__fs3d {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+}
+.puc-wd__fs3d-chip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(10, 14, 10, 0.78);
+  border: 1px solid rgba(231, 184, 65, 0.3);
+  font-family: var(--puc-font-display);
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+.puc-wd__fs3d-chip--top { top: 14px; }
+.puc-wd__fs3d-chip--bottom { bottom: 14px; }
+.puc-wd__fs3d-chip--active {
+  border-color: var(--puc-accent);
+  box-shadow: 0 0 0 2px rgba(241, 195, 76, 0.22), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.puc-wd__fs3d-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.puc-wd__fs3d-dot--w { background: #f3e6c8; }
+.puc-wd__fs3d-dot--b { background: #3a2a20; }
+.puc-wd__fs3d-exit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 184, 65, 0.4);
+  background: rgba(10, 14, 10, 0.78);
+  color: var(--puc-text-accent);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-wd__fs3d-exit:hover { border-color: var(--puc-accent); }

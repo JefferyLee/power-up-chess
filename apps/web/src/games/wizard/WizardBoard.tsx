@@ -157,7 +157,7 @@ function EffectStack({ effects }: { effects: readonly Effect[] }) {
   )
 }
 
-function effectIcon(kind: EffectKind): string {
+export function effectIcon(kind: EffectKind): string {
   switch (kind) {
     case 'freeze':  return '❄'
     case 'confuse': return '😵‍💫'
