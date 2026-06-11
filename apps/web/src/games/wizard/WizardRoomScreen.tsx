@@ -35,7 +35,7 @@ type CastFlow =
   | { stage: 'awaiting-1st'; spellId: SpellId }
   | { stage: 'awaiting-2nd'; spellId: SpellId; first: Square }
 
-const MAX_SQUARE_SIZE = 60
+const MAX_SQUARE_SIZE = 66
 
 interface Props {
   roomId: string

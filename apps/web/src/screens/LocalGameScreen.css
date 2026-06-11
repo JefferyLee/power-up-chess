@@ -143,14 +143,19 @@
 
 /* 3D view claims far more screen than the fixed 2D square grid —
  * the camera can be zoomed/orbited, so a bigger viewport is pure
- * win. Width leads, height follows the viewport. */
+ * win. Width leads, height follows the viewport. The third min()
+ * term reserves room for the moves column (≤320px) + gaps/padding,
+ * because the board's grid track is min-content and would otherwise
+ * happily push the row past the viewport (landscape phones between
+ * 881–1300px hit exactly that). */
 .puc-local__board-stage--3d {
-  width: min(72vw, 920px);
+  width: min(72vw, 920px, calc(100vw - 440px));
   height: min(74dvh, 760px);
 }
 @media (max-width: 880px) {
   .puc-local__board-stage--3d {
     width: 100%;
+    max-width: calc(100vw - 24px);
     height: min(62dvh, 560px);
   }
 }
@@ -334,4 +339,58 @@
   letter-spacing: 0.5px;
   background: rgba(0, 0, 0, 0.25);
   border-radius: 10px;
+}
+
+/* Fullscreen 3D overlay — viewport-filling canvas with floating
+ * player chips. z-index 40 keeps the game-end (50) and resign (60)
+ * overlays above it. */
+.puc-local__fs3d {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+}
+.puc-local__fs3d-chip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(10, 14, 10, 0.78);
+  border: 1px solid rgba(231, 184, 65, 0.3);
+  font-family: var(--puc-font-display);
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+}
+.puc-local__fs3d-chip--top { top: 14px; }
+.puc-local__fs3d-chip--bottom { bottom: 14px; }
+.puc-local__fs3d-chip--active {
+  border-color: var(--puc-accent);
+  box-shadow: 0 0 0 2px rgba(241, 195, 76, 0.22), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.puc-local__fs3d-exit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 184, 65, 0.4);
+  background: rgba(10, 14, 10, 0.78);
+  color: var(--puc-text-accent);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-local__fs3d-exit:hover {
+  border-color: var(--puc-accent);
+  color: var(--puc-accent);
 }

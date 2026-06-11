@@ -28,7 +28,6 @@ import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
 import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
-import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
@@ -128,6 +127,20 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // 3D view — same game, alternate renderer. The Board3D chunk
   // (three.js) is lazy-loaded on first flip.
   const [view3d, setView3d] = useState(false)
+  // Fullscreen 3D — a fixed overlay fills the viewport; player names
+  // + clocks float as compact chips. ESC or ✕ exits.
+  const [fs3d, setFs3d] = useState(false)
+  useEffect(() => {
+    if (!fs3d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [fs3d])
   const sound = useSound()
   const { identity, setCastlePoints } = useCastle()
 
@@ -422,16 +435,24 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         </div>
         <div className="puc-local__actions">
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
-          <MuteButton />
           <button
             type="button"
             className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
-            onClick={() => setView3d((v) => !v)}
+            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
             aria-pressed={view3d}
             title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
           >
             {view3d ? '🎲 2D' : '🎲 3D'}
           </button>
+          {view3d && (
+            <button
+              type="button"
+              onClick={() => setFs3d(true)}
+              title="Fullscreen 3D board"
+            >
+              ⛶
+            </button>
+          )}
           {!view3d && (
             <button
               type="button"
@@ -486,6 +507,11 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
             style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
           >
             {view3d ? (
+              fs3d ? (
+                <div className="puc-local__board3d-loading">
+                  Playing fullscreen — press ESC or ✕ to return.
+                </div>
+              ) : (
               <Suspense
                 fallback={
                   <div className="puc-local__board3d-loading">
@@ -502,6 +528,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
                   checkSquare={checkSquare}
                 />
               </Suspense>
+              )
             ) : (
               <Board
                 pieces={pieces}
@@ -549,6 +576,59 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           <MoveList history={snap.history} />
         </aside>
       </div>
+
+      {/* Fullscreen 3D — the canvas fills the viewport; names + clocks
+       *  float as compact chips. Sits BELOW the end-game / resign
+       *  overlays (z 50/60) so those still appear over the board. */}
+      {view3d && fs3d && (
+        <div className="puc-local__fs3d">
+          <Suspense
+            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
+          >
+            <Board3D
+              pieces={pieces}
+              turn={snap.turn}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+            />
+          </Suspense>
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
+              (snap.turn === 'b' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span className="puc-player__dot puc-player__dot--b" aria-hidden="true" />
+            <span>{blackName}</span>
+            {timeControl && (
+              <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
+            )}
+          </div>
+          <div
+            className={
+              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
+              (snap.turn === 'w' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
+            }
+          >
+            <span className="puc-player__dot puc-player__dot--w" aria-hidden="true" />
+            <span>{whiteName}</span>
+            {timeControl && (
+              <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
+            )}
+          </div>
+          <button
+            type="button"
+            className="puc-local__fs3d-exit"
+            onClick={() => setFs3d(false)}
+            aria-label="Exit fullscreen"
+            title="Exit fullscreen (ESC)"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <GameEndOverlay
         status={effectiveStatus}

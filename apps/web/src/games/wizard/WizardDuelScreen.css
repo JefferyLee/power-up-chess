@@ -45,7 +45,12 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
-  grid-template-rows: auto auto;
+  /* min-content + 1fr: the tall right sidebar spans both rows, and
+   * with auto/auto its extra height inflated ROW 1 — pushing the
+   * board far below the opponent plate. Pinning row 1 to the plate's
+   * own height hands all the spanned slack to row 2, so the plate
+   * and board sit snugly 16px apart. */
+  grid-template-rows: min-content 1fr;
   gap: 16px;
   align-items: start;
 }

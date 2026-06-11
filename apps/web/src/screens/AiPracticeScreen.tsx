@@ -21,7 +21,6 @@ import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
 import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
-import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
@@ -447,7 +446,6 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
             ))}
           </div>
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
-          <MuteButton />
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
           </button>

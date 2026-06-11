@@ -19,7 +19,6 @@ import { ResignDialog } from '../powerups/ResignDialog'
 import { callClaimTimeWin, callJoinRoom, callResignGame } from '../firebase/callables'
 import { saveGame } from '../history/api'
 import { track } from '../firebase/analytics'
-import { MuteButton } from '../sound/MuteButton'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
 import { ChampionCrown } from '../tournament/ChampionCrown'
@@ -632,7 +631,6 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         </div>
         <div className="puc-local__actions">
           {yourColor && <CrownBadge variant="inline" watch={room.status} />}
-          <MuteButton />
           {yourColor && room.status === 'live' && (
             <button type="button" onClick={() => setResignDialogOpen(true)}>
               Resign
