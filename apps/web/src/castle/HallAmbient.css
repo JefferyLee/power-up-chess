@@ -1,6 +1,6 @@
-/* Hall ambient decor — fireplace + window. Positioned fixed inside
- * the Hall, behind everything, never intercepts pointer events. The
- * Hall content sits above via stacking context. */
+/* Hall ambient decor — painterly hearth + window. Positioned fixed
+ * inside the Hall, behind everything, never intercepts pointer
+ * events. The Hall content sits above via stacking context. */
 
 .puc-ambient {
   position: fixed;
@@ -10,77 +10,171 @@
   overflow: hidden;
 }
 
+/* ── Room glow: a wide warm pool of light rising from the hearth
+ *    corner. Multi-stop keyframes make the breathing feel like fire,
+ *    not a metronome. */
+.puc-ambient__roomglow {
+  position: absolute;
+  left: -18vw;
+  bottom: -22vh;
+  width: 85vw;
+  height: 80vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(246, 162, 61, 0.1),
+    rgba(246, 162, 61, 0.04) 45%,
+    transparent 72%
+  );
+  animation: puc-roomglow 3.1s ease-in-out infinite;
+}
+@keyframes puc-roomglow {
+  0%, 100% { opacity: 0.75; }
+  23%      { opacity: 1; }
+  41%      { opacity: 0.82; }
+  62%      { opacity: 0.95; }
+  81%      { opacity: 0.7; }
+}
+
+/* ── Fireplace */
+/* Dimmed well below the foreground (doors, cards) — it's set dressing,
+ * not content. */
 .puc-ambient__fireplace {
   position: absolute;
-  left: 16px;
-  bottom: 16px;
-  width: 120px;
-  height: 140px;
+  left: 10px;
+  bottom: 0;
+  width: 360px;
   opacity: 0.55;
-  filter: drop-shadow(0 0 18px rgba(246, 162, 61, 0.35));
+  filter: drop-shadow(0 0 18px rgba(246, 162, 61, 0.25));
+}
+.puc-ambient__fireplace-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Firelight flicker — same painting, screen-blended on top, opacity
+ * dancing. Brightens the embers/flames far more than the stone. */
+.puc-ambient__fireplace-fire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: screen;
+  animation: puc-firelight 2.2s ease-in-out infinite;
+}
+@keyframes puc-firelight {
+  0%, 100% { opacity: 0.14; }
+  18%      { opacity: 0.42; }
+  37%      { opacity: 0.2; }
+  54%      { opacity: 0.48; }
+  71%      { opacity: 0.26; }
+  86%      { opacity: 0.38; }
 }
 
+/* Big dancing flame tongues over the painted fire — positioned over
+ * the firebox (the arch opening sits roughly in the middle 55% of the
+ * art, floor at ~14% up). Screen blend lets the glow ride the paint. */
+.puc-ambient__flames {
+  position: absolute;
+  left: 23%;
+  bottom: 13%;
+  width: 54%;
+  height: 60%;
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+.puc-ambient__flame {
+  transform-origin: center bottom;
+  transform-box: fill-box;
+}
+@keyframes puc-flame-sway-1 {
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); opacity: 0.85; }
+  35%      { transform: translateY(-3px) scaleY(1.18) scaleX(0.9); opacity: 1; }
+  65%      { transform: translateY(2px) scaleY(0.86) scaleX(1.1); opacity: 0.75; }
+}
+@keyframes puc-flame-sway-2 {
+  0%, 100% { transform: translateY(-2px) scaleY(1.08) scaleX(1); opacity: 0.95; }
+  40%      { transform: translateY(3px) scaleY(0.88) scaleX(1.12); opacity: 0.78; }
+  75%      { transform: translateY(-4px) scaleY(1.22) scaleX(0.88); opacity: 1; }
+}
+@keyframes puc-flame-sway-3 {
+  0%, 100% { transform: translateY(1px) scaleY(0.94) scaleX(1.04); opacity: 0.8; }
+  30%      { transform: translateY(-3px) scaleY(1.15) scaleX(0.92); opacity: 1; }
+  70%      { transform: translateY(2px) scaleY(0.85) scaleX(1.1); opacity: 0.72; }
+}
+.puc-ambient__flame--1 { animation: puc-flame-sway-1 1.5s ease-in-out infinite; }
+.puc-ambient__flame--2 { animation: puc-flame-sway-2 1.9s ease-in-out infinite 0.2s; }
+.puc-ambient__flame--3 { animation: puc-flame-sway-3 1.65s ease-in-out infinite 0.45s; }
+
+/* Embers drifting up out of the firebox (centre-bottom of the art). */
+.puc-ambient__ember {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd86b 0%, rgba(246, 130, 40, 0.7) 55%, transparent 100%);
+  opacity: 0;
+}
+@keyframes puc-ember-rise {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  12%  { opacity: 0.9; }
+  100% { transform: translate(var(--ember-drift, 8px), -110px) scale(0.4); opacity: 0; }
+}
+.puc-ambient__ember--1 { animation: puc-ember-rise 2.6s linear infinite;       --ember-drift: 10px; margin-left: -14px; }
+.puc-ambient__ember--2 { animation: puc-ember-rise 3.3s linear infinite 0.9s;  --ember-drift: -12px; margin-left: 6px; }
+.puc-ambient__ember--3 { animation: puc-ember-rise 2.9s linear infinite 1.7s;  --ember-drift: 4px; margin-left: 18px; }
+
+/* ── Window */
 .puc-ambient__window {
   position: absolute;
-  right: 24px;
-  top: 80px;
-  width: 90px;
-  height: 160px;
-  opacity: 0.5;
-  filter: drop-shadow(0 0 22px rgba(246, 194, 102, 0.35));
+  right: 22px;
+  top: 64px;
+  width: 230px;
+  opacity: 0.45;
+  filter: drop-shadow(0 0 16px rgba(246, 194, 102, 0.22));
 }
-
-/* ── Flame flicker — three keyframes out of phase so the cluster
- *    moves like real fire. Each flame scales vertically and shifts
- *    its centre slightly; no transform-origin tricks needed because
- *    the flames are drawn at the bottom of their bbox. */
-@keyframes puc-flame-1 {
-  0%, 100% { transform: translateY(0)   scaleY(1)    scaleX(1);    opacity: 0.92; }
-  35%      { transform: translateY(-2px) scaleY(1.15) scaleX(0.92); opacity: 1;    }
-  65%      { transform: translateY(1px)  scaleY(0.9)  scaleX(1.08); opacity: 0.85; }
+.puc-ambient__window-img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-@keyframes puc-flame-2 {
-  0%, 100% { transform: translateY(-1px) scaleY(1.05) scaleX(1);    opacity: 0.95; }
-  40%      { transform: translateY(2px)  scaleY(0.92) scaleX(1.1);  opacity: 0.85; }
-  75%      { transform: translateY(-3px) scaleY(1.18) scaleX(0.9);  opacity: 1;    }
-}
-@keyframes puc-flame-3 {
-  0%, 100% { transform: translateY(1px)  scaleY(0.95) scaleX(1.03); opacity: 0.88; }
-  30%      { transform: translateY(-2px) scaleY(1.12) scaleX(0.94); opacity: 1;    }
-  70%      { transform: translateY(2px)  scaleY(0.88) scaleX(1.08); opacity: 0.8;  }
-}
-@keyframes puc-hearth-breathe {
-  0%, 100% { opacity: 0.65; transform: scale(1);    }
-  50%      { opacity: 0.95; transform: scale(1.08); }
-}
-
-.puc-ambient__flame {
-  /* transform-origin at the bottom of each flame so scaleY grows
-   * upward like a real flame, not centre-out. */
-  transform-origin: center bottom;
-}
-.puc-ambient__flame--1 { animation: puc-flame-1 1.6s ease-in-out infinite; }
-.puc-ambient__flame--2 { animation: puc-flame-2 1.9s ease-in-out infinite 0.15s; }
-.puc-ambient__flame--3 { animation: puc-flame-3 1.7s ease-in-out infinite 0.35s; }
-.puc-ambient__hearth-glow {
-  transform-origin: 60px 118px;
-  animation: puc-hearth-breathe 2.8s ease-in-out infinite;
-}
-
-/* ── Window light — slow brighten / dim like a dawn pulse */
-@keyframes puc-window-pulse {
-  0%, 100% { opacity: 0.7;  }
-  50%      { opacity: 1;    }
-}
+/* Slow sunlight pulse through the panes. */
 .puc-ambient__window-glow {
-  animation: puc-window-pulse 5s ease-in-out infinite;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: screen;
+  animation: puc-window-pulse 5.5s ease-in-out infinite;
+}
+@keyframes puc-window-pulse {
+  0%, 100% { opacity: 0.12; }
+  50%      { opacity: 0.35; }
+}
+/* Light shaft angling down-left from the sill. */
+.puc-ambient__shaft {
+  position: absolute;
+  top: 62%;
+  right: 38%;
+  width: 290px;
+  height: 380px;
+  background: linear-gradient(to bottom, rgba(255, 226, 150, 0.08), transparent 72%);
+  clip-path: polygon(78% 0, 100% 0, 52% 100%, 0% 100%);
+  animation: puc-window-pulse 5.5s ease-in-out infinite;
 }
 
 /* On small viewports the corner decor competes with limited space —
  * shrink + push closer to the edges. */
+@media (max-width: 1100px) {
+  .puc-ambient__fireplace { width: 280px; }
+  .puc-ambient__window    { width: 180px; }
+  .puc-ambient__shaft     { width: 200px; height: 260px; }
+}
 @media (max-width: 760px) {
-  .puc-ambient__fireplace { width: 86px; height: 100px; opacity: 0.45; left: 6px; bottom: 6px; }
-  .puc-ambient__window    { width: 60px; height: 108px; opacity: 0.4;  right: 8px; top: 64px;   }
+  .puc-ambient__fireplace { width: 210px; left: 4px; }
+  .puc-ambient__window    { width: 130px; right: 8px; top: 60px; }
+  .puc-ambient__shaft     { display: none; }
 }
 @media (max-width: 540px) {
   /* Tight phone viewport — the chat and door grid already crowd
@@ -89,9 +183,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .puc-ambient__roomglow,
+  .puc-ambient__fireplace-fire,
   .puc-ambient__flame,
-  .puc-ambient__hearth-glow,
-  .puc-ambient__window-glow {
+  .puc-ambient__ember,
+  .puc-ambient__window-glow,
+  .puc-ambient__shaft {
     animation: none;
   }
+  .puc-ambient__ember { display: none; }
 }

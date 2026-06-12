@@ -195,3 +195,29 @@
   justify-content: center;
   color: var(--puc-text-muted);
 }
+
+/* --- fullscreen 3D --- */
+.puc-daily__fs3d {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+}
+.puc-daily__fs3d-exit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(231, 184, 65, 0.4);
+  background: rgba(10, 14, 10, 0.78);
+  color: var(--puc-text-accent);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.puc-daily__fs3d-exit:hover { border-color: var(--puc-accent); }

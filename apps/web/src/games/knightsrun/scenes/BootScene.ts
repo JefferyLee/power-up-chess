@@ -1,13 +1,15 @@
-// BootScene — load assets, then jump straight into GameScene.
+// BootScene — load piece art + generate board textures, then start.
 //
-// We load the piece SVGs we need (knight = player, pawn/rook/queen = obstacles)
-// at small fixed sizes. Phaser rasterises SVGs at load time, so the size we
-// pass becomes the texture resolution; larger = sharper but heavier.
+// Pieces are the cburnett SVGs (rasterised by Phaser at load); board
+// squares / target discs / coins are generated procedurally so no
+// extra assets ship.
 
 import Phaser from 'phaser'
+import knightWhiteUrl from '../../../cosmetics/assets/cburnett/wN.svg'
 import pawnBlackUrl from '../../../cosmetics/assets/cburnett/bP.svg'
 import rookBlackUrl from '../../../cosmetics/assets/cburnett/bR.svg'
-import queenBlackUrl from '../../../cosmetics/assets/cburnett/bQ.svg'
+import bishopBlackUrl from '../../../cosmetics/assets/cburnett/bB.svg'
+import { SQ } from '../config'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -15,21 +17,59 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // The knight is a hand-tuned chibi PNG (generated, then bg-removed +
-    // resized in tools/generate-image/). Lives in /public so it's not
-    // bundled into the main JS — Phaser fetches it lazily on boot.
-    this.load.image('knight-chibi', '/sprites/knight-chibi-side.png')
-    // Phaser 4's load.svg() does a buggy atob() on the response and throws on
-    // any non-base64 input — bypass it by loading the SVGs as plain images.
-    // SVGs with viewBox rasterise correctly through the <img> path.
+    // Phaser 4's load.svg() does a buggy atob() on the response — load
+    // SVGs as plain images instead; viewBox rasterises correctly.
+    this.load.image('knight-w', knightWhiteUrl)
     this.load.image('pawn-b', pawnBlackUrl)
     this.load.image('rook-b', rookBlackUrl)
-    this.load.image('queen-b', queenBlackUrl)
-    // Coin texture is generated procedurally so we don't need an asset —
-    // see GameScene.makeCoinTexture(). Nothing to preload for coins.
+    this.load.image('bishop-b', bishopBlackUrl)
   }
 
   create(): void {
+    this.makeSquareTexture('sq-light', 0xb99c6f, 0x8a7350)
+    this.makeSquareTexture('sq-dark', 0x6e4f33, 0x523a26)
+    this.makeTargetTexture()
+    this.makeCoinTexture()
     this.scene.start('Game')
+  }
+
+  /** Rounded stone square with a few darker speckles. */
+  private makeSquareTexture(key: string, fill: number, speckle: number): void {
+    const g = this.add.graphics()
+    g.fillStyle(fill, 1)
+    g.fillRoundedRect(1, 1, SQ - 2, SQ - 2, 8)
+    g.lineStyle(2, speckle, 0.55)
+    g.strokeRoundedRect(1, 1, SQ - 2, SQ - 2, 8)
+    g.fillStyle(speckle, 0.35)
+    // Deterministic speckles — Boot runs once, any pattern works.
+    const spots = [[18, 26, 4], [70, 14, 3], [44, 58, 5], [84, 74, 3], [22, 82, 4], [62, 90, 3]] as const
+    for (const [x, y, r] of spots) g.fillCircle(x, y, r)
+    g.generateTexture(key, SQ, SQ)
+    g.destroy()
+  }
+
+  /** Pulsing landing-target disc: soft ring + translucent centre. */
+  private makeTargetTexture(): void {
+    const d = Math.floor(SQ * 0.78)
+    const g = this.add.graphics()
+    g.lineStyle(6, 0x7cc28b, 0.95)
+    g.strokeCircle(d / 2, d / 2, d / 2 - 4)
+    g.fillStyle(0x7cc28b, 0.3)
+    g.fillCircle(d / 2, d / 2, d / 2 - 8)
+    g.generateTexture('target', d, d)
+    g.destroy()
+  }
+
+  private makeCoinTexture(): void {
+    const d = 40
+    const g = this.add.graphics()
+    g.fillStyle(0xf1c34c, 1)
+    g.fillCircle(d / 2, d / 2, d / 2 - 2)
+    g.lineStyle(3, 0xb78938, 1)
+    g.strokeCircle(d / 2, d / 2, d / 2 - 2)
+    g.lineStyle(2, 0xfff0b8, 0.9)
+    g.strokeCircle(d / 2, d / 2, d / 2 - 9)
+    g.generateTexture('gold', d, d)
+    g.destroy()
   }
 }

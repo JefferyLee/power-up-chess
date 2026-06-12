@@ -1,332 +1,680 @@
-// GameScene — the runner itself.
+// GameScene — the L-jump bridge runner.
 //
-// Knight runs in place; the world scrolls past from right to left. Obstacles
-// and coins are spawned off-screen right and move at the world's current
-// speed. Single-tap (or SPACE / ↑) jumps. Touching a coin = +25 + ping;
-// touching an obstacle = game over → GameOverScene.
+// An endless 5-file chessboard bridge stretches upward. The knight
+// advances ONLY by real knight moves: its forward L-targets glow, the
+// kid taps one, the knight leaps (the whole point — burning the L
+// pattern into muscle memory at speed). Behind, the bridge crumbles
+// into the void on a ramping timer. Enemy rooks/bishops periodically
+// telegraph an attack line across the bridge, then strike — standing
+// on the line when it fires costs the shield, then the run.
+//
+// Pedagogy disguised as arcade: forward knight-move fluency, reading
+// telegraphed piece attack ranges, and "fork" moments (landing where
+// you attack two enemies at once) that wire tactic vocabulary in.
+//
+// Coordinates: rank 0 at world y = 0; higher ranks extend UPWARD
+// (negative world y). The `board` container scrolls down as the
+// knight climbs, keeping it anchored at KNIGHT_ANCHOR_Y.
 
 import Phaser from 'phaser'
 import { playSound } from '../../../sound/synth'
 import {
-  COIN_FLOAT_HEIGHTS,
-  COIN_SPAWN_MAX_MS,
-  COIN_SPAWN_MIN_MS,
-  COIN_VALUE,
-  GRAVITY_Y,
-  GROUND_Y,
-  JUMP_VELOCITY,
-  MAX_SPEED,
-  SCORE_PER_PX,
-  SPAWN_MAX_MS,
-  SPAWN_MIN_MS,
-  SPEED_RAMP_PER_SEC,
-  START_SPEED,
+  BOARD_X,
+  COLLAPSE_RAMP_PER_S,
+  COLLAPSE_SPEED_MAX,
+  COLLAPSE_SPEED_START,
+  COLLAPSE_START_DELAY_MS,
+  FILES,
+  KNIGHT_ANCHOR_Y,
+  SCORE_FORK,
+  SCORE_GOLD,
+  SCORE_PAWN,
+  SCORE_PIECE,
+  SCORE_RANK,
+  SQ,
+  SWEEP_FIRST_MS,
+  SWEEP_INTERVAL_MIN_MS,
+  SWEEP_INTERVAL_START_MS,
+  SWEEP_STRIKE_MS,
+  SWEEP_TELEGRAPH_MIN_MS,
+  SWEEP_TELEGRAPH_START_MS,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from '../config'
 
-type ObstacleKind = 'pawn' | 'rook' | 'queen'
+type ItemKind = 'pawn' | 'bishop' | 'rook' | 'gold' | 'shield'
 
-interface ObstacleSpec {
-  textureKey: string
-  yOffset: number // negative from ground = floats above
-  scale: number
+interface Cell {
+  kind: 'stone' | 'gap'
+  item: ItemKind | null
+  itemObj: Phaser.GameObjects.GameObject | null
 }
 
-const OBSTACLE_SPECS: Record<ObstacleKind, ObstacleSpec> = {
-  pawn: { textureKey: 'pawn-b', yOffset: 0, scale: 1 },
-  rook: { textureKey: 'rook-b', yOffset: 0, scale: 1 },
-  queen: { textureKey: 'queen-b', yOffset: -10, scale: 1 },
+interface Row {
+  rank: number
+  cells: Cell[]
+  container: Phaser.GameObjects.Container
+}
+
+interface Sweep {
+  /** 'f,r' keys of every threatened cell. */
+  cells: Set<string>
+  state: 'telegraph' | 'strike'
+  /** elapsed-ms timestamp when the current state ends. */
+  until: number
+  rects: Phaser.GameObjects.Rectangle[]
+  icon: Phaser.GameObjects.Image
+  hasHitKnight: boolean
+}
+
+const FORWARD_MOVES: ReadonlyArray<readonly [number, number]> = [
+  [-1, 2], [1, 2], [-2, 1], [2, 1],
+]
+const KNIGHT_ATTACKS: ReadonlyArray<readonly [number, number]> = [
+  [-1, 2], [1, 2], [-2, 1], [2, 1], [-1, -2], [1, -2], [-2, -1], [2, -1],
+]
+
+const ITEM_TEXTURE: Record<Exclude<ItemKind, 'shield'>, string> = {
+  pawn: 'pawn-b',
+  bishop: 'bishop-b',
+  rook: 'rook-b',
+  gold: 'gold',
 }
 
 export class GameScene extends Phaser.Scene {
+  private board!: Phaser.GameObjects.Container
+  private rows = new Map<number, Row>()
   private knight!: Phaser.GameObjects.Image
-  private knightVy = 0
-  private onGround = true
+  private kFile = 2
+  private kRank = 0
+  private maxGenRank = -1
+  private prevGapFile = -1
 
-  private floor!: Phaser.GameObjects.TileSprite
-  private skyFar!: Phaser.GameObjects.TileSprite
-  private skyNear!: Phaser.GameObjects.TileSprite
+  private elapsed = 0
+  private collapseProgress = 0
+  private dead = false
+  private moving = false
+  private invulnUntil = 0
 
-  private obstacles!: Phaser.GameObjects.Group
-  private coins!: Phaser.GameObjects.Group
+  private score = 0
+  private ranks = 0
+  private captures = 0
+  private forks = 0
+  private shields = 0
 
-  private worldSpeed = START_SPEED
-  private elapsedSec = 0
-  private distance = 0
-  private coinsCollected = 0
+  private markers: Phaser.GameObjects.Image[] = []
+  private sweeps: Sweep[] = []
+  private nextSweepAt = SWEEP_FIRST_MS
 
   private scoreText!: Phaser.GameObjects.Text
-  private coinText!: Phaser.GameObjects.Text
-
-  private nextObstacleAt = 0
-  private nextCoinAt = 0
-  private gameOver = false
+  private shieldText!: Phaser.GameObjects.Text
+  private voidRect!: Phaser.GameObjects.Rectangle
+  private voidEdge!: Phaser.GameObjects.Rectangle
 
   constructor() {
     super('Game')
   }
 
   create(): void {
-    this.distance = 0
-    this.coinsCollected = 0
-    this.gameOver = false
-    this.elapsedSec = 0
-    this.worldSpeed = START_SPEED
+    // Reset all run state — scene instances are reused on "Run again".
+    this.rows = new Map()
+    this.kFile = 2
+    this.kRank = 0
+    this.maxGenRank = -1
+    this.prevGapFile = -1
+    this.elapsed = 0
+    this.collapseProgress = 0
+    this.dead = false
+    this.moving = false
+    this.invulnUntil = 0
+    this.score = 0
+    this.ranks = 0
+    this.captures = 0
+    this.forks = 0
+    this.shields = 0
+    this.markers = []
+    this.sweeps = []
+    this.nextSweepAt = SWEEP_FIRST_MS
 
-    this.makeBackgroundTextures()
-    this.makeCoinTexture()
-    this.skyFar = this.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'sky-far').setOrigin(0, 0)
-    this.skyNear = this.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'sky-near').setOrigin(0, 0)
-    this.floor = this.add.tileSprite(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y - 10, 'floor-checker').setOrigin(0, 0)
+    this.add.rectangle(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 0x171026).setOrigin(0, 0)
 
-    const KNIGHT_SCALE = 0.5
-    this.knight = this.add.image(150, GROUND_Y, 'knight-chibi').setOrigin(0.5, 1).setScale(KNIGHT_SCALE)
-    this.tweens.add({
-      targets: this.knight,
-      scaleY: KNIGHT_SCALE * 0.97,
-      scaleX: KNIGHT_SCALE * 1.03,
-      duration: 240,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.InOut',
-    })
+    this.board = this.add.container(0, this.cameraTargetY())
 
-    this.obstacles = this.add.group()
-    this.coins = this.add.group()
+    for (let r = 0; r <= 9; r++) this.spawnRow(r)
 
-    // HUD — distance score on the right, coin count on the left.
+    this.knight = this.add
+      .image(this.cellX(this.kFile), this.worldY(this.kRank), 'knight-w')
+      .setDisplaySize(SQ * 0.86, SQ * 0.86)
+      .setDepth(10)
+    this.board.add(this.knight)
+
+    // The void — covers everything below the collapse line.
+    this.voidRect = this.add
+      .rectangle(0, 0, WORLD_WIDTH, 4000, 0x0a0614, 0.94)
+      .setOrigin(0, 0)
+      .setDepth(20)
+    this.voidEdge = this.add
+      .rectangle(0, 0, WORLD_WIDTH, 5, 0xf6a23d, 0.8)
+      .setOrigin(0, 0)
+      .setDepth(21)
+    this.board.add([this.voidRect, this.voidEdge])
+
+    // HUD — fixed to the screen, not the scrolling board.
     this.scoreText = this.add
-      .text(WORLD_WIDTH - 20, 18, '0', {
+      .text(WORLD_WIDTH / 2, 26, '0', {
         fontFamily: '"Cinzel", Georgia, serif',
-        fontSize: '24px',
+        fontSize: '34px',
         color: '#f4c266',
       })
-      .setOrigin(1, 0)
-    this.coinText = this.add
-      .text(20, 18, '🪙 0', {
-        fontFamily: '"Cinzel", Georgia, serif',
-        fontSize: '20px',
-        color: '#ffd860',
+      .setOrigin(0.5, 0)
+      .setDepth(100)
+    this.shieldText = this.add
+      .text(WORLD_WIDTH - 18, 30, '', {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '26px',
       })
-      .setOrigin(0, 0)
+      .setOrigin(1, 0)
+      .setDepth(100)
 
-    this.input.keyboard?.on('keydown-SPACE', this.tryJump, this)
-    this.input.keyboard?.on('keydown-UP', this.tryJump, this)
-    this.input.on('pointerdown', this.tryJump, this)
+    this.add
+      .text(WORLD_WIDTH / 2, 72, 'Leap like a knight — tap a glowing square!', {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '14px',
+        color: '#bcb4d0',
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(100)
+      .setAlpha(0.9)
 
-    this.nextObstacleAt = this.time.now + 800
-    this.nextCoinAt = this.time.now + 1400
+    this.showTargets()
   }
 
-  update(_time: number, deltaMs: number): void {
-    if (this.gameOver) return
-    const dt = deltaMs / 1000
+  // ── Coordinate helpers ──────────────────────────────────────────
 
-    this.elapsedSec += dt
-    this.worldSpeed = Math.min(
-      MAX_SPEED,
-      START_SPEED + this.elapsedSec * SPEED_RAMP_PER_SEC,
-    )
+  private cellX(file: number): number {
+    return BOARD_X + file * SQ + SQ / 2
+  }
 
-    const dx = this.worldSpeed * dt
-    this.distance += dx
-    this.scoreText.setText(Math.floor(this.distance * SCORE_PER_PX * 10).toString())
+  /** World y of a rank's square centre (rank 0 at 0, climbing = -y). */
+  private worldY(rank: number): number {
+    return -rank * SQ
+  }
 
-    this.skyFar.tilePositionX += dx * 0.06
-    this.skyNear.tilePositionX += dx * 0.18
-    this.floor.tilePositionX += dx
+  private cameraTargetY(): number {
+    return WORLD_HEIGHT * KNIGHT_ANCHOR_Y + this.kRank * SQ
+  }
 
-    if (!this.onGround) {
-      this.knightVy += GRAVITY_Y * dt
-      this.knight.y += this.knightVy * dt
-      if (this.knight.y >= GROUND_Y) {
-        this.knight.y = GROUND_Y
-        this.knightVy = 0
-        this.onGround = true
+  private collapseWorldY(): number {
+    return SQ * 1.5 - this.collapseProgress
+  }
+
+  private cellAt(file: number, rank: number): Cell | null {
+    if (file < 0 || file >= FILES) return null
+    return this.rows.get(rank)?.cells[file] ?? null
+  }
+
+  // ── Bridge generation ───────────────────────────────────────────
+
+  private spawnRow(rank: number): void {
+    if (this.rows.has(rank)) return
+    this.maxGenRank = Math.max(this.maxGenRank, rank)
+    const container = this.add.container(0, this.worldY(rank))
+    this.board.addAt(container, 0) // squares render under knight/markers
+
+    const cells: Cell[] = []
+    // One gap max per row, never two rows running in the same file —
+    // plus the self-heal in showTargets() this keeps the bridge passable.
+    let gapFile = -1
+    if (rank > 2) {
+      const gapChance = Math.min(0.32, 0.1 + rank * 0.004)
+      if (Math.random() < gapChance) {
+        do {
+          gapFile = Math.floor(Math.random() * FILES)
+        } while (gapFile === this.prevGapFile)
       }
     }
+    this.prevGapFile = gapFile
 
-    // Obstacles — move + cull.
-    const obstacles = this.obstacles.getChildren() as Phaser.GameObjects.Image[]
-    for (const ob of obstacles) {
-      ob.x -= dx
-      if (ob.x < -100) ob.destroy()
-    }
-
-    // Coins — move + cull + gentle bob so they catch the eye.
-    const coins = this.coins.getChildren() as Phaser.GameObjects.Image[]
-    for (const c of coins) {
-      c.x -= dx
-      if (c.x < -80) c.destroy()
-    }
-
-    // Obstacle spawn cadence: tightens as speed grows.
-    if (this.time.now >= this.nextObstacleAt) {
-      this.spawnObstacle()
-      const speedRatio = Phaser.Math.Clamp((this.worldSpeed - START_SPEED) / (MAX_SPEED - START_SPEED), 0, 1)
-      const upper = Phaser.Math.Linear(SPAWN_MAX_MS, SPAWN_MIN_MS + 200, speedRatio)
-      this.nextObstacleAt = this.time.now + Phaser.Math.Between(SPAWN_MIN_MS, upper)
-    }
-
-    // Coin spawn cadence: independent of obstacles.
-    if (this.time.now >= this.nextCoinAt) {
-      this.spawnCoin()
-      this.nextCoinAt = this.time.now + Phaser.Math.Between(COIN_SPAWN_MIN_MS, COIN_SPAWN_MAX_MS)
-    }
-
-    // Collisions.
-    const knightBox = this.knightHitbox()
-    for (const c of coins) {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(knightBox, c.getBounds())) {
-        this.collectCoin(c)
+    let itemsInRow = 0
+    for (let f = 0; f < FILES; f++) {
+      if (f === gapFile) {
+        cells.push({ kind: 'gap', item: null, itemObj: null })
+        continue
       }
-    }
-    for (const ob of obstacles) {
-      if (Phaser.Geom.Intersects.RectangleToRectangle(knightBox, ob.getBounds())) {
-        this.endRun()
-        break
+      const dark = (f + rank) % 2 === 1
+      const sq = this.add.image(this.cellX(f), 0, dark ? 'sq-dark' : 'sq-light')
+      container.add(sq)
+
+      let item: ItemKind | null = null
+      if (rank > 1 && itemsInRow < 2) {
+        const roll = Math.random()
+        if (roll < 0.16) item = 'pawn'
+        else if (roll < 0.23) item = Math.random() < 0.5 ? 'bishop' : 'rook'
+        else if (roll < 0.28) item = 'gold'
+        else if (roll < 0.3 && rank > 6) item = 'shield'
       }
+      let itemObj: Phaser.GameObjects.GameObject | null = null
+      if (item) {
+        itemsInRow++
+        if (item === 'shield') {
+          itemObj = this.add
+            .text(this.cellX(f), 0, '🛡', { fontSize: '40px' })
+            .setOrigin(0.5)
+        } else {
+          const size = item === 'gold' ? SQ * 0.42 : SQ * 0.66
+          itemObj = this.add
+            .image(this.cellX(f), 0, ITEM_TEXTURE[item])
+            .setDisplaySize(size, size)
+        }
+        container.add(itemObj)
+      }
+      cells.push({ kind: 'stone', item, itemObj })
+    }
+    this.rows.set(rank, { rank, cells, container })
+  }
+
+  private ensureGenerated(): void {
+    while (this.maxGenRank < this.kRank + 10) this.spawnRow(this.maxGenRank + 1)
+  }
+
+  // ── Move targets ────────────────────────────────────────────────
+
+  private clearMarkers(): void {
+    for (const m of this.markers) m.destroy()
+    this.markers = []
+  }
+
+  private showTargets(): void {
+    this.clearMarkers()
+    if (this.dead) return
+
+    let targets = this.legalTargets()
+    if (targets.length === 0) {
+      // Self-heal: never strand the knight — restore one target square.
+      for (const [df, dr] of FORWARD_MOVES) {
+        const f = this.kFile + df
+        const r = this.kRank + dr
+        if (f < 0 || f >= FILES) continue
+        const cell = this.cellAt(f, r)
+        if (cell && cell.kind === 'gap') {
+          cell.kind = 'stone'
+          const row = this.rows.get(r)!
+          const dark = (f + r) % 2 === 1
+          const sq = this.add.image(this.cellX(f), 0, dark ? 'sq-dark' : 'sq-light')
+          row.container.addAt(sq, 0)
+          break
+        }
+      }
+      targets = this.legalTargets()
+    }
+
+    for (const [f, r] of targets) {
+      const marker = this.add
+        .image(this.cellX(f), this.worldY(r), 'target')
+        .setDepth(5)
+        .setInteractive({ useHandCursor: true })
+      marker.on('pointerdown', () => this.hop(f, r))
+      this.tweens.add({
+        targets: marker,
+        scale: { from: 0.86, to: 1.04 },
+        duration: 520,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      })
+      this.board.add(marker)
+      this.markers.push(marker)
     }
   }
 
-  private tryJump(): void {
-    if (this.gameOver) return
-    if (!this.onGround) return
-    this.knightVy = JUMP_VELOCITY
-    this.onGround = false
+  private legalTargets(): Array<[number, number]> {
+    const out: Array<[number, number]> = []
+    for (const [df, dr] of FORWARD_MOVES) {
+      const f = this.kFile + df
+      const r = this.kRank + dr
+      const cell = this.cellAt(f, r)
+      if (cell && cell.kind === 'stone') out.push([f, r])
+    }
+    return out
+  }
+
+  // ── The leap ────────────────────────────────────────────────────
+
+  private hop(file: number, rank: number): void {
+    if (this.moving || this.dead) return
+    this.moving = true
+    this.clearMarkers()
     playSound('knight-jump')
-  }
 
-  private spawnObstacle(): void {
-    const r = Math.random()
-    let kind: ObstacleKind = 'pawn'
-    if (r < 0.5) kind = 'pawn'
-    else if (r < 0.85) kind = 'rook'
-    else kind = 'queen'
-    const spec = OBSTACLE_SPECS[kind]
-    const ob = this.add.image(WORLD_WIDTH + 60, GROUND_Y + spec.yOffset, spec.textureKey).setOrigin(0.5, 1).setScale(spec.scale)
-    this.obstacles.add(ob)
-  }
+    const gained = rank - this.kRank
+    this.kFile = file
+    this.kRank = rank
 
-  private spawnCoin(): void {
-    const yOffset = COIN_FLOAT_HEIGHTS[Phaser.Math.Between(0, COIN_FLOAT_HEIGHTS.length - 1)] ?? -90
-    const coin = this.add.image(WORLD_WIDTH + 40, GROUND_Y + yOffset - 16, 'coin').setOrigin(0.5, 0.5)
-    // Gentle spinning sparkle — feels alive, signals "collectible".
-    this.tweens.add({
-      targets: coin,
-      scaleX: { from: 1, to: 0.4 },
-      duration: 480,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.InOut',
-    })
-    this.coins.add(coin)
-  }
-
-  private collectCoin(coin: Phaser.GameObjects.Image): void {
-    this.coinsCollected += 1
-    this.coinText.setText(`🪙 ${this.coinsCollected}`)
-    playSound('knight-coin')
-    // Sparkle + fade burst at the coin's spot.
-    this.tweens.add({
-      targets: coin,
-      alpha: 0,
-      scale: 1.6,
-      duration: 220,
-      ease: 'Cubic.Out',
-      onComplete: () => coin.destroy(),
-    })
-  }
-
-  private knightHitbox(): Phaser.Geom.Rectangle {
-    const w = 128 * 0.45
-    const h = 128 * 0.85
-    return new Phaser.Geom.Rectangle(this.knight.x - w / 2, this.knight.y - h, w, h)
-  }
-
-  private endRun(): void {
-    if (this.gameOver) return
-    this.gameOver = true
-    playSound('knight-hit')
-    this.cameras.main.shake(280, 0.012)
-    this.cameras.main.flash(140, 220, 60, 40)
     this.tweens.add({
       targets: this.knight,
-      angle: -25,
-      duration: 280,
-      ease: 'Sine.Out',
+      x: this.cellX(file),
+      y: this.worldY(rank),
+      duration: 240,
+      ease: 'Quad.easeInOut',
+      onComplete: () => this.land(gained),
     })
-    const distanceScore = Math.floor(this.distance * SCORE_PER_PX * 10)
-    const coinBonus = this.coinsCollected * COIN_VALUE
-    const totalScore = distanceScore + coinBonus
-    this.time.delayedCall(600, () => {
+    // Hop "arc" — scale swell halfway through the leap.
+    this.tweens.add({
+      targets: this.knight,
+      displayWidth: SQ * 1.12,
+      displayHeight: SQ * 1.12,
+      duration: 120,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    })
+    this.tweens.add({
+      targets: this.board,
+      y: this.cameraTargetY(),
+      duration: 300,
+      ease: 'Quad.easeOut',
+    })
+  }
+
+  private land(ranksGained: number): void {
+    this.ranks += ranksGained
+    this.addScore(ranksGained * SCORE_RANK, null)
+
+    const cell = this.cellAt(this.kFile, this.kRank)
+    if (cell?.item) this.collectItem(cell)
+    this.checkFork()
+
+    this.ensureGenerated()
+    this.moving = false
+    this.showTargets()
+  }
+
+  private collectItem(cell: Cell): void {
+    const item = cell.item!
+    cell.item = null
+    cell.itemObj?.destroy()
+    cell.itemObj = null
+    const x = this.cellX(this.kFile)
+    const y = this.worldY(this.kRank)
+    switch (item) {
+      case 'pawn':
+        this.captures++
+        this.addScore(SCORE_PAWN, [x, y, `+${SCORE_PAWN}`])
+        playSound('capture')
+        break
+      case 'bishop':
+      case 'rook':
+        this.captures++
+        this.addScore(SCORE_PIECE, [x, y, `+${SCORE_PIECE}`])
+        playSound('capture')
+        break
+      case 'gold':
+        this.addScore(SCORE_GOLD, [x, y, `+${SCORE_GOLD}`])
+        playSound('knight-coin')
+        break
+      case 'shield':
+        this.shields = 1
+        this.floatText(x, y, '🛡 Shield!', '#9fd6ff')
+        playSound('small-solve')
+        break
+    }
+  }
+
+  /** Landing where you attack ≥2 enemy pieces = a FORK — the game's
+   *  signature teaching moment. */
+  private checkFork(): void {
+    let attacked = 0
+    for (const [df, dr] of KNIGHT_ATTACKS) {
+      const cell = this.cellAt(this.kFile + df, this.kRank + dr)
+      if (cell?.item === 'pawn' || cell?.item === 'bishop' || cell?.item === 'rook') attacked++
+    }
+    if (attacked >= 2) {
+      this.forks++
+      this.addScore(SCORE_FORK, null)
+      this.banner(`FORK! +${SCORE_FORK}`)
+      playSound('streak')
+    }
+  }
+
+  // ── Sweeps ──────────────────────────────────────────────────────
+
+  private spawnSweep(): void {
+    const isRook = Math.random() < 0.55
+    const cells = new Set<string>()
+    let iconX = 0
+    let iconY = 0
+    let iconKey = 'rook-b'
+
+    if (isRook) {
+      const rank = this.kRank + 1 + Math.floor(Math.random() * 3)
+      for (let f = 0; f < FILES; f++) cells.add(`${f},${rank}`)
+      iconX = BOARD_X - SQ * 0.45
+      iconY = this.worldY(rank)
+    } else {
+      iconKey = 'bishop-b'
+      const dir = Math.random() < 0.5 ? 1 : -1
+      const anchorFile = this.kFile
+      const anchorRank = this.kRank + 1 + Math.floor(Math.random() * 2)
+      for (let d = -6; d <= 6; d++) {
+        const f = anchorFile + d * dir
+        const r = anchorRank + d
+        if (f >= 0 && f < FILES && r > this.kRank - 2) cells.add(`${f},${r}`)
+      }
+      iconX = this.cellX(anchorFile)
+      iconY = this.worldY(anchorRank)
+    }
+
+    const telegraphMs = Math.max(
+      SWEEP_TELEGRAPH_MIN_MS,
+      SWEEP_TELEGRAPH_START_MS - this.kRank * 4,
+    )
+    const rects: Phaser.GameObjects.Rectangle[] = []
+    for (const key of cells) {
+      const [f, r] = key.split(',').map(Number) as [number, number]
+      const rect = this.add
+        .rectangle(this.cellX(f), this.worldY(r), SQ - 6, SQ - 6, 0xe05a4a, 0.26)
+        .setDepth(6)
+      this.board.add(rect)
+      this.tweens.add({
+        targets: rect,
+        fillAlpha: 0.45,
+        duration: 300,
+        yoyo: true,
+        repeat: -1,
+      })
+      rects.push(rect)
+    }
+    const icon = this.add
+      .image(iconX, iconY, iconKey)
+      .setDisplaySize(SQ * 0.6, SQ * 0.6)
+      .setDepth(7)
+      .setAlpha(0.9)
+    this.board.add(icon)
+
+    this.sweeps.push({
+      cells,
+      state: 'telegraph',
+      until: this.elapsed + telegraphMs,
+      rects,
+      icon,
+      hasHitKnight: false,
+    })
+  }
+
+  private updateSweeps(): void {
+    for (const s of [...this.sweeps]) {
+      if (s.state === 'telegraph' && this.elapsed >= s.until) {
+        s.state = 'strike'
+        s.until = this.elapsed + SWEEP_STRIKE_MS
+        for (const rect of s.rects) {
+          this.tweens.killTweensOf(rect)
+          rect.setFillStyle(0xff7a4a, 0.85)
+        }
+        playSound('check')
+      }
+      if (s.state === 'strike') {
+        if (
+          !s.hasHitKnight &&
+          !this.moving &&
+          s.cells.has(`${this.kFile},${this.kRank}`) &&
+          this.elapsed >= this.invulnUntil
+        ) {
+          s.hasHitKnight = true
+          this.hitKnight()
+        }
+        if (this.elapsed >= s.until) {
+          for (const rect of s.rects) rect.destroy()
+          s.icon.destroy()
+          this.sweeps.splice(this.sweeps.indexOf(s), 1)
+        }
+      }
+    }
+  }
+
+  private hitKnight(): void {
+    if (this.dead) return
+    if (this.shields > 0) {
+      this.shields = 0
+      this.invulnUntil = this.elapsed + 1200
+      playSound('knight-hit')
+      this.banner('Shield broke!')
+      // Quick blink — Phaser 4 dropped the v3 tint-flash API.
+      this.tweens.add({ targets: this.knight, alpha: 0.25, duration: 90, yoyo: true, repeat: 2 })
+      return
+    }
+    this.die()
+  }
+
+  // ── Death ───────────────────────────────────────────────────────
+
+  private die(): void {
+    if (this.dead) return
+    this.dead = true
+    this.clearMarkers()
+    playSound('mate-loss')
+    this.tweens.add({
+      targets: this.knight,
+      y: this.knight.y + 180,
+      angle: 140,
+      alpha: 0,
+      duration: 650,
+      ease: 'Quad.easeIn',
+    })
+    this.time.delayedCall(800, () => {
       this.scene.start('GameOver', {
-        distanceScore,
-        coins: this.coinsCollected,
-        coinBonus,
-        score: totalScore,
+        ranks: this.ranks,
+        captures: this.captures,
+        forks: this.forks,
+        score: this.score,
       })
     })
   }
 
-  private makeCoinTexture(): void {
-    if (this.textures.exists('coin')) return
-    const g = this.make.graphics({ x: 0, y: 0 })
-    // Outer glow ring.
-    g.fillStyle(0xffd860, 0.35).fillCircle(20, 20, 18)
-    // Coin body + rim.
-    g.fillStyle(0xfcc640, 1).fillCircle(20, 20, 14)
-    g.fillStyle(0xfff2a8, 1).fillCircle(20, 20, 10)
-    // Pawn-icon emboss centre — a tiny dark dot + stalk to suggest a pawn.
-    g.fillStyle(0x8a5a08, 1).fillCircle(20, 18, 3)
-    g.fillRect(18, 20, 4, 6)
-    g.generateTexture('coin', 40, 40)
-    g.destroy()
+  // ── Per-frame ───────────────────────────────────────────────────
+
+  update(_time: number, delta: number): void {
+    if (this.dead) return
+    this.elapsed += delta
+
+    // Collapse ramp.
+    if (this.elapsed > COLLAPSE_START_DELAY_MS) {
+      const t = (this.elapsed - COLLAPSE_START_DELAY_MS) / 1000
+      const speed = Math.min(COLLAPSE_SPEED_MAX, COLLAPSE_SPEED_START + COLLAPSE_RAMP_PER_S * t)
+      this.collapseProgress += (speed * delta) / 1000
+    }
+    const voidY = this.collapseWorldY()
+    this.voidRect.setY(voidY)
+    this.voidEdge.setY(voidY - 2)
+
+    // Crumble rows the void has swallowed.
+    for (const row of [...this.rows.values()]) {
+      if (this.worldY(row.rank) + SQ / 2 >= voidY) {
+        this.rows.delete(row.rank)
+        this.tweens.add({
+          targets: row.container,
+          y: row.container.y + 70,
+          alpha: 0,
+          duration: 450,
+          ease: 'Quad.easeIn',
+          onComplete: () => row.container.destroy(),
+        })
+      }
+    }
+
+    // The void catches the knight.
+    if (!this.moving && this.worldY(this.kRank) + SQ * 0.45 >= voidY) {
+      this.die()
+      return
+    }
+
+    // Sweeps.
+    if (this.elapsed >= this.nextSweepAt) {
+      this.spawnSweep()
+      const interval = Math.max(
+        SWEEP_INTERVAL_MIN_MS,
+        SWEEP_INTERVAL_START_MS - this.kRank * 18,
+      )
+      this.nextSweepAt = this.elapsed + interval
+    }
+    this.updateSweeps()
+
+    this.shieldText.setText(this.shields > 0 ? '🛡' : '')
   }
 
-  private makeBackgroundTextures(): void {
-    if (!this.textures.exists('floor-checker')) {
-      const g = this.make.graphics({ x: 0, y: 0 })
-      const cell = 36
-      g.fillStyle(0x2a1f47).fillRect(0, 0, cell * 2, cell * 2)
-      g.fillStyle(0x3a2e5e).fillRect(0, 0, cell, cell)
-      g.fillStyle(0x3a2e5e).fillRect(cell, cell, cell, cell)
-      g.generateTexture('floor-checker', cell * 2, cell * 2)
-      g.destroy()
-    }
-    if (!this.textures.exists('sky-far')) {
-      const g = this.make.graphics({ x: 0, y: 0 })
-      g.fillGradientStyle(0x1a1530, 0x1a1530, 0x2a1f47, 0x2a1f47, 1)
-      g.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
-      g.fillStyle(0xffffff, 0.55)
-      const rng = new Phaser.Math.RandomDataGenerator(['knight-stars-far'])
-      for (let i = 0; i < 60; i++) {
-        const x = rng.between(0, WORLD_WIDTH)
-        const y = rng.between(0, GROUND_Y - 80)
-        const r = rng.between(1, 2)
-        g.fillCircle(x, y, r)
-      }
-      g.generateTexture('sky-far', WORLD_WIDTH, WORLD_HEIGHT)
-      g.destroy()
-    }
-    if (!this.textures.exists('sky-near')) {
-      const g = this.make.graphics({ x: 0, y: 0 })
-      g.fillStyle(0x1a1428, 1)
-      let x = 0
-      while (x < WORLD_WIDTH) {
-        const w = Phaser.Math.Between(60, 140)
-        const h = Phaser.Math.Between(40, 90)
-        g.fillRect(x, GROUND_Y - h, w, h)
-        for (let cx = 0; cx < w; cx += 16) {
-          if (Math.floor(cx / 16) % 2 === 0) {
-            g.fillRect(x + cx, GROUND_Y - h - 8, 10, 8)
-          }
-        }
-        x += w + Phaser.Math.Between(0, 30)
-      }
-      g.generateTexture('sky-near', WORLD_WIDTH, WORLD_HEIGHT)
-      g.destroy()
-    }
+  // ── Feedback helpers ────────────────────────────────────────────
+
+  private addScore(points: number, float: [number, number, string] | null): void {
+    this.score += points
+    this.scoreText.setText(`${this.score}`)
+    if (float) this.floatText(float[0], float[1], float[2], '#ffd860')
+  }
+
+  private floatText(x: number, y: number, text: string, color: string): void {
+    const t = this.add
+      .text(x, y - SQ * 0.4, text, {
+        fontFamily: '"Cinzel", Georgia, serif',
+        fontSize: '22px',
+        color,
+        stroke: '#1a1108',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(30)
+    this.board.add(t)
+    this.tweens.add({
+      targets: t,
+      y: t.y - 56,
+      alpha: 0,
+      duration: 850,
+      ease: 'Quad.easeOut',
+      onComplete: () => t.destroy(),
+    })
+  }
+
+  private banner(text: string): void {
+    const b = this.add
+      .text(WORLD_WIDTH / 2, WORLD_HEIGHT * 0.34, text, {
+        fontFamily: '"Cinzel", Georgia, serif',
+        fontSize: '40px',
+        color: '#ffd860',
+        stroke: '#3a2010',
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setDepth(110)
+      .setScale(0.6)
+    this.tweens.add({
+      targets: b,
+      scale: 1,
+      duration: 220,
+      ease: 'Back.Out',
+    })
+    this.tweens.add({
+      targets: b,
+      alpha: 0,
+      y: b.y - 30,
+      delay: 700,
+      duration: 400,
+      onComplete: () => b.destroy(),
+    })
   }
 }

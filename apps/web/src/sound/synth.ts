@@ -503,7 +503,7 @@ export function setMasterVolume(volume: number): void {
 // one-shot play() API: ambient lives on a dedicated gain node that we
 // can fade in / out / mute independently of SFX.
 
-export type AmbientName = 'gate-night'
+export type AmbientName = 'gate-night' | 'fire-crackle'
 
 /** Perceived target gain for the ambient bed. Quiet enough that the
  *  wicket-creak and other SFX still cut through. */
@@ -525,6 +525,8 @@ export function startAmbient(name: AmbientName): void {
   if (ambient) stopAmbientNow()
   if (name === 'gate-night') {
     ambient = startGateNight(c, masterGain)
+  } else if (name === 'fire-crackle') {
+    ambient = startFireCrackle(c, masterGain)
   }
 }
 
@@ -645,4 +647,92 @@ function playOneChime(c: AudioContext, dest: GainNode, freq: number): void {
   osc.connect(g).connect(dest)
   osc.start(t0)
   osc.stop(t0 + 2.7)
+}
+
+/** Generate a hearth-fire bed: looping brown-noise rumble through a
+ *  breathing lowpass (the fire's body), plus randomized short
+ *  band-passed noise bursts — the wood crackles and pops. Everything
+ *  routes through the ambient gain so mute ducks it as one unit. */
+function startFireCrackle(c: AudioContext, dest: GainNode): AmbientState {
+  // ── Rumble: brown noise loop ──
+  const seconds = 4
+  const buf = c.createBuffer(1, c.sampleRate * seconds, c.sampleRate)
+  const data = buf.getChannelData(0)
+  let last = 0
+  for (let i = 0; i < data.length; i++) {
+    const w = Math.random() * 2 - 1
+    last = (last + 0.02 * w) / 1.02
+    data[i] = last * 3.2 * 0.16
+  }
+  const source = c.createBufferSource()
+  source.buffer = buf
+  source.loop = true
+
+  const filter = c.createBiquadFilter()
+  filter.type = 'lowpass'
+  filter.frequency.value = 360
+  filter.Q.value = 0.6
+
+  // Slow breathing on the cutoff — the fire swelling and settling.
+  const lfo = c.createOscillator()
+  const lfoGain = c.createGain()
+  lfo.type = 'sine'
+  lfo.frequency.value = 0.13
+  lfoGain.gain.value = 140
+  lfo.connect(lfoGain).connect(filter.frequency)
+
+  const gain = c.createGain()
+  gain.gain.setValueAtTime(0.0001, c.currentTime)
+  gain.gain.exponentialRampToValueAtTime(AMBIENT_PEAK, c.currentTime + 2)
+
+  source.connect(filter).connect(gain).connect(dest)
+  source.start()
+  lfo.start()
+
+  // ── Crackles: short noise bursts on a jittered timer. Mostly soft
+  //    ticks; roughly one in six is a louder "snap". Bursts feed the
+  //    ambient gain so they duck with mute. ──
+  const popBuf = c.createBuffer(1, Math.floor(c.sampleRate * 0.1), c.sampleRate)
+  const popData = popBuf.getChannelData(0)
+  for (let i = 0; i < popData.length; i++) popData[i] = Math.random() * 2 - 1
+
+  let popTimer: number | null = null
+  const scheduleNextPop = (): void => {
+    const gap = 90 + Math.random() * 460
+    popTimer = window.setTimeout(() => {
+      if (!ambient || ambient.name !== 'fire-crackle') return
+      const t0 = c.currentTime
+      const snap = Math.random() < 0.17
+      const src = c.createBufferSource()
+      src.buffer = popBuf
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.value = 1400 + Math.random() * (snap ? 2600 : 1800)
+      bp.Q.value = 2.2
+      const g = c.createGain()
+      const peak = (snap ? 2.4 : 0.9) * (0.5 + Math.random() * 0.5)
+      g.gain.setValueAtTime(0.0001, t0)
+      g.gain.exponentialRampToValueAtTime(peak, t0 + 0.004)
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + (snap ? 0.09 : 0.045))
+      src.connect(bp).connect(g).connect(gain)
+      src.start(t0)
+      src.stop(t0 + 0.12)
+      scheduleNextPop()
+    }, gap)
+  }
+  scheduleNextPop()
+
+  return {
+    name: 'fire-crackle',
+    gain,
+    destroy: () => {
+      try { source.stop() } catch { /* already stopped */ }
+      try { lfo.stop() } catch { /* */ }
+      try { source.disconnect() } catch { /* */ }
+      try { filter.disconnect() } catch { /* */ }
+      try { gain.disconnect() } catch { /* */ }
+      try { lfoGain.disconnect() } catch { /* */ }
+      if (popTimer !== null) window.clearTimeout(popTimer)
+    },
+  }
 }

@@ -50,15 +50,6 @@ export function KnightsRunRoute() {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH,
           },
-          // Don't let arrow keys scroll the page — they're the jump key.
-          input: {
-            keyboard: {
-              capture: [
-                Phaser.Input.Keyboard.KeyCodes.SPACE,
-                Phaser.Input.Keyboard.KeyCodes.UP,
-              ],
-            },
-          },
           render: { antialias: true, pixelArt: false },
         })
         instance.registry.set('exitCallback', exitCallback)
@@ -90,7 +81,7 @@ export function KnightsRunRoute() {
           ← Back to castle
         </button>
         <h1 className="puc-knr__title">Knight's Run</h1>
-        <span className="puc-knr__hint">SPACE / ↑ / tap = jump</span>
+        <span className="puc-knr__hint">Tap a glowing square to leap</span>
       </header>
       <div ref={containerRef} className="puc-knr__canvas">
         {status === 'loading' && <div className="puc-knr__loading">Loading the runner…</div>}

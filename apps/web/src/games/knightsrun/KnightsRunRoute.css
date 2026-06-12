@@ -1,5 +1,5 @@
 .puc-knr {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: #0c0820;
   color: var(--puc-text);
   display: flex;
@@ -39,8 +39,11 @@
   color: var(--puc-text-muted);
 }
 .puc-knr__canvas {
-  width: min(900px, 100%);
-  aspect-ratio: 900 / 360;
+  /* Fill the viewport below the header: height-driven on desktop,
+   * width-driven on phones. 600:800 matches the Phaser world, so FIT
+   * scales edge-to-edge with no letterboxing. */
+  width: min(100%, calc((100dvh - 84px) * 0.75));
+  aspect-ratio: 600 / 800;
   background: #0c0820;
   border: 1px solid rgba(241, 195, 76, 0.18);
   border-radius: 10px;

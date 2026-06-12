@@ -51,6 +51,10 @@ export default defineConfig({
           '**/stories.bundle.json',
           '**/sprites/doors/**',
           '**/sprites/hosts/**',
+          '**/sprites/hall/**',
+          // 3D assets (model textures are .png — keep them out of the
+          // precache; the runtime models3d cache picks them up).
+          '**/models3d/**',
         ],
         // Lift the precache file-size cap so the biggest JS chunk fits.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
@@ -69,7 +73,7 @@ export default defineConfig({
             // kid opens the Hall, then static. Pattern is NOT end-
             // anchored so it still matches the ?v=N cache-buster query
             // the doors carry (see DOOR_ART_VERSION in RoomDoor.tsx).
-            urlPattern: /\/sprites\/(doors|hosts)\/.*\.png(\?.*)?$/,
+            urlPattern: /\/sprites\/(doors|hosts|hall)\/.*\.png(\?.*)?$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-doors-v2',
@@ -109,7 +113,7 @@ export default defineConfig({
             // environment HDR + wood texture under /models3d/env/.
             // Fetched only when a kid flips to 3D view; cache-first so
             // later flips are instant and survive offline.
-            urlPattern: /\/models3d\/.*\.(gltf|bin|hdr|jpg)$/,
+            urlPattern: /\/models3d\/.*\.(gltf|bin|hdr|jpg|png)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-models3d-v1',

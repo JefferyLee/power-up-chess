@@ -1,19 +1,20 @@
-// GLTF chess piece geometry — loads the six Sketchfab models (see
-// public/models3d/CREDITS.md for attribution) and normalises each
-// into a single merged BufferGeometry: centred on x/z, base at y=0,
-// uniformly scaled to a per-piece target height in board units.
-// Textures were stripped from the gltf files (we apply our own
-// per-side materials), so the geometry is all we read.
+// GLTF chess piece assets — the Glowbox "Chess Set" (Sketchfab,
+// CC-BY-4.0, see public/models3d/CREDITS.md). One scene holds every
+// piece as a named node ("Pawn_3_Dark_3", "Tower_Dark_10", …) with
+// two PBR materials (Chess_Pieces_Light / _Dark). We extract one
+// geometry per piece type PER COLOUR (the two colours are authored
+// facing each other, so no render-time flip is needed) and keep the
+// baseColor textures for the painted-wood look. The board node was
+// pruned from the shipped file — we render our own board.
 
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
-import type { PieceSymbol } from '../chess/types'
-import { mergeGeometries } from './pieceGeometry'
+import type { Color, PieceSymbol } from '../chess/types'
 
-/** Target heights in board-square units (square = 1×1). Slightly
- *  taller than the procedural set — the models carry finer detail
- *  and can afford the presence. */
+const MODEL_URL = '/models3d/glowbox/scene.gltf'
+
+/** Target heights in board-square units (square = 1×1). */
 const TARGET_HEIGHT: Record<PieceSymbol, number> = {
   p: 0.62,
   r: 0.72,
@@ -23,69 +24,71 @@ const TARGET_HEIGHT: Record<PieceSymbol, number> = {
   k: 1.1,
 }
 
-const MODEL_URL: Record<PieceSymbol, string> = {
-  p: '/models3d/pawn/scene.gltf',
-  r: '/models3d/rook/scene.gltf',
-  n: '/models3d/knight/scene.gltf',
-  b: '/models3d/bishop/scene.gltf',
-  q: '/models3d/queen/scene.gltf',
-  k: '/models3d/king/scene.gltf',
+/** Node-name → piece type. The set calls rooks "Tower". */
+const TYPE_PATTERNS: Array<[PieceSymbol, RegExp]> = [
+  ['p', /^Pawn/i],
+  ['r', /^Tower/i],
+  ['n', /^Knight/i],
+  ['b', /^Bishop/i],
+  ['q', /^Queen/i],
+  ['k', /^King/i],
+]
+
+export interface GltfPieceAssets {
+  geos: Record<Color, Record<PieceSymbol, THREE.BufferGeometry>>
+  maps: Record<Color, THREE.Texture | null>
 }
 
-function extractNormalized(
-  scene: THREE.Object3D,
-  targetHeight: number,
-  preRotateX = 0,
-  preRotateY = 0,
-): THREE.BufferGeometry {
-  scene.updateWorldMatrix(true, true)
-  const parts: THREE.BufferGeometry[] = []
-  scene.traverse((o) => {
-    const mesh = o as THREE.Mesh
-    if (mesh.isMesh && mesh.geometry) {
-      const g = mesh.geometry.clone()
-      g.applyMatrix4(mesh.matrixWorld)
-      parts.push(g)
-    }
-  })
-  const merged = mergeGeometries(parts)
-  // Axis corrections for models authored with a different "up" or
-  // facing — applied before the bbox normalisation so height/base
-  // maths see the upright shape.
-  if (preRotateX !== 0) merged.rotateX(preRotateX)
-  if (preRotateY !== 0) merged.rotateY(preRotateY)
-  merged.computeBoundingBox()
-  const bb = merged.boundingBox!
+/** Centre on x/z, base at y=0, uniform-scale to the target height.
+ *  UVs ride along untouched (clone keeps all attributes). */
+function normalize(g: THREE.BufferGeometry, targetHeight: number): void {
+  g.computeBoundingBox()
+  const bb = g.boundingBox!
   const height = bb.max.y - bb.min.y || 1
   const scale = targetHeight / height
   const cx = (bb.min.x + bb.max.x) / 2
   const cz = (bb.min.z + bb.max.z) / 2
-  merged.translate(-cx, -bb.min.y, -cz)
-  merged.scale(scale, scale, scale)
-  merged.computeVertexNormals()
-  return merged
+  g.translate(-cx, -bb.min.y, -cz)
+  g.scale(scale, scale, scale)
 }
 
-/** Suspends until all six models are fetched (drei useGLTF). */
-export function useGltfPieceGeometries(): Record<PieceSymbol, THREE.BufferGeometry> {
-  const pawn = useGLTF(MODEL_URL.p)
-  const rook = useGLTF(MODEL_URL.r)
-  const knight = useGLTF(MODEL_URL.n)
-  const bishop = useGLTF(MODEL_URL.b)
-  const queen = useGLTF(MODEL_URL.q)
-  const king = useGLTF(MODEL_URL.k)
-  return useMemo(
-    () => ({
-      p: extractNormalized(pawn.scene, TARGET_HEIGHT.p),
-      // The rook model is authored Z-up — stand it on its base.
-      r: extractNormalized(rook.scene, TARGET_HEIGHT.r, -Math.PI / 2),
-      // Knight: Z-up AND faces sideways once upright — stand it, then
-      // turn it 90° clockwise (viewed from above) to face the enemy.
-      n: extractNormalized(knight.scene, TARGET_HEIGHT.n, -Math.PI / 2, -Math.PI / 2),
-      b: extractNormalized(bishop.scene, TARGET_HEIGHT.b),
-      q: extractNormalized(queen.scene, TARGET_HEIGHT.q),
-      k: extractNormalized(king.scene, TARGET_HEIGHT.k),
-    }),
-    [pawn, rook, knight, bishop, queen, king],
-  )
+/** Suspends until the set is fetched (drei useGLTF). */
+export function useGltfPieceAssets(): GltfPieceAssets {
+  const gltf = useGLTF(MODEL_URL)
+  return useMemo(() => {
+    const scene = gltf.scene
+    scene.updateWorldMatrix(true, true)
+    const geos = { w: {}, b: {} } as GltfPieceAssets['geos']
+    const maps: GltfPieceAssets['maps'] = { w: null, b: null }
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh || !mesh.geometry) return
+      // Meshes are anonymous Object_N children — the piece name lives
+      // on an ancestor node.
+      let name = ''
+      for (let p: THREE.Object3D | null = mesh; p; p = p.parent) {
+        if (/dark|light/i.test(p.name)) {
+          name = p.name
+          break
+        }
+      }
+      if (!name) return
+      const color: Color = /dark/i.test(name) ? 'b' : 'w'
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      if (!maps[color] && mat?.map) maps[color] = mat.map
+      const entry = TYPE_PATTERNS.find(([, re]) => re.test(name))
+      if (!entry) return
+      const type = entry[0]
+      if (geos[color][type]) return
+      const g = mesh.geometry.clone()
+      g.applyMatrix4(mesh.matrixWorld)
+      // Knights are authored facing sideways — turn 90° clockwise
+      // (viewed from above). Same world rotation for both colours
+      // keeps them facing each other.
+      if (type === 'n') g.rotateY(-Math.PI / 2)
+      normalize(g, TARGET_HEIGHT[type])
+      geos[color][type] = g
+    })
+    return { geos, maps }
+  }, [gltf])
 }

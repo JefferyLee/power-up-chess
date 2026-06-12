@@ -39,6 +39,7 @@ import { HostInviteButton } from '../invitations/HostInviteButton'
 import { FeedbackInbox } from './FeedbackInbox'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
+import { useSound } from '../sound/useSound'
 import './HallScreen.css'
 
 const DEFAULT_OPPONENT_NAME = 'Friend'
@@ -47,6 +48,13 @@ const UNLOCK_THRESHOLD = 200
 export function HallScreen() {
   const navigate = useNavigate()
   const { identity, hostId, signOut, clearDecayInfo, clearBonusInfo } = useCastle()
+  // Hearth-fire crackle while in the Hall — synthesized ambient bed, no
+  // asset file. Browsers gate audio start on the first user interaction.
+  const sound = useSound()
+  useEffect(() => {
+    sound.startAmbient('fire-crackle')
+    return () => sound.stopAmbient()
+  }, [sound])
   const cosmetics = useCosmetics()
   const profile = loadProfile()
   const host = HOSTS[hostId]

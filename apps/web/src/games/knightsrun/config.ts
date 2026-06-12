@@ -1,41 +1,39 @@
 // Knight's Run — tuning knobs.
 //
-// All numbers in screen pixels and ms. The scene scales itself to its
-// container, so these are nominal values at the design resolution
-// (WORLD_WIDTH × WORLD_HEIGHT). On smaller screens Phaser's FIT scale mode
-// shrinks everything uniformly; gameplay feels the same.
+// The game is a VERTICAL endless bridge: a 5-file chessboard strip
+// scrolling beneath the knight, who advances by real L-shaped knight
+// leaps while the bridge collapses behind and enemy pieces sweep
+// telegraphed attack lines across it. All numbers nominal at the
+// design resolution; Phaser's FIT scale mode shrinks uniformly.
 
-export const WORLD_WIDTH = 900
-export const WORLD_HEIGHT = 360
+export const WORLD_WIDTH = 600
+export const WORLD_HEIGHT = 800
 
-/** Ground line — Knight's feet rest here at idle. */
-export const GROUND_Y = 290
+/** Files (columns) on the bridge and square size in px. */
+export const FILES = 5
+export const SQ = 104
+export const BOARD_X = (WORLD_WIDTH - FILES * SQ) / 2
 
-/** Horizontal speed of the world scrolling past, in px/sec. Grows over time
- *  via SPEED_RAMP_PER_SEC up to MAX_SPEED. */
-export const START_SPEED = 280
-export const MAX_SPEED = 620
-export const SPEED_RAMP_PER_SEC = 6 // every second, +6 px/sec
+/** The knight's square sits at this fraction of screen height. */
+export const KNIGHT_ANCHOR_Y = 0.6
 
-/** Jump physics — single-tap parabolic arc, no double jump in M0. */
-export const JUMP_VELOCITY = -680 // negative = up
-export const GRAVITY_Y = 1800
+/** Bridge collapse — the void chases from below. */
+export const COLLAPSE_START_DELAY_MS = 3500
+export const COLLAPSE_SPEED_START = 26 // px/s
+export const COLLAPSE_SPEED_MAX = 92
+export const COLLAPSE_RAMP_PER_S = 0.6 // +px/s every second
 
-/** Spawn cadence for obstacles. We pick a random delay from
- *  [SPAWN_MIN_MS, SPAWN_MAX_MS] but the upper bound shrinks as speed grows
- *  so the game stays interesting at high speed. */
-export const SPAWN_MIN_MS = 700
-export const SPAWN_MAX_MS = 1600
+/** Enemy sweeps (rook rank-beams / bishop diagonals). */
+export const SWEEP_FIRST_MS = 6000
+export const SWEEP_INTERVAL_START_MS = 6500
+export const SWEEP_INTERVAL_MIN_MS = 3200
+export const SWEEP_TELEGRAPH_START_MS = 1200
+export const SWEEP_TELEGRAPH_MIN_MS = 800
+export const SWEEP_STRIKE_MS = 260
 
-/** Score = distance, in px/100 → "metres". Display only; not gameplay. */
-export const SCORE_PER_PX = 0.01
-
-/** Coin pickup — bright yellow disc. One coin = +25 points. */
-export const COIN_VALUE = 25
-/** Spawn cadence is independent of obstacles so they don't synchronise into
- *  unfair patterns. Same speed-scaled tightening as obstacles. */
-export const COIN_SPAWN_MIN_MS = 900
-export const COIN_SPAWN_MAX_MS = 2200
-/** Coins float at "easy jump height" most of the time + sometimes at
- *  ground level so casual running picks them up. */
-export const COIN_FLOAT_HEIGHTS = [-60, -90, -120, 0] // negative = above ground
+/** Scoring. */
+export const SCORE_RANK = 1
+export const SCORE_PAWN = 5
+export const SCORE_PIECE = 15
+export const SCORE_GOLD = 20
+export const SCORE_FORK = 25

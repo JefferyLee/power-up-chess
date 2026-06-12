@@ -1,6 +1,6 @@
 // GameOverScene — overlay shown after a run ends.
 //
-// Shows the score breakdown (distance + coin bonus = total), the player's
+// Shows the score breakdown (leaps · captures · forks), the player's
 // personal best from local IDB, and Run-again / Back buttons. If the run
 // just broke the best, the row gets a "NEW BEST!" tag + a fanfare sound.
 
@@ -10,16 +10,16 @@ import { loadBestRun, saveKnightsRun } from '../history'
 import { WORLD_HEIGHT, WORLD_WIDTH } from '../config'
 
 interface InitData {
-  distanceScore: number
-  coins: number
-  coinBonus: number
+  ranks: number
+  captures: number
+  forks: number
   score: number
 }
 
 export class GameOverScene extends Phaser.Scene {
-  private distanceScore = 0
-  private coins = 0
-  private coinBonus = 0
+  private ranks = 0
+  private captures = 0
+  private forks = 0
   private score = 0
   private bestRowText: Phaser.GameObjects.Text | null = null
   private newBestTag: Phaser.GameObjects.Text | null = null
@@ -29,9 +29,9 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   init(data: InitData): void {
-    this.distanceScore = data.distanceScore
-    this.coins = data.coins
-    this.coinBonus = data.coinBonus
+    this.ranks = data.ranks
+    this.captures = data.captures
+    this.forks = data.forks
     this.score = data.score
   }
 
@@ -56,7 +56,7 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     // Breakdown row.
-    const breakdown = `Distance ${this.distanceScore}   +   🪙 ${this.coins} × 25 = ${this.coinBonus}`
+    const breakdown = `Leaps ${this.ranks}   ·   Captures ${this.captures}   ·   Forks ${this.forks}`
     this.add
       .text(WORLD_WIDTH / 2, 156, breakdown, {
         fontFamily: 'system-ui, sans-serif',
@@ -99,12 +99,14 @@ export class GameOverScene extends Phaser.Scene {
 
     try {
       const displayName = (this.game.registry.get('displayName') as string | undefined) ?? ''
+      // IDB schema predates the rebuild — map leaps→distance and
+      // captures→coins rather than bump the store version.
       await saveKnightsRun({
         runId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         displayName,
         score: this.score,
-        distance: this.distanceScore,
-        coins: this.coins,
+        distance: this.ranks,
+        coins: this.captures,
         finishedAt: Date.now(),
       })
     } catch {

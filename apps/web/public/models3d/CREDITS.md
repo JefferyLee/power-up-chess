@@ -1,26 +1,19 @@
-# 3D chess piece models — attribution
+# 3D chess assets — attribution
 
-The six GLTF piece models in this directory are third-party assets
-licensed under **CC-BY-4.0** (https://creativecommons.org/licenses/by/4.0/),
-originally published on Sketchfab and obtained via the
-https://github.com/Sushant-Coder-01/chess3d repository's public assets.
+## Piece models (`glowbox/`)
 
-Per-model attribution is preserved in each piece directory's
-`license.txt` (as shipped by Sketchfab's download bundles), including:
-
-- Bishop — "Wooden bishop chess piece" by francesca23
-  https://sketchfab.com/3d-models/wooden-bishop-chess-piece-6ca1785eca0342c482a2376a712f756a
-- Pawn — by ranya123 (see pawn/license.txt)
-- Knight, Rook, Queen, King — see the respective license.txt files.
+"Chess Set" by **Glowbox 3D** — Sketchfab, licensed **CC-BY-4.0**
+(https://creativecommons.org/licenses/by/4.0/).
+https://sketchfab.com/3d-models/chess-set-520cc529bfd8425695cd336efd1dfe11
 
 Modifications made for Power Up Chess:
-- Texture references removed from the .gltf manifests and texture
-  files deleted — the app applies its own solid per-side materials.
-- Geometry is merged, recentred, and rescaled at load time
-  (apps/web/src/board3d/gltfPieces.ts).
+- The board node, its material and 2K texture were pruned from the
+  shipped file (the app renders its own board).
+- Piece baseColor textures recompressed with pngquant.
+- Per-piece geometry is extracted, recentred, and rescaled at load
+  time (apps/web/src/board3d/gltfPieces.ts).
 
-CC-BY-4.0 requires this attribution to accompany redistribution; keep
-this file and the per-piece license.txt files together with the models.
+CC-BY-4.0 requires this attribution to accompany redistribution.
 
 ## Environment assets (`env/`)
 

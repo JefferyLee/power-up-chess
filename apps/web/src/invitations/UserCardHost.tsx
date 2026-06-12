@@ -17,7 +17,8 @@
 // dismiss path. PlaqueCard contents are unchanged — only WHERE the
 // outer UserCard lives moves.
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useCastle } from '../castle/useCastle'
 import { UserCard } from './UserCard'
 
@@ -35,6 +36,14 @@ const Context = createContext<UserCardController | null>(null)
 export function UserCardHost({ children }: { children: ReactNode }) {
   const { identity } = useCastle()
   const [active, setActive] = useState<string | null>(null)
+
+  // Navigating anywhere (e.g. tapping a team on the plaque, which goes
+  // to /team/:id) closes the modal — otherwise it would sit on top of
+  // the destination page.
+  const { pathname } = useLocation()
+  useEffect(() => {
+    setActive(null)
+  }, [pathname])
 
   const controller = useMemo<UserCardController>(
     () => ({

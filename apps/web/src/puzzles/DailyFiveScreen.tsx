@@ -52,6 +52,18 @@ export function DailyFiveScreen() {
 
   // 3D view — same legality/judging flow, different renderer.
   const [view3d, setView3d] = useState(false)
+  const [fs3d, setFs3d] = useState(false)
+  useEffect(() => {
+    if (!fs3d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
+    window.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [fs3d])
   const [puzzles, setPuzzles] = useState<ServerPuzzle[]>([])
   const [results, setResults] = useState<Array<boolean | null>>([])
   const [completionBonusPaid, setCompletionBonusPaid] = useState(false)
@@ -60,6 +72,11 @@ export function DailyFiveScreen() {
   const [moveIndex, setMoveIndex] = useState(0)
   const [shake, setShake] = useState(false)
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
+  // Between-puzzle / done UI lives in the sidebar — drop out of
+  // fullscreen so the kid can see the result and move on.
+  useEffect(() => {
+    if (phase.kind !== 'playing') setFs3d(false)
+  }, [phase.kind])
   const startedAtRef = useRef<number | null>(null)
 
   // Initial fetch.
@@ -387,12 +404,23 @@ export function DailyFiveScreen() {
           <button
             type="button"
             className={'puc-daily__btn' + (view3d ? ' puc-daily__btn--on' : '')}
-            onClick={() => setView3d((v) => !v)}
+            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
             aria-pressed={view3d}
             title={view3d ? 'Back to the flat board' : 'Solve on the 3D board'}
           >
             {view3d ? '🎲 2D board' : '🎲 3D board'}
           </button>
+
+          {view3d && (
+            <button
+              type="button"
+              className="puc-daily__btn"
+              onClick={() => setFs3d(true)}
+              title="Fullscreen 3D board"
+            >
+              ⛶ Fullscreen
+            </button>
+          )}
 
           {phase.kind === 'playing' && (
             <button
@@ -440,6 +468,33 @@ export function DailyFiveScreen() {
           )}
         </aside>
       </div>
+
+      {view3d && fs3d && (
+        <div className="puc-daily__fs3d">
+          <Suspense
+            fallback={<div className="puc-daily__board3d-loading">Carving the 3D board…</div>}
+          >
+            <Board3D
+              pieces={pieces}
+              turn={game.turn()}
+              legalDestinationsFrom={legalDestinationsFrom}
+              onMove={handleMove}
+              lastMove={lastMove}
+              checkSquare={checkSquare}
+              initialSide={current.sideToMove}
+            />
+          </Suspense>
+          <button
+            type="button"
+            className="puc-daily__fs3d-exit"
+            onClick={() => setFs3d(false)}
+            aria-label="Exit fullscreen"
+            title="Exit fullscreen (ESC)"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }

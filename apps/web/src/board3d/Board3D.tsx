@@ -26,7 +26,7 @@ import * as THREE from 'three'
 import type { Color, MoveInput, Piece as PieceModel, PieceSymbol, Square as SquareName } from '../chess/types'
 import { FILES, RANKS, squareColor, type File, type Rank } from '../board/squares'
 import { pieceGeometries } from './pieceGeometry'
-import { useGltfPieceGeometries } from './gltfPieces'
+import { useGltfPieceAssets } from './gltfPieces'
 import { usePieceTracking, type CapturedPiece, type TrackedPiece } from './usePieceTracking'
 
 export interface Board3DProps {
@@ -55,11 +55,25 @@ function squareToWorld(sq: SquareName): [number, number] {
   return [fileIdx - 3.5, 3.5 - rankIdx]
 }
 
-const SQUARE_LIGHT = '#ffffff'
-const SQUARE_DARK = '#8a6238'
-const FRAME_TINT = '#7a5530'
+/* Tints multiply the wood texture (a warm reddish board) — light
+ * squares get >1 components to brighten, all three lean toward
+ * green/blue to pull the overall cast away from red. */
+const SQUARE_LIGHT = new THREE.Color(2.3, 2.35, 2.4)
+const SQUARE_DARK = new THREE.Color(0.62, 0.58, 0.52)
+const FRAME_TINT = new THREE.Color(0.54, 0.47, 0.4)
 const PIECE_WHITE = '#c4ad84'
 const PIECE_BLACK = '#3a2a20'
+/* The Glowbox baseColor textures average #5c3422 (light) vs #31180f
+ * (dark) — barely 2× apart, so on screen the sides blur together.
+ * Components >1 brighten the light set toward cream; the dark set is
+ * multiplied further down. ~5× contrast after tinting. */
+const MAP_TINT_WHITE = new THREE.Color(1.65, 1.55, 1.38)
+const MAP_TINT_BLACK = new THREE.Color(0.55, 0.52, 0.5)
+
+function pieceTint(color: Color, map: THREE.Texture | null): THREE.Color | string {
+  if (map) return color === 'w' ? MAP_TINT_WHITE : MAP_TINT_BLACK
+  return color === 'w' ? PIECE_WHITE : PIECE_BLACK
+}
 const TINT_SELECTED = '#f1c34c'
 const TINT_LEGAL = '#7cc28b'
 const TINT_CAPTURE = '#ef8a5a'
@@ -260,6 +274,8 @@ interface MoveAnim {
 function AnimatedPiece({
   tracked,
   geometry,
+  map,
+  rotateBlack,
   scale,
   isSelected,
   inCheck,
@@ -268,6 +284,8 @@ function AnimatedPiece({
 }: {
   tracked: TrackedPiece
   geometry: THREE.BufferGeometry
+  map: THREE.Texture | null
+  rotateBlack: boolean
   scale: number
   isSelected: boolean
   inCheck: boolean
@@ -359,7 +377,7 @@ function AnimatedPiece({
     <mesh
       ref={setRef}
       geometry={geometry}
-      rotation={[0, tracked.piece.color === 'b' ? Math.PI : 0, 0]}
+      rotation={[0, rotateBlack && tracked.piece.color === 'b' ? Math.PI : 0, 0]}
       scale={scale}
       castShadow
       onClick={(e) => { e.stopPropagation(); onTap(tracked.square) }}
@@ -368,7 +386,8 @@ function AnimatedPiece({
       dispose={null}
     >
       <meshPhysicalMaterial
-        color={tracked.piece.color === 'w' ? PIECE_WHITE : PIECE_BLACK}
+        map={map}
+        color={pieceTint(tracked.piece.color, map)}
         emissive={inCheck ? TINT_CHECK : isSelected ? TINT_SELECTED : '#000000'}
         emissiveIntensity={inCheck ? 0.5 : isSelected ? 0.35 : 0}
         roughness={0.45}
@@ -387,11 +406,15 @@ function AnimatedPiece({
 function DyingPiece({
   info,
   geometry,
+  map,
+  rotateBlack,
   scale,
   onDone,
 }: {
   info: CapturedPiece
   geometry: THREE.BufferGeometry
+  map: THREE.Texture | null
+  rotateBlack: boolean
   scale: number
   onDone: (info: CapturedPiece) => void
 }) {
@@ -428,11 +451,12 @@ function DyingPiece({
         geometry={geometry}
         scale={scale}
         position={[x, 0, z]}
-        rotation={[0, info.piece.color === 'b' ? Math.PI : 0, 0]}
+        rotation={[0, rotateBlack && info.piece.color === 'b' ? Math.PI : 0, 0]}
         dispose={null}
       >
         <meshPhysicalMaterial
-          color={info.piece.color === 'w' ? PIECE_WHITE : PIECE_BLACK}
+          map={map}
+          color={pieceTint(info.piece.color, map)}
           roughness={0.45}
           metalness={0.05}
           clearcoat={0.7}
@@ -460,11 +484,15 @@ function GravePiece({
   info,
   index,
   geometry,
+  map,
+  rotateBlack,
   scale,
 }: {
   info: CapturedPiece
   index: number
   geometry: THREE.BufferGeometry
+  map: THREE.Texture | null
+  rotateBlack: boolean
   scale: number
 }) {
   const ref = useRef<THREE.Mesh>(null)
@@ -491,12 +519,13 @@ function GravePiece({
       ref={setRef}
       geometry={geometry}
       position={[x, 0, z]}
-      rotation={[0, info.piece.color === 'b' ? Math.PI : 0, 0]}
+      rotation={[0, rotateBlack && info.piece.color === 'b' ? Math.PI : 0, 0]}
       castShadow
       dispose={null}
     >
       <meshPhysicalMaterial
-        color={info.piece.color === 'w' ? PIECE_WHITE : PIECE_BLACK}
+        map={map}
+        color={pieceTint(info.piece.color, map)}
         roughness={0.6}
         metalness={0.05}
         clearcoat={0.4}
@@ -512,6 +541,8 @@ function PiecesInner({
   dying,
   graveyard,
   geos,
+  maps,
+  rotateBlack,
   scale,
   selected,
   checkSquare,
@@ -522,7 +553,9 @@ function PiecesInner({
   tracked: TrackedPiece[]
   dying: CapturedPiece[]
   graveyard: CapturedPiece[]
-  geos: Record<PieceSymbol, THREE.BufferGeometry>
+  geos: Record<Color, Record<PieceSymbol, THREE.BufferGeometry>>
+  maps: Record<Color, THREE.Texture | null>
+  rotateBlack: boolean
   scale: number
   selected: SquareName | null
   checkSquare: SquareName | null
@@ -538,7 +571,9 @@ function PiecesInner({
         <AnimatedPiece
           key={t.id}
           tracked={t}
-          geometry={geos[t.piece.type]}
+          geometry={geos[t.piece.color][t.piece.type]}
+          map={maps[t.piece.color]}
+          rotateBlack={rotateBlack}
           scale={scale}
           isSelected={selected === t.square}
           inCheck={checkSquare === t.square}
@@ -550,16 +585,34 @@ function PiecesInner({
         <DyingPiece
           key={d.id}
           info={d}
-          geometry={geos[d.piece.type]}
+          geometry={geos[d.piece.color][d.piece.type]}
+          map={maps[d.piece.color]}
+          rotateBlack={rotateBlack}
           scale={scale}
           onDone={onDeadDone}
         />
       ))}
       {whiteTaken.map((g, i) => (
-        <GravePiece key={g.id} info={g} index={i} geometry={geos[g.piece.type]} scale={scale} />
+        <GravePiece
+          key={g.id}
+          info={g}
+          index={i}
+          geometry={geos[g.piece.color][g.piece.type]}
+          map={maps[g.piece.color]}
+          rotateBlack={rotateBlack}
+          scale={scale}
+        />
       ))}
       {blackTaken.map((g, i) => (
-        <GravePiece key={g.id} info={g} index={i} geometry={geos[g.piece.type]} scale={scale} />
+        <GravePiece
+          key={g.id}
+          info={g}
+          index={i}
+          geometry={geos[g.piece.color][g.piece.type]}
+          map={maps[g.piece.color]}
+          rotateBlack={rotateBlack}
+          scale={scale}
+        />
       ))}
     </group>
   )
@@ -576,18 +629,24 @@ interface PiecesProps {
   onDeadDone: (info: CapturedPiece) => void
 }
 
-/** GLTF-model pieces (Sketchfab set — see public/models3d/CREDITS.md).
- *  Suspends while the six models download. */
+/** GLTF-model pieces (Glowbox set — see public/models3d/CREDITS.md).
+ *  Suspends while the set downloads. The two colours are authored
+ *  facing each other, so no render-time flip. */
 function PiecesGltf(props: PiecesProps) {
-  const geos = useGltfPieceGeometries()
-  return <PiecesInner geos={geos} scale={1} {...props} />
+  const { geos, maps } = useGltfPieceAssets()
+  return <PiecesInner geos={geos} maps={maps} rotateBlack={false} scale={1} {...props} />
 }
+
+const NO_MAPS: Record<Color, THREE.Texture | null> = { w: null, b: null }
 
 /** Procedural low-poly pieces — instant, used as the Suspense
  *  fallback while the GLTF set streams in. */
 function PiecesProcedural(props: PiecesProps) {
-  const geos = useMemo(() => pieceGeometries(), [])
-  return <PiecesInner geos={geos} scale={1.25} {...props} />
+  const geos = useMemo(() => {
+    const g = pieceGeometries()
+    return { w: g, b: g }
+  }, [])
+  return <PiecesInner geos={geos} maps={NO_MAPS} rotateBlack scale={1.25} {...props} />
 }
 
 export function Board3D({
@@ -715,8 +774,9 @@ export function Board3D({
           shadow-camera-near={1}
           shadow-camera-far={30}
         />
-        {/* Warm hearth fill from the side — ties into the castle look. */}
-        <pointLight position={[-7, 3, 6]} intensity={18} color="#ffb060" />
+        {/* Soft golden fill from the side — toned down from the old
+          * orange hearth light, which pushed the whole board red. */}
+        <pointLight position={[-7, 3, 6]} intensity={11} color="#ffdcae" />
 
         {/* Board frame under the squares. */}
         <mesh position={[0, -0.16, 0]} receiveShadow>

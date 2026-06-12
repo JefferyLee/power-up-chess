@@ -1,0 +1,13 @@
+A single tall medieval castle window, viewed straight on from the front, centered, the complete window filling the frame from top to bottom.
+
+Architecture: a tall narrow rounded Romanesque arch of rough, weathered sandstone framing the window, with a chunky protruding stone sill at the bottom. Visible ashlar masonry block joints and a chiseled, pitted, genuinely ANCIENT rustic stone surface with chips and cracks — heavily textured, NOT smooth or clean.
+
+The window itself: diamond-leaded glass panes set in dark iron cames, divided by one vertical stone mullion and two horizontal transoms. Warm golden late-afternoon sunlight STREAMING through the glass from outside — the panes glow softly in honey and amber tones, brightest near the top of the arch, with the warm light catching the inner edge of the stone frame and spilling onto the sill. No landscape visible through the glass, just soft glowing warm light.
+
+Style: painterly, richly textured storybook fantasy game art for children ages 8 to 10. Warm, inviting, cozy, magical — NOT grim, NOT scary. High detail in the stone pitting and the glass glow.
+
+Background: plain near-black void. The window is fully isolated, no surrounding castle wall beyond the stone arch itself, so it can be cleanly cut out.
+
+Output: tall portrait orientation, high quality PNG.
+
+IMPORTANT FRAMING: leave a clear margin of empty near-black background around ALL FOUR sides of the window. The complete stone arch AND the sill must sit fully inside the frame — nothing touching or cropped by any edge. Centre the window with breathing room top, bottom, left, and right.
