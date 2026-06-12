@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-king-alfonso-s-medieval-puzzle-b",
   "bookId": "alfonso-juegos",
   "title": "King Alfonso's Medieval Puzzle Book",
+  "titleCn": "阿方索国王的中世纪谜题书",
   "body": "Back in the thirteenth century, a Spanish king named Alfonso the Wise loved chess so much that he ordered a giant book to be written about games. This book contained dozens of special chess puzzles, each starting with a different number of pieces on the board. Medieval players would spend hours trying to solve these tricky setups, just like we do with chess puzzles today!",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-03cf5f5503",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a king named Alfonso loved the quiet beauty of chess. He ordered a giant book to be created, filled with dozens of unique brain-teasers. Each page showed a different challenge, some with only a few pieces left on the board for players to study.",
-    "luca": "Imagine opening a massive, ancient book of secret tactical battles! King Alfonso created these wild challenges to test the cleverest minds of his time. People back then would spend hours plotting their moves to conquer each difficult board layout. It was the ultimate quest to see who could find the winning path!"
+    "luca": "Imagine opening a massive, ancient book of secret tactical battles! King Alfonso created these wild challenges to test the cleverest minds of his time. People back then would spend hours plotting their moves to conquer each difficult board layout. It was the ultimate quest to see who could find the winning path!",
+    "cn": "很久以前的西班牙，有一位叫阿方索的国王，深深迷上了国际象棋那种安静的美。他下令做一本巨大的书，里面装满了几十道独一无二的动脑谜题。每一页都是一个不同的挑战，有的棋盘上只剩下几个棋子，等着棋手们细细研究。"
   },
   "source": {
     "book": "Libro de los juegos",

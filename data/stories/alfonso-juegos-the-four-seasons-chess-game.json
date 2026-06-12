@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, clever teachers created a special board painted with the four times of the year. The squares were divided into bright sections for spring, summer, autumn, and winter. To win, you had to watch the quiet changes of the seasons and guide your pieces carefully through them.",
-    "luca": "Imagine a medieval clash where the battlefield actually changes with the calendar! Thinkers created a board with colorful zones for spring, summer, autumn, and winter. You had to command your pieces to match the shifting times of the year to win."
+    "luca": "Imagine a medieval clash where the battlefield actually changes with the calendar! Thinkers created a board with colorful zones for spring, summer, autumn, and winter. You had to command your pieces to match the shifting times of the year to win.",
+    "cn": "很久以前，一些聪明的学者发明了一种特别的棋盘，上面画着一年里的四个季节。棋盘被分成四块亮闪闪的区域，分别代表春天、夏天、秋天和冬天。想要赢，你就得留心季节悄悄的变化，小心地带着你的棋子，一步一步走过整整一年。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "四季棋"
 }

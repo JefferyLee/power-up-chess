@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise chess teacher named Aron Nimzowitsch shared a quiet secret to keeping your pieces safe. He taught that we should never let a single piece go hunting for lonely enemy pawns before the rest of our army has even woken up. If you rush ahead too quickly, your sleepy friends at home won't be ready to help when trouble arrives.",
-    "luca": "Imagine charging straight into enemy territory just to snatch a tiny pawn while your knights and bishops are still sitting on their starting squares! Aron Nimzowitsch warned that this greedy shortcut leads straight to disaster. You have to get your whole team ready for action first, or the opponent will trap you in a flash!"
+    "luca": "Imagine charging straight into enemy territory just to snatch a tiny pawn while your knights and bishops are still sitting on their starting squares! Aron Nimzowitsch warned that this greedy shortcut leads straight to disaster. You have to get your whole team ready for action first, or the opponent will trap you in a flash!",
+    "cn": "很久以前，聪明的棋艺老师阿龙·尼姆佐维奇悄悄告诉大家一个保护棋子的秘诀。他说，在自己的大部队还没“睡醒”之前，千万别让一个棋子独自跑出去，追着对方孤零零的小兵不放。要是你冲得太快，家里那些还在打瞌睡的伙伴们，等麻烦找上门的时候可帮不上忙哦。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "尼姆佐维奇的黄金法则"
 }

@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A curious king in ancient India spent his days wondering if we win by making clever choices or just by being lucky. To help him, three wise thinkers arrived with different treasures. One offered the quiet, thoughtful game of chess to show the power of a clever mind, while the others brought rolling dice and a game that blended both together. Many years later, a Spanish ruler named Alfonso loved this tale so much that he saved it forever in his own special book.",
-    "luca": "This king wanted to solve a major mystery: does victory come from pure, brilliant strategy, or just a lucky roll? The first wise guide stepped up and handed him chess, a battlefield of pure mind power with no luck involved at all. Then came the wild roll of the dice, and finally a game that combined both forces. King Alfonso of Spain thought this clash was so cool that he wrote the whole adventure down in his own book!"
+    "luca": "This king wanted to solve a major mystery: does victory come from pure, brilliant strategy, or just a lucky roll? The first wise guide stepped up and handed him chess, a battlefield of pure mind power with no luck involved at all. Then came the wild roll of the dice, and finally a game that combined both forces. King Alfonso of Spain thought this clash was so cool that he wrote the whole adventure down in his own book!",
+    "cn": "古时候，印度有一位好奇的国王，整天琢磨一个问题：人到底是靠聪明的选择取胜，还是光靠运气？为了帮他解开疑惑，三位智者带着不同的宝贝来了。一位献上了安静又费脑筋的国际象棋，证明聪明脑瓜的力量；另外两位，一个带来了骨碌碌滚的骰子，一个带来了把两样都掺在一起的游戏。许多年以后，西班牙的国王阿方索太喜欢这个故事了，就把它写进自己那本特别的书里，永远地保存了下来。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "献给智慧国王的三种游戏"
 }

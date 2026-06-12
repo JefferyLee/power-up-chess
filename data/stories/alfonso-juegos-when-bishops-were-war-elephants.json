@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "If you could peek inside a very old book of games, you would see how different the chess board used to look. Standing right beside the swift horses were giant elephants carved from smooth stone. On their wide backs, these great creatures carried tiny wooden castles filled with miniature soldiers.",
-    "luca": "Imagine sending giant armored elephants charging across the board instead of quiet bishops! These massive stone beasts stood right next to the leaping horses, ready to crash through the enemy lines. They even carried wooden towers on their backs, packed with tiny soldiers waiting to join the fight!"
+    "luca": "Imagine sending giant armored elephants charging across the board instead of quiet bishops! These massive stone beasts stood right next to the leaping horses, ready to crash through the enemy lines. They even carried wooden towers on their backs, packed with tiny soldiers waiting to join the fight!",
+    "cn": "要是你能偷偷翻开一本很老很老的游戏书，就会看到从前的棋盘和现在多么不一样。在飞快的马儿旁边，站着用光滑石头雕成的大象。这些大家伙宽宽的背上，还驮着小小的木头城堡，城堡里挤满了迷你小士兵呢。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "当象还是战象的时候"
 }

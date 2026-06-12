@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-a-king-s-cure-for-boredom-and-br",
   "bookId": "alfonso-juegos",
   "title": "A King's Cure for Boredom and Brawls",
+  "titleCn": "国王治无聊和吵架的妙方",
   "body": "Back in the 1270s, a Spanish king named Alfonso decided his kingdom needed a better way to relax. He noticed people got into terrible fights over gambling, so he helped write a famous book about chess. The king believed that chess was a beautiful, peaceful game that could bring people joy and comfort whenever they were feeling stressed or sad.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-701131958c",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle king named Alfonso watched his people argue over noisy dice games. He wanted to give them something quiet and beautiful to soothe their minds instead. So, he helped write a special book about the quiet magic of chess, showing how the pieces could bring comfort to anyone who was feeling sad.",
-    "luca": "King Alfonso looked out at his kingdom in the 1270s and saw way too many wild brawls over silly bets. He needed a master plan to stop the chaos, so he created a legendary rulebook for a brand new battle of wits. He proved that you could have an epic adventure right on a wooden board without ever throwing a single punch."
+    "luca": "King Alfonso looked out at his kingdom in the 1270s and saw way too many wild brawls over silly bets. He needed a master plan to stop the chaos, so he created a legendary rulebook for a brand new battle of wits. He proved that you could have an epic adventure right on a wooden board without ever throwing a single punch.",
+    "cn": "很久以前的西班牙，有一位温和的国王叫阿方索。他看到人们玩吵闹的骰子游戏时总是争吵，心里很着急。他想送给大家一样安静又美好的东西，让人们的心平静下来。于是，他帮忙写了一本特别的书，讲国际象棋那种安安静静的魔力——小小的棋子，也能安慰每一个不开心的人。"
   },
   "source": {
     "book": "Libro de los juegos",

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A hundred years ago, a thoughtful player named Aron looked at the wooden pieces and decided to find a new path. The traditional masters shook their heads, warning children not to copy his unusual style. But Aron patiently kept playing his own way, quietly winning giant tournaments and changing the game forever.",
-    "luca": "Aron didn't care about the dusty old rules! While everyone else played it safe, he launched brave, surprising attacks that left his opponents completely scrambled. He swept through the biggest tournaments of his time, proving that a little rebellion can completely rewrite the game."
+    "luca": "Aron didn't care about the dusty old rules! While everyone else played it safe, he launched brave, surprising attacks that left his opponents completely scrambled. He swept through the biggest tournaments of his time, proving that a little rebellion can completely rewrite the game.",
+    "cn": "一百年前，有位爱思考的棋手叫阿龙，他望着木头棋子，决定走一条新路。那些守旧的大师们直摇头，还告诫孩子们千万别学他那奇怪的下法。可阿龙耐心地坚持自己的风格，悄悄地赢下了一个又一个大比赛，把这项游戏永远地改变了。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "改变国际象棋的叛逆者"
 }

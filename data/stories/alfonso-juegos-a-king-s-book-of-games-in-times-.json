@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-a-king-s-book-of-games-in-times-",
   "bookId": "alfonso-juegos",
   "title": "A King's Book of Games in Times of War",
+  "titleCn": "战火中的国王游戏书",
   "body": "During a time of family rebellion and war, a Spanish king named Alfonso the Tenth ordered the creation of a beautiful book about board games. Completed in 1283, this famous manuscript detailed the rules of chess, dice, and backgammon. Later, the king even added a special section for a giant version of chess and games based on the stars.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-e0dffc50c3",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, King Alfonso lived through a loud and scary war, even fighting with his own family. To find a quiet space of peace, he asked his artists to paint a wonderful book filled with the secrets of chess, backgammon, and dice. Inside its colorful pages, he even drew giant chessboards and games that followed the movement of the silent stars.",
-    "luca": "While battles raged outside his castle walls, King Alfonso decided to launch a totally different kind of mission. In 1283, he finished a master plan of a book packed with rules for chess and dice battles. He even upgraded the adventure by adding giant-sized chess and games played with the actual stars!"
+    "luca": "While battles raged outside his castle walls, King Alfonso decided to launch a totally different kind of mission. In 1283, he finished a master plan of a book packed with rules for chess and dice battles. He even upgraded the adventure by adding giant-sized chess and games played with the actual stars!",
+    "cn": "很久很久以前，在西班牙，阿方索国王经历了一场又吵又吓人的战争，连自己的家人都跟他打了起来。为了找到一块安静的小天地，他请画师们画了一本特别棒的书，里面藏着国际象棋、双陆棋和骰子游戏的秘密。在五彩缤纷的书页里，他还画下了巨大的棋盘，以及跟着夜空中静悄悄的星星移动的游戏呢。"
   },
   "source": {
     "book": "Libro de los juegos",

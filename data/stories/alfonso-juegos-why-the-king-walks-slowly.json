@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise Spanish ruler named King Alfonso explained why our chess king takes such tiny, quiet steps. He believed that a true leader never runs in a hurry or panics. Instead, the king walks slowly to look closely at each of his brave soldiers and keep them safe.",
-    "luca": "You might think a king should charge ahead on a fast horse, but an old Spanish ruler named Alfonso had a far better plan. He wrote that a great commander must never sprint into a trap. By moving just one square at a time, the leader can scout the battlefield and guide his whole army to victory."
+    "luca": "You might think a king should charge ahead on a fast horse, but an old Spanish ruler named Alfonso had a far better plan. He wrote that a great commander must never sprint into a trap. By moving just one square at a time, the leader can scout the battlefield and guide his whole army to victory.",
+    "cn": "很久以前，西班牙聪明的国王阿方索解释过，为什么棋盘上的王每次只迈小小的、安安静静的一步。他觉得，一位真正的首领从不慌慌张张地乱跑。王慢慢地走，是为了把每一个勇敢的士兵都看仔细，护他们周全。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "王为什么走得慢"
 }

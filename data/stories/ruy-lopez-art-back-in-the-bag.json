@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, in a famous old book, a character named Sancho Panza shared a beautiful secret about chess. He noticed that during a match, every carved figure has its own unique strength and a specific duty to perform. But as soon as the playtime ends, the majestic rulers and the humble helpers are all gently gathered into the very same storage pouch.",
-    "luca": "In a classic adventure tale, Sancho Panza described the ultimate end of a chess battle. While the clash is happening, some pieces hold massive authority while others have small tasks to complete. But the moment the fight finishes, the rules change completely. The grandest queens and the smallest soldiers get jumbled up and tossed right back into the exact same bag!"
+    "luca": "In a classic adventure tale, Sancho Panza described the ultimate end of a chess battle. While the clash is happening, some pieces hold massive authority while others have small tasks to complete. But the moment the fight finishes, the rules change completely. The grandest queens and the smallest soldiers get jumbled up and tossed right back into the exact same bag!",
+    "cn": "很久以前，在一本有名的老书里，有个叫桑丘·潘萨的人物，说出了一个关于国际象棋的美妙秘密。他发现，下棋的时候，每一枚雕刻的棋子都有自己独特的本领，要完成自己特别的任务。可是棋局一结束，威风的王和后，还有那些默默帮忙的小兵，都会被轻轻地收进同一个袋子里。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "一起回到袋子里"
 }

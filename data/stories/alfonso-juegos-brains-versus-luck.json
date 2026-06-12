@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-brains-versus-luck",
   "bookId": "alfonso-juegos",
   "title": "Brains Versus Luck",
+  "titleCn": "动脑筋还是碰运气",
   "body": "An old legend from India tells of wise men who argued about what was more important in life: smart thinking or pure luck. To show the difference, they compared the game of chess to rolling dice. Chess represented the power of the human mind and careful planning, while dice represented unpredictable fate. This story helped people understand why chess was such a noble game of skill.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-249a1f196c",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in India, wise teachers wondered if it was better to be clever or just lucky. They used two games to find the answer. Rolling dice represented the wild winds of chance, but moving chess pieces showed the quiet power of a thoughtful mind.",
-    "luca": "It was a massive debate! The thinkers of ancient India wanted to know if brainpower could beat random luck. So they set up a battle between rolling dice, which is totally wild, and chess, where you need a brilliant strategy to win."
+    "luca": "It was a massive debate! The thinkers of ancient India wanted to know if brainpower could beat random luck. So they set up a battle between rolling dice, which is totally wild, and chess, where you need a brilliant strategy to win.",
+    "cn": "很久以前，在印度，有几位充满智慧的老师在琢磨一个问题：到底是聪明更厉害，还是运气更厉害呢？他们用两种游戏来寻找答案。掷骰子就像一阵抓不住的狂风，全凭运气；而走国际象棋的棋子，却显出了爱思考的头脑里那股安静的力量。"
   },
   "source": {
     "book": "Libro de los juegos",

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Over four hundred years ago, a priest from Spain named Ruy López sat down to write a book filled with his quiet chess secrets. Eager players in Italy and France quickly translated the pages so they could try his clever ideas themselves. It took hundreds of years, however, for the entire guide to finally be printed in English.",
-    "luca": "Imagine a guide so packed with brilliant strategies that players across Europe scrambled to get their hands on it! To learn his winning style, rivals rushed to translate the pages into French and Italian. This grand chess adventure lasted for centuries before the complete book was finally printed in English!"
+    "luca": "Imagine a guide so packed with brilliant strategies that players across Europe scrambled to get their hands on it! To learn his winning style, rivals rushed to translate the pages into French and Italian. This grand chess adventure lasted for centuries before the complete book was finally printed in English!",
+    "cn": "四百多年前，西班牙的神父鲁伊·洛佩斯坐下来，写了一本装满他国际象棋小秘密的书。意大利和法国那些迫不及待的棋手们，很快就把书页翻译成自己的语言，好亲自试一试他的聪明点子。不过，要等上好几百年，这本指南的全部内容才终于用英语印了出来。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "环游世界的棋书"
 }

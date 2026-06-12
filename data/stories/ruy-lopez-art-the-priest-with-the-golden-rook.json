@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-priest-with-the-golden-rook",
   "bookId": "ruy-lopez-art",
   "title": "The Priest with the Golden Rook",
+  "titleCn": "挂着金色小车的神父",
   "body": "Long ago in Spain, King Philip the Second loved chess so much that he made a priest named Ruy Lopez his royal advisor. Lopez was such an amazing player that the king rewarded him with a beautiful golden chain to wear around his neck. Hanging from this special chain was a tiny, shiny chess rook!",
   "motif": "anecdote",
   "sourceChunkId": "ruy-lopez-art-82ca133add",
@@ -13,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Deep inside a quiet Spanish palace, King Philip spent his days studying the chess board. He found a wonderful partner in a priest named Ruy Lopez, who played with great patience and care. To thank his friend, the king placed a beautiful golden chain around the priest's neck. Hanging from the links was a tiny, polished rook that caught the soft candlelight.",
-    "luca": "King Philip of Spain was absolutely wild about chess, and he wanted the cleverest player in the land to help him run the kingdom. That champion was a priest named Ruy Lopez, who defeated everyone with his brilliant moves. To celebrate these victories, the king gave him an awesome treasure to wear. It was a heavy golden chain featuring a miniature, sparkling rook as the ultimate trophy."
+    "luca": "King Philip of Spain was absolutely wild about chess, and he wanted the cleverest player in the land to help him run the kingdom. That champion was a priest named Ruy Lopez, who defeated everyone with his brilliant moves. To celebrate these victories, the king gave him an awesome treasure to wear. It was a heavy golden chain featuring a miniature, sparkling rook as the ultimate trophy.",
+    "cn": "在西班牙一座安静的宫殿深处，国王费利佩天天对着棋盘琢磨。他找到了一位特别棒的对弈伙伴——神父鲁伊·洛佩斯，他下棋既耐心又细心。为了感谢这位朋友，国王把一条漂亮的金链子戴在了神父的脖子上。链子上挂着一个小小的、擦得亮亮的车，在柔柔的烛光里一闪一闪。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the year 1561, a Spanish priest named Ruy López wrote down his favorite chess secrets in a special book. He hoped a young prince who adored the game would get to read his quiet pages. To make sure the book found its way into the royal palace, he wrote a lovely dedication to the prince's own teacher.",
-    "luca": "Ruy López had a brilliant plan to get his new chess book to Spain's young prince! He knew the royal kid loved chess, but getting a book into a palace was a tough mission. So, he pulled a clever move and dedicated the book to the prince's personal teacher instead. That way, the teacher would definitely show the book to his royal student!"
+    "luca": "Ruy López had a brilliant plan to get his new chess book to Spain's young prince! He knew the royal kid loved chess, but getting a book into a palace was a tough mission. So, he pulled a clever move and dedicated the book to the prince's personal teacher instead. That way, the teacher would definitely show the book to his royal student!",
+    "cn": "很久以前，在1561年，一位名叫鲁伊·洛佩斯的西班牙神父，把自己最喜欢的国际象棋秘诀写进了一本特别的书里。他多希望那位热爱下棋的小王子，能读到这些安静的书页啊。为了让这本书顺利走进王宫，他想了个好主意——把书题献给王子的老师。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "把书送到王子手里的妙计"
 }

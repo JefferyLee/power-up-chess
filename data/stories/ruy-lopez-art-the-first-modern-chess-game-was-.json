@@ -14,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Over five hundred years ago in Spain, three poets decided to write a beautiful story about the very first modern chess game. They turned the board into a quiet battlefield of love between two ancient Roman gods. One poet played as Mars, moving his pawn forward, while another played as Venus to defend her side. Their third friend watched over them, gently explaining the brand-new rules of the game.",
-    "luca": "Picture a chess match so exciting that three writers turned it into an epic clash of the gods! Mars charged his king's pawn forward two whole steps to start the attack. Venus immediately blocked his path with a clever counter-move of her own queen's pawn. To keep the peace, a third poet acted as the referee, calling out the brand-new rules of this updated game."
+    "luca": "Picture a chess match so exciting that three writers turned it into an epic clash of the gods! Mars charged his king's pawn forward two whole steps to start the attack. Venus immediately blocked his path with a clever counter-move of her own queen's pawn. To keep the peace, a third poet acted as the referee, calling out the brand-new rules of this updated game.",
+    "cn": "五百多年前的西班牙，三位诗人决定写一个美丽的故事，讲的是世界上第一盘现代国际象棋。他们把棋盘变成了一个安安静静的战场，对阵的双方是两位古罗马的神。一位诗人扮演战神玛尔斯，把兵向前推进；另一位扮演爱神维纳斯，守住自己这一边。他们的第三位朋友则在旁边看着，温和地讲解这套全新的下棋规则。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -23,5 +24,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "第一盘现代国际象棋是一首爱情诗"
 }

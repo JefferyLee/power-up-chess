@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise chess teacher named Aron Nimzowitsch noticed a quiet mistake that many new players made. Instead of helping all their pieces step out onto the board, they would chase after a single, lonely pawn. It is easy to get distracted by one small prize, but it leaves the rest of your army waiting in the shadows.",
-    "luca": "Aron Nimzowitsch saw that beginners love to charge straight into battle with wild energy! They zoom across the board to snatch up one tiny pawn, totally forgetting to set up their main army. This eager rush might feel exciting, but it actually ruins their plans before the real fight even starts."
+    "luca": "Aron Nimzowitsch saw that beginners love to charge straight into battle with wild energy! They zoom across the board to snatch up one tiny pawn, totally forgetting to set up their main army. This eager rush might feel exciting, but it actually ruins their plans before the real fight even starts.",
+    "cn": "很久以前，睿智的棋艺老师阿龙·尼姆佐维奇发现，许多新手都会悄悄犯同一个错误。他们不去帮所有棋子一个个走上棋盘，反而追着一个孤零零的小兵满场跑。一个小小的“奖品”确实容易让人分心，可这样一来，你的大部队就只能躲在阴影里干等着啦。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "追小兵的陷阱"
 }

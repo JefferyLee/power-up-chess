@@ -17,12 +17,14 @@ import {
   type LibraryShelfEntry,
 } from '../firebase/callables'
 import { speakLong, type SpeakLongHandle } from '../audio/speakLong'
+import { BookOwlPanel } from './BookOwlPanel'
 import './LibraryRoute.css'
 
 interface BundledStory {
   id: string
   title: string
-  variants: { lucy: string; luca: string }
+  titleCn?: string
+  variants: { lucy: string; luca: string; cn?: string }
   motif: string
   era?: string
   source: { book?: string; author?: string }
@@ -34,6 +36,9 @@ interface Bundle {
 }
 
 type HostVoice = 'lucy' | 'luca'
+/** Library language: EN reads the kid's host's retelling; CN reads
+ *  the Chinese retelling with a zh neural voice. */
+type LibLang = 'en' | 'cn'
 
 const HEAT_BUCKETS = [
   { max: 50, label: 'cool', width: 44 },
@@ -67,7 +72,9 @@ export function LibraryRoute() {
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [shelves, setShelves] = useState<LibraryShelfEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [voice, setVoice] = useState<HostVoice>(hostId)
+  const [lang, setLang] = useState<LibLang>('en')
+  // EN text + audio follow the kid's current host.
+  const voice: HostVoice = hostId
   const [openBook, setOpenBook] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [speakingId, setSpeakingId] = useState<string | null>(null)
@@ -124,7 +131,10 @@ export function LibraryRoute() {
     speakingRef.current = null
     setSpeakingId(null)
     setLoadingId(null)
-  }, [voice])
+  }, [lang])
+
+  const storyText = (story: BundledStory): string =>
+    lang === 'cn' ? story.variants.cn ?? story.variants[voice] : story.variants[voice]
 
   // Story map keyed by id for fast drawer lookups.
   const storiesByBook = useMemo(() => {
@@ -203,10 +213,13 @@ export function LibraryRoute() {
       speechRef.current = null
     }
     speechRef.current = speakLong({
-      text: story.variants[voice],
-      lang: 'en-US',
+      text: storyText(story),
+      lang: lang === 'cn' ? 'zh-CN' : 'en-US',
       rate: 0.95,
-      pickVoice: (voices) => voices.find((v) => v.lang.startsWith('en') && wantedMatch.test(v.name)),
+      pickVoice: (voices) =>
+        lang === 'cn'
+          ? voices.find((v) => v.lang.startsWith('zh'))
+          : voices.find((v) => v.lang.startsWith('en') && wantedMatch.test(v.name)),
       onEnd: finish,
       onError: finish,
     })
@@ -241,7 +254,7 @@ export function LibraryRoute() {
     markRead(story.id)
 
     // Tier 1: in-memory blob cache (downloaded statics + synthesized).
-    const cacheKey = `${story.id}:${voice}`
+    const cacheKey = `${story.id}:${lang === 'cn' ? 'cn' : voice}`
     const cached = audioCacheRef.current.get(cacheKey)
     if (cached) {
       playFromUrl(story, cached)
@@ -255,22 +268,28 @@ export function LibraryRoute() {
     // playback cold). A blob in memory has nothing left to interrupt.
     // The content-type check guards against Firebase's SPA rewrite
     // answering MISSING files with 200 index.html.
-    const staticUrl = `/audio/${story.id}-${voice}.mp3`
-    try {
-      const res = await fetch(staticUrl)
-      const type = res.headers.get('content-type') ?? ''
-      if (res.ok && type.startsWith('audio/')) {
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        audioCacheRef.current.set(cacheKey, url)
-        setLoadingId(null)
-        playFromUrl(story, url)
-        return
-      }
-    } catch { /* fall through to Edge-TTS */ }
+    // No statics exist for Chinese yet — CN goes straight to Edge-TTS.
+    if (lang === 'en') {
+      const staticUrl = `/audio/${story.id}-${voice}.mp3`
+      try {
+        const res = await fetch(staticUrl)
+        const type = res.headers.get('content-type') ?? ''
+        if (res.ok && type.startsWith('audio/')) {
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          audioCacheRef.current.set(cacheKey, url)
+          setLoadingId(null)
+          playFromUrl(story, url)
+          return
+        }
+      } catch { /* fall through to Edge-TTS */ }
+    }
     // Tier 3: Edge-TTS via Cloud Function.
     try {
-      const res = await callSynthesizeStoryAudio({ voice, text: story.variants[voice] })
+      const res = await callSynthesizeStoryAudio({
+        voice: lang === 'cn' ? 'cn' : voice,
+        text: storyText(story),
+      })
       if (loadingId !== null && loadingId !== story.id) return
       const blob = base64ToBlob(res.audioBase64, res.mimeType)
       const url = URL.createObjectURL(blob)
@@ -304,36 +323,38 @@ export function LibraryRoute() {
           ←
         </button>
         <div className="puc-library__title-wrap">
-          <h1 className="puc-library__title">Story Library</h1>
+          <h1 className="puc-library__title">The Library</h1>
           <p className="puc-library__sub">
             {bundle
-              ? `${bundle.count} chess stories — read or listen.`
+              ? `${bundle.count} chess stories + the Book Owl's reading lists.`
               : 'Opening the library…'}
           </p>
         </div>
-        <div className="puc-library__voice" role="radiogroup" aria-label="Reader voice">
+        <div className="puc-library__voice" role="radiogroup" aria-label="Story language">
           <button
             type="button"
             role="radio"
-            aria-checked={voice === 'lucy'}
-            className={'puc-library__voice-btn ' + (voice === 'lucy' ? 'puc-library__voice-btn--on' : '')}
-            onClick={() => setVoice('lucy')}
+            aria-checked={lang === 'en'}
+            className={'puc-library__voice-btn ' + (lang === 'en' ? 'puc-library__voice-btn--on' : '')}
+            onClick={() => setLang('en')}
           >
-            Lucy
+            EN
           </button>
           <button
             type="button"
             role="radio"
-            aria-checked={voice === 'luca'}
-            className={'puc-library__voice-btn ' + (voice === 'luca' ? 'puc-library__voice-btn--on' : '')}
-            onClick={() => setVoice('luca')}
+            aria-checked={lang === 'cn'}
+            className={'puc-library__voice-btn ' + (lang === 'cn' ? 'puc-library__voice-btn--on' : '')}
+            onClick={() => setLang('cn')}
           >
-            Luca
+            中文
           </button>
         </div>
       </header>
 
       {error && <p className="puc-library__error">{error}</p>}
+
+      <BookOwlPanel lang={lang} />
 
       <main className="puc-library__bookshelf">
         {shelfRows.length === 0 ? (
@@ -360,6 +381,7 @@ export function LibraryRoute() {
           shelf={openBookShelf}
           stories={openBookStories}
           voice={voice}
+          lang={lang}
           expandedId={expandedId}
           speakingId={speakingId}
           loadingId={loadingId}
@@ -425,6 +447,7 @@ function BookDrawer({
   shelf,
   stories,
   voice,
+  lang,
   expandedId,
   speakingId,
   loadingId,
@@ -436,6 +459,7 @@ function BookDrawer({
   shelf: LibraryShelfEntry
   stories: BundledStory[]
   voice: HostVoice
+  lang: LibLang
   expandedId: string | null
   speakingId: string | null
   loadingId: string | null
@@ -501,7 +525,9 @@ function BookDrawer({
                   >
                     {read ? '✓' : ''}
                   </span>
-                  <span className="puc-drawer__story-title">{story.title}</span>
+                  <span className="puc-drawer__story-title">
+                    {lang === 'cn' ? story.titleCn ?? story.title : story.title}
+                  </span>
                   {story.era && <span className="puc-drawer__story-era">{story.era}</span>}
                   <span className="puc-drawer__story-chevron" aria-hidden="true">
                     {expanded ? '▾' : '▸'}
@@ -509,7 +535,9 @@ function BookDrawer({
                 </button>
                 {expanded && (
                   <div className="puc-drawer__story-body">
-                    <p className="puc-drawer__story-text">{story.variants[voice]}</p>
+                    <p className="puc-drawer__story-text">
+                      {lang === 'cn' ? story.variants.cn ?? story.variants[voice] : story.variants[voice]}
+                    </p>
                     <div className="puc-drawer__story-actions">
                       <button
                         type="button"
@@ -522,10 +550,10 @@ function BookDrawer({
                         disabled={loading}
                       >
                         {loading
-                          ? `⏳ Loading ${voice === 'lucy' ? 'Lucy' : 'Luca'}…`
+                          ? '⏳ Loading…'
                           : speaking
                             ? '⏹ Stop'
-                            : '🔊 Read aloud'}
+                            : lang === 'cn' ? '🔊 朗读' : '🔊 Read aloud'}
                       </button>
                       <span className="puc-drawer__story-meta">{story.motif}</span>
                     </div>

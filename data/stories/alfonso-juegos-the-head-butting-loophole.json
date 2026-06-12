@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in sunny Spain, players would sometimes get very upset when their games did not go well. The law back then made you pay a fine if you broke the wooden board with a stone or a blade. But if you were silly enough to crack the board using nothing but your own forehead, you did not have to pay a single coin.",
-    "luca": "Picture a player getting so wild after losing that they just want to smash the whole game to pieces! Back then, using a rock or a dagger to break the board meant you had to pay a heavy fine. But if you chose to dive headfirst and shatter the wood with your own skull, the law let you off completely free. That is one painful way to save your coins!"
+    "luca": "Picture a player getting so wild after losing that they just want to smash the whole game to pieces! Back then, using a rock or a dagger to break the board meant you had to pay a heavy fine. But if you chose to dive headfirst and shatter the wood with your own skull, the law let you off completely free. That is one painful way to save your coins!",
+    "cn": "很久以前，在阳光灿烂的西班牙，棋手们输了棋有时会气得不得了。那时候的法律规定：要是你用石头或刀子把木头棋盘砸坏了，就得交罚款。可是，如果你傻乎乎地只用自己的额头把棋盘撞裂了，那就一个铜板都不用交！"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "用脑袋撞棋盘不罚款？"
 }

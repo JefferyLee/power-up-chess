@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-a-king-s-broken-rules",
   "bookId": "alfonso-juegos",
   "title": "A King's Broken Rules",
+  "titleCn": "国王的规矩被打破了",
   "body": "King Alfonso the Tenth of Spain loved to write down strict laws to keep his kingdom in perfect order. He made a rule that his oldest son would always inherit the throne. However, when his eldest son suddenly died, the king's perfect plans were completely ruined, proving that real life is much harder to control than a game.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-b89597a06e",
@@ -13,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "King Alfonso of Spain loved to write down neat, tidy rules to keep his whole land peaceful. He decided his very oldest son would be the next king, drawing it out like a beautiful plan on paper. But when his son passed away, the king learned that even the most carefully written rules cannot control the future.",
-    "luca": "Alfonso thought he could map out his kingdom's future like a perfect game! He set a super strict law that his firstborn son would take the crown next. But a sudden tragedy crashed through his strategy, proving that real life doesn't always follow the rulebook."
+    "luca": "Alfonso thought he could map out his kingdom's future like a perfect game! He set a super strict law that his firstborn son would take the crown next. But a sudden tragedy crashed through his strategy, proving that real life doesn't always follow the rulebook.",
+    "cn": "西班牙的阿方索国王最喜欢把规矩写得整整齐齐，好让整个国家平平安安。他定下规矩：自己最大的儿子将来接着当国王，还像画一幅漂亮的图纸一样，把计划写在纸上。可是后来，他的大儿子不幸去世了。国王这才明白：哪怕规矩写得再仔细，也管不住明天会发生什么。"
   },
   "source": {
     "book": "Libro de los juegos",

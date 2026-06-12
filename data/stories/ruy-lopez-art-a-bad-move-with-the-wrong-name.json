@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the sixteenth century, a thoughtful writer named Damiano crafted a book to protect chess players from making a terrible mistake at the very start of the game. He carefully explained why this particular opening move would leave your pieces weak and unprotected. Yet, in a quiet twist of history, people began calling that exact, clumsy setup by his own name instead.",
-    "luca": "Imagine writing a brilliant guidebook to warn players away from a disastrous opening trap, only for the world to name the trap after you! That is the wild trick history played on a writer named Damiano back in the fifteen-hundreds. He loudly declared that this specific start was a terrible mistake, but today, players still call this awful defense by his name."
+    "luca": "Imagine writing a brilliant guidebook to warn players away from a disastrous opening trap, only for the world to name the trap after you! That is the wild trick history played on a writer named Damiano back in the fifteen-hundreds. He loudly declared that this specific start was a terrible mistake, but today, players still call this awful defense by his name.",
+    "cn": "很久以前的十六世纪，有位细心的作家叫达米亚诺。他写了一本书，想保护棋手们，别在开局的时候犯下一个可怕的错误。他认认真真地解释了，为什么这步开局棋会让你的棋子又虚弱又没人保护。可历史偏偏开了个安静的小玩笑——后来人们竟然就用他的名字，来称呼这个笨拙的下法。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "一步臭棋，挂错了名字"
 }

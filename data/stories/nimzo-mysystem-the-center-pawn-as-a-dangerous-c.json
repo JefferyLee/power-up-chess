@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, a thoughtful chess master named Aron Nimzowitsch taught his students to look closely at the very middle of the board. He warned that a free pawn marching down the center was like a sneaky troublemaker on the run. To keep your side safe, you had to work together to quietly stop this traveler in its tracks, or gently remove it from the game.",
-    "luca": "This master, Aron, wanted players to treat that runaway center pawn like an outlaw on the loose! You had to launch a giant mission with your pieces to corner him. Your only choices were to lock him in a deep dungeon so he could never move, or defeat him right on the spot."
+    "luca": "This master, Aron, wanted players to treat that runaway center pawn like an outlaw on the loose! You had to launch a giant mission with your pieces to corner him. Your only choices were to lock him in a deep dungeon so he could never move, or defeat him right on the spot.",
+    "cn": "很久以前，爱思考的国际象棋大师阿龙·尼姆佐维奇教学生们，要紧紧盯着棋盘的正中央。他提醒大家：一个沿着中路大步前进、没人拦着的小兵，就像一个正在逃跑的捣蛋鬼。想保住自己的阵地，就得让棋子们齐心协力——要么悄悄把这个“旅行者”拦在半路上，要么干脆请它离开棋盘。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "中心兵是个危险的逃犯"
 }

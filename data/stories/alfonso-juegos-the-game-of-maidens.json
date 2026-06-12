@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Nearly eight hundred years ago, players loved a highly disciplined version of chess where every single move had to follow strict guidelines. Old stories whisper that clever young women from a faraway shore first created these rules. Because of this sweet tale, people lovingly called the match the game of maidens.",
-    "luca": "Imagine a fierce chess showdown where the rules are so tight you are forced into your moves. Stories claim this daring challenge was dreamed up by young women living far across the ocean. Everyone called it the game of maidens, and it was the ultimate test of strategy."
+    "luca": "Imagine a fierce chess showdown where the rules are so tight you are forced into your moves. Stories claim this daring challenge was dreamed up by young women living far across the ocean. Everyone called it the game of maidens, and it was the ultimate test of strategy.",
+    "cn": "差不多八百年前，棋手们特别喜欢一种规矩特别严的国际象棋，每走一步棋，都必须按照严格的规则来。古老的故事里悄悄传说，最早想出这些规则的，是住在大海对岸的聪明姑娘们。因为这个甜甜的传说，大家都亲切地把这种下法叫作“少女棋”。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "少女棋"
 }

@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-eat-your-bets",
   "bookId": "alfonso-juegos",
   "title": "Eat Your Bets!",
+  "titleCn": "把赌注吃掉吧！",
   "body": "Medieval laws banned people from betting expensive things like gold or silver on games. They even banned betting food and drinks, with one delicious exception. If the players promised to sit down and eat or drink the prize together right after the game, the match was perfectly legal.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-c3b21c4615",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, strict laws stopped people from wagering shiny silver coins on their board games. Even risking a loaf of bread or a sweet drink was forbidden, with one very gentle exception. If the two players promised to sit down and share the tasty prize together as soon as the match ended, the law allowed it.",
-    "luca": "Imagine a time when betting your gold coins on a game could get you into major trouble with the law! To keep the adventure going, players had to find a clever loophole. If you wagered a delicious treat, you and your opponent had to sit down and devour the prize together the second the match ended."
+    "luca": "Imagine a time when betting your gold coins on a game could get you into major trouble with the law! To keep the adventure going, players had to find a clever loophole. If you wagered a delicious treat, you and your opponent had to sit down and devour the prize together the second the match ended.",
+    "cn": "很久以前，严格的法律不许人们拿亮闪闪的银币当棋局的赌注。就连押上一块面包、一杯甜甜的饮料都不行。不过，有一个特别温柔的例外：只要两位棋手说好，比赛一结束就坐下来，把好吃的奖品一起分享掉，法律就答应啦。"
   },
   "source": {
     "book": "Libro de los juegos",

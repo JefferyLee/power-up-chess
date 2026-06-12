@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Imagine a quiet evening over seven hundred years ago, playing a game where the board is the night sky. Instead of wooden pawns, you guide seven shining planets through the twelve signs of the zodiac. To win, you must carefully watch how these stars align to see if they are friendly or fighting.",
-    "luca": "This was the ultimate brain championship for the kingdom's cleverest scholars back in 1283! You got to launch seven cosmic planets across a map of the zodiac. To score a victory, you had to calculate exactly how these space pieces clashed or teamed up based on where they landed."
+    "luca": "This was the ultimate brain championship for the kingdom's cleverest scholars back in 1283! You got to launch seven cosmic planets across a map of the zodiac. To score a victory, you had to calculate exactly how these space pieces clashed or teamed up based on where they landed.",
+    "cn": "想象一下，在七百多年前一个安静的夜晚，你玩的棋盘竟然是整片星空！你移动的不是木头小兵，而是七颗闪闪发光的行星，让它们在十二个星座之间慢慢旅行。想要赢，就得仔细观察这些星星排成的样子——看看它们是好朋友，还是正在闹别扭呢。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "跟着星星下棋"
 }

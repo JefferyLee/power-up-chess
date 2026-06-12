@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "More than a hundred years ago, a quiet storm brewed between two great chess thinkers. A young writer named Aron began questioning the traditional rules that players had followed for decades. He showed everyone how to guard the heart of the board with gentle, clever setups from a distance.",
-    "luca": "Aron decided to throw out the old rulebook and challenge the reigning master, Siegbert, to a battle of ideas! Instead of just rushing pawns straight into the middle, he launched a daring strategy that caught everyone by surprise. This bold move completely transformed how we play the game today."
+    "luca": "Aron decided to throw out the old rulebook and challenge the reigning master, Siegbert, to a battle of ideas! Instead of just rushing pawns straight into the middle, he launched a daring strategy that caught everyone by surprise. This bold move completely transformed how we play the game today.",
+    "cn": "一百多年前，两位伟大的棋坛思想家之间，悄悄酝酿着一场风暴。一位名叫阿龙的年轻作者，开始质疑大家遵守了几十年的老规矩。他向所有人展示：原来不用一头挤进去，也可以从远处用轻巧聪明的布局，守护棋盘的中心。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国际象棋大革命"
 }

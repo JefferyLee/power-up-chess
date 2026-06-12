@@ -2109,6 +2109,60 @@ registerCommand({
   },
 })
 
+// ── /seek — the Book Owl's reading lists (book-seek integration) ──
+//
+// Same curated-topic allowlist as the Library's owl panel; the server
+// rejects anything off-list, so free text never reaches the LLM
+// pipeline. Output is the four-era list as plain terminal text.
+registerCommand({
+  name: 'seek',
+  tier: 'advanced',
+  description: 'Ask the Book Owl for a reading list, e.g. /seek dragons.',
+  handle: async (args) => {
+    const { SEEK_TOPIC_CHIPS } = await import('../../library/seekTopics')
+    const query = args.trim().toLowerCase()
+    if (!query) {
+      const lines = SEEK_TOPIC_CHIPS.map(
+        (t, i) => `${String(i + 1).padStart(2, ' ')}. ${t.en}`,
+      )
+      pushPrivate('reply', 'The Book Owl knows these shelves — pick one with /seek <number or name>:')
+      pushPrivate('ascii', lines.join('\n'))
+      return
+    }
+    const byNumber = /^\d+$/.test(query)
+      ? SEEK_TOPIC_CHIPS[Number(query) - 1]
+      : undefined
+    const topic =
+      byNumber ??
+      SEEK_TOPIC_CHIPS.find((t) => t.id === query || t.en.toLowerCase().includes(query))
+    if (!topic) {
+      pushPrivate('reply', `The owl tilts its head — no shelf called "${args.trim()}". Try /seek to see the list.`)
+      return
+    }
+    pushPrivate('whisper', `The Book Owl flaps off into the stacks for books about ${topic.en}…`)
+    try {
+      const { callSeekBooks } = await import('../../firebase/callables')
+      const res = await callSeekBooks(topic.id)
+      if (!res.ok) {
+        pushPrivate('reply', 'The owl returns empty-taloned — that list is still being gathered. Try again soon.')
+        return
+      }
+      const out: string[] = [`📚 Books about ${res.list.label}`, '']
+      for (const s of res.list.sections) {
+        out.push(`── ${s.title} ──`)
+        for (const b of s.books) {
+          out.push(`  ${b.verified ? '✓' : '·'} ${b.title} — ${b.author}${b.year ? ` (${b.year})` : ''}`)
+          if (b.intro) out.push(`      ${b.intro}`)
+        }
+        out.push('')
+      }
+      pushPrivate('ascii', out.join('\n'))
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'The owl got lost in the stacks.')
+    }
+  },
+})
+
 // Avoid TS "unused" warning since the only reset path goes through
 // /play new (which writes a fresh state directly, no clear needed).
 void clearPlayState

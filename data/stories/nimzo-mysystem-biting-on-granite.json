@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A wise chess teacher from the past named Aron loved to paint pictures with his words. He said that attacking a row of highly protected pawns is like trying to chew on a hard stone. Instead of rushing in, we must guide our pieces on a quiet, patient journey to find a hidden way through.",
-    "luca": "Imagine charging your army straight into a wall of solid rock! A brilliant player named Aron warned that crashing into those super-defended targets will only break your own forces. The real adventure is in sneaking your pieces around, tricking the enemy until their strong defense finally cracks."
+    "luca": "Imagine charging your army straight into a wall of solid rock! A brilliant player named Aron warned that crashing into those super-defended targets will only break your own forces. The real adventure is in sneaking your pieces around, tricking the enemy until their strong defense finally cracks.",
+    "cn": "从前有位很有智慧的国际象棋老师，名叫阿伦。他特别喜欢用话语来画画。他说，去攻打一排被保护得严严实实的兵，就像啃一块硬邦邦的大石头。所以别急着往里冲，我们要带着棋子来一场安静、耐心的小旅行，找到一条藏起来的路穿过去。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "咬不动的大石头"
 }

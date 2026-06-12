@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a young player named Aron only wanted his chess pieces to dance in wild, fiery patterns. He ignored the quiet, patient moves, focusing only on big storms on the board until those storms turned against him. To heal his game, he spent years quietly designing a beautiful, brand-new way to guide his pieces.",
-    "luca": "Teenaged Aron wanted total chaos and spectacular explosions on the chessboard! But after getting crushed in battle after battle, he realized his wild charges weren't working. So, he spent years drawing up a secret blueprint for a completely new style of chess warfare."
+    "luca": "Teenaged Aron wanted total chaos and spectacular explosions on the chessboard! But after getting crushed in battle after battle, he realized his wild charges weren't working. So, he spent years drawing up a secret blueprint for a completely new style of chess warfare.",
+    "cn": "很久以前，有个年轻棋手叫阿龙，他只想让自己的棋子跳又疯又烈的“烟花舞”。他瞧不上那些安静、耐心的走法，一心只想在棋盘上掀起大风暴——直到这些风暴反过来打败了他自己。为了治好自己的棋，他花了好多年时间，悄悄设计出一套漂亮的、全新的下棋方法。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "只想放烟花的男孩"
 }

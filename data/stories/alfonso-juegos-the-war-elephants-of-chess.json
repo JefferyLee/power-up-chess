@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "If we could look at a very old book, we would discover that the quiet bishop on your board used to be a magnificent war elephant. These grand animals walked along the diagonal paths of the kingdom rather than straight ahead. It was a gentle way to travel because no one could stand against their immense power in a direct fight.",
-    "luca": "Picture a giant war elephant charging right into the action where your bishop now stands! Hundreds of years ago, a writer explained that these beasts were too powerful for anyone to fight face-to-face. That is why they leaped diagonally across the board, launching clever sideways attacks that nobody could block!"
+    "luca": "Picture a giant war elephant charging right into the action where your bishop now stands! Hundreds of years ago, a writer explained that these beasts were too powerful for anyone to fight face-to-face. That is why they leaped diagonally across the board, launching clever sideways attacks that nobody could block!",
+    "cn": "要是我们能翻开一本特别古老的书，就会发现：你棋盘上那枚安安静静的象，从前竟是一头威风凛凛的战象！这些大家伙在王国里走的是斜斜的路线，而不是一直往前冲。这样走其实很温柔——因为真要面对面打起来，谁也扛不住它们那股巨大的力气呀。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国际象棋里的战象"
 }

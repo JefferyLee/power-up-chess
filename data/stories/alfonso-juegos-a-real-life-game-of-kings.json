@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-a-real-life-game-of-kings",
   "bookId": "alfonso-juegos",
   "title": "A Real-Life Game of Kings",
+  "titleCn": "现实中的国王棋局",
   "body": "King Alfonso the Wise of Spain is famous for creating one of the oldest chess books in history. But while he was working on it, he was playing a real-life game of survival against his own son, Sancho, who tried to steal his crown! King Alfonso had to dodge betrayals and make tricky alliances to keep his throne, just like a king on a chessboard.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-0b7a7a553b",
@@ -13,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a thoughtful king named Alfonso spent his quiet hours writing one of the very first books about chess. He loved how the carved pieces moved safely across the board, but outside his library, a real storm was brewing. His own son, Sancho, wanted to take the golden crown, forcing the father to defend his kingdom with gentle patience.",
-    "luca": "This wasn't just a quiet game on a board—it was a high-stakes battle for the throne! Prince Sancho launched a rebellion to snatch the crown, forcing King Alfonso to dodge sneaky traps and make secret deals. To survive, the king had to think five moves ahead, just like a real chess master protecting his army."
+    "luca": "This wasn't just a quiet game on a board—it was a high-stakes battle for the throne! Prince Sancho launched a rebellion to snatch the crown, forcing King Alfonso to dodge sneaky traps and make secret deals. To survive, the king had to think five moves ahead, just like a real chess master protecting his army.",
+    "cn": "很久以前的西班牙，有一位爱思考的国王，名叫阿方索。安静的时候，他就坐下来写书，那可是世界上最早的国际象棋书之一。他喜欢看雕刻的棋子在棋盘上稳稳当当地走来走去。可是在书房外面，一场真正的风暴正在酝酿——他自己的儿子桑乔，想抢走那顶金灿灿的王冠。这位父亲只好用温和又耐心的办法，守护自己的王国。"
   },
   "source": {
     "book": "Libro de los juegos",

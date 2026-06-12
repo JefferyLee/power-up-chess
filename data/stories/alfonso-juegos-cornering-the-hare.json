@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-cornering-the-hare",
   "bookId": "alfonso-juegos",
   "title": "Cornering the Hare",
+  "titleCn": "围住小野兔",
   "body": "Long ago, people played a board game called corner the hare. One player controlled a single piece representing a fast hare, while the other player had twelve pieces trying to surround it. If the hare managed to capture enough attackers to leave them with only nine, the hare won. With only nine pieces left, the hunter could no longer trap the clever animal.",
   "motif": "game",
   "sourceChunkId": "alfonso-juegos-7cf89dd954",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Hundreds of years ago, families gathered around a wooden board to play a quiet game of chase. One person guided a single, swift hare, while their opponent moved twelve tiny pieces to try and circle the little animal. If the clever hare could slip past and take three of those pieces away, it won its freedom. With only nine pursuers left on the board, there was simply too much open space for the hare to ever be caught.",
-    "luca": "Imagine being one lone player facing an army of twelve hunters closing in from every side! This medieval game was a thrilling race where you had to dodge, weave, and strike back. Your goal as the speedy beast was to knock out enough attackers until only nine remained. Once the enemy force shrunk to nine, their trap crumbled, and you leaped away to victory!"
+    "luca": "Imagine being one lone player facing an army of twelve hunters closing in from every side! This medieval game was a thrilling race where you had to dodge, weave, and strike back. Your goal as the speedy beast was to knock out enough attackers until only nine remained. Once the enemy force shrunk to nine, their trap crumbled, and you leaped away to victory!",
+    "cn": "几百年前，一家人会围着一块木头棋盘，玩一种安安静静的追逐游戏。一个人指挥一只跑得飞快的野兔，对手则移动十二个小小的棋子，想把这只小动物团团围住。如果机灵的野兔能溜过去，吃掉其中三个棋子，它就赢回了自由——因为棋盘上只剩九个追兵的时候，空地实在太多，野兔就再也不会被抓住啦。"
   },
   "source": {
     "book": "Libro de los juegos",

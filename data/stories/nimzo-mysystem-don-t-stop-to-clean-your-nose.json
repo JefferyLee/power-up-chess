@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, a wise chess master named Aron Nimzowitsch compared the start of a game to a fast running race. He said that if you waste your early turns, it is just like pausing to wipe a speck of dust off your nose while sprinting. It is lovely to be tidy, but pausing for even a second lets your opponent slip right past you.",
-    "luca": "Imagine you are zooming down the track, sprinting for the finish line! If you stop to clean your face mid-dash, your rival will fly right past you to victory. That is why Nimzowitsch warned players never to waste their very first moves on the board. You have to charge ahead with your pieces right from the start!"
+    "luca": "Imagine you are zooming down the track, sprinting for the finish line! If you stop to clean your face mid-dash, your rival will fly right past you to victory. That is why Nimzowitsch warned players never to waste their very first moves on the board. You have to charge ahead with your pieces right from the start!",
+    "cn": "很久以前，有一位聪明的国际象棋大师，名叫阿龙·尼姆佐维奇。他说，下棋的开局就像一场飞快的赛跑。如果你把开头的几步棋浪费掉了，就好像在冲刺的时候，停下来擦掉鼻子上的一点小灰尘。爱干净当然好，可是哪怕只停一秒钟，对手就会“嗖”地一下从你身边冲过去啦。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "别停下来擦鼻子！"
 }

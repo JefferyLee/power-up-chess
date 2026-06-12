@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in medieval Spain, a wise king named Alfonso loved to study beautiful chess puzzles. One of these ancient mind-teasers was packed with twenty-nine wooden pieces, filling almost every square on the board. It looked like a quiet, crowded forest waiting for a spark of magic.",
-    "luca": "To solve this ultimate challenge, the black side had to launch a daring, non-stop attack. A single, brave rook had to charge across the board and put the enemy king in danger twelve times in a row without stopping. One wrong move would ruin the whole mission, but a perfect run meant total victory."
+    "luca": "To solve this ultimate challenge, the black side had to launch a daring, non-stop attack. A single, brave rook had to charge across the board and put the enemy king in danger twelve times in a row without stopping. One wrong move would ruin the whole mission, but a perfect run meant total victory.",
+    "cn": "很久很久以前，在中世纪的西班牙，有一位聪明的国王，名叫阿方索。他最喜欢研究漂亮的国际象棋谜题啦。其中有一道古老的谜题，棋盘上密密麻麻摆了二十九个木头棋子，几乎把每个格子都占满了。看上去就像一片安安静静、挤挤挨挨的小森林，正等着一点魔法的火花呢。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国王的十二连将谜题"
 }

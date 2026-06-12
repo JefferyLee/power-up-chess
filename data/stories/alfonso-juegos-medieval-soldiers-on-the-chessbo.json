@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise king named Alfonso wrote a beautiful book about the secrets of chess. He believed the little pawns were like the quiet foot soldiers of his kingdom, carrying heavy gear on their backs. Because their packs were so heavy, they could only take one small step at a time.",
-    "luca": "But don't underestimate these soldiers when the battle begins! Alfonso explained that a warrior couldn't easily strike an enemy blocking them face-to-face. Instead, they had to wait for the perfect moment to swing their swords sideways at an opponent on the diagonal."
+    "luca": "But don't underestimate these soldiers when the battle begins! Alfonso explained that a warrior couldn't easily strike an enemy blocking them face-to-face. Instead, they had to wait for the perfect moment to swing their swords sideways at an opponent on the diagonal.",
+    "cn": "很久以前，有一位聪明的国王叫阿方索，他写了一本漂亮的书，专门讲国际象棋里藏着的秘密。他觉得，棋盘上那些小小的兵，就像王国里默默无闻的步兵，背上扛着沉甸甸的装备。正因为背包太重啦，他们每次只能慢慢地、稳稳地向前迈一小步。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "棋盘上的中世纪小士兵"
 }

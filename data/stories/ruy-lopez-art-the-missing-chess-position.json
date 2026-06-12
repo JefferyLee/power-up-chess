@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-missing-chess-position",
   "bookId": "ruy-lopez-art",
   "title": "The Missing Chess Position",
+  "titleCn": "失踪的棋局",
   "body": "Over five hundred years ago, a Spanish writer named Lucena published one of the earliest books about modern chess. Today, chess players study a famous endgame trick called the Lucena Position, named in his honor. But there is a funny twist: if you search through Lucena's ancient book, that famous position is nowhere to be found!",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-42373c558e",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a thoughtful writer named Lucena printed one of the very first books about our favorite game. Today, players still practice a clever endgame trick named in his honor. But if you turn the dusty, yellowed pages of his ancient book, you will find that this special setup is completely missing.",
-    "luca": "Imagine a secret code named after a master who never actually wrote it down! We all learn this brilliant winning setup and use his name to describe it. Yet, if you hunt through his original guidebook from five hundred years ago, the secret formula is totally gone."
+    "luca": "Imagine a secret code named after a master who never actually wrote it down! We all learn this brilliant winning setup and use his name to describe it. Yet, if you hunt through his original guidebook from five hundred years ago, the secret formula is totally gone.",
+    "cn": "很久以前，在西班牙，有一位爱思考的作家，名叫卢塞纳。他印出了关于我们最爱的国际象棋的最早的书之一。直到今天，棋手们还在练习一个用他的名字命名的聪明的残局妙招。可是呢，如果你翻开他那本落满灰尘、纸页发黄的老书，你会发现——这个特别的棋局竟然根本不在里面！"
   },
   "source": {
     "book": "The Art of the Game of Chess",

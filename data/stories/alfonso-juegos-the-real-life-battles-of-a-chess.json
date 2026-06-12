@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a king named Alfonso spent his quiet hours creating a magnificent book filled with chess secrets. But while he was traveling far from home, a real army crossed into his peaceful lands. His young son had to step forward and watch over the kingdom.",
-    "luca": "Picture this: the king is away, and suddenly an enemy army marches right into your territory! In the year 1275, King Alfonso's young son had to face this exact challenge. He had to act fast and protect his family's land all by himself."
+    "luca": "Picture this: the king is away, and suddenly an enemy army marches right into your territory! In the year 1275, King Alfonso's young son had to face this exact challenge. He had to act fast and protect his family's land all by himself.",
+    "cn": "很久以前，国王阿方索常常在安静的时光里，编写一本装满国际象棋秘密的华丽大书。可是有一次，他出门远行，一支真正的军队竟闯进了他平静的国土。他年纪小小的儿子只好勇敢地站出来，替父亲守护整个王国。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "棋盘国王的真实战斗"
 }

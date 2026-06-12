@@ -14,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Over a hundred years ago, a quiet young man named Paul sat in a cozy theater box in Paris. While the opera singers performed on stage, he focused on a tiny wooden board. He played a friendly game of chess against two noblemen, gently placing his pieces under the dim lights.",
-    "luca": "Paul launched a brilliant and fearless attack! He gave up his most valuable pieces on purpose to trap the enemy king. That wild evening turned into the most famous casual chess battle of all time."
+    "luca": "Paul launched a brilliant and fearless attack! He gave up his most valuable pieces on purpose to trap the enemy king. That wild evening turned into the most famous casual chess battle of all time.",
+    "cn": "一百多年前，在巴黎，一位安静的年轻人——保罗，坐在剧院里舒舒服服的包厢里。台上的歌唱家们唱着歌剧，他的眼睛却盯着一张小小的木头棋盘。在昏黄的灯光下，他轻轻地落子，和两位贵族下了一盘友好的国际象棋。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -23,5 +24,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "歌剧院里的传奇一夜"
 }

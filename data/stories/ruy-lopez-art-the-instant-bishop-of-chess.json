@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Imagine a quiet stone room in Spain where a king sat playing his favorite game. Suddenly, a guard rushed in because a captive in the dungeon needed to share a final secret before it was too late. Since no holy man could be found in the castle, the king looked at his clever opponent. He gently declared that his chess partner was now a real-life priest so the duty could be finished.",
-    "luca": "Talk about a crazy emergency! The king absolutely had to find a church leader to hear a captive's final confession, but the castle was totally empty. He looked down at the board, got a wild idea, and pointed his finger right at his chess opponent. Just like that, with one quick royal command, a regular player was drafted into the priesthood to save the day!"
+    "luca": "Talk about a crazy emergency! The king absolutely had to find a church leader to hear a captive's final confession, but the castle was totally empty. He looked down at the board, got a wild idea, and pointed his finger right at his chess opponent. Just like that, with one quick royal command, a regular player was drafted into the priesthood to save the day!",
+    "cn": "想象一下，在西班牙一间安静的石头屋子里，国王正坐着下他最喜欢的国际象棋。忽然，一名卫兵急匆匆地跑进来——地牢里有个囚犯，想趁还来得及，说出最后的秘密。可是整座城堡里找不到一位神职人员。国王看了看对面这位聪明的棋友，温和地宣布：从这一刻起，他的下棋伙伴就是一位真正的神父啦！这样，这件要紧的事就能办成了。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "下棋下出来的主教"
 }

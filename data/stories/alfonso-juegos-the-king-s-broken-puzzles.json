@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a wise king named Alfonso collected over one hundred chess challenges into a beautiful, hand-written book. He wanted to share these quiet mind-games with everyone, but a few of the drawings had tiny mistakes that made them impossible to finish. For hundreds of years, these little errors slept on the pages until modern chess lovers finally solved the mystery.",
-    "luca": "Imagine opening a book of chess battles from many centuries ago, only to find out the games are completely stuck. King Alfonso designed over a hundred of these challenges, but a few had hidden mistakes that made winning totally impossible. It took modern chess detectives to hunt down the errors and finally crack the king's broken codes."
+    "luca": "Imagine opening a book of chess battles from many centuries ago, only to find out the games are completely stuck. King Alfonso designed over a hundred of these challenges, but a few had hidden mistakes that made winning totally impossible. It took modern chess detectives to hunt down the errors and finally crack the king's broken codes.",
+    "cn": "很久以前，在西班牙，聪明的阿方索国王把一百多道国际象棋难题，收进了一本美丽的手写书里。他想把这些安安静静的动脑游戏分享给所有人。可是有几幅图画上出了一点点小差错，让那些题目根本没办法解开。这些小错误在书页里一睡就是好几百年，直到现代的棋迷们当起了侦探，才终于解开了谜团。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国王的“坏掉的”棋题"
 }

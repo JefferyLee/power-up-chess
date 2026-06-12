@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-christmas-game-day",
   "bookId": "alfonso-juegos",
   "title": "Christmas Game Day",
+  "titleCn": "圣诞游戏日",
   "body": "Hundreds of years ago, playing board games for money was strictly illegal outside of special gaming houses. But there was one exception to the rule. On Christmas Eve and Christmas Day, the law allowed everyone to play games at home so they could share holiday cheer with their families.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-c3b21c4615",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Many years ago, families had to keep their game boards hidden away because playing for prizes was forbidden in ordinary homes. Only special gaming halls were allowed to host these matches. But on the cozy nights of Christmas Eve and Christmas Day, the rules softened so everyone could share the joy of playing by the fire.",
-    "luca": "Back in the old days, playing board games for stakes was totally banned unless you went to a designated gaming hall. But on Christmas Eve and Christmas Day, the law declared a massive truce. Families could finally challenge each other at home and share the excitement of the game."
+    "luca": "Back in the old days, playing board games for stakes was totally banned unless you went to a designated gaming hall. But on Christmas Eve and Christmas Day, the law declared a massive truce. Families could finally challenge each other at home and share the excitement of the game.",
+    "cn": "很多年以前，普通人家是不许玩带彩头的游戏的，所以家家户户只好把棋盘藏起来。只有专门的游戏厅，才可以举办这样的比赛。可是一到平安夜和圣诞节那两个暖融融的夜晚，规矩就变温柔了——大家终于可以围着炉火，一起分享玩游戏的快乐啦。"
   },
   "source": {
     "book": "Libro de los juegos",

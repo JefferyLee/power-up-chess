@@ -610,9 +610,10 @@ const equipCosmeticFn = httpsCallable<
   EquipCosmeticResponse
 >(functions, 'equipCosmetic')
 
-// P1.F Story Library — Edge-TTS proxy callable.
+// P1.F Story Library — Edge-TTS proxy callable. 'owl' is the Book
+// Owl's British voice; 'cn' reads the Chinese story variants.
 export interface SynthesizeStoryAudioRequest {
-  voice: 'lucy' | 'luca'
+  voice: 'lucy' | 'luca' | 'owl' | 'cn'
   text: string
 }
 export interface SynthesizeStoryAudioResponse {
@@ -655,6 +656,43 @@ const getLibraryShelvesFn = httpsCallable<unknown, GetLibraryShelvesResponse>(
 )
 export async function callGetLibraryShelves(): Promise<GetLibraryShelvesResponse> {
   const { data } = await getLibraryShelvesFn(undefined)
+  return data
+}
+
+// Book Owl — curated reading lists proxied from the book-seek project.
+export interface SeekBooksRequest { topicId: string }
+export interface SeekBook {
+  title: string
+  author: string
+  year: string
+  intro: string
+  introCn: string
+  coverUrl?: string
+  verified?: boolean
+}
+export interface SeekSection {
+  key: string
+  title: string
+  titleCn: string
+  books: SeekBook[]
+}
+export interface SeekList {
+  topicId: string
+  label: string
+  labelCn: string
+  sections: SeekSection[]
+  notes?: string
+  notesCn?: string
+}
+export type SeekBooksResponse =
+  | { ok: true; list: SeekList }
+  | { ok: false; status: 'not-ready' }
+const seekBooksFn = httpsCallable<SeekBooksRequest, SeekBooksResponse>(
+  functions,
+  'seekBooks',
+)
+export async function callSeekBooks(topicId: string): Promise<SeekBooksResponse> {
+  const { data } = await seekBooksFn({ topicId })
   return data
 }
 

@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-king-s-chess-tournament",
   "bookId": "ruy-lopez-art",
   "title": "The King's Chess Tournament",
+  "titleCn": "国王的国际象棋大赛",
   "body": "Long ago in 1575, the King of Spain hosted one of the very first international chess tournaments. A player named Leonardo won the grand prize, which included a fancy fur cape and bags of gold. Even better, Leonardo asked the king to stop taxing his hometown for twenty years, making him a local hero!",
   "motif": "tournament",
   "sourceChunkId": "ruy-lopez-art-e7678f869c",
@@ -15,7 +16,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "In the year 1575, the King of Spain invited the world's finest players to a grand palace tournament. A quiet player named Leonardo won the final games, receiving a beautiful cape made of soft fur and heavy sacks of gold coins. Instead of keeping all the wealth for himself, he made a gentle request to the king. He asked that his entire home village be freed from paying taxes for twenty long years, bringing comfort to his neighbors.",
-    "luca": "Imagine a massive chess showdown in a royal castle, where the ultimate champion would take home a legendary treasure. A bold player named Leonardo defeated everyone to win the grand prize of gold and a fancy royal cloak. But his greatest move happened after the game ended. He used his victory to strike a deal with the king, saving his hometown from taxes for two whole decades!"
+    "luca": "Imagine a massive chess showdown in a royal castle, where the ultimate champion would take home a legendary treasure. A bold player named Leonardo defeated everyone to win the grand prize of gold and a fancy royal cloak. But his greatest move happened after the game ended. He used his victory to strike a deal with the king, saving his hometown from taxes for two whole decades!",
+    "cn": "公元1575年，西班牙国王把全世界最厉害的棋手请进了富丽堂皇的宫殿，举办了一场盛大的比赛。一位安静的棋手莱昂纳多赢下了最后的对局，得到了一件柔软的毛皮披风，还有一袋袋沉甸甸的金币。可他没有把财富都留给自己，而是轻轻地向国王提了一个请求：让他的家乡整整二十年都不用交税。乡亲们听了，心里别提多暖和了。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

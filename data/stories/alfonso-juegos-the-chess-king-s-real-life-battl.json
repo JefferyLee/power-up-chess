@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a wise king named Alfonso created a beautiful, hand-painted book filled with chess secrets. He loved the quiet order of the game, where every piece had its place. Sadly, his own home became much more troubled than any chessboard when his son turned against him to take the crown.",
-    "luca": "Talk about a massive plot twist! Alfonso's son, Sancho, secretly teamed up with enemy rulers to snatch the kingdom away. The wise king had to spend his very last years defending his throne in a giant, real-life battle. It was just like a high-stakes chess match, but with real crowns on the line."
+    "luca": "Talk about a massive plot twist! Alfonso's son, Sancho, secretly teamed up with enemy rulers to snatch the kingdom away. The wise king had to spend his very last years defending his throne in a giant, real-life battle. It was just like a high-stakes chess match, but with real crowns on the line.",
+    "cn": "很久以前，在西班牙，有一位聪明的国王叫阿方索，他做了一本美丽的手绘书，里面装满了国际象棋的秘密。他喜欢棋盘上那种安安静静的秩序——每个棋子都待在自己该待的地方。可惜呀，他自己的家却比任何一盘棋都要乱：他的亲生儿子竟然背叛了他，想夺走他的王冠。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "棋盘国王的真实战斗"
 }

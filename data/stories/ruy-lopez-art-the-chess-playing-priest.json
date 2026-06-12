@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Five hundred years ago, a quiet priest named Ruy López packed his bags for a long journey to Rome. While visiting on church duties, he sat down at wooden tables to play the local masters. With gentle patience, he won every single game he played. Though the title did not exist yet, we now look back at him as the world's very first champion.",
-    "luca": "A priest named Ruy López marched into Italy five centuries ago and decided to take on the strongest players he could find. He swept through Rome, crushing the local masters with his bold strategies. He made every tough victory look totally effortless. History books now celebrate this brave traveler as the planet's very first chess king."
+    "luca": "A priest named Ruy López marched into Italy five centuries ago and decided to take on the strongest players he could find. He swept through Rome, crushing the local masters with his bold strategies. He made every tough victory look totally effortless. History books now celebrate this brave traveler as the planet's very first chess king.",
+    "cn": "五百年前，安静的神父鲁伊·洛佩斯收拾好行李，踏上了去罗马的漫长旅程。在那里办教会事务的空闲时间，他坐到木桌前，和当地的高手们下国际象棋。他不急不躁，温和又有耐心，结果每一盘棋都赢了。虽然那时还没有“世界冠军”这个头衔，但现在回头看，大家都把他当作世界上第一位国际象棋冠军。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "会下棋的神父"
 }

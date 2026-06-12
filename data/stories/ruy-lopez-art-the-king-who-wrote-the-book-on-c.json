@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-king-who-wrote-the-book-on-c",
   "bookId": "ruy-lopez-art",
   "title": "The King Who Wrote the Book on Chess",
+  "titleCn": "为国际象棋写书的国王",
   "body": "Back in the thirteenth century, King Alfonso of Spain was so fascinated by games that he ordered a special book to be written about them. This massive book featured beautiful hand-painted pictures of people playing chess. Thanks to his efforts, chess became incredibly popular across Europe as a tool for teaching smart thinking.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-8cadf71364",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle king named Alfonso decided to capture the joy of games in a giant book. He asked artists to paint lovely, colorful pictures of people sitting quietly and playing chess. This beautiful creation traveled across Europe, helping people learn how to think deeply and plan their next steps.",
-    "luca": "King Alfonso of Spain loved a good challenge, so he gathered his scribes to make the ultimate game guide. It was packed with awesome, hand-drawn scenes of players facing off over the board. This massive project spread everywhere, training people to think like brilliant strategists."
+    "luca": "King Alfonso of Spain loved a good challenge, so he gathered his scribes to make the ultimate game guide. It was packed with awesome, hand-drawn scenes of players facing off over the board. This massive project spread everywhere, training people to think like brilliant strategists.",
+    "cn": "很久以前，西班牙有一位温和的国王，名叫阿方索。他决定把游戏带来的快乐统统装进一本大大的书里。他请画师们画出一幅幅漂亮的彩色图画，画里的人安安静静地坐着下国际象棋。这本美丽的书后来走遍了欧洲，帮助人们学会深深地思考，想好下一步该怎么走。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

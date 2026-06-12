@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-king-alfonso-s-rules-for-fair-pl",
   "bookId": "alfonso-juegos",
   "title": "King Alfonso's Rules for Fair Play",
+  "titleCn": "阿方索国王的公平游戏规则",
   "body": "In the medieval days, gaming houses were wild places filled with arguments, trickery, and loaded dice. To bring order to the chaos, King Alfonso the Tenth of Castile ordered a special law book to be written in 1276. This guide established forty-four rules to punish cheaters and keep board games fair for everyone.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-19e0e47d84",
@@ -13,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, the rooms where people gathered to play games were very loud and full of trickery. King Alfonso wanted everyone to enjoy their games in peace, so he decided to make a change. In the year 1276, he had a beautiful book written down with forty-four special rules. This guide helped protect players so that every move on the board could be honest and kind.",
-    "luca": "Imagine a crowded hall where players used secret tricks and even fake dice to steal a victory. King Alfonso of Castile decided to put an end to this wild chaos. In 1276, he created a powerful law book packed with forty-four rules to stop the cheaters. This brave plan made sure that every game of skill was played with honor."
+    "luca": "Imagine a crowded hall where players used secret tricks and even fake dice to steal a victory. King Alfonso of Castile decided to put an end to this wild chaos. In 1276, he created a powerful law book packed with forty-four rules to stop the cheaters. This brave plan made sure that every game of skill was played with honor.",
+    "cn": "很久以前，人们聚在一起玩游戏的屋子总是闹哄哄的，到处都有人耍小花招。阿方索国王希望每个人都能安安心心地玩游戏，于是决定改变这一切。在1276年，他让人写下了一本漂亮的书，里面有四十四条特别的规则。这本指南保护着每一位玩游戏的人，让棋盘上的每一步都诚实又友善。"
   },
   "source": {
     "book": "Libro de los juegos",

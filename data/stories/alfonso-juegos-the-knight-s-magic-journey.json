@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise king named Alfonso wrote a beautiful book about the secrets of chess. He loved how the clever knight could hop gracefully across the board. He showed how one lone horseman, starting in the very corner, could touch every square on the board during its quiet journey.",
-    "luca": "Imagine a wild mission where your knight has to leap onto every single square on the battlefield without missing one! King Alfonso wrote down this ultimate jumping quest hundreds of years ago. Today, brave players still try to solve this legendary puzzle called the Knight's Tour."
+    "luca": "Imagine a wild mission where your knight has to leap onto every single square on the battlefield without missing one! King Alfonso wrote down this ultimate jumping quest hundreds of years ago. Today, brave players still try to solve this legendary puzzle called the Knight's Tour.",
+    "cn": "很久以前，聪明的国王阿方索写了一本漂亮的书，讲国际象棋的小秘密。他特别喜欢看机灵的马在棋盘上轻巧地跳来跳去。他还展示了一匹孤零零的小马，从棋盘的角落出发，怎样在安静的旅行中踩遍棋盘上的每一个格子。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "马儿的奇妙旅程"
 }

@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Way back in the late fifteenth century, a Spanish author named Luis de Lucena sat down with ink and parchment to record the new rules of chess. Inside his precious book, he drew a quiet trap where a single knight completely surrounds the opposing king. Sadly, as the years drifted by, people forgot his name and gave the honor to a different player named Philidor instead.",
-    "luca": "Imagine pulling off a sneaky knight strike, only for someone else to steal your glory centuries later! That is exactly what happened to Luis, who mapped out this epic battle plan way back in his 1497 handbook. A player named Philidor got his name on the trophy, but Luis was the true mastermind behind the trap."
+    "luca": "Imagine pulling off a sneaky knight strike, only for someone else to steal your glory centuries later! That is exactly what happened to Luis, who mapped out this epic battle plan way back in his 1497 handbook. A player named Philidor got his name on the trophy, but Luis was the true mastermind behind the trap.",
+    "cn": "早在十五世纪快结束的时候，西班牙作家路易斯·德·卢塞纳拿起墨水和羊皮纸，坐下来记录国际象棋的新规则。在他那本珍贵的书里，他画下了一个安静的陷阱：只用一个马，就把对方的王困得死死的。可惜呀，随着岁月慢慢流走，人们忘记了他的名字，把这份荣誉给了另一位棋手——菲利多尔。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "棋史上的名字大乌龙"
 }

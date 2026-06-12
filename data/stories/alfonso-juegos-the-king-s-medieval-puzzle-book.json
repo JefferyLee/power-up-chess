@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a king ordered a wonderful book filled with over a hundred chess secrets. Artists painted colorful illustrations for every single page to show where the wooden pieces belonged. If you look closely at the drawings, you can see exactly how to set up each challenge.",
-    "luca": "This wasn't just a regular book—it was a battle guide with high-stakes challenges. You had to hunt down the perfect checkmate in a limited number of turns. One tiny slip-up by the attacker, and the defender snatched the victory instantly."
+    "luca": "This wasn't just a regular book—it was a battle guide with high-stakes challenges. You had to hunt down the perfect checkmate in a limited number of turns. One tiny slip-up by the attacker, and the defender snatched the victory instantly.",
+    "cn": "很久以前，一位国王下令做一本很棒的书，里面藏着一百多个国际象棋的秘密。画师们给每一页都画上了五彩缤纷的插图，告诉你每个木头棋子应该摆在哪里。只要你仔细看那些图画，就能照着摆出每一道棋题来。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国王的中世纪棋题书"
 }

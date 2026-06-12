@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, a thoughtful chess master named Aron Nimzowitsch used a clever playground story to teach his students. He explained that to win a weak pawn, you do not have to attack it directly. Instead, you gently steer its defenders away or block their path so they can no longer help.",
-    "luca": "Get ready for a classic schoolyard showdown right on the board! Aron Nimzowitsch loved to show players how to capture a weak pawn by ignoring the pawn itself at first. Your real mission is to charge at the defenders, scaring them off or blocking them completely. Once the guards scatter, that target is totally yours!"
+    "luca": "Get ready for a classic schoolyard showdown right on the board! Aron Nimzowitsch loved to show players how to capture a weak pawn by ignoring the pawn itself at first. Your real mission is to charge at the defenders, scaring them off or blocking them completely. Once the guards scatter, that target is totally yours!",
+    "cn": "很久以前，爱思考的国际象棋大师阿龙·尼姆佐维奇，用一个聪明的操场小故事来教学生。他说，想赢下对方一个虚弱的兵，并不需要直接去攻击它。你可以轻轻把它的保镖们引开，或者挡住他们的路，让他们再也帮不上忙。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "操场上的国际象棋大战"
 }

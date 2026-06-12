@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a chess master named Aron began a game with one of his corner castles completely missing from the board. Instead of worrying, he guided his little foot soldiers slowly and carefully into the very heart of the battlefield. They stood shoulder to shoulder, creating a safe path while the other player overlooked the middle of the board. It took only thirteen quiet steps for the opponent to realize his own king was entirely lost.",
-    "luca": "Aron started the match with a giant handicap, leaving his left rook completely off the board! But he had a wild plan to charge his pawns straight down the center like a runaway train. The other player grabbed extra pieces but forgot to guard his own middle ground. In just thirteen lightning-fast moves, the enemy king was trapped with absolutely nowhere to run!"
+    "luca": "Aron started the match with a giant handicap, leaving his left rook completely off the board! But he had a wild plan to charge his pawns straight down the center like a runaway train. The other player grabbed extra pieces but forgot to guard his own middle ground. In just thirteen lightning-fast moves, the enemy king was trapped with absolutely nowhere to run!",
+    "cn": "很久以前，国际象棋大师阿龙下了一盘特别的棋——开局的时候，他角落里的一辆车干脆没放上棋盘。他一点儿也不慌，慢慢地、小心地带着他的小兵们走向战场的正中央。小兵们肩并着肩，铺出一条安全的路，而对手却一直没把棋盘中央放在眼里。只走了短短十三步，对手就发现，自己的王已经彻底没救了。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "少一辆车的妙局"
 }

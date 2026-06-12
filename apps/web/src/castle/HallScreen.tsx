@@ -457,8 +457,8 @@ export function HallScreen() {
           <RoomDoor
             icon="📚"
             iconKey="library"
-            label="Story Library"
-            blurb="108 chess stories — read with Lucy or Luca."
+            label="The Library"
+            blurb="Chess stories + the Book Owl's reading lists."
             variant="parchment"
             onClick={() => navigate('/library')}
           />

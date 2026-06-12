@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Once, the chess queen was very quiet and could only step one tiny square at a time. But in Spain, a real queen named Isabella wore armor and guided her armies with great care. The people wanted their game to mirror her strength, so they gave the wooden queen the power to glide all the way across the board.",
-    "luca": "Imagine a queen who could only crawl one space at a time—so boring! Then came Queen Isabella of Spain, a fierce leader who actually marched right into battle with her soldiers. Chess players saw her bravery and decided the game needed a major upgrade. They unlocked her ultimate move, letting her charge across the entire battlefield in a single swoop!"
+    "luca": "Imagine a queen who could only crawl one space at a time—so boring! Then came Queen Isabella of Spain, a fierce leader who actually marched right into battle with her soldiers. Chess players saw her bravery and decided the game needed a major upgrade. They unlocked her ultimate move, letting her charge across the entire battlefield in a single swoop!",
+    "cn": "从前，棋盘上的后特别安静，每次只能小心翼翼地挪一格。可是在西班牙，有一位真正的女王，名叫伊莎贝拉。她穿上铠甲，细心地指挥着自己的军队。人们希望棋盘上的后也能像她一样强大，于是就送给木头做的后一种新本领——让她可以一口气滑过整张棋盘。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "后是怎么变成最强棋子的"
 }

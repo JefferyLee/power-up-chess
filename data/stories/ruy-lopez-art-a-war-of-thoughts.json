@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Nearly nine centuries ago, a wise scholar named Abraham sat down in Spain to write a beautiful poem. He painted a picture of a quiet battlefield made of dark and light squares. On this board, two armies meet, yet there is no clashing of metal or sound of shields. It is a silent, magical dance where only gentle ideas guide the pieces.",
-    "luca": "Imagine a massive clash where nobody gets hurt because the only weapons are inside your own mind! That is exactly what Abraham described in his epic poem nine hundred years ago. He saw the checkered board as a thrilling battleground for two rival armies. Every single move is a secret plan, proving that the ultimate power is just a brilliant strategy."
+    "luca": "Imagine a massive clash where nobody gets hurt because the only weapons are inside your own mind! That is exactly what Abraham described in his epic poem nine hundred years ago. He saw the checkered board as a thrilling battleground for two rival armies. Every single move is a secret plan, proving that the ultimate power is just a brilliant strategy.",
+    "cn": "差不多九百年前，在西班牙，有一位聪明的学者，名叫亚伯拉罕。他坐下来，写了一首美丽的诗。诗里描绘了一个安静的战场，由深色和浅色的方格拼成。在这块棋盘上，两支大军相遇了，却听不到刀剑相碰的声音，也没有盾牌的撞响。这是一场无声又神奇的舞蹈——指挥棋子的，只有轻轻的念头和巧妙的主意。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "一场思想的战争"
 }

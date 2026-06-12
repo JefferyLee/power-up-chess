@@ -32,6 +32,9 @@ async function main() {
     stories.push({
       id: story.id,
       title: story.title,
+      // Chinese title for the library's CN mode (optional until every
+      // story is translated).
+      ...(story.titleCn ? { titleCn: story.titleCn } : {}),
       variants: story.variants,
       motif: story.motif,
       era: story.era,

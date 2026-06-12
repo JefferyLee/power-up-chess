@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-origin-of-the-gambit",
   "bookId": "ruy-lopez-art",
   "title": "The Origin of the Gambit",
+  "titleCn": "“弃兵局”这个词的由来",
   "body": "In the sixteenth century, a Spanish priest named Ruy Lopez wrote a book pointing out the mistakes of an earlier master named Damiano. In his writings, Lopez explained the meaning of the word 'gambit,' which actually comes from an old Italian wrestling phrase about tripping up an opponent's leg.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-24d13ffc4b",
@@ -13,7 +14,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the fifteen-hundreds, a priest in Spain named Ruy Lopez spent his quiet hours writing a book about chess. He wanted to help players by pointing out the errors of a past champion named Damiano. In his writing, he explained a wonderful word we still use today called the gambit. It originally came from an old Italian wrestling trick where you sweep your opponent's ankle.",
-    "luca": "Imagine a clever priest named Ruy Lopez challenging the old ideas of an older player named Damiano. In his action-packed book, Lopez revealed a sneaky move called the gambit. This word actually comes from Italian athletes who loved to trip their rival's leg to win a match. It is the ultimate surprise attack!"
+    "luca": "Imagine a clever priest named Ruy Lopez challenging the old ideas of an older player named Damiano. In his action-packed book, Lopez revealed a sneaky move called the gambit. This word actually comes from Italian athletes who loved to trip their rival's leg to win a match. It is the ultimate surprise attack!",
+    "cn": "在很久以前的十六世纪，西班牙有一位神父，名叫鲁伊·洛佩斯。他喜欢在安静的时光里写一本关于国际象棋的书。他想帮助棋手们，就把从前一位高手达米亚诺书里的错误一一指了出来。在书里，他还讲了一个我们今天还在用的奇妙的词——“弃兵局”。这个词原本来自意大利古老的摔跤招式，意思是伸腿一勾，把对手绊个趔趄！"
   },
   "source": {
     "book": "The Art of the Game of Chess",

@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "In the year 1929, a thoughtful player named Aron Nimzowitsch traveled to a major contest in Carlsbad. Almost everyone expected the famous former champion, Capablanca, to easily win. But Aron guided his pieces with highly unusual, clever ideas that puzzled his opponents. In the end, his quiet focus earned him the top prize.",
-    "luca": "Aron went head-to-head with the biggest giants of the game, including the famous master Capablanca. Instead of playing safe, he unleashed daring and unexpected plans that shook up the whole room. He charged past the favorites to snatch the gold. That day, he proved his wild style could defeat the toughest opponents on Earth!"
+    "luca": "Aron went head-to-head with the biggest giants of the game, including the famous master Capablanca. Instead of playing safe, he unleashed daring and unexpected plans that shook up the whole room. He charged past the favorites to snatch the gold. That day, he proved his wild style could defeat the toughest opponents on Earth!",
+    "cn": "1929年，一位爱思考的棋手——阿龙·尼姆佐维奇——来到卡尔斯巴德，参加一场重要的大赛。几乎所有人都觉得，冠军肯定是那位大名鼎鼎的前世界冠军卡帕布兰卡。可是阿龙走的棋又新奇又巧妙，把对手们一个个都看糊涂了。最后，靠着安安静静的专注，他捧走了第一名的奖杯。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "打败棋坛巨人"
 }

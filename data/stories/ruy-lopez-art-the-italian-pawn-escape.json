@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-italian-pawn-escape",
   "bookId": "ruy-lopez-art",
   "title": "The Italian Pawn Escape",
+  "titleCn": "意大利小兵的逃脱妙计",
   "body": "In the sixteenth century, chess players in Italy had their own unique set of rules. One famous custom allowed a pawn to jump forward two squares without being captured by an enemy pawn waiting on the side. This special rule was known as passing battle, and it made Italian games very different from those played in other countries.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-327ef06275",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the sunny valleys of Italy, chess was played with a gentle touch of wonder. A tiny pawn could glide forward two whole spaces, safely slipping past an enemy waiting right next to it. They called this quiet escape the passing battle, and it kept the little soldiers safe on their journey.",
-    "luca": "Imagine sprinting right through enemy lines without getting caught! Five hundred years ago, Italian players used a special rule where pawns could leap two squares to dodge a sideways ambush. This daring move was called the passing battle, and it turned their games into a fast-paced rescue mission."
+    "luca": "Imagine sprinting right through enemy lines without getting caught! Five hundred years ago, Italian players used a special rule where pawns could leap two squares to dodge a sideways ambush. This daring move was called the passing battle, and it turned their games into a fast-paced rescue mission.",
+    "cn": "很久很久以前，在阳光洒满山谷的意大利，人们下国际象棋的方式带着一点奇妙的温柔。一个小小的兵可以一口气向前滑两格，安安稳稳地从旁边正等着抓它的敌人身边溜过去。人们把这种悄悄的逃脱叫作“过路之战”，它让小兵们在旅途中平平安安。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

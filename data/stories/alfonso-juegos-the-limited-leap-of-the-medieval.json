@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "More than seven hundred years ago, the bishop was a quiet traveler on the wooden board. King Alfonso wrote in his old book that this little piece could only ever visit six special squares. It moved by taking a gentle, two-step leap along the diagonal lines, never wandering any further.",
-    "luca": "Back in the medieval days, the bishop didn't slide across the whole battlefield like a rocket. It was a trick jumper, leaping exactly two spaces diagonally to land on its target. This meant the brave piece was locked out of almost every fight, with only six spots it could ever reach!"
+    "luca": "Back in the medieval days, the bishop didn't slide across the whole battlefield like a rocket. It was a trick jumper, leaping exactly two spaces diagonally to land on its target. This meant the brave piece was locked out of almost every fight, with only six spots it could ever reach!",
+    "cn": "七百多年前，象还是木头棋盘上一位安安静静的小旅行家。国王阿方索在他的古书里写道，这枚小棋子一辈子只能去六个特别的格子。它走路的方式，是沿着斜线轻轻一跳、正好跳过两格，再远的地方就从来不去啦。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "中世纪小象的短短一跳"
 }

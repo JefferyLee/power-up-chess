@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, King Alfonso noticed that chess matches could last for a very long time. The players would sit quietly, waiting and waiting for the next turn. To bring a soft touch of surprise to the board, they began rolling dice to decide which piece to move next.",
-    "luca": "Imagine waiting forever just for one single turn. King Alfonso's players solved this boredom by tossing dice right onto the table to make things move much faster. Suddenly, the quiet strategy game became a wild race where a lucky roll decided your next big move."
+    "luca": "Imagine waiting forever just for one single turn. King Alfonso's players solved this boredom by tossing dice right onto the table to make things move much faster. Suddenly, the quiet strategy game became a wild race where a lucky roll decided your next big move.",
+    "cn": "很久以前，在西班牙，阿方索国王发现，一盘国际象棋有时候要下好久好久。棋手们安安静静地坐着，等啊等啊，就为了等对方走下一步。为了给棋盘添上一点小小的惊喜，人们开始掷骰子，让骰子来决定下一步该走哪个棋子。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "用骰子让象棋跑起来"
 }

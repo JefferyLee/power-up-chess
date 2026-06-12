@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Hundreds of years ago, a thoughtful player named Ruy López wrote a special guide filled with chess secrets. The King of Spain wanted to protect these precious pages, so he signed a royal paper just for this book. This gentle guard of ink made sure that no one could copy the writer's hard work without permission.",
-    "luca": "Imagine having the King of Spain protect your chess strategies! He made a strict royal rule that absolutely nobody could copy Ruy's new book. Anyone who dared to break this law faced a giant penalty of twenty thousand coins. That would be worth a massive fortune today!"
+    "luca": "Imagine having the King of Spain protect your chess strategies! He made a strict royal rule that absolutely nobody could copy Ruy's new book. Anyone who dared to break this law faced a giant penalty of twenty thousand coins. That would be worth a massive fortune today!",
+    "cn": "几百年前，有一位爱动脑筋的棋手，名叫鲁伊·洛佩斯。他写了一本特别的指南，里面装满了国际象棋的秘密。西班牙国王想保护这些珍贵的书页，于是专门为这本书签下了一道皇家文书。这位用墨水写成的“温柔卫士”守在书前，保证谁也不能不经允许，就抄走作者辛辛苦苦写下的成果。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "棋书的皇家卫士"
 }

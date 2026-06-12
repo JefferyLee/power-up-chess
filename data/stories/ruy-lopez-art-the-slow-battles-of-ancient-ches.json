@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-slow-battles-of-ancient-ches",
   "bookId": "ruy-lopez-art",
   "title": "The Slow Battles of Ancient Chess",
+  "titleCn": "古代象棋的慢悠悠大战",
   "body": "Before modern rules were invented, chess was a much slower game where players did not have to worry about quick attacks. Both sides would spend their first ten moves quietly setting up their armies on their own half of the board. Only after their forces were fully ready would they finally cross the middle line to fight.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-599bd2f63d",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, chess began as a very quiet, patient game. Players spent their first ten turns gently arranging their pieces, making sure every wooden soldier was in its perfect spot. No one rushed across the middle of the board until both sides were completely prepared.",
-    "luca": "Imagine a giant battle where you had to wait ten whole turns before you could even launch an attack! Both armies stayed on their own territory, preparing their secret formations. Only when the preparation was complete did the soldiers finally march across the border for a massive clash!"
+    "luca": "Imagine a giant battle where you had to wait ten whole turns before you could even launch an attack! Both armies stayed on their own territory, preparing their secret formations. Only when the preparation was complete did the soldiers finally march across the border for a massive clash!",
+    "cn": "很久很久以前，国际象棋刚出现的时候，是一种特别安静、特别有耐心的游戏。棋手们要花上整整十个回合，轻轻地摆好自己的棋子，让每一个小木头士兵都站在最合适的位置上。在双方都完完全全准备好之前，谁也不会急着冲过棋盘的中线。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

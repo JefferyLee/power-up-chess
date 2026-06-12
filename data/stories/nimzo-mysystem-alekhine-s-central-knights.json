@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Nearly a century ago, a clever player named Alexander guided his two quiet knights to the very middle of the board. His opponent, George, felt much too cramped with those pieces so close, so he decided to sweep one away. But as soon as that wooden horse left its square, a secret path opened up for the rest of Alexander's army to glide forward.",
-    "luca": "Back in 1925, Alexander pulled off a daring stunt by marching his knights straight into the heart of the battlefield. George felt completely trapped by these invaders, so he eagerly swiped one of them. But that play was a trap, because losing the piece unlocked a secret gateway for the rest of his army to charge ahead!"
+    "luca": "Back in 1925, Alexander pulled off a daring stunt by marching his knights straight into the heart of the battlefield. George felt completely trapped by these invaders, so he eagerly swiped one of them. But that play was a trap, because losing the piece unlocked a secret gateway for the rest of his army to charge ahead!",
+    "cn": "差不多一百年前，有位聪明的棋手，名叫亚历山大。他把自己两匹安静的马，一步一步领到了棋盘正中央。对手乔治被这两个棋子挤得难受极了，就决定吃掉一匹。可那匹木头马刚一离开格子，一条秘密通道就打开了，亚历山大剩下的大军顺着它轻轻滑了上来。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "阿廖欣的中心双马"
 }

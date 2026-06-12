@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in medieval Spain, players loved a quiet puzzle game where the rules were turned upside down. If a wooden piece stepped into your path, you were absolutely required to take it, even if it felt like a trap. It was a gentle lesson in letting go, where giving away your own pieces on purpose was the secret to finding a victory.",
-    "luca": "Imagine a wild battle from seven centuries ago where you are forced to strike every target your enemy throws at you! In this Spanish game, you couldn't run away or ignore an invitation to fight. You had to charge forward and capture, meaning you could sacrifice your mightiest warriors to lure the enemy into a trap. To win this clash, you actually had to lose your army on purpose!"
+    "luca": "Imagine a wild battle from seven centuries ago where you are forced to strike every target your enemy throws at you! In this Spanish game, you couldn't run away or ignore an invitation to fight. You had to charge forward and capture, meaning you could sacrifice your mightiest warriors to lure the enemy into a trap. To win this clash, you actually had to lose your army on purpose!",
+    "cn": "很久以前，在中世纪的西班牙，棋手们喜欢玩一种把规则整个翻过来的安静小游戏。只要有棋子走到你跟前，你就必须把它吃掉——哪怕你觉得那是个圈套，也不能不吃。这其实是一堂温柔的“学会放手”课：故意把自己的棋子送出去，反而是赢棋的秘密呢。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "中世纪的“必吃棋”"
 }

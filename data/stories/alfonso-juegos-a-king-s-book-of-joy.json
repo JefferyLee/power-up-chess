@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-a-king-s-book-of-joy",
   "bookId": "alfonso-juegos",
   "title": "A King's Book of Joy",
+  "titleCn": "国王的快乐之书",
   "body": "In 1283, King Alfonso of Spain was going through a very difficult time because his own son had rebelled against him. During a brief moment of peace, the king decided to create a beautiful book about games. He hoped that indoor games like chess would bring happiness and comfort to people who were sick, trapped, or lonely at home.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-30d0a41b55",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a sad king named Alfonso faced a rebellion led by his own son. During a quiet moment of peace, he decided to paint and write a magnificent book all about indoor games. He hoped that the magic of chess would bring a little warmth and comfort to those who were feeling lonely or unwell in their homes.",
-    "luca": "Imagine your own family turning against you in a battle for the throne! That is exactly what happened to King Alfonso, but he did not give up. In a quick break from the fighting, he launched a brilliant plan to create a master guidebook of games. He wanted chess to be a secret weapon of joy for anyone trapped inside or fighting a tough illness."
+    "luca": "Imagine your own family turning against you in a battle for the throne! That is exactly what happened to King Alfonso, but he did not give up. In a quick break from the fighting, he launched a brilliant plan to create a master guidebook of games. He wanted chess to be a secret weapon of joy for anyone trapped inside or fighting a tough illness.",
+    "cn": "很久以前的西班牙，有一位伤心的国王，名叫阿方索。他的儿子竟然带头反对他。趁着一段难得安静的日子，他决定写一本华丽的大书，画上各种各样能在屋里玩的游戏。他希望国际象棋的魔力，能给那些待在家里、感到孤单或者生病的人，带去一点点温暖和安慰。"
   },
   "source": {
     "book": "Libro de los juegos",

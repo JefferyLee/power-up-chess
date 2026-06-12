@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle priest named Ruy Lopez watched a young prince named Charles play chess with quiet focus. The prince loved the wooden pieces and the clever squares so much that it touched the priest's heart. To share this joy, the priest sat down and wrote one of the very first guidebooks, filled with secrets to help everyone learn the game.",
-    "luca": "Imagine a real-life prince from the old days who was totally obsessed with conquering the chessboard! A priest named Ruy Lopez saw this royal battle-spirit and decided to do something legendary. He grabbed his quill and wrote down a master plan, creating one of the world's first-ever chess rulebooks to help future champions win their own matches."
+    "luca": "Imagine a real-life prince from the old days who was totally obsessed with conquering the chessboard! A priest named Ruy Lopez saw this royal battle-spirit and decided to do something legendary. He grabbed his quill and wrote down a master plan, creating one of the world's first-ever chess rulebooks to help future champions win their own matches.",
+    "cn": "很久很久以前，在西班牙，有一位温和的神父，名叫鲁伊·洛佩斯。他注意到小王子卡洛斯下国际象棋时总是全神贯注。小王子那么喜欢那些木头棋子和巧妙的方格，这份热爱深深打动了神父的心。为了把这份快乐分享给更多人，神父坐下来，写出了世界上最早的国际象棋指南之一，里面装满了帮助大家学会下棋的小秘密。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "爱下棋的小王子"
 }

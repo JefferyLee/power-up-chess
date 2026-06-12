@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Over five hundred years ago in Portugal, a quiet apothecary named Pedro Damiano spent his time writing down the secrets of the board. He wanted to help anyone learn how to guide their pieces gracefully. His wonderful book became so popular that workshops printed it over and over again for families to treasure.",
-    "luca": "Imagine mixing medicine by day and plotting epic chess victories by night! This Portuguese pharmacist wrote a strategy guide that became one of the first smash-hit books in history. Everyone wanted a piece of his clever tactics, so printers had to crank out version after version to keep up with the demand."
+    "luca": "Imagine mixing medicine by day and plotting epic chess victories by night! This Portuguese pharmacist wrote a strategy guide that became one of the first smash-hit books in history. Everyone wanted a piece of his clever tactics, so printers had to crank out version after version to keep up with the demand.",
+    "cn": "五百多年前的葡萄牙，有一位安静的药剂师，名叫佩德罗·达米亚诺。他把棋盘上的秘密一条一条写下来，希望帮助每一个人学会优雅地指挥自己的棋子。他这本好书后来大受欢迎，印书坊一遍又一遍地加印，好让一家又一家的人把它当成宝贝珍藏起来。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "会下棋的药剂师"
 }

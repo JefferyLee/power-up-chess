@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A new player once found a quiet way to rescue a difficult game. By sliding a piece back and forth, they kept the opposing king trapped in an endless loop. But the player grew restless with this soft rhythm and decided to move a different castle instead. That tiny change broke the spell, letting the king slip away and costing them the game.",
-    "luca": "This player had a perfect defensive loop going, keeping a tough opponent locked down with repeated attacks. But then they got tired of the same safe march and decided to swap pieces just to show off. Huge mistake! The rival king saw the gap, bolted for freedom, and snatched the victory right away."
+    "luca": "This player had a perfect defensive loop going, keeping a tough opponent locked down with repeated attacks. But then they got tired of the same safe march and decided to swap pieces just to show off. Huge mistake! The rival king saw the gap, bolted for freedom, and snatched the victory right away.",
+    "cn": "有个刚学棋的新手，曾经找到一个安安静静的办法，把一盘很难下的棋救了回来。他让一个棋子来来回回地走，把对方的王困在一个绕不出去的圈圈里。可是走着走着，他觉得这样的节奏太没意思了，于是决定换另一辆车来走。就是这么一个小小的改变，魔法一下子被打破了——王溜走了，这盘棋也输掉了。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "无聊惹的祸"
 }

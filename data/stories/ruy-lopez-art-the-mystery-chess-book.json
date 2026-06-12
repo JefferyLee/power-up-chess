@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-mystery-chess-book",
   "bookId": "ruy-lopez-art",
   "title": "The Mystery Chess Book",
+  "titleCn": "神秘的棋书",
   "body": "Over five hundred years ago, someone wrote a secret handbook of chess strategies called the Göttingen manuscript. Some historians believe it was created for a young Spanish prince, while others think it was written in Portugal. To this day, nobody knows for sure who actually wrote down these very first modern chess secrets!",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-509a100d93",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Imagine holding a delicate, hand-written book that is over five hundred years old. Its pages whisper secrets about how to move the chess pieces in brand new ways. Some people believe a teacher crafted this guide especially for a young prince in Spain.",
-    "luca": "This was the ultimate secret handbook of its time, packed with clever plans! We still do not know if it was written in Portugal or made for a royal Spanish family. The author left no name, leaving us with a brilliant chess mystery that nobody has solved yet."
+    "luca": "This was the ultimate secret handbook of its time, packed with clever plans! We still do not know if it was written in Portugal or made for a royal Spanish family. The author left no name, leaving us with a brilliant chess mystery that nobody has solved yet.",
+    "cn": "想象一下，你手里捧着一本五百多岁、薄薄的手写小书。它的书页轻声细语，讲着用全新方法移动棋子的秘密。有人相信，这本小书是一位老师特意为西班牙的一位小王子写的呢。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

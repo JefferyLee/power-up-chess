@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a wise world champion named Emanuel Lasker shared a secret for the very start of a chess game. He believed we should gently nudge just one or two of our little pawns forward at first. This opens up cozy pathways so our noble knights and elegant bishops can step onto the board. If we push too many pawns, our other friends get trapped behind them and lose their turn to play.",
-    "luca": "Imagine your knights and bishops are heroes waiting for the signal to charge forward. If you spend all your time marching a whole army of pawns, your best fighters stay stuck at the back. Lasker's top rule is to launch just one or two pawns to clear the gates, then send your heavy cavalry leaping into action. Speed is everything when you want to win the center of the board!"
+    "luca": "Imagine your knights and bishops are heroes waiting for the signal to charge forward. If you spend all your time marching a whole army of pawns, your best fighters stay stuck at the back. Lasker's top rule is to launch just one or two pawns to clear the gates, then send your heavy cavalry leaping into action. Speed is everything when you want to win the center of the board!",
+    "cn": "很久以前，一位睿智的世界冠军——埃马努埃尔·拉斯克——分享了一个开局的小秘密。他说，刚开始下棋的时候，只要轻轻推动一两个小兵就够了。这样就能打开舒舒服服的小路，让威风的马和优雅的象走上棋盘。要是推出去的兵太多，其他伙伴就会被堵在后面，连出场的机会都没有啦。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "拉斯克的小兵黄金法则"
 }

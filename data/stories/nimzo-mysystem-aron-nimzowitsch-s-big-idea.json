@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A thoughtful player named Aron wanted everyone to see the board in a gentle, clever way. He carefully wrote down his new rules for a newspaper in Vienna, showing how pieces can find safe homes to rest. To him, these quiet pathways were like hidden jewels that made his strategy shine.",
-    "luca": "Aron loved to brag about his daring new battle plans! He declared that he had cracked the secret code of the open pathways on the board. He published his bold rules for everyone to see, showing off the treasures of his wild new system."
+    "luca": "Aron loved to brag about his daring new battle plans! He declared that he had cracked the secret code of the open pathways on the board. He published his bold rules for everyone to see, showing off the treasures of his wild new system.",
+    "cn": "有一位爱思考的棋手，名叫阿伦。他想让大家用一种温和又聪明的眼光来看棋盘。他认认真真地把自己的新规则写下来，登在维也纳的报纸上，告诉大家棋子怎样找到安全的小窝休息。在他心里，这些安静的通道就像藏起来的宝石，让他的战术闪闪发光。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "尼姆佐维奇的大主意"
 }

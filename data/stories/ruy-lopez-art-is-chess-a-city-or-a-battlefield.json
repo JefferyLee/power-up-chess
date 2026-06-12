@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A monk named Jacobus looked at the wooden board and saw a quiet, busy town. He imagined the little pieces as neighbors, like bakers and builders, all helping each other live in peace. To him, every square was a tiny street where people worked side by side.",
-    "luca": "But then a Spanish champion named Ruy Lopez charged in with a totally different plan! He declared that those sixty-four squares were actually a wild, daring battlefield. For him, the game was a thrilling clash between two noble forces fighting for victory."
+    "luca": "But then a Spanish champion named Ruy Lopez charged in with a totally different plan! He declared that those sixty-four squares were actually a wild, daring battlefield. For him, the game was a thrilling clash between two noble forces fighting for victory.",
+    "cn": "有一位修士叫雅各布斯，他看着木头棋盘，看到的却是一座安静又热闹的小城。在他的想象里，小小的棋子就像住在一起的邻居——有面包师，有建筑工，大家互相帮忙，和和气气地过日子。在他眼里，每一个方格都是一条小小的街道，人们在那里肩并肩地干活。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国际象棋是城市还是战场？"
 }

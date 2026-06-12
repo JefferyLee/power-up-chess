@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-king-who-preferred-brains-ov",
   "bookId": "ruy-lopez-art",
   "title": "The King Who Preferred Brains Over Luck",
+  "titleCn": "爱动脑筋、不爱碰运气的国王",
   "body": "Long ago in India, a king named Balhait decided he did not like board games that used dice because they relied too much on luck. Instead, he wanted a game where players had to use their own smarts and free will to win. He promoted chess, using the board to plan out real military battles and even compare the pieces to the stars in the sky.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-4d6d82a522",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in ancient India, a gentle ruler named King Balhait watched his court toss dice and felt something was missing. He wished for a game where a person's own thoughtful choices decided the path to victory. To show his people a better way, he shared the quiet beauty of chess, comparing the carved figures to the glowing stars in the night sky.",
-    "luca": "King Balhait was totally done with letting random dice rolls decide who won! He wanted a real clash of minds where clever planning and bold moves ruled the day. He used the chessboard to map out daring army strategies, proving that smart thinking always beats lucky guesses."
+    "luca": "King Balhait was totally done with letting random dice rolls decide who won! He wanted a real clash of minds where clever planning and bold moves ruled the day. He used the chessboard to map out daring army strategies, proving that smart thinking always beats lucky guesses.",
+    "cn": "很久很久以前，在古老的印度，有一位温和的国王，名叫巴勒海特。他看着宫廷里的人们掷骰子玩游戏，总觉得少了点什么。他盼望有一种游戏，输赢是靠自己用心思考来决定的。于是，他把国际象棋安安静静的美分享给了大家，还把那些精雕细刻的棋子，比作夜空里一闪一闪的星星。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

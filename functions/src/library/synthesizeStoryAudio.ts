@@ -13,7 +13,9 @@
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts'
 
-export type StoryVoice = 'lucy' | 'luca'
+/** 'owl' is the Book Owl's voice — a warm British librarian.
+ *  'cn' reads the library's Chinese story variants. */
+export type StoryVoice = 'lucy' | 'luca' | 'owl' | 'cn'
 
 export interface SynthesizeStoryAudioRequest {
   voice: StoryVoice
@@ -29,6 +31,8 @@ export interface SynthesizeStoryAudioResponse {
 const VOICE_MAP: Record<StoryVoice, string> = {
   lucy: 'en-US-AriaNeural',
   luca: 'en-US-GuyNeural',
+  owl: 'en-GB-SoniaNeural',
+  cn: 'zh-CN-XiaoxiaoNeural',
 }
 
 const MAX_TEXT_LEN = 4000
@@ -42,8 +46,8 @@ export const synthesizeStoryAudio = onCall<
   }
   const voice = req.data?.voice
   const rawText = req.data?.text
-  if (voice !== 'lucy' && voice !== 'luca') {
-    throw new HttpsError('invalid-argument', 'voice must be lucy or luca.')
+  if (voice !== 'lucy' && voice !== 'luca' && voice !== 'owl' && voice !== 'cn') {
+    throw new HttpsError('invalid-argument', 'voice must be lucy, luca, owl or cn.')
   }
   const text = typeof rawText === 'string' ? rawText.trim() : ''
   if (text.length === 0) {

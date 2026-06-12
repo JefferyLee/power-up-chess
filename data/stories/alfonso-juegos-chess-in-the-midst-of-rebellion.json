@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-chess-in-the-midst-of-rebellion",
   "bookId": "alfonso-juegos",
   "title": "Chess in the Midst of Rebellion",
+  "titleCn": "叛乱中的国际象棋",
   "body": "In the early 1280s, King Alfonso X of Castile faced a heartbreaking rebellion led by his own son, Sancho. While sick and trapped in his palace in Seville, the king found solace in compiling knowledge. During this chaotic time, he finished his famous book of games, which became one of Europe's earliest and most beautiful guides to chess.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-3341a25cb5",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the 1280s, a king named Alfonso was very sick and could not leave his castle in Seville. While there was trouble outside, he sat quietly and gathered all the chess secrets he knew. He turned them into a beautiful book of games to keep his mind peaceful.",
-    "luca": "Talk about a family showdown! King Alfonso's own son led a rebellion against him, trapping the poor king inside his own palace. But instead of giving up, the king spent his time writing down the ultimate chess strategies. It became one of the very first and most famous game books in Europe."
+    "luca": "Talk about a family showdown! King Alfonso's own son led a rebellion against him, trapping the poor king inside his own palace. But instead of giving up, the king spent his time writing down the ultimate chess strategies. It became one of the very first and most famous game books in Europe.",
+    "cn": "很久以前，大约在一二八零年代，有一位叫阿方索的国王病得很重，只能待在塞维利亚的城堡里，哪儿也去不了。外面闹哄哄的，麻烦不断，他却安安静静地坐着，把自己知道的国际象棋秘密一条一条收集起来，写成了一本漂亮的游戏书，让自己的心保持平静。"
   },
   "source": {
     "book": "Libro de los juegos",

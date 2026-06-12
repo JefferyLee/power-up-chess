@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-chess-dice-and-backgammon",
   "bookId": "alfonso-juegos",
   "title": "Chess, Dice, and Backgammon",
+  "titleCn": "国际象棋、骰子和双陆棋",
   "body": "A famous legend tells of an Indian king who asked his wise men to prove what mattered more: brainpower, luck, or a mix of both. Each wise man returned with a game to prove his theory. One brought chess to represent pure intellect, another brought dice to represent luck, and the third brought backgammon to show how skill and luck work together.",
   "motif": "anecdote",
   "sourceChunkId": "alfonso-juegos-30d0a41b55",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a thoughtful king wanted to know what helped people succeed the most: deep thinking, simple luck, or a bit of both. His quiet advisors went away to find the perfect answers. They returned with three beautiful games, including a quiet board of carved wooden chess pieces that needed only a clever mind to win.",
-    "luca": "Imagine the challenge! One inventor brought rolling dice to show how wild luck can rule the world. Another brought backgammon, where you need a great plan but still have to watch the roll of the dice. But the last inventor showed off chess, where there are no lucky bounces and only your bravest moves can save the day."
+    "luca": "Imagine the challenge! One inventor brought rolling dice to show how wild luck can rule the world. Another brought backgammon, where you need a great plan but still have to watch the roll of the dice. But the last inventor showed off chess, where there are no lucky bounces and only your bravest moves can save the day.",
+    "cn": "很久以前，有一位爱思考的国王想弄明白：人要做成一件事，最靠得住的到底是什么？是动脑筋，是好运气，还是两样都来一点？他那些安静的谋士们各自出发，去寻找最好的答案。回来的时候，他们带来了三种漂亮的游戏，其中就有一副安安静静的木雕国际象棋——要赢下它，只需要一个聪明的脑袋。"
   },
   "source": {
     "book": "Libro de los juegos",

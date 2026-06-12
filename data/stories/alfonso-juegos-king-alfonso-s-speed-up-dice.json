@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle king named Alfonso loved playing a massive board game with giant wooden pieces. He watched over games filled with tall giraffes, proud lions, and even magical unicorns. Because the board was so big, the matches lasted for days. To make things faster, the king had his artists carve special blocks with eight sides to choose the next animal's turn.",
-    "luca": "Imagine a chess battle where you command roaring lions and charging unicorns across a giant board! King Alfonso loved this super-sized game, but the clashes took forever to finish. To speed through the adventure, the king came up with a brilliant plan. He created unique dice with eight sides, forcing players to roll and instantly launch their next beast into the action!"
+    "luca": "Imagine a chess battle where you command roaring lions and charging unicorns across a giant board! King Alfonso loved this super-sized game, but the clashes took forever to finish. To speed through the adventure, the king came up with a brilliant plan. He created unique dice with eight sides, forcing players to roll and instantly launch their next beast into the action!",
+    "cn": "很久以前，在西班牙，有一位温和的国王叫阿方索，他特别喜欢玩一种巨大的棋盘游戏，棋子都是大块的木头雕的。棋盘上有高高的长颈鹿、神气的狮子，甚至还有神奇的独角兽。可是棋盘实在太大啦，一盘棋常常要下上好几天。为了让游戏快一点，国王请工匠们做了一种特别的八面骰子，掷一掷，就知道下一步轮到哪只动物出场了。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "阿方索国王的加速骰子"
 }

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle king named Alfonso faced deep sadness when his own family started a war against him. To find a quiet space in his mind, he turned to the beautiful, carved shapes of chess pieces. He asked his scribes to paint a magnificent book filled with pictures of people playing games together. It was his way of finding a little bit of peace when the world outside was so loud.",
-    "luca": "King Alfonso was in giant trouble when his own relatives turned against him and started a massive fight for the throne! Instead of panicking during the chaos, he made a brilliant, unexpected move. He gathered artists to write one of the greatest game books in history, packed with chess secrets. He showed everyone that even when your kingdom is messy, you can still master the board!"
+    "luca": "King Alfonso was in giant trouble when his own relatives turned against him and started a massive fight for the throne! Instead of panicking during the chaos, he made a brilliant, unexpected move. He gathered artists to write one of the greatest game books in history, packed with chess secrets. He showed everyone that even when your kingdom is messy, you can still master the board!",
+    "cn": "很久以前，在西班牙，温和的国王阿方索遇上了一件特别伤心的事——他自己的家人竟然起兵和他打仗。为了让心里安静一点，他把目光投向那些雕刻得漂漂亮亮的棋子。他请书写师们画了一本华丽的大书，里面全是人们一起开心下棋的画面。外面的世界吵吵嚷嚷，这就是他给自己找到的一小片宁静。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "伤心的国王和他的游戏书"
 }

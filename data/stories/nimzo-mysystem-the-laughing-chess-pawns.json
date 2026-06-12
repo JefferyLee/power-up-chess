@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A clever chess master named Aron lived a long time ago, and he believed every wooden piece on the board had its own little heart. He warned that if you attack an opponent's pawn without a good plan, that tiny soldier will actually giggle at your mistake. To quiet its soft laughter, you must find a way to gently but firmly block its path.",
-    "luca": "That is when you launch a daring rescue mission with your bravest knight! You gallop right up to the giggling pawn's nose and claim a permanent outpost. Suddenly, your opponent gets super nervous, and that noisy little pawn completely loses its voice."
+    "luca": "That is when you launch a daring rescue mission with your bravest knight! You gallop right up to the giggling pawn's nose and claim a permanent outpost. Suddenly, your opponent gets super nervous, and that noisy little pawn completely loses its voice.",
+    "cn": "很久以前，有位聪明的国际象棋大师叫阿龙，他相信棋盘上的每个木头棋子都有一颗小小的心。他提醒大家：要是你还没想好计划就去攻击对方的兵，那个小士兵真的会咯咯地笑话你哦。想让它的笑声安静下来，你就得想个办法，温柔又坚定地挡住它的路。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "会笑的小兵"
 }

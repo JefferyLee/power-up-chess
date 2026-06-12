@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a chess master named Aron Nimzowitsch looked at his wooden pieces and saw a tiny, living world. He believed the rooks on the board were the closest of friends, always watching out for each other. When one rook stepped into danger to let the other win the game, Aron saw it as a quiet, beautiful act of love.",
-    "luca": "Imagine your castle pieces as ultimate teammates on a daring mission! Aron Nimzowitsch loved to plan these wild rescues where one rook would charge straight into the enemy line. By drawing all the fire, this brave hero cleared the path so their best buddy could swoop in for the final checkmate. It was the ultimate sacrifice play!"
+    "luca": "Imagine your castle pieces as ultimate teammates on a daring mission! Aron Nimzowitsch loved to plan these wild rescues where one rook would charge straight into the enemy line. By drawing all the fire, this brave hero cleared the path so their best buddy could swoop in for the final checkmate. It was the ultimate sacrifice play!",
+    "cn": "很久以前，国际象棋大师阿龙·尼姆佐维奇看着自己的木头棋子，仿佛看见了一个小小的、活生生的世界。他相信，棋盘上的两辆车是最要好的朋友，总是互相照应。当一辆车勇敢地走进危险，好让另一辆车赢下棋局时，阿龙觉得，那是一份安静又美丽的爱。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "一对好朋友车"
 }

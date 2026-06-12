@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-how-to-embarrass-a-king",
   "bookId": "alfonso-juegos",
   "title": "How to Embarrass a King",
+  "titleCn": "怎样让国王下不来台",
   "body": "In the thirteenth century, King Alfonso the Wise of Spain wrote a beautiful book explaining the rules of chess. He compared the chess king to a real-life monarch who has supreme power but must never be physically harmed or captured. Instead of being taken off the board, the king is defeated when opponents embarrass him by blocking his path or forcing him to flee his square.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-add90caf49",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A very long time ago in Spain, King Alfonso wrote a beautiful book about the secrets of the chessboard. He believed the chess king should be treated with the same deep respect as a real-life ruler. That is why nobody ever removes the king from the board or harms him during a match.",
-    "luca": "Instead, you have to win by pulling off a clever trap! You corner the leader, block all his escape routes, and force him to run for his life. It is the ultimate royal embarrassment when the mightiest piece on the board has to scramble away in defeat."
+    "luca": "Instead, you have to win by pulling off a clever trap! You corner the leader, block all his escape routes, and force him to run for his life. It is the ultimate royal embarrassment when the mightiest piece on the board has to scramble away in defeat.",
+    "cn": "很久很久以前，在西班牙，阿方索国王写了一本漂亮的书，讲棋盘上的种种秘密。他认为，棋盘上的王，应该像现实中的国王一样受到深深的尊重。所以呀，下棋的时候，谁也不会把王从棋盘上拿走，更不会伤害他。"
   },
   "source": {
     "book": "Libro de los juegos",

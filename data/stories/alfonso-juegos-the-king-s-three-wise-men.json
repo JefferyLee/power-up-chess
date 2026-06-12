@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Once in ancient India, a king asked his advisors to show him whether clever planning or simple luck guides our lives. One advisor brought rolling dice, another brought a game of mixed chance, but the last one quietly presented a beautiful chessboard. The ruler gazed at the carved pieces and decided that this thoughtful game of pure skill was the most wonderful of all.",
-    "luca": "Imagine a royal challenge where three thinkers had to prove what rules the world: brainpower, wild luck, or a bit of each! One competitor brought dice for chaotic chance, and another brought a game where skill fights back against bad luck. But the winner brought a chessboard to prove that a sharp mind wins every single battle. The king absolutely loved chess, declaring it the greatest and most respectable game of all!"
+    "luca": "Imagine a royal challenge where three thinkers had to prove what rules the world: brainpower, wild luck, or a bit of each! One competitor brought dice for chaotic chance, and another brought a game where skill fights back against bad luck. But the winner brought a chessboard to prove that a sharp mind wins every single battle. The king absolutely loved chess, declaring it the greatest and most respectable game of all!",
+    "cn": "从前，在古老的印度，有一位国王问他的三位谋士：到底是聪明的计划，还是单纯的运气，在指引我们的生活？一位谋士带来了骰子，另一位带来了一种又靠运气又靠本事的游戏，最后一位却安安静静地捧出一张漂亮的国际象棋棋盘。国王看着那些精雕细刻的棋子，最后决定：这种全靠动脑的游戏，才是世界上最美妙的游戏。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "国王的三位智者"
 }

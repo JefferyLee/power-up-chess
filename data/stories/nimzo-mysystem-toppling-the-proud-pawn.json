@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, in a beautiful seaside town, a player named Aron faced a giant, stubborn pawn standing right in the middle of the board. Instead of just building a slow wall to block it, Aron quietly placed his pieces in perfect, waiting spots. With one gentle nudge of his own pawn, he swept the giant away and changed the whole game.",
-    "luca": "Aron wasn't going to sit back and play defense all day. He spent his time setting up a brilliant, secret trap, waiting for the perfect second to strike. Boom! He launched a single pawn forward, smashing the enemy's center to pieces and turning the whole battle around."
+    "luca": "Aron wasn't going to sit back and play defense all day. He spent his time setting up a brilliant, secret trap, waiting for the perfect second to strike. Boom! He launched a single pawn forward, smashing the enemy's center to pieces and turning the whole battle around.",
+    "cn": "很久以前，在一座美丽的海边小镇上，棋手阿龙遇到了一个又大又倔的兵，稳稳地站在棋盘正中央。阿龙没有慢吞吞地修一堵墙去堵它，而是悄悄把自己的棋子一个个摆到最完美的位置，静静等待。然后，他轻轻一推自己的小兵——那个“巨人”就被扫了出去，整盘棋一下子翻转过来。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "推倒骄傲的小兵"
 }

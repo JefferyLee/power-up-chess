@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Hundreds of years ago, a gentle king named Alfonso noticed that his people were carrying heavy worries. To help them feel better, he created a massive, beautiful book filled with colorful hand-painted drawings of chess boards. He believed that moving these tiny wooden pieces could help a tired mind find peace and quiet joy.",
-    "luca": "King Alfonso launched a grand plan to defeat sadness using the power of board games! He packed a giant book with the most exciting chess puzzles he could find. It was his secret weapon to get everyone's brain working and turn their gloomy days into a playful adventure."
+    "luca": "King Alfonso launched a grand plan to defeat sadness using the power of board games! He packed a giant book with the most exciting chess puzzles he could find. It was his secret weapon to get everyone's brain working and turn their gloomy days into a playful adventure.",
+    "cn": "几百年前，温和的国王阿方索发现，他的子民们心里装着沉甸甸的烦恼。为了让大家开心起来，他做了一本又大又美的书，里面满是手绘的彩色棋盘图画。他相信，挪动这些小小的木头棋子，能让疲惫的脑袋安静下来，找到平和又暖暖的快乐。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "想治好忧愁的国王"
 }

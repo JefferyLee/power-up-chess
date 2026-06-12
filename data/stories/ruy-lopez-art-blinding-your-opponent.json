@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Five centuries ago, chess writers shared unusual secrets that had nothing to do with the wooden pieces. They suggested placing the table so the morning sunlight would beam straight into the other player's eyes. If the game took place after dusk, they recommended setting a dancing flame to the right of your challenger to cast confusing shapes across the squares.",
-    "luca": "Back in the fifteen-hundreds, masters used wild tactics that weren't even on the board! One old guidebook told players to angle the seat so the blazing sun would beam right into their rival's face. During evening matches, they would position a wavering candle on the right to mess with the enemy using spooky, shifting shapes."
+    "luca": "Back in the fifteen-hundreds, masters used wild tactics that weren't even on the board! One old guidebook told players to angle the seat so the blazing sun would beam right into their rival's face. During evening matches, they would position a wavering candle on the right to mess with the enemy using spooky, shifting shapes.",
+    "cn": "五百年前，写棋书的人分享过一些奇奇怪怪的秘诀，跟木头棋子一点关系都没有。他们建议把桌子摆好位置，让清晨的阳光正好直直地照进对手的眼睛。要是天黑以后下棋，他们还建议在对手右边放一支跳动的蜡烛，让摇晃的影子在棋盘的方格上晃来晃去，把对手看得晕头转向。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "晃花对手的眼睛"
 }

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, the rooms where people played board games were so noisy and full of arguments that even the judges were baffled. To help everyone, King Alfonso sat down and carefully wrote forty-four laws to bring peace to the tables. He wanted to protect players and make sure every single wager was fair and honest. However, if someone chose to cheat three separate times, they faced a very quiet and permanent punishment.",
-    "luca": "Picture a medieval hall packed with shouting players, clashing boards, and total chaos! King Alfonso decided to tame this wild scene by launching forty-four brand-new laws for gamers. He drew up strict boundaries for betting to keep the play honest and intense. And if you dared to cheat three times, the penalty was absolutely brutal—you would lose your thumbs!"
+    "luca": "Picture a medieval hall packed with shouting players, clashing boards, and total chaos! King Alfonso decided to tame this wild scene by launching forty-four brand-new laws for gamers. He drew up strict boundaries for betting to keep the play honest and intense. And if you dared to cheat three times, the penalty was absolutely brutal—you would lose your thumbs!",
+    "cn": "很久很久以前，在西班牙，人们下棋玩游戏的屋子里总是吵吵嚷嚷、争个不停，连法官都被弄得晕头转向。为了帮大家解决麻烦，阿方索国王坐下来，认认真真写了四十四条法律，要让每张游戏桌都安安静静、规规矩矩。他想保护每一位玩家，让每一次打赌都公平诚实。不过呀，要是有人忍不住作弊，而且一连作弊三次，就要受到一种悄悄的、再也改不回来的惩罚哦。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "阿方索国王的游戏法典"
 }

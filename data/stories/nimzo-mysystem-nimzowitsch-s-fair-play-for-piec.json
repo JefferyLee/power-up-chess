@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, a wise teacher named Aron Nimzowitsch taught people to treat every single wooden piece on the board with the same gentle care. He believed that each pawn, knight, and rook has its own quiet purpose. If you send just one favorite piece out on a long, lonely journey, the rest of your friends are left behind with nothing to do.",
-    "luca": "Aron Nimzowitsch had an awesome plan for starting a match! He warned players never to send a single hero charging across the board all by themselves. To win the battle, your entire squad has to team up and move together."
+    "luca": "Aron Nimzowitsch had an awesome plan for starting a match! He warned players never to send a single hero charging across the board all by themselves. To win the battle, your entire squad has to team up and move together.",
+    "cn": "很久以前，有一位智慧的老师，名叫阿龙·尼姆佐维奇。他教大家要用同样温柔的心，对待棋盘上的每一个棋子。他相信，每个兵、每匹马、每辆车，都有自己安安静静的使命。如果你只派最喜欢的那一个棋子，孤零零地跑去远方冒险，剩下的伙伴们就只能留在原地，什么也做不了。"
   },
   "source": {
     "book": "My System: A Chess Treatise",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "对每个棋子都要公平"
 }

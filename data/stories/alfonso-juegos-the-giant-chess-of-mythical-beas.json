@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Imagine opening a dusty, hand-painted book from hundreds of years ago to find a board with over one hundred squares. Instead of normal wooden pieces, you would guide gentle unicorns and proud lions across the grid. The most wondrous of all was a giant bird that could lift a whole elephant into the clouds. It was a game meant to show a ruler's quiet majesty.",
-    "luca": "This wasn't just a regular game; it was an absolute beast of a battle with twenty-four fighters on each side! You got to launch wild attacks using roaring lions and a massive bird called the Aanca. Picture swooping down from the sky to snatch up an entire elephant in your claws. Kings played this giant game to prove they were the toughest rulers around and terrify anyone who dared challenge them."
+    "luca": "This wasn't just a regular game; it was an absolute beast of a battle with twenty-four fighters on each side! You got to launch wild attacks using roaring lions and a massive bird called the Aanca. Picture swooping down from the sky to snatch up an entire elephant in your claws. Kings played this giant game to prove they were the toughest rulers around and terrify anyone who dared challenge them.",
+    "cn": "想象一下，你翻开一本几百年前落满灰尘的手绘古书，里面画着一张超过一百个格子的大棋盘。在那上面，你指挥的不是普通的木头棋子，而是温柔的独角兽和神气的狮子。最神奇的是一只巨大的鸟，它能叼起一整头大象，飞到云朵上面去！这是一种让国王显得格外威严的游戏。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "神兽大棋盘"
 }

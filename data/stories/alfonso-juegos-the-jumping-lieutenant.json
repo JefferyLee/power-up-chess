@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago, a gentle guardian called the Alferza stood right beside the king to keep him safe. This was before the modern queen ever joined the board. On its very first turn, this loyal helper could make a magical hop right over the other pieces to find its perfect spot.",
-    "luca": "Imagine a medieval bodyguard springing right into battle to defend the king! This lieutenant piece had an incredible secret ability to start the game. It could launch itself into the air, vaulting over other figures to charge straight toward danger."
+    "luca": "Imagine a medieval bodyguard springing right into battle to defend the king! This lieutenant piece had an incredible secret ability to start the game. It could launch itself into the air, vaulting over other figures to charge straight toward danger.",
+    "cn": "很久以前，在现在的“后”还没出现的年代，棋盘上有一位温柔的守护者，叫“阿尔费扎”，它总是紧紧守在王的身边，保护王的安全。在它走的第一步棋里，这位忠心的小帮手还有一个神奇的本领——可以一下子跳过别的棋子，蹦到最合适的位置上去。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "会跳的小护卫"
 }

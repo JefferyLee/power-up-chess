@@ -2,6 +2,7 @@
   "id": "alfonso-juegos-chess-of-the-four-seasons",
   "bookId": "alfonso-juegos",
   "title": "Chess of the Four Seasons",
+  "titleCn": "四季棋",
   "body": "Hundreds of years ago in Spain, people played a colorful chess variant designed for four players instead of two. Each player represented a different season of the year with their own colored army: green for spring, red for summer, black for autumn, and white for winter. The players even matched their pieces to nature's elements, like fire, water, air, and earth, turning the chessboard into a battle of the seasons.",
   "motif": "history",
   "sourceChunkId": "alfonso-juegos-ec054dc1fd",
@@ -9,7 +10,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, four friends would gather around a single board to play a very special game together. Each person guided their own colorful army representing a time of the year, like the fresh green of spring or the quiet white of winter. They even matched their moves to the quiet power of earth, air, water, and fire.",
-    "luca": "Imagine a massive four-way clash where the seasons themselves went to war on a single board! You could launch a daring attack with the fiery red summer troops, or defend your territory with the dark autumn army. It was a thrilling struggle of nature, pitting wind and waves against solid ground and burning flames."
+    "luca": "Imagine a massive four-way clash where the seasons themselves went to war on a single board! You could launch a daring attack with the fiery red summer troops, or defend your territory with the dark autumn army. It was a thrilling struggle of nature, pitting wind and waves against solid ground and burning flames.",
+    "cn": "很久以前的西班牙，四个朋友会围着同一张棋盘，一起玩一种特别的游戏。每个人指挥一支彩色的小军队，代表一年里的一个季节——有春天那种嫩嫩的绿色，也有冬天那种安静的白色。他们走的每一步棋，还和土、风、水、火这四种安静的大自然力量一一对应呢。"
   },
   "source": {
     "book": "Libro de los juegos",

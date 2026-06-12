@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Eight hundred years ago, a gentle king in Spain named Alfonso wanted everyone to share his love for chess. He asked artists to paint a grand book filled with bright scenes of friends sitting together over the game boards. This precious book even had rules written down so that every player in the land would be treated with kindness and respect.",
-    "luca": "Imagine a medieval king who was so obsessed with board games that he made them the law of the land! King Alfonso ordered his scribes to create a massive, action-packed handbook showing players matching wits. He even set up strict kingdom-wide rules to stop any sneaky cheaters in their tracks."
+    "luca": "Imagine a medieval king who was so obsessed with board games that he made them the law of the land! King Alfonso ordered his scribes to create a massive, action-packed handbook showing players matching wits. He even set up strict kingdom-wide rules to stop any sneaky cheaters in their tracks.",
+    "cn": "八百年前，西班牙有一位温和的国王，名叫阿方索。他特别希望大家都能像他一样爱上国际象棋。于是他请画师们画了一本华丽的大书，里面满是朋友们围坐在棋盘边下棋的鲜亮画面。这本宝贝书里还写下了规则，好让全国每一位下棋的人都能受到善待和尊重。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "热爱游戏的国王"
 }

@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a gentle priest named Ruy López spent many quiet hours writing down his favorite chess secrets. But he worried that other players might be unkind about his work, comparing their harsh words to hidden, biting serpents. To keep his mind at peace, he asked a very important nobleman to protect his beautiful book.",
-    "luca": "Ruy López was stepping into a real battle zone when he published his chess ideas! He actually warned his readers that jealous rivals were like venomous snakes waiting to strike from the grass. So, he made a clever defensive move by putting a mighty nobleman's name on the front page as a shield."
+    "luca": "Ruy López was stepping into a real battle zone when he published his chess ideas! He actually warned his readers that jealous rivals were like venomous snakes waiting to strike from the grass. So, he made a clever defensive move by putting a mighty nobleman's name on the front page as a shield.",
+    "cn": "很久以前的西班牙，温和的神父鲁伊·洛佩斯花了许多安静的时光，把自己最喜欢的国际象棋秘密一点一点写下来。可他担心别的棋手会说他的坏话，还把那些刻薄的话比作藏在暗处、随时会咬人的毒蛇。为了让自己安心，他请了一位非常重要的贵族大人，来保护他这本美丽的书。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "鲁伊·洛佩斯和毒蛇"
 }

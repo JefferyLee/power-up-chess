@@ -13,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the sixteenth century, a thoughtful Spanish priest sat quietly by his wooden board. He realized that the usual way of starting a game left a tiny weakness that others missed. By gently sliding his bishop to a new square called b5, he created a clever plan that players still love to use today.",
-    "luca": "This clever priest decided to shake up the chess world with a surprise attack! Instead of playing it safe in the middle, he launched his bishop way forward to create instant trouble for his opponent. This bold move was so successful that it became one of the most legendary battle plans in history."
+    "luca": "This clever priest decided to shake up the chess world with a surprise attack! Instead of playing it safe in the middle, he launched his bishop way forward to create instant trouble for his opponent. This bold move was so successful that it became one of the most legendary battle plans in history.",
+    "cn": "很久以前的十六世纪，一位爱思考的西班牙神父静静地坐在木棋盘前。他发现，大家平时习惯的开局方法里，藏着一个别人都没注意到的小弱点。他轻轻地把象滑到一个叫 b5 的新格子上，创造出一个聪明的计划——直到今天，棋手们还是特别喜欢用这一招呢。"
   },
   "source": {
     "book": "The Art of the Game of Chess",
@@ -22,5 +23,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "鲁伊·洛佩斯开局的诞生"
 }

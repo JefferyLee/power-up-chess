@@ -2,6 +2,7 @@
   "id": "ruy-lopez-art-the-priest-who-defended-chess-bo",
   "bookId": "ruy-lopez-art",
   "title": "The Priest Who Defended Chess Books",
+  "titleCn": "为棋书辩护的神父",
   "body": "In the sixteenth century, critics argued that writing a chess guide was pointless because the game had too many possibilities to ever teach. The Spanish priest Ruy López strongly disagreed with this mindset. He argued that just as a fertile field needs cultivation to grow crops, a chess player needs deep study to handle any unexpected moves an opponent might try.",
   "motif": "history",
   "sourceChunkId": "ruy-lopez-art-bf4f1b4d8f",
@@ -12,7 +13,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago, people thought it was impossible to write a guide for chess because the game has endless paths. A Spanish priest named Ruy López disagreed, believing that a player's mind is like a quiet, empty field. Just as a farmer cares for the soil to help crops grow, he believed we must study to prepare our minds for any surprise.",
-    "luca": "Imagine being told that chess has too many wild moves to ever write down in a guide! That is what people believed in the 1500s, but a brave priest named Ruy López refused to back down. He argued that you have to prepare your mind like a farmer works the land, getting it ready for action. By studying hard, you can stand strong against any unexpected move your opponent throws at you!"
+    "luca": "Imagine being told that chess has too many wild moves to ever write down in a guide! That is what people believed in the 1500s, but a brave priest named Ruy López refused to back down. He argued that you have to prepare your mind like a farmer works the land, getting it ready for action. By studying hard, you can stand strong against any unexpected move your opponent throws at you!",
+    "cn": "很久以前，人们觉得国际象棋根本没法写成指南，因为棋盘上的路千千万万，数也数不清。可西班牙神父鲁伊·洛佩斯不同意。他相信，棋手的头脑就像一片安静的空田地。就像农夫细心耕耘土壤，庄稼才能长大一样，他相信我们也要好好学习，让头脑做好准备，迎接棋盘上的任何意外。"
   },
   "source": {
     "book": "The Art of the Game of Chess",

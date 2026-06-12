@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "A long time ago in India, people created a giant chess board that looked like a magical forest. Instead of only standard soldiers, they carved rare, colorful birds and wild creatures to move through the game. Rulers used these beautiful animal figures to show off their great riches to anyone who visited.",
-    "luca": "Imagine marching a roaring wild predator right across a giant board to terrify your opponent! Ancient rulers used these massive animal pieces to scare their rivals and prove who was boss. It was a wild battle of wits where you could command a whole army of beasts."
+    "luca": "Imagine marching a roaring wild predator right across a giant board to terrify your opponent! Ancient rulers used these massive animal pieces to scare their rivals and prove who was boss. It was a wild battle of wits where you could command a whole army of beasts.",
+    "cn": "很久很久以前，在印度，人们做出了一张巨大的棋盘，看上去就像一座神奇的森林。棋盘上不只有普通的小士兵，工匠们还雕出了罕见的彩色大鸟和各种野兽，让它们在棋盘上走来走去。国王们就用这些漂亮的动物棋子，向每一位来访的客人炫耀自己的财富。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "猛兽大象棋"
 }

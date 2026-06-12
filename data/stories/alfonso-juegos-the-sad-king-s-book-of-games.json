@@ -12,7 +12,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in Spain, a very sad king named Alfonso sat in his quiet palace while a war raged outside. His own family had turned against him, which made his heart ache with sorrow. To find comfort, he spent his very last days in Seville creating a gorgeous book filled with painted chess games. He wanted to show the world that even when everything is loud and scary, a wooden board can bring quiet peace.",
-    "luca": "Imagine facing a massive rebellion led by your very own relatives. That is exactly what happened to King Alfonso, but instead of giving up, he launched a brilliant final mission. In the city of Seville, he rushed to finish the ultimate guide to chess before his time ran out. It was his way of conquering the chaos, proving that a clever mind on a game board is stronger than any army."
+    "luca": "Imagine facing a massive rebellion led by your very own relatives. That is exactly what happened to King Alfonso, but instead of giving up, he launched a brilliant final mission. In the city of Seville, he rushed to finish the ultimate guide to chess before his time ran out. It was his way of conquering the chaos, proving that a clever mind on a game board is stronger than any army.",
+    "cn": "很久以前，在西班牙，有一位非常伤心的国王，名叫阿方索。宫殿外战火纷飞，他独自坐在安静的宫殿里。他自己的家人都背叛了他，这让他的心疼得不得了。为了找一点安慰，他在塞维利亚度过的最后那些日子里，做出了一本无比精美的书，里面画满了一局又一局的国际象棋。他想告诉全世界：哪怕外面又吵又吓人，一张小小的木头棋盘，也能带来安安静静的平和。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -21,5 +22,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "忧伤国王的游戏之书"
 }

@@ -9,7 +9,8 @@
   "sourcePage": "p.1",
   "variants": {
     "lucy": "Long ago in the Middle Ages, people played a beautiful game modeled after the evening sky. Instead of ordinary chess pieces, they moved tiny planets, including a sorrowful Saturn draped in a dark, cozy shawl. They watched the real stars above to see how to guide their cosmic pieces.",
-    "luca": "To launch their celestial armies, players had to roll a strange die with seven different sides. Every single roll sent a planet charging across the board depending on the patterns in the sky. Imagine controlling the entire cosmos with one lucky toss!"
+    "luca": "To launch their celestial armies, players had to roll a strange die with seven different sides. Every single roll sent a planet charging across the board depending on the patterns in the sky. Imagine controlling the entire cosmos with one lucky toss!",
+    "cn": "很久以前的中世纪，人们玩一种照着夜空的样子做出来的美丽棋戏。棋盘上摆的不是普通的棋子，而是一颗颗小小的行星，其中还有一颗忧伤的土星，裹着一条深色的、暖暖的披肩。下棋的人会抬头看真正的星星，看看天上的星星怎么排，再决定棋盘上的星星该怎么走。"
   },
   "source": {
     "book": "Libro de los juegos",
@@ -18,5 +19,6 @@
     "page": "p.1"
   },
   "rightsStatus": "engineering-stored-not-reviewed",
-  "generatedAt": 1780345640425
+  "generatedAt": 1780345640425,
+  "titleCn": "星星们的太空棋局"
 }
