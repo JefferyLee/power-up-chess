@@ -43,8 +43,8 @@
   left: 10px;
   bottom: 0;
   width: 360px;
-  opacity: 0.55;
-  filter: drop-shadow(0 0 18px rgba(246, 162, 61, 0.25));
+  opacity: 0.35;
+  filter: drop-shadow(0 0 14px rgba(246, 162, 61, 0.18));
 }
 .puc-ambient__fireplace-img {
   display: block;
@@ -76,7 +76,7 @@
 .puc-ambient__flames {
   position: absolute;
   left: 23%;
-  bottom: 13%;
+  bottom: 22%;
   width: 54%;
   height: 60%;
   mix-blend-mode: screen;
@@ -131,8 +131,8 @@
   right: 22px;
   top: 64px;
   width: 230px;
-  opacity: 0.45;
-  filter: drop-shadow(0 0 16px rgba(246, 194, 102, 0.22));
+  opacity: 0.28;
+  filter: drop-shadow(0 0 12px rgba(246, 194, 102, 0.16));
 }
 .puc-ambient__window-img {
   display: block;

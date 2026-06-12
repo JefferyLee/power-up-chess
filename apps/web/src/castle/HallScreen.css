@@ -566,3 +566,8 @@
   .puc-roomdoor__sign { animation: none; }
   .puc-roomdoor__firelight { animation: none; opacity: 0.22; }
 }
+
+/* Companion figure on a door (the Library's Book Owl). */
+.puc-roomdoor__companion {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}

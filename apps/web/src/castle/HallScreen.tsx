@@ -460,6 +460,7 @@ export function HallScreen() {
             label="The Library"
             blurb="Chess stories + the Book Owl's reading lists."
             variant="parchment"
+            companionImg="/sprites/hall/book-owl.png?v=1"
             onClick={() => navigate('/library')}
           />
           <RoomDoor

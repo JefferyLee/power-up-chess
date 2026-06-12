@@ -30,6 +30,9 @@ interface Props {
   /** Door art key — selects /sprites/doors/<iconKey>.png. Omit to
    *  fall back to the emoji tile. */
   iconKey?: string
+  /** Optional figure standing by the door (e.g. the Book Owl on the
+   *  Library door) — drawn bottom-right, in front of the threshold. */
+  companionImg?: string
 }
 
 const FALLBACK_WOOD: Record<NonNullable<Props['variant']>, string> = {
@@ -60,6 +63,7 @@ export function RoomDoor({
   badge,
   badgeTitle,
   iconKey,
+  companionImg,
 }: Props) {
   return (
     <button
@@ -118,6 +122,18 @@ export function RoomDoor({
             x="0" y="0" width="100" height="150"
             preserveAspectRatio="xMidYMid meet"
             className="puc-roomdoor__firelight"
+            pointerEvents="none"
+          />
+        )}
+
+        {/* — Companion figure (owl etc.) standing by the threshold,
+         *    in front of the door, clear of the centred notice/lock. */}
+        {companionImg && (
+          <image
+            href={companionImg}
+            x="28" y="86" width="44" height="62"
+            preserveAspectRatio="xMidYMax meet"
+            className="puc-roomdoor__companion"
             pointerEvents="none"
           />
         )}
