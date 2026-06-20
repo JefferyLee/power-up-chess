@@ -49,6 +49,12 @@ export interface RoomDoc {
   lastTickServerTs: number | null
   createdAt: number // ms since epoch
   updatedAt: number
+  /** Pending takeback request. The requester may only take back their
+   *  OWN last (un-answered) move, and only with the opponent's consent.
+   *  `atMoveCount` pins the offer to a position so a new move voids it. */
+  takeback?: { by: 'w' | 'b'; atMoveCount: number } | null
+  /** How many takebacks each side has spent this game (max 3). */
+  takebacksUsed?: { w: number; b: number }
 }
 
 export interface Move {

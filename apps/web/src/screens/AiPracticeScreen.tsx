@@ -16,6 +16,8 @@ import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
+import { callSpendOnTakeback } from '../firebase/callables'
+import { takebackCost } from '../games/takeback'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
@@ -328,6 +330,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     setEngineError(null)
     setClocks(initialClockState(timeControl ?? null))
     setTimeoutLoser(null)
+    setTakebacksUsed(0)
   }, [timeControl])
 
   const handlePickDifficulty = useCallback((id: DifficultyId) => {
@@ -339,6 +342,47 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     // against a different opponent mid-stream would be confusing.
     handleRestart()
   }, [activeDifficultyId, handleRestart])
+
+  // Takeback ("悔棋"): paid, 3 per game. Reverts the AI's reply AND your
+  // move so it's your turn again. Only allowed when it's your turn (the
+  // AI has replied and isn't mid-think) and at least one full pair of
+  // plies exists.
+  const [takebacksUsed, setTakebacksUsed] = useState(0)
+  const [takebackBusy, setTakebackBusy] = useState(false)
+  const takebackNextCost = takebackCost(takebacksUsed)
+  const canTakeback =
+    !gameOver &&
+    !aiThinking &&
+    snap.turn === playerColor &&
+    snap.history.length >= 2 &&
+    takebackNextCost !== null &&
+    !takebackBusy &&
+    !!identity &&
+    !identity.isBypass &&
+    identity.castlePoints >= takebackNextCost
+  const handleTakeback = useCallback(async () => {
+    if (!identity || identity.isBypass) return
+    const cost = takebackCost(takebacksUsed)
+    if (cost === null || identity.castlePoints < cost) return
+    if (gameOver || aiThinking || snap.turn !== playerColor || snap.history.length < 2) return
+    setTakebackBusy(true)
+    try {
+      const points = await callSpendOnTakeback(
+        identity.normalizedName,
+        identity.sessionId ?? '',
+        takebacksUsed + 1,
+      )
+      setCastlePoints(points)
+      game.undo() // AI's reply
+      game.undo() // your move
+      setSnap(snapshot(game))
+      setTakebacksUsed((n) => n + 1)
+    } catch {
+      /* charge failed — leave the board as-is */
+    } finally {
+      setTakebackBusy(false)
+    }
+  }, [identity, takebacksUsed, gameOver, aiThinking, snap.turn, snap.history.length, game, setCastlePoints])
 
   const handleResign = useCallback((resigner: Color) => {
     setResignation({ resigner })
@@ -482,6 +526,22 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           )}
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
+          </button>
+          <button
+            type="button"
+            onClick={() => { void handleTakeback() }}
+            disabled={!canTakeback}
+            title={
+              takebackNextCost === null
+                ? 'No takebacks left this game (max 3)'
+                : identity && !identity.isBypass && identity.castlePoints < takebackNextCost
+                  ? `Need ${takebackNextCost}✦ to take back`
+                  : 'Take back your last move'
+            }
+          >
+            {takebackNextCost === null
+              ? 'Takeback ✗'
+              : `↩ Takeback (−${takebackNextCost}✦)`}
           </button>
           <button type="button" onClick={handleRestart}>
             New game

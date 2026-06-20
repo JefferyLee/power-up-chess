@@ -65,6 +65,11 @@ export interface RoomDoc {
   lastTickServerTs: number | null
   createdAt: number
   updatedAt: number
+  /** Pending takeback offer — the requester's own last move, awaiting
+   *  opponent consent. */
+  takeback?: { by: 'w' | 'b'; atMoveCount: number } | null
+  /** Takebacks each side has spent this game (max 3). */
+  takebacksUsed?: { w: number; b: number }
 }
 
 export interface CreateRoomRequest {

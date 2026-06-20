@@ -184,3 +184,36 @@
   padding: 10px 16px;
   z-index: 70;
 }
+
+/* Takeback offer banner. */
+.puc-online__takeback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 920px;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(231, 184, 65, 0.14);
+  border: 1px solid rgba(231, 184, 65, 0.45);
+  color: var(--puc-text, #e8dcc0);
+  font-size: 14px;
+}
+.puc-online__takeback-actions { display: inline-flex; gap: 8px; }
+.puc-online__takeback-actions button {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.5);
+  background: transparent;
+  color: var(--puc-text-accent, #f4c266);
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-online__takeback-actions button:hover:not(:disabled) { background: rgba(231, 184, 65, 0.16); }
+.puc-online__takeback-actions button:disabled { opacity: 0.6; cursor: default; }
+.puc-online__takeback--note {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(231, 184, 65, 0.3);
+}

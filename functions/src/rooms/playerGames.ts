@@ -13,10 +13,39 @@
 // signed-in guests is consistent with that model. This stores only what
 // a spectator could already have seen.
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { Chess } from 'chess.js'
 import type { RoomDoc } from './types'
+
+// Role gates for the Hall of Games. Curators may feature/unfeature a
+// game; the admin may also delete one. Checked against the guest doc's
+// uids server-side, so a client can't spoof the role. Coach Paul's
+// display name is matched in both spaced + unspaced normalised forms.
+const ADMIN_NAME = 'jeff'
+const CURATOR_NAMES = [ADMIN_NAME, 'coach paul', 'coachpaul']
+
+/** The curator name the caller is signed into, or null. */
+async function callerCurator(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+): Promise<string | null> {
+  for (const name of CURATOR_NAMES) {
+    const snap = await db.collection('guests').doc(name).get()
+    const uids = (snap.data() as { uids?: string[] } | undefined)?.uids ?? []
+    if (uids.includes(uid)) return name
+  }
+  return null
+}
+
+async function callerIsAdmin(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+): Promise<boolean> {
+  const snap = await db.collection('guests').doc(ADMIN_NAME).get()
+  const uids = (snap.data() as { uids?: string[] } | undefined)?.uids ?? []
+  return uids.includes(uid)
+}
 
 export interface ArchivedGame {
   roomId: string
@@ -63,12 +92,17 @@ export interface GameRecap {
 }
 
 /** The global-archive shape: an ArchivedGame plus a normalized-name
- *  array for per-player filtering, an optional engine analysis, and an
- *  optional host recap. */
+ *  array for per-player filtering, an optional engine analysis, an
+ *  optional host recap, and curator "featured" state. */
 export interface GlobalGame extends ArchivedGame {
   players: string[]
   analysis?: GameAnalysisSummary
   recap?: GameRecap
+  featured?: boolean
+  /** Only present while featured — lets the Featured view orderBy it
+   *  without a composite index (un-feature deletes the field). */
+  featuredAt?: number
+  featuredBy?: string
 }
 
 function normalizeName(name: string): string {
@@ -195,14 +229,17 @@ export const getRoomGame = onCall<GetRoomGameRequest, Promise<GetRoomGameRespons
 const BROWSE_DEFAULT = 30
 const BROWSE_MAX = 50
 
-export type BrowseSort = 'recent' | 'cleanest' | 'brilliant'
+export type BrowseSort = 'recent' | 'cleanest' | 'brilliant' | 'featured'
 
 export interface BrowseGamesRequest {
   sort?: BrowseSort
   limit?: number
   /** playedAt of the last row from the previous page. Only the 'recent'
-   *  view paginates; the curated lists return a single top-N page. */
+   *  view paginates; the other views return a single top-N page. */
   cursorPlayedAt?: number
+  /** Filter to games this normalized player took part in. Overrides
+   *  sort (returns their games, newest first). */
+  player?: string
 }
 export interface BrowseGamesResponse {
   games: GlobalGame[]
@@ -219,6 +256,31 @@ export const browseGames = onCall<BrowseGamesRequest, Promise<BrowseGamesRespons
     const limit = Math.min(BROWSE_MAX, Math.max(1, req.data?.limit ?? BROWSE_DEFAULT))
     const sort = req.data?.sort ?? 'recent'
     const db = getFirestore()
+
+    // Player filter overrides sort: array-contains (single-field index,
+    // no orderBy → no composite index needed), sorted client-side.
+    const player = (req.data?.player ?? '').trim().toLowerCase()
+    if (player) {
+      const snap = await db
+        .collection('games')
+        .where('players', 'array-contains', player)
+        .limit(BROWSE_MAX)
+        .get()
+      const games = snap.docs
+        .map((d) => d.data() as GlobalGame)
+        .sort((a, b) => b.playedAt - a.playedAt)
+      return { games, nextCursor: null }
+    }
+
+    if (sort === 'featured') {
+      // featuredAt exists only on featured games → implicit filter.
+      const snap = await db
+        .collection('games')
+        .orderBy('featuredAt', 'desc')
+        .limit(limit)
+        .get()
+      return { games: snap.docs.map((d) => d.data() as GlobalGame), nextCursor: null }
+    }
 
     if (sort === 'cleanest' || sort === 'brilliant') {
       // Only analyzed games carry these fields, so orderBy implicitly
@@ -357,6 +419,73 @@ export const saveGameRecap = onCall<SaveGameRecapRequest, Promise<{ ok: boolean 
     if (!(await ref.get()).exists) return { ok: false }
     const recap: GameRecap = { host, text, savedAt: Date.now() }
     await ref.set({ recap }, { merge: true })
+    return { ok: true }
+  },
+)
+
+// ── Curate the archive ──────────────────────────────────────────────
+
+export interface FeatureGameRequest {
+  roomId: string
+  featured: boolean
+}
+
+export const featureGame = onCall<FeatureGameRequest, Promise<{ ok: boolean; featured: boolean }>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const db = getFirestore()
+    const curator = await callerCurator(db, req.auth.uid)
+    if (!curator) throw new HttpsError('permission-denied', 'Curators only.')
+
+    const roomId = (req.data?.roomId ?? '').trim()
+    if (!roomId) throw new HttpsError('invalid-argument', 'roomId required.')
+    const featured = req.data?.featured === true
+
+    const ref = db.collection('games').doc(roomId)
+    if (!(await ref.get()).exists) return { ok: false, featured: false }
+    if (featured) {
+      await ref.set(
+        { featured: true, featuredAt: Date.now(), featuredBy: curator },
+        { merge: true },
+      )
+    } else {
+      // Drop featuredAt entirely so it leaves the Featured orderBy.
+      await ref.update({
+        featured: false,
+        featuredAt: FieldValue.delete(),
+        featuredBy: FieldValue.delete(),
+      })
+    }
+    return { ok: true, featured }
+  },
+)
+
+export interface DeleteArchivedGameRequest {
+  roomId: string
+}
+
+export const deleteArchivedGame = onCall<DeleteArchivedGameRequest, Promise<{ ok: boolean }>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const db = getFirestore()
+    if (!(await callerIsAdmin(db, req.auth.uid))) {
+      throw new HttpsError('permission-denied', 'Admin only.')
+    }
+    const roomId = (req.data?.roomId ?? '').trim()
+    if (!roomId) throw new HttpsError('invalid-argument', 'roomId required.')
+
+    const ref = db.collection('games').doc(roomId)
+    const snap = await ref.get()
+    if (!snap.exists) return { ok: false }
+    // Remove the game from every archive surface (global + both players'
+    // history). The live room doc is left untouched.
+    const players = (snap.data() as GlobalGame).players ?? []
+    await Promise.all([
+      ref.delete(),
+      ...players.map((name) =>
+        db.collection('guests').doc(name).collection('games').doc(roomId).delete(),
+      ),
+    ])
     return { ok: true }
   },
 )

@@ -14,6 +14,8 @@ import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { track } from '../firebase/analytics'
+import { callSpendOnTakeback } from '../firebase/callables'
+import { takebackCost } from '../games/takeback'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
@@ -257,9 +259,40 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     setBlooms((prev) => prev.filter((b) => b.id !== id))
   }, [])
 
-  const handleUndo = useCallback(() => {
-    if (game.undo()) setSnap(snapshot(game))
-  }, [game])
+  // Takeback ("悔棋"): a paid, 3-per-game undo. Local games revert the
+  // last single ply; the signed-in account pays the escalating cost.
+  const [takebacksUsed, setTakebacksUsed] = useState(0)
+  const [takebackBusy, setTakebackBusy] = useState(false)
+  const takebackNextCost = takebackCost(takebacksUsed)
+  const canTakeback =
+    !gameOver &&
+    snap.history.length > 0 &&
+    takebackNextCost !== null &&
+    !takebackBusy &&
+    !!identity &&
+    !identity.isBypass &&
+    identity.castlePoints >= takebackNextCost
+  const handleTakeback = useCallback(async () => {
+    if (!identity || identity.isBypass) return
+    const cost = takebackCost(takebacksUsed)
+    if (cost === null || identity.castlePoints < cost) return
+    if (snap.history.length === 0 || gameOver) return
+    setTakebackBusy(true)
+    try {
+      const points = await callSpendOnTakeback(
+        identity.normalizedName,
+        identity.sessionId ?? '',
+        takebacksUsed + 1,
+      )
+      setCastlePoints(points)
+      if (game.undo()) setSnap(snapshot(game))
+      setTakebacksUsed((n) => n + 1)
+    } catch {
+      /* charge failed (balance / session) — leave the board as-is */
+    } finally {
+      setTakebackBusy(false)
+    }
+  }, [identity, takebacksUsed, snap.history.length, gameOver, game, setCastlePoints])
 
   const handleRestart = useCallback(() => {
     const fresh = new ChessGame()
@@ -273,6 +306,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     setSavedThisGame(false)
     setClocks(initialClockState(timeControl))
     setTimeoutLoser(null)
+    setTakebacksUsed(0)
   }, [timeControl])
 
   const handleResign = useCallback((resigner: Color) => {
@@ -475,8 +509,21 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           >
             Resign
           </button>
-          <button type="button" onClick={handleUndo} disabled={snap.history.length === 0 || gameOver}>
-            Undo
+          <button
+            type="button"
+            onClick={() => { void handleTakeback() }}
+            disabled={!canTakeback}
+            title={
+              takebackNextCost === null
+                ? 'No takebacks left this game (max 3)'
+                : identity && !identity.isBypass && identity.castlePoints < takebackNextCost
+                  ? `Need ${takebackNextCost}✦ to take back`
+                  : 'Take back the last move'
+            }
+          >
+            {takebackNextCost === null
+              ? 'Takeback ✗'
+              : `↩ Takeback (−${takebackNextCost}✦)`}
           </button>
           <button type="button" onClick={handleRestart}>
             New game

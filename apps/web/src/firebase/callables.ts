@@ -1446,27 +1446,61 @@ export interface GameRecapSummary {
   text: string
   savedAt: number
 }
-export type BrowseSort = 'recent' | 'cleanest' | 'brilliant'
+export type BrowseSort = 'recent' | 'cleanest' | 'brilliant' | 'featured'
 export interface GlobalGameSummary extends ArchivedGameSummary {
   players: string[]
   analysis?: GameAnalysisSummary
   recap?: GameRecapSummary
+  featured?: boolean
+  featuredBy?: string
 }
 export interface BrowseGamesResponse {
   games: GlobalGameSummary[]
   nextCursor: number | null
 }
 const browseGamesFn = httpsCallable<
-  { sort?: BrowseSort; limit?: number; cursorPlayedAt?: number },
+  { sort?: BrowseSort; limit?: number; cursorPlayedAt?: number; player?: string },
   BrowseGamesResponse
 >(functions, 'browseGames')
 export async function callBrowseGames(opts?: {
   sort?: BrowseSort
   limit?: number
   cursorPlayedAt?: number
+  player?: string
 }): Promise<BrowseGamesResponse> {
   const { data } = await browseGamesFn(opts ?? {})
   return data
+}
+
+// Curate the Hall of Games — gated server-side (curators feature,
+// admin deletes); the client only shows the controls to the eligible.
+const featureGameFn = httpsCallable<
+  { roomId: string; featured: boolean },
+  { ok: boolean; featured: boolean }
+>(functions, 'featureGame')
+export async function callFeatureGame(roomId: string, featured: boolean): Promise<boolean> {
+  const { data } = await featureGameFn({ roomId, featured })
+  return data.featured
+}
+const deleteArchivedGameFn = httpsCallable<{ roomId: string }, { ok: boolean }>(
+  functions,
+  'deleteArchivedGame',
+)
+export async function callDeleteArchivedGame(roomId: string): Promise<boolean> {
+  const { data } = await deleteArchivedGameFn({ roomId })
+  return data.ok
+}
+
+/** Hall-of-Games roles, matched against the viewer's castle name. The
+ *  callables re-verify server-side; this only decides which controls
+ *  to show. Keep in sync with CURATOR_NAMES in functions playerGames. */
+export const ARCHIVE_CURATORS = ['jeff', 'coach paul', 'coachpaul']
+export function archiveRole(normalizedName: string | null | undefined): {
+  curator: boolean
+  admin: boolean
+} {
+  const n = normalizedName ?? ''
+  return { curator: ARCHIVE_CURATORS.includes(n), admin: n === 'jeff' }
 }
 
 export interface BackfillGameArchiveResponse { scanned: number; archived: number }
@@ -1512,4 +1546,36 @@ export async function callSaveGameRecap(
   } catch {
     // Best-effort — the archive just won't carry this game's recap.
   }
+}
+
+// ── Takeback ("悔棋") ────────────────────────────────────────────────
+// Local / AI: charge for a client-side undo. Online: offer/accept.
+const spendOnTakebackFn = httpsCallable<
+  { normalizedName: string; sessionId: string; index: number },
+  { castlePoints: number }
+>(functions, 'spendOnTakeback')
+export async function callSpendOnTakeback(
+  normalizedName: string,
+  sessionId: string,
+  index: number,
+): Promise<number> {
+  const { data } = await spendOnTakebackFn({ normalizedName, sessionId, index })
+  return data.castlePoints
+}
+
+const requestTakebackFn = httpsCallable<{ roomId: string }, { ok: boolean }>(
+  functions,
+  'requestTakeback',
+)
+export async function callRequestTakeback(roomId: string): Promise<void> {
+  await requestTakebackFn({ roomId })
+}
+
+const respondTakebackFn = httpsCallable<
+  { roomId: string; accept: boolean },
+  { ok: boolean; accepted: boolean }
+>(functions, 'respondTakeback')
+export async function callRespondTakeback(roomId: string, accept: boolean): Promise<boolean> {
+  const { data } = await respondTakebackFn({ roomId, accept })
+  return data.accepted
 }

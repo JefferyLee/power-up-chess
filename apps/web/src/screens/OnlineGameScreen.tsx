@@ -21,7 +21,8 @@ import { GameEndOverlay } from '../powerups/GameEndOverlay'
 import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
 import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
-import { callClaimTimeWin, callJoinRoom, callResignGame } from '../firebase/callables'
+import { callClaimTimeWin, callJoinRoom, callResignGame, callRequestTakeback, callRespondTakeback, callGetPublicProfile } from '../firebase/callables'
+import { takebackCost } from '../games/takeback'
 import { saveGame } from '../history/api'
 import { track } from '../firebase/analytics'
 import { useSound } from '../sound/useSound'
@@ -374,6 +375,71 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     }
   }, [roomId])
 
+  // ── Takeback ("悔棋") — paid, 3 per game, opponent must consent. You
+  // may only take back your OWN last move before the opponent replies,
+  // so no opponent move is ever reverted. The charge lands on accept.
+  const lastMoverColor: Color | null =
+    room.moves.length > 0 ? ((room.moves.length - 1) % 2 === 0 ? 'w' : 'b') : null
+  const myTakebacksUsed = yourColor ? (room.takebacksUsed?.[yourColor] ?? 0) : 0
+  const myTakebackCost = takebackCost(myTakebacksUsed)
+  const offer = room.takeback ?? null
+  const canRequestTakeback =
+    !!yourColor &&
+    room.status === 'live' &&
+    !gameOver &&
+    !offer &&
+    lastMoverColor === yourColor &&
+    myTakebackCost !== null &&
+    !!identity &&
+    !identity.isBypass &&
+    identity.castlePoints >= myTakebackCost
+  const [takebackBusy, setTakebackBusy] = useState(false)
+  const onRequestTakeback = useCallback(async () => {
+    setTakebackBusy(true)
+    try { await callRequestTakeback(roomId) } catch { /* surfaced by disabled state */ }
+    finally { setTakebackBusy(false) }
+  }, [roomId])
+  const onRespondTakeback = useCallback(async (accept: boolean) => {
+    setTakebackBusy(true)
+    try { await callRespondTakeback(roomId, accept) } catch { /* ignore */ }
+    finally { setTakebackBusy(false) }
+  }, [roomId])
+
+  // When my own outgoing offer resolves, tell me how it went. Accepted
+  // removes a move (room.moves shrinks below the offer's pinned count)
+  // and charged me — refetch my balance. Declined leaves the move list
+  // intact and costs nothing. The note auto-dismisses.
+  const [takebackNote, setTakebackNote] = useState<string | null>(null)
+  const hadMyOffer = useRef(false)
+  const myOfferLen = useRef<number | null>(null)
+  useEffect(() => {
+    const mineNow = offer?.by === yourColor
+    if (mineNow) {
+      myOfferLen.current = offer!.atMoveCount
+    } else if (hadMyOffer.current) {
+      const before = myOfferLen.current
+      const accepted = before !== null && room.moves.length < before
+      myOfferLen.current = null
+      if (accepted && identity && !identity.isBypass) {
+        callGetPublicProfile({ normalizedName: identity.normalizedName })
+          .then((p) => setCastlePoints(p.castlePoints))
+          .catch(() => {})
+      }
+      setTakebackNote(
+        accepted
+          ? '↩ Your opponent allowed the takeback.'
+          : '✋ Your opponent declined the takeback.',
+      )
+    }
+    hadMyOffer.current = mineNow
+  }, [offer, yourColor, room.moves.length, identity, setCastlePoints])
+
+  useEffect(() => {
+    if (!takebackNote) return
+    const t = window.setTimeout(() => setTakebackNote(null), 4500)
+    return () => window.clearTimeout(t)
+  }, [takebackNote])
+
   // Capture sparks driven by new captures appearing in the move list. seenRef
   // tracks how much of the move list we have already processed, so re-renders
   // do not re-spawn old sparks. Initial value = current length so a player who
@@ -666,6 +732,24 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
               ⛶
             </button>
           )}
+          {yourColor && room.status === 'live' && !offer && (
+            <button
+              type="button"
+              onClick={() => { void onRequestTakeback() }}
+              disabled={!canRequestTakeback || takebackBusy}
+              title={
+                myTakebackCost === null
+                  ? 'No takebacks left this game (max 3)'
+                  : lastMoverColor !== yourColor
+                    ? 'You can only take back your own last move'
+                    : identity && !identity.isBypass && identity.castlePoints < myTakebackCost
+                      ? `Need ${myTakebackCost}✦ to take back`
+                      : 'Ask your opponent to let you take back your last move'
+              }
+            >
+              {myTakebackCost === null ? 'Takeback ✗' : `↩ Takeback (−${myTakebackCost}✦)`}
+            </button>
+          )}
           {yourColor && room.status === 'live' && (
             <button type="button" onClick={() => setResignDialogOpen(true)}>
               Resign
@@ -676,6 +760,32 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           </button>
         </div>
       </header>
+
+      {!offer && takebackNote && (
+        <div className="puc-online__takeback puc-online__takeback--note" role="status">
+          <span>{takebackNote}</span>
+        </div>
+      )}
+
+      {offer && yourColor && (
+        <div className="puc-online__takeback" role="status">
+          {offer.by === yourColor ? (
+            <span>↩ Takeback requested — waiting for your opponent to agree…</span>
+          ) : (
+            <>
+              <span>↩ Your opponent asks to take back their last move.</span>
+              <span className="puc-online__takeback-actions">
+                <button type="button" disabled={takebackBusy} onClick={() => { void onRespondTakeback(true) }}>
+                  Allow
+                </button>
+                <button type="button" disabled={takebackBusy} onClick={() => { void onRespondTakeback(false) }}>
+                  Decline
+                </button>
+              </span>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="puc-local__main">
         <aside className="puc-local__side puc-local__side--top">
