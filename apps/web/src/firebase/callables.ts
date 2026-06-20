@@ -1382,3 +1382,42 @@ export async function callGetPublicProfile(
   return data
 }
 
+
+// ── Match history (server-side online-game archive) ──────────────────
+// A player's finished ONLINE games, mirrored per-player so any plaque
+// can list them. Local / AI games never reach the server — those live
+// only in the viewer's own IndexedDB (see HistoryScreen).
+export interface ArchivedGameSummary {
+  roomId: string
+  playedAt: number
+  whiteName: string
+  blackName: string
+  result: 'white' | 'black' | 'draw'
+  endReason: import('../rooms/types').EndReason
+  moveCount: number
+  hostId: 'lucy' | 'luca'
+}
+export interface GetPlayerGamesResponse { games: ArchivedGameSummary[] }
+const getPlayerGamesFn = httpsCallable<
+  { normalizedName: string; limit?: number },
+  GetPlayerGamesResponse
+>(functions, 'getPlayerGames')
+export async function callGetPlayerGames(
+  normalizedName: string,
+  limit?: number,
+): Promise<GetPlayerGamesResponse> {
+  const { data } = await getPlayerGamesFn({ normalizedName, ...(limit ? { limit } : {}) })
+  return data
+}
+
+export type GetRoomGameResponse =
+  | { ok: true; pgn: string; hostId: 'lucy' | 'luca'; whiteName: string; blackName: string }
+  | { ok: false }
+const getRoomGameFn = httpsCallable<{ roomId: string }, GetRoomGameResponse>(
+  functions,
+  'getRoomGame',
+)
+export async function callGetRoomGame(roomId: string): Promise<GetRoomGameResponse> {
+  const { data } = await getRoomGameFn({ roomId })
+  return data
+}

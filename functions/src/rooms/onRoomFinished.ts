@@ -19,6 +19,7 @@ import {
   type GuestDoc,
 } from '../castle/types'
 import { appendRecentlyPlayedTx } from '../castle/recentlyPlayed'
+import { archiveFinishedGame } from './playerGames'
 import type { RoomDoc } from './types'
 
 function normalizeName(name: string): string {
@@ -55,6 +56,11 @@ export const onRoomFinished = onDocumentUpdated('rooms/{roomId}', async (event) 
   const whiteName = normalizeName(after.white.displayName)
   const blackName = normalizeName(after.black.displayName)
   if (!whiteName || !blackName || whiteName === blackName) return
+
+  // Archive the finished game into both players' history subcollections.
+  // Independent of (and before) the rating transaction so it happens
+  // even when a side is a bypass guest who earns no rating.
+  await archiveFinishedGame(event.params.roomId, after)
 
   await db.runTransaction(async (tx) => {
     const whiteRef = db.collection('guests').doc(whiteName)

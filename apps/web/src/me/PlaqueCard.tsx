@@ -136,6 +136,22 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
               <span><b>{nullable(profile.matchesLocal)}</b> local</span>
             </span>
           </Row>
+          {/* Self → own full local history (all modes). Others → their
+            * server-archived online games. Hidden for others with no
+            * online games (only online games are archived server-side). */}
+          {(isSelf || profile.chessGames > 0) && (
+            <Row label="History">
+              <button
+                type="button"
+                className="puc-plaque-link"
+                onClick={() =>
+                  navigate(isSelf ? '/history' : `/history/${profile.normalizedName}`)
+                }
+              >
+                {isSelf ? 'View match history →' : 'View online games →'}
+              </button>
+            </Row>
+          )}
         </Section>
 
         <Section title="Puzzles">

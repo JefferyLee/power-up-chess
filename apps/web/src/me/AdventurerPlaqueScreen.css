@@ -544,3 +544,15 @@
   word-break: break-all;
   overflow-wrap: anywhere;
 }
+
+/* Inline link button inside a plaque row (e.g. Match history). */
+.puc-plaque-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--puc-text-accent, #f4c266);
+  font-weight: 600;
+}
+.puc-plaque-link:hover { text-decoration: underline; }

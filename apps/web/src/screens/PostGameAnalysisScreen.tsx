@@ -25,6 +25,10 @@ export interface ReviewState {
   hostId: HostId
   whiteName: string
   blackName: string
+  /** When false, reviewing this game grants NO crowns / castle points
+   *  (used when viewing another player's game from their plaque).
+   *  Defaults to award when omitted, preserving own-game review. */
+  award?: boolean
 }
 
 type Phase =
@@ -70,12 +74,15 @@ export function PostGameAnalysisScreen() {
             bestExcellent += 1
           }
         }
-        if (crowns > 0) addCrowns(crowns)
+        // Only the player's OWN games earn rewards. Reviewing someone
+        // else's game (from their plaque) is read-only.
+        const award = state.award !== false
+        if (award && crowns > 0) addCrowns(crowns)
         // Castle points for review-discovered move quality. We use a synthetic
         // game-id from the PGN length + timestamp; future Phase C work can
         // dedupe via a guests/reviewed-games subcollection.
         const brilliantCount = brilliantIdx.size
-        if (brilliantCount + bestExcellent > 0) {
+        if (award && brilliantCount + bestExcellent > 0) {
           void awardPoints(identity, {
             source: 'chess-review',
             gameId: `review-${Date.now()}`,
@@ -112,7 +119,7 @@ export function PostGameAnalysisScreen() {
     return (
       <div className="puc-review puc-review--centered">
         <div className="puc-review__progress">
-          <h2>Reviewing your game…</h2>
+          <h2>{state.award === false ? 'Reviewing the game…' : 'Reviewing your game…'}</h2>
           <p>The engine is checking every move. This takes about a minute.</p>
           <div className="puc-review__bar" aria-label={`${pct} percent`}>
             <div className="puc-review__bar-fill" style={{ width: `${pct}%` }} />
