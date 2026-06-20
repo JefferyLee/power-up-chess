@@ -7,7 +7,7 @@ import { isBrilliant } from '../engine/brilliant'
 import type { AnalyzedGame, AnalyzedMove } from '../engine/analyzeGame'
 import { analyzeGame } from '../engine/analyzeGame'
 import { StockfishEngine } from '../engine/stockfish'
-import { callGameRecap, callHostCommentary, callSaveGameAnalysis, type SideCounts } from '../firebase/callables'
+import { callGameRecap, callHostCommentary, callSaveGameAnalysis, callSaveGameRecap, type SideCounts } from '../firebase/callables'
 import { track } from '../firebase/analytics'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { addCrowns } from '../storage/profile'
@@ -363,7 +363,14 @@ function ReviewView({
       playerName: myName,
       isAdaSpecialMode: isAdaName(myName),
     })
-      .then((res) => setRecap({ status: 'ready', text: res.text, source: res.source }))
+      .then((res) => {
+        setRecap({ status: 'ready', text: res.text, source: res.source })
+        // Persist the host's story onto the archived game so the Hall
+        // of Games can show it. Same engine-backed text shown live.
+        if (state.roomId && res.text) {
+          void callSaveGameRecap(state.roomId, state.hostId, res.text)
+        }
+      })
       .catch(() => setRecap({ status: 'error' }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -291,3 +291,27 @@
   color: var(--puc-text-accent, #f4c266);
   letter-spacing: 0.3px;
 }
+
+/* Hall of Games — expandable host recap under a game row. */
+.puc-history__recap {
+  padding: 0 14px 10px;
+}
+.puc-history__recap-toggle {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12.5px;
+  color: var(--puc-text-accent, #f4c266);
+}
+.puc-history__recap-toggle:hover { text-decoration: underline; }
+.puc-history__recap-text {
+  margin: 4px 0 2px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--puc-text, #e8dcc0);
+  opacity: 0.92;
+  border-left: 2px solid rgba(231, 184, 65, 0.4);
+  padding-left: 10px;
+}

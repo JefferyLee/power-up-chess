@@ -1441,10 +1441,16 @@ export interface GameAnalysisSummary {
   white: SideCounts
   black: SideCounts
 }
+export interface GameRecapSummary {
+  host: 'lucy' | 'luca'
+  text: string
+  savedAt: number
+}
 export type BrowseSort = 'recent' | 'cleanest' | 'brilliant'
 export interface GlobalGameSummary extends ArchivedGameSummary {
   players: string[]
   analysis?: GameAnalysisSummary
+  recap?: GameRecapSummary
 }
 export interface BrowseGamesResponse {
   games: GlobalGameSummary[]
@@ -1488,5 +1494,22 @@ export async function callSaveGameAnalysis(
     await saveGameAnalysisFn({ roomId, analysis })
   } catch {
     // Best-effort — a failed upload just leaves the game un-annotated.
+  }
+}
+
+// Persist the host's post-game recap onto an archived game (Phase 3).
+const saveGameRecapFn = httpsCallable<
+  { roomId: string; host: 'lucy' | 'luca'; text: string },
+  { ok: boolean }
+>(functions, 'saveGameRecap')
+export async function callSaveGameRecap(
+  roomId: string,
+  host: 'lucy' | 'luca',
+  text: string,
+): Promise<void> {
+  try {
+    await saveGameRecapFn({ roomId, host, text })
+  } catch {
+    // Best-effort — the archive just won't carry this game's recap.
   }
 }

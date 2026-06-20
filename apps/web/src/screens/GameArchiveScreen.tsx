@@ -171,6 +171,8 @@ function ArchiveRow({
   onReview: () => void
 }) {
   const host = HOSTS[game.hostId]
+  const [recapOpen, setRecapOpen] = useState(false)
+  const recapHost = game.recap ? HOSTS[game.recap.host] : null
   const winnerName =
     game.result === 'draw' ? null : game.result === 'white' ? game.whiteName : game.blackName
   return (
@@ -214,6 +216,19 @@ function ArchiveRow({
           )}
         </div>
       </button>
+      {game.recap && recapHost && (
+        <div className="puc-history__recap">
+          <button
+            type="button"
+            className="puc-history__recap-toggle"
+            aria-expanded={recapOpen}
+            onClick={() => setRecapOpen((v) => !v)}
+          >
+            📜 {recapHost.name}&apos;s take {recapOpen ? '▾' : '▸'}
+          </button>
+          {recapOpen && <p className="puc-history__recap-text">{game.recap.text}</p>}
+        </div>
+      )}
     </li>
   )
 }

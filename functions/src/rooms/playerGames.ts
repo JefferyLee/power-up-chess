@@ -53,11 +53,22 @@ export interface GameAnalysisSummary {
   black: SideCounts
 }
 
+/** The host's post-game "story" recap (the same single engine-backed
+ *  LLM call shown live in review), persisted so the archive can show
+ *  it without re-spending an LLM call. */
+export interface GameRecap {
+  host: 'lucy' | 'luca'
+  text: string
+  savedAt: number
+}
+
 /** The global-archive shape: an ArchivedGame plus a normalized-name
- *  array for per-player filtering and an optional engine analysis. */
+ *  array for per-player filtering, an optional engine analysis, and an
+ *  optional host recap. */
 export interface GlobalGame extends ArchivedGame {
   players: string[]
   analysis?: GameAnalysisSummary
+  recap?: GameRecap
 }
 
 function normalizeName(name: string): string {
@@ -308,6 +319,44 @@ export const saveGameAnalysis = onCall<SaveGameAnalysisRequest, Promise<{ ok: bo
       black,
     }
     await ref.set({ analysis }, { merge: true })
+    return { ok: true }
+  },
+)
+
+// ── Persist the host recap (Phase 3) ────────────────────────────────
+//
+// Stores the post-game host "story" onto the archived game so the Hall
+// of Games can show it. The recap is the exact engine-backed text the
+// reviewer already saw live (gameRecap is honesty-constrained + cached
+// server-side), so persisting it ships no new unreviewed content.
+
+const RECAP_MAX_LEN = 1500
+
+export interface SaveGameRecapRequest {
+  roomId: string
+  host: 'lucy' | 'luca'
+  text: string
+}
+
+export const saveGameRecap = onCall<SaveGameRecapRequest, Promise<{ ok: boolean }>>(
+  async (req) => {
+    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    const roomId = (req.data?.roomId ?? '').trim()
+    const host = req.data?.host
+    const text = (req.data?.text ?? '').trim()
+    if (!roomId) throw new HttpsError('invalid-argument', 'roomId required.')
+    if (host !== 'lucy' && host !== 'luca') {
+      throw new HttpsError('invalid-argument', 'host must be lucy or luca.')
+    }
+    if (!text || text.length > RECAP_MAX_LEN) {
+      throw new HttpsError('invalid-argument', 'text missing or too long.')
+    }
+
+    const db = getFirestore()
+    const ref = db.collection('games').doc(roomId)
+    if (!(await ref.get()).exists) return { ok: false }
+    const recap: GameRecap = { host, text, savedAt: Date.now() }
+    await ref.set({ recap }, { merge: true })
     return { ok: true }
   },
 )
