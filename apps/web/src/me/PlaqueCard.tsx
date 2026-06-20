@@ -130,28 +130,28 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
             )}
           </Row>
           <Row label="Matches">
-            <span className="puc-plaque-trio">
-              <span><b>{profile.chessGames}</b> online</span>
-              <span><b>{nullable(profile.matchesAi)}</b> AI</span>
-              <span><b>{nullable(profile.matchesLocal)}</b> local</span>
+            <span className="puc-plaque-matches">
+              <span className="puc-plaque-trio">
+                <span><b>{profile.chessGames}</b> online</span>
+                <span><b>{nullable(profile.matchesAi)}</b> AI</span>
+                <span><b>{nullable(profile.matchesLocal)}</b> local</span>
+              </span>
+              {/* Self → own full local history (all modes). Others →
+                * their server-archived online games. Hidden for others
+                * with no online games (only online ones are archived). */}
+              {(isSelf || profile.chessGames > 0) && (
+                <button
+                  type="button"
+                  className="puc-plaque-link puc-plaque-link--inline"
+                  onClick={() =>
+                    navigate(isSelf ? '/history' : `/history/${profile.normalizedName}`)
+                  }
+                >
+                  {isSelf ? 'history →' : 'games →'}
+                </button>
+              )}
             </span>
           </Row>
-          {/* Self → own full local history (all modes). Others → their
-            * server-archived online games. Hidden for others with no
-            * online games (only online games are archived server-side). */}
-          {(isSelf || profile.chessGames > 0) && (
-            <Row label="History">
-              <button
-                type="button"
-                className="puc-plaque-link"
-                onClick={() =>
-                  navigate(isSelf ? '/history' : `/history/${profile.normalizedName}`)
-                }
-              >
-                {isSelf ? 'View match history →' : 'View online games →'}
-              </button>
-            </Row>
-          )}
         </Section>
 
         <Section title="Puzzles">
