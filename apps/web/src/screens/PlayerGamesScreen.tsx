@@ -61,6 +61,7 @@ export function PlayerGamesScreen() {
           blackName: res.blackName,
           // Viewing someone else's game — no crowns / castle points.
           award: false,
+          roomId,
         },
       })
     } catch {

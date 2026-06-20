@@ -244,3 +244,50 @@
 .puc-history__btn--danger:hover {
   filter: brightness(1.08);
 }
+
+/* Pagination button for the Hall of Games archive. */
+.puc-history__more {
+  display: block;
+  margin: 16px auto 32px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.45);
+  background: transparent;
+  color: var(--puc-text-accent, #f4c266);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-history__more:hover:not(:disabled) { background: rgba(231, 184, 65, 0.12); }
+.puc-history__more:disabled { opacity: 0.6; cursor: default; }
+
+/* Hall of Games — sort tabs + per-game quality chip. */
+.puc-history__tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 720px;
+  margin: 0 auto 4px;
+  padding: 0 16px;
+}
+.puc-history__tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.35);
+  background: transparent;
+  color: var(--puc-text-muted, #b9ad8e);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-history__tab:hover { background: rgba(231, 184, 65, 0.10); }
+.puc-history__tab--on {
+  background: rgba(231, 184, 65, 0.20);
+  border-color: var(--puc-accent, #f1c34c);
+  color: var(--puc-text-accent, #f4c266);
+}
+.puc-history__quality {
+  font-weight: 600;
+  color: var(--puc-text-accent, #f4c266);
+  letter-spacing: 0.3px;
+}

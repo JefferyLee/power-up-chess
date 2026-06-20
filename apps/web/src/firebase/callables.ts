@@ -1421,3 +1421,72 @@ export async function callGetRoomGame(roomId: string): Promise<GetRoomGameRespon
   const { data } = await getRoomGameFn({ roomId })
   return data
 }
+
+// ── Hall of Games (global online-game archive) ───────────────────────
+export interface SideCounts {
+  brilliant: number
+  best: number
+  excellent: number
+  good: number
+  inaccuracy: number
+  mistake: number
+  blunder: number
+}
+export interface GameAnalysisSummary {
+  v: number
+  depth: number
+  analyzedAt: number
+  flaws: number
+  brilliancies: number
+  white: SideCounts
+  black: SideCounts
+}
+export type BrowseSort = 'recent' | 'cleanest' | 'brilliant'
+export interface GlobalGameSummary extends ArchivedGameSummary {
+  players: string[]
+  analysis?: GameAnalysisSummary
+}
+export interface BrowseGamesResponse {
+  games: GlobalGameSummary[]
+  nextCursor: number | null
+}
+const browseGamesFn = httpsCallable<
+  { sort?: BrowseSort; limit?: number; cursorPlayedAt?: number },
+  BrowseGamesResponse
+>(functions, 'browseGames')
+export async function callBrowseGames(opts?: {
+  sort?: BrowseSort
+  limit?: number
+  cursorPlayedAt?: number
+}): Promise<BrowseGamesResponse> {
+  const { data } = await browseGamesFn(opts ?? {})
+  return data
+}
+
+export interface BackfillGameArchiveResponse { scanned: number; archived: number }
+const backfillGameArchiveFn = httpsCallable<unknown, BackfillGameArchiveResponse>(
+  functions,
+  'backfillGameArchive',
+)
+export async function callBackfillGameArchive(): Promise<BackfillGameArchiveResponse> {
+  const { data } = await backfillGameArchiveFn({})
+  return data
+}
+
+// Persist a review's engine analysis onto a game in the Hall of Games.
+// Fire-and-forget from the review screen; server validates the move
+// tally before accepting. No-op return when the game isn't archived.
+const saveGameAnalysisFn = httpsCallable<
+  { roomId: string; analysis: { depth: number; white: SideCounts; black: SideCounts } },
+  { ok: boolean }
+>(functions, 'saveGameAnalysis')
+export async function callSaveGameAnalysis(
+  roomId: string,
+  analysis: { depth: number; white: SideCounts; black: SideCounts },
+): Promise<void> {
+  try {
+    await saveGameAnalysisFn({ roomId, analysis })
+  } catch {
+    // Best-effort — a failed upload just leaves the game un-annotated.
+  }
+}

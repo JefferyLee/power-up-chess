@@ -2163,6 +2163,27 @@ registerCommand({
   },
 })
 
+// ─── Hidden (admin): /archive-backfill ────────────────────────────
+// One-off populate of the global + per-player game archives from every
+// already-completed room. The callable itself is admin-gated server-
+// side; this command is only listed for the admin.
+registerCommand({
+  name: 'archive-backfill',
+  tier: 'hidden',
+  description: 'Admin: backfill the Hall of Games from old finished rooms.',
+  unlockedFor: (id) => id?.normalizedName === 'jeff',
+  handle: async () => {
+    pushPrivate('whisper', 'Scanning finished rooms…')
+    try {
+      const { callBackfillGameArchive } = await import('../../firebase/callables')
+      const res = await callBackfillGameArchive()
+      pushPrivate('reply', `Archive backfill done: scanned ${res.scanned} rooms, archived ${res.archived} games.`)
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'Backfill failed.')
+    }
+  },
+})
+
 // Avoid TS "unused" warning since the only reset path goes through
 // /play new (which writes a fresh state directly, no clear needed).
 void clearPlayState

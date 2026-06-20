@@ -157,6 +157,7 @@ export function OnlineGameScreen() {
             hostId: room.hostMode,
             whiteName: room.white.displayName,
             blackName: room.black?.displayName ?? '',
+            roomId,
           },
         })
       }}

@@ -7,7 +7,7 @@ import { isBrilliant } from '../engine/brilliant'
 import type { AnalyzedGame, AnalyzedMove } from '../engine/analyzeGame'
 import { analyzeGame } from '../engine/analyzeGame'
 import { StockfishEngine } from '../engine/stockfish'
-import { callGameRecap, callHostCommentary } from '../firebase/callables'
+import { callGameRecap, callHostCommentary, callSaveGameAnalysis, type SideCounts } from '../firebase/callables'
 import { track } from '../firebase/analytics'
 import { HOSTS, type HostId } from '../hosts/hosts'
 import { addCrowns } from '../storage/profile'
@@ -20,6 +20,25 @@ import './PostGameAnalysisScreen.css'
 
 const COMMENTARY_TIMEOUT_MS = 3000
 
+/** Tally each side's move classifications (brilliant overrides the raw
+ *  classification) for the Hall of Games quality summary. */
+function summarizeAnalysis(
+  analysis: AnalyzedGame,
+  brilliantIdx: Set<number>,
+): { white: SideCounts; black: SideCounts } {
+  const blank = (): SideCounts => ({
+    brilliant: 0, best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0,
+  })
+  const white = blank()
+  const black = blank()
+  for (const m of analysis.moves) {
+    const side = m.color === 'w' ? white : black
+    if (brilliantIdx.has(m.index)) side.brilliant += 1
+    else side[m.classification] += 1
+  }
+  return { white, black }
+}
+
 export interface ReviewState {
   pgn: string
   hostId: HostId
@@ -29,6 +48,9 @@ export interface ReviewState {
    *  (used when viewing another player's game from their plaque).
    *  Defaults to award when omitted, preserving own-game review. */
   award?: boolean
+  /** Online room id, when this game is in the Hall of Games. Set →
+   *  the computed analysis is uploaded so the archive can rank it. */
+  roomId?: string
 }
 
 type Phase =
@@ -73,6 +95,13 @@ export function PostGameAnalysisScreen() {
             crowns += 1
             bestExcellent += 1
           }
+        }
+        // Persist the engine summary to the Hall of Games (if this game
+        // is archived) so the archive can rank it. Engine facts only;
+        // happens regardless of reward eligibility.
+        if (state.roomId) {
+          const summary = summarizeAnalysis(analysis, brilliantIdx)
+          void callSaveGameAnalysis(state.roomId, { depth: 14, ...summary })
         }
         // Only the player's OWN games earn rewards. Reviewing someone
         // else's game (from their plaque) is read-only.

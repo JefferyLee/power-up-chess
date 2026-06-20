@@ -80,6 +80,11 @@ export function HistoryScreen() {
                     hostId: g.hostId,
                     whiteName: g.whiteName,
                     blackName: g.blackName,
+                    // Online games carry id "online:ROOMID" — pass the
+                    // room id so the review can annotate the archive.
+                    ...(g.mode === 'online' && g.id.startsWith('online:')
+                      ? { roomId: g.id.slice('online:'.length) }
+                      : {}),
                   },
                 })}
               />

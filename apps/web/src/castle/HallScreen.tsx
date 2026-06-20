@@ -401,6 +401,14 @@ export function HallScreen() {
             variant="starry"
             onClick={() => navigate('/openings')}
           />
+          <RoomDoor
+            icon="📜"
+            iconKey="archive"
+            label="Hall of Games"
+            blurb="Every online game, replay and review. NEW."
+            variant="parchment"
+            onClick={() => navigate('/archive')}
+          />
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>

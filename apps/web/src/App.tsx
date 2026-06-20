@@ -4,6 +4,7 @@ import { OnlineGameScreen } from './screens/OnlineGameScreen'
 import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { PlayerGamesScreen } from './screens/PlayerGamesScreen'
+import { GameArchiveScreen } from './screens/GameArchiveScreen'
 import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
 import { PlotScreen } from './puzzles/PlotScreen'
 import { CalibrationScreen } from './puzzles/CalibrationScreen'
@@ -101,6 +102,7 @@ export function App() {
           <Route path="/review" element={<PostGameAnalysisScreen />} />
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/history/:name" element={<PlayerGamesScreen />} />
+          <Route path="/archive" element={<GameArchiveScreen />} />
           <Route path="/learn" element={<LearnRoute />} />
           <Route path="/learn/:lessonId" element={<LessonScreen />} />
           <Route path="/puzzles" element={<PuzzleGardenScreen />} />
