@@ -720,55 +720,117 @@ function makeUsersFilter(filter: string): ((row: PresenceRow) => boolean) | null
 
 const KNOWN_FILTERS = ['hall', 'chess', 'wizard', 'playing', 'garden', 'forest', 'puzzle', 'practice']
 
+/** Coarse "last seen" label for the directory roll. */
+function agoLabel(ts: number): string {
+  const ms = Date.now() - ts
+  if (!ts || ms < 0) return 'a while ago'
+  const min = Math.floor(ms / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const d = Math.floor(hr / 24)
+  if (d < 30) return `${d}d ago`
+  return `${Math.floor(d / 30)}mo ago`
+}
+
+/** /users online [filter] [page] — the live-presence view (who's in the
+ *  castle right now). Token order is forgiving: a bare integer is the
+ *  page, anything else is the filter. */
+function renderOnlineUsers(tokens: string[], ctx: CommandContext): void {
+  if (ctx.world.presence.length === 0) {
+    pushPrivate('reply', 'No one is in the castle right now. Strange.')
+    return
+  }
+  let filterToken: string | null = null
+  let pageToken: number | null = null
+  for (const t of tokens) {
+    if (/^\d+$/.test(t)) pageToken = Number(t)
+    else if (filterToken === null) filterToken = t
+  }
+
+  const filter = filterToken ? makeUsersFilter(filterToken) : null
+  const filtered = filter ? ctx.world.presence.filter(filter) : ctx.world.presence
+  if (filtered.length === 0) {
+    pushPrivate('reply',
+      `No one online matches "${filterToken}" right now. Try one of: ${KNOWN_FILTERS.join(', ')}, or a specific roomId.`,
+    )
+    return
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / USERS_PAGE_SIZE))
+  const page = pageToken !== null ? Math.max(1, Math.min(totalPages, pageToken)) : 1
+  const start = (page - 1) * USERS_PAGE_SIZE
+  const slice = filtered.slice(start, start + USERS_PAGE_SIZE)
+  const nameWidth = Math.max(...slice.map((p) => p.displayName.length), 4)
+
+  const header = filterToken
+    ? `── HERE NOW · ${filterToken} · page ${page}/${totalPages} · ${filtered.length} match${filtered.length === 1 ? '' : 'es'} ──`
+    : `── HERE NOW · page ${page}/${totalPages} · ${ctx.world.presence.length} online ──`
+  const lines = [header]
+  for (const p of slice) {
+    lines.push(`  ${p.displayName.padEnd(nameWidth)}  ${describeLocation(p.location)}`)
+  }
+  lines.push('')
+  if (page < totalPages) {
+    const nextHint = filterToken ? `/users online ${filterToken} ${page + 1}` : `/users online ${page + 1}`
+    lines.push(`${nextHint} for the next page.`)
+  } else if (totalPages > 1) {
+    lines.push('(last page)')
+  }
+  pushPrivate('reply', lines.join('\n'))
+}
+
 registerCommand({
   name: 'users',
   tier: 'basic',
-  description: 'List everyone in the castle. /users hall, /users playing, or /users ABC12 to filter; /users 2 for next page.',
-  handle: (args, ctx) => {
-    if (ctx.world.presence.length === 0) {
-      pushPrivate('reply', 'No one is in the castle right now. Strange.')
-      return
-    }
-
-    // Token order is forgiving: /users [filter] [page] in any order.
-    // A bare integer is the page; anything else is the filter.
+  description: 'List everyone registered at the castle (most-recent first). /users online for who is here right now (then hall/playing/<roomId> to filter); /users 2 for the next page.',
+  handle: async (args, ctx) => {
     const tokens = args.trim().split(/\s+/).filter(Boolean)
-    let filterToken: string | null = null
-    let pageToken: number | null = null
-    for (const t of tokens) {
-      if (/^\d+$/.test(t)) pageToken = Number(t)
-      else if (filterToken === null) filterToken = t
-    }
 
-    const filter = filterToken ? makeUsersFilter(filterToken) : null
-    const filtered = filter ? ctx.world.presence.filter(filter) : ctx.world.presence
-    if (filtered.length === 0) {
-      pushPrivate('reply',
-        `No one matches "${filterToken}" right now. Try one of: ${KNOWN_FILTERS.join(', ')}, or a specific roomId.`,
-      )
+    // /users online … → live presence (the old behaviour + its filters).
+    if (tokens[0]?.toLowerCase() === 'online') {
+      renderOnlineUsers(tokens.slice(1), ctx)
       return
     }
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / USERS_PAGE_SIZE))
-    const page = pageToken !== null ? Math.max(1, Math.min(totalPages, pageToken)) : 1
-    const start = (page - 1) * USERS_PAGE_SIZE
-    const slice = filtered.slice(start, start + USERS_PAGE_SIZE)
-    const nameWidth = Math.max(...slice.map((p) => p.displayName.length), 4)
+    // Default: the full registered roster, most-recently-seen first.
+    let guests: import('../../firebase/callables').GuestSummary[]
+    let total: number
+    try {
+      const { callListGuests } = await import('../../firebase/callables')
+      const res = await callListGuests()
+      guests = res.guests
+      total = res.total
+    } catch (err) {
+      pushPrivate('reply', err instanceof Error ? err.message : 'Could not reach the castle directory.')
+      return
+    }
+    if (guests.length === 0) {
+      pushPrivate('reply', 'No one has registered at the castle yet.')
+      return
+    }
 
-    const header = filterToken
-      ? `── ADVENTURERS · ${filterToken} · page ${page}/${totalPages} · ${filtered.length} match${filtered.length === 1 ? '' : 'es'} ──`
-      : `── ADVENTURERS · page ${page}/${totalPages} · ${ctx.world.presence.length} present ──`
-    const lines = [header]
-    for (const p of slice) {
-      lines.push(`  ${p.displayName.padEnd(nameWidth)}  ${describeLocation(p.location)}`)
+    const pageToken = tokens.find((t) => /^\d+$/.test(t))
+    const totalPages = Math.max(1, Math.ceil(guests.length / USERS_PAGE_SIZE))
+    const page = pageToken ? Math.max(1, Math.min(totalPages, Number(pageToken))) : 1
+    const start = (page - 1) * USERS_PAGE_SIZE
+    const slice = guests.slice(start, start + USERS_PAGE_SIZE)
+    const nameWidth = Math.max(...slice.map((g) => g.displayName.length), 4)
+    const onlineNames = new Set(ctx.world.presence.map((p) => p.normalizedName))
+
+    const scope = total > guests.length ? `showing ${guests.length} of ${total}` : `${total} registered`
+    const lines = [`── CASTLE ROLL · page ${page}/${totalPages} · ${scope} ──`]
+    for (const g of slice) {
+      const status = onlineNames.has(g.normalizedName)
+        ? '● online now'
+        : `last seen ${agoLabel(g.lastVisitAt)}`
+      lines.push(`  ${g.displayName.padEnd(nameWidth)}  ${String(g.castlePoints).padStart(4)}cp  ${status}`)
     }
     lines.push('')
-    if (page < totalPages) {
-      const nextHint = filterToken ? `/users ${filterToken} ${page + 1}` : `/users ${page + 1}`
-      lines.push(`${nextHint} for the next page.`)
-    } else if (totalPages > 1) {
-      lines.push('(last page)')
-    }
+    if (page < totalPages) lines.push(`/users ${page + 1} for the next page.`)
+    else if (totalPages > 1) lines.push('(last page)')
+    lines.push('/users online — just who is here right now.')
     pushPrivate('reply', lines.join('\n'))
   },
 })

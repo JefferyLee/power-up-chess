@@ -56,3 +56,6 @@ data/puzzles/*.json
 
 # tools/generate-image — generated PNGs are dev artifacts, not source
 tools/generate-image/output/
+
+# TypeScript incremental build info
+*.tsbuildinfo

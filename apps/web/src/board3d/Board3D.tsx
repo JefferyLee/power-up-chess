@@ -19,7 +19,7 @@
 // Move/capture SOUNDS stay with the screens (they already play
 // 'move'/'capture'/'check' at move time) — none here, or they'd double.
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Environment, Html, OrbitControls, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
@@ -55,24 +55,83 @@ function squareToWorld(sq: SquareName): [number, number] {
   return [fileIdx - 3.5, 3.5 - rankIdx]
 }
 
-/* Tints multiply the wood texture (a warm reddish board) — light
- * squares get >1 components to brighten, all three lean toward
- * green/blue to pull the overall cast away from red. */
-const SQUARE_LIGHT = new THREE.Color(2.3, 2.35, 2.4)
-const SQUARE_DARK = new THREE.Color(0.62, 0.58, 0.52)
-const FRAME_TINT = new THREE.Color(0.54, 0.47, 0.4)
-const PIECE_WHITE = '#c4ad84'
-const PIECE_BLACK = '#3a2a20'
-/* The Glowbox baseColor textures average #5c3422 (light) vs #31180f
- * (dark) — barely 2× apart, so on screen the sides blur together.
- * Components >1 brighten the light set toward cream; the dark set is
- * multiplied further down. ~5× contrast after tinting. */
-const MAP_TINT_WHITE = new THREE.Color(1.65, 1.55, 1.38)
-const MAP_TINT_BLACK = new THREE.Color(0.55, 0.52, 0.5)
+/* Two selectable looks for the 3D set (Ada picks via the corner
+ * toggle; the choice persists in localStorage):
+ *
+ *  - 'wood'    — the realistic painted-wood set. Square/frame colours
+ *    MULTIPLY the wood-grain texture (>1 components brighten and pull
+ *    the cast off red); piece colours multiply the Glowbox baseColor
+ *    maps. The dark map is so dark it needs >1 tint just to climb out
+ *    of the mud into a visible warm walnut.
+ *  - 'candy' — flat colourful board (no textures, colours render almost
+ *    as-is). A cream + deep-blue board with clean ivory-vs-navy pieces.
+ *    Toned down from the first attempt: the blue is deeper (was too pale
+ *    and glary), the rail is dark slate (was an ugly pink/purple), and
+ *    there is NO pink anywhere. Low clearcoat for a soft sheen. */
+export type Palette3dName = 'wood' | 'candy'
 
-function pieceTint(color: Color, map: THREE.Texture | null): THREE.Color | string {
-  if (map) return color === 'w' ? MAP_TINT_WHITE : MAP_TINT_BLACK
-  return color === 'w' ? PIECE_WHITE : PIECE_BLACK
+interface Palette3d {
+  /** Apply the wood-grain texture to squares/frame/trays. */
+  texturedBoard: boolean
+  /** Apply the Glowbox baseColor maps to the pieces. */
+  texturedPieces: boolean
+  squareLight: THREE.ColorRepresentation
+  squareDark: THREE.ColorRepresentation
+  frame: THREE.ColorRepresentation
+  /** Piece colour — multiplies the map in 'wood', stands alone in 'candy'. */
+  white: THREE.ColorRepresentation
+  black: THREE.ColorRepresentation
+  /** Scene fill so the chosen look never reads dark. */
+  ambient: number
+  /** Piece clearcoat — soft sheen, dialled down from the old toy gloss. */
+  clearcoat: number
+}
+
+const PALETTES: Record<Palette3dName, Palette3d> = {
+  wood: {
+    texturedBoard: true,
+    texturedPieces: true,
+    squareLight: new THREE.Color(2.4, 2.42, 2.42),
+    squareDark: new THREE.Color(1.18, 1.06, 0.92),
+    frame: new THREE.Color(0.92, 0.8, 0.64),
+    white: new THREE.Color(2.0, 1.88, 1.66),
+    black: new THREE.Color(1.55, 1.32, 1.12),
+    ambient: 0.42,
+    clearcoat: 0.7,
+  },
+  // Cream + deep-blue board, ivory vs navy pieces. No pink anywhere.
+  candy: {
+    texturedBoard: false,
+    texturedPieces: false,
+    squareLight: '#ecdfc4',  // warm cream
+    squareDark: '#4f86b5',   // deep blue (toned down from the pale glary one)
+    frame: '#2f3b52',        // dark slate-blue rail
+    white: '#f5eede',        // bright ivory — pops on the blue squares
+    black: '#2b3340',        // deep navy charcoal — reads on blue and cream
+    ambient: 0.52,
+    clearcoat: 0.4,
+  },
+}
+
+const PaletteContext = createContext<Palette3d>(PALETTES.wood)
+const usePalette = () => useContext(PaletteContext)
+
+/** Untextured pieces (candy mode, or the procedural fallback before the
+ *  GLTF set lands) take the flat colour; textured wood pieces multiply
+ *  the map by it. Same colour key either way. */
+function pieceTint(color: Color, palette: Palette3d): THREE.ColorRepresentation {
+  return color === 'w' ? palette.white : palette.black
+}
+
+const PALETTE_KEY = 'puc.board3d.palette'
+function readPalette(): Palette3dName {
+  try {
+    // 'classic' is a legacy key from the brief green-board version.
+    const v = localStorage.getItem(PALETTE_KEY)
+    return v === 'candy' || v === 'classic' ? 'candy' : 'wood'
+  } catch {
+    return 'wood'
+  }
 }
 const TINT_SELECTED = '#f1c34c'
 const TINT_LEGAL = '#7cc28b'
@@ -161,6 +220,7 @@ function Squares({
   wood: THREE.Texture | null
   onTap: (sq: SquareName) => void
 }) {
+  const palette = usePalette()
   const cells = useMemo(() => {
     const out: Array<{ sq: SquareName; x: number; z: number; dark: boolean }> = []
     for (const f of FILES) {
@@ -199,11 +259,11 @@ function Squares({
             <meshStandardMaterial
               key={wood ? 'wood' : 'flat'}
               map={wood}
-              color={dark ? SQUARE_DARK : SQUARE_LIGHT}
+              color={dark ? palette.squareDark : palette.squareLight}
               emissive={tint ?? '#000000'}
               emissiveIntensity={tint ? 0.55 : 0}
               roughness={0.8}
-              envMapIntensity={0.4}
+              envMapIntensity={0.55}
             />
           </mesh>
         )
@@ -292,6 +352,7 @@ function AnimatedPiece({
   onTap: (sq: SquareName) => void
   onLanded: (sq: SquareName) => void
 }) {
+  const palette = usePalette()
   const ref = useRef<THREE.Mesh>(null)
   const anim = useRef<MoveAnim | null>(null)
   const prevSquare = useRef(tracked.square)
@@ -387,14 +448,14 @@ function AnimatedPiece({
     >
       <meshPhysicalMaterial
         map={map}
-        color={pieceTint(tracked.piece.color, map)}
+        color={pieceTint(tracked.piece.color, palette)}
         emissive={inCheck ? TINT_CHECK : isSelected ? TINT_SELECTED : '#000000'}
         emissiveIntensity={inCheck ? 0.5 : isSelected ? 0.35 : 0}
         roughness={0.45}
         metalness={0.05}
-        clearcoat={0.7}
+        clearcoat={palette.clearcoat}
         clearcoatRoughness={0.25}
-        envMapIntensity={0.45}
+        envMapIntensity={0.6}
       />
     </mesh>
   )
@@ -418,6 +479,7 @@ function DyingPiece({
   scale: number
   onDone: (info: CapturedPiece) => void
 }) {
+  const palette = usePalette()
   const ref = useRef<THREE.Mesh>(null)
   const life = useRef(0)
   const done = useRef(false)
@@ -456,12 +518,12 @@ function DyingPiece({
       >
         <meshPhysicalMaterial
           map={map}
-          color={pieceTint(info.piece.color, map)}
+          color={pieceTint(info.piece.color, palette)}
           roughness={0.45}
           metalness={0.05}
-          clearcoat={0.7}
+          clearcoat={palette.clearcoat}
           clearcoatRoughness={0.25}
-          envMapIntensity={0.45}
+          envMapIntensity={0.6}
         />
       </mesh>
       {sparkling && (
@@ -495,6 +557,7 @@ function GravePiece({
   rotateBlack: boolean
   scale: number
 }) {
+  const palette = usePalette()
   const ref = useRef<THREE.Mesh>(null)
   const life = useRef(0)
   const [x, z] = graveSlot(info.piece.color, index)
@@ -525,12 +588,12 @@ function GravePiece({
     >
       <meshPhysicalMaterial
         map={map}
-        color={pieceTint(info.piece.color, map)}
+        color={pieceTint(info.piece.color, palette)}
         roughness={0.6}
         metalness={0.05}
         clearcoat={0.4}
         clearcoatRoughness={0.35}
-        envMapIntensity={0.3}
+        envMapIntensity={0.45}
       />
     </mesh>
   )
@@ -633,8 +696,19 @@ interface PiecesProps {
  *  Suspends while the set downloads. The two colours are authored
  *  facing each other, so no render-time flip. */
 function PiecesGltf(props: PiecesProps) {
+  const palette = usePalette()
   const { geos, maps } = useGltfPieceAssets()
-  return <PiecesInner geos={geos} maps={maps} rotateBlack={false} scale={1} {...props} />
+  // Candy mode keeps the carved geometry but drops the wood baseColor
+  // maps, so the pieces read as flat glossy toy colours.
+  return (
+    <PiecesInner
+      geos={geos}
+      maps={palette.texturedPieces ? maps : NO_MAPS}
+      rotateBlack={false}
+      scale={1}
+      {...props}
+    />
+  )
 }
 
 const NO_MAPS: Record<Color, THREE.Texture | null> = { w: null, b: null }
@@ -662,10 +736,23 @@ export function Board3D({
   badges,
 }: Board3DProps) {
   const [selected, setSelected] = useState<SquareName | null>(null)
+  // The chosen 3D look (wood / candy). Persisted so Ada's pick sticks
+  // across screens and sessions.
+  const [paletteName, setPaletteName] = useState<Palette3dName>(readPalette)
+  const palette = PALETTES[paletteName]
+  const togglePalette = useCallback(() => {
+    setPaletteName((p) => {
+      const next: Palette3dName = p === 'candy' ? 'wood' : 'candy'
+      try { localStorage.setItem(PALETTE_KEY, next) } catch { /* private mode */ }
+      return next
+    })
+  }, [])
   // Stable per-piece identity + movedFrom/captured diffs — drives one
   // persistent animated mesh per piece.
   const { tracked, captured, bulkChange } = usePieceTracking(pieces)
-  const wood = useWoodTexture()
+  const woodTex = useWoodTexture()
+  // Candy mode renders flat (untextured) board + frame.
+  const wood = palette.texturedBoard ? woodTex : null
 
   // Captured pieces linger as "dying" meshes until their pop finishes,
   // then re-materialise in the side trays. A board reset (next puzzle,
@@ -744,6 +831,7 @@ export function Board3D({
   )
 
   return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
     <Canvas
       shadows="soft"
       /* Camera mounts behind the viewer's side; OrbitControls owns it
@@ -752,6 +840,10 @@ export function Board3D({
       dpr={[1, 2]}
       style={{ touchAction: 'none' }}
     >
+      {/* Provider lives INSIDE the Canvas — React context doesn't cross
+        * the R3F reconciler boundary, so the scene meshes read the
+        * palette from here, not from a provider outside <Canvas>. */}
+      <PaletteContext.Provider value={palette}>
       <Suspense fallback={null}>
         {/* Image-based lighting (warm wooden interior, CC0 Poly Haven).
           * Own Suspense so the board paints before the 1.5 MB HDR
@@ -759,10 +851,10 @@ export function Board3D({
         <Suspense fallback={null}>
           <Environment files={ENV_URL} />
         </Suspense>
-        <ambientLight intensity={0.22} />
+        <ambientLight intensity={palette.ambient} />
         <directionalLight
           position={[6, 10, 4]}
-          intensity={1.5}
+          intensity={1.7}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
@@ -784,9 +876,9 @@ export function Board3D({
           <meshStandardMaterial
             key={wood ? 'wood' : 'flat'}
             map={wood}
-            color={FRAME_TINT}
+            color={palette.frame}
             roughness={0.85}
-            envMapIntensity={0.4}
+            envMapIntensity={0.55}
           />
         </mesh>
 
@@ -798,9 +890,9 @@ export function Board3D({
             <meshStandardMaterial
               key={wood ? 'wood' : 'flat'}
               map={wood}
-              color={FRAME_TINT}
+              color={palette.frame}
               roughness={0.85}
-              envMapIntensity={0.4}
+              envMapIntensity={0.55}
             />
           </mesh>
         ))}
@@ -872,6 +964,32 @@ export function Board3D({
           maxPolarAngle={Math.PI / 2.15}
         />
       </Suspense>
+      </PaletteContext.Provider>
     </Canvas>
+    {/* Ada's look-picker — flips the 3D set between the realistic
+      * wooden pieces and the colourful blue board. */}
+    <button
+      type="button"
+      onClick={togglePalette}
+      aria-pressed={paletteName === 'candy'}
+      title={paletteName === 'candy' ? 'Switch to the wooden set' : 'Switch to the blue board'}
+      style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 5,
+        border: 'none',
+        borderRadius: 999,
+        padding: '6px 12px',
+        font: '600 14px system-ui, sans-serif',
+        color: '#fff',
+        cursor: 'pointer',
+        background: paletteName === 'candy' ? 'rgba(47,59,82,0.92)' : 'rgba(123,89,52,0.9)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      }}
+    >
+      {paletteName === 'candy' ? '🟦 Blue' : '🪵 Wood'}
+    </button>
+    </div>
   )
 }

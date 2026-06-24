@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
+
+/* three.js lives in its own chunk — only fetched when a reviewer flips
+ * the Hall of Games board into 3D. */
+const Board3D = lazy(() =>
+  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
+)
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { piecesFromFen } from '../chess/fen'
 import { isBrilliant } from '../engine/brilliant'
@@ -196,6 +202,8 @@ function ReviewView({
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const host = HOSTS[state.hostId]
   const picker = useMemo(() => new TemplatePicker(), [])
+  // Alternate 3D view of the board (read-only here, like the 2D one).
+  const [view3d, setView3d] = useState(false)
 
   // Move Replay Theater state. When set, the board temporarily shows the
   // move's "before" position with an arrow, then auto-advances to "after"
@@ -404,6 +412,15 @@ function ReviewView({
 
       <div className="puc-review__main">
         <div className="puc-review__board-col">
+          <button
+            type="button"
+            className="puc-review__view-toggle"
+            onClick={() => setView3d((v) => !v)}
+            aria-pressed={view3d}
+            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+          >
+            {view3d ? '🎲 2D' : '🎲 3D'}
+          </button>
           <ReviewBoardSticky
             onPrev={() => {
               if (selectedIdx === null || selectedIdx <= 0) return
@@ -419,16 +436,36 @@ function ReviewView({
             selected={selected}
             selectedIsBrilliant={selected ? brilliantIdx.has(selected.index) : false}
           >
-            <Board
-              pieces={pieces}
-              turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
-              legalDestinationsFrom={() => []}
-              onMove={() => { /* read-only in review */ }}
-              lastMove={lastMove}
-              checkSquare={null}
-              arrows={replayArrows}
-              squareSize={SQUARE_SIZE}
-            />
+            {view3d ? (
+              <div
+                className="puc-review__board3d"
+                style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+              >
+                <Suspense
+                  fallback={<div className="puc-review__board3d-loading">Carving the 3D board…</div>}
+                >
+                  <Board3D
+                    pieces={pieces}
+                    turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
+                    legalDestinationsFrom={() => []}
+                    onMove={() => { /* read-only in review */ }}
+                    lastMove={lastMove}
+                    checkSquare={null}
+                  />
+                </Suspense>
+              </div>
+            ) : (
+              <Board
+                pieces={pieces}
+                turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
+                legalDestinationsFrom={() => []}
+                onMove={() => { /* read-only in review */ }}
+                lastMove={lastMove}
+                checkSquare={null}
+                arrows={replayArrows}
+                squareSize={SQUARE_SIZE}
+              />
+            )}
           </ReviewBoardSticky>
           <EvalBar evalCp={evalCp} />
           <div className="puc-review__host-panel">

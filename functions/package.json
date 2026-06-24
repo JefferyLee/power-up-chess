@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "main": "lib/index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "build": "tsc && node scripts/bundle-stories.mjs",

@@ -69,7 +69,7 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "nodejs20",
+      "runtime": "nodejs22",
       "predeploy": ["pnpm --filter @power-up-chess/functions build"]
     }
   ],

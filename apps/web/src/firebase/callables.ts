@@ -725,6 +725,19 @@ export async function callFindPlayer(req: FindPlayerRequest): Promise<FindPlayer
   return data
 }
 
+export interface GuestSummary {
+  normalizedName: string
+  displayName: string
+  castlePoints: number
+  lastVisitAt: number
+}
+export interface ListGuestsResponse { guests: GuestSummary[]; total: number }
+const listGuestsFn = httpsCallable<unknown, ListGuestsResponse>(functions, 'listGuests')
+export async function callListGuests(): Promise<ListGuestsResponse> {
+  const { data } = await listGuestsFn({})
+  return data
+}
+
 // ── Teams (MVP3-P3) ──
 export interface TeamBadge {
   shape?: 'shield-heater' | 'shield-round' | 'shield-pointed' | 'roundel'
