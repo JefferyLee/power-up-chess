@@ -65,6 +65,28 @@
   margin: 0 auto;
 }
 
+/* ── Masters tab (经典名局 / 大师对局) ── */
+.puc-masters__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.puc-masters__count {
+  color: var(--puc-text-muted);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+.puc-masters__blurb {
+  margin: 4px 0 0;
+  color: var(--puc-text-muted);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
 .puc-history__empty {
   text-align: center;
   color: var(--puc-text-muted);

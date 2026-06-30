@@ -20,6 +20,7 @@ import {
 import { useCastle } from '../castle/useCastle'
 import { HOSTS } from '../hosts/hosts'
 import type { EndReason } from '../rooms/types'
+import { MastersView } from './MastersView'
 import './HistoryScreen.css'
 
 type LoadState =
@@ -39,6 +40,8 @@ export function GameArchiveScreen() {
   const { identity } = useCastle()
   const role = archiveRole(identity?.normalizedName)
   const [sort, setSort] = useState<BrowseSort>('recent')
+  // Masters mode swaps the whole online list for the static GM archive.
+  const [masters, setMasters] = useState(false)
   // Player filter (overrides sort). Draft = the input; player = applied.
   const [draft, setDraft] = useState('')
   const [player, setPlayer] = useState<string | null>(null)
@@ -157,15 +160,24 @@ export function GameArchiveScreen() {
               key={s.key}
               type="button"
               role="tab"
-              aria-selected={!player && sort === s.key}
-              className={'puc-history__tab' + (!player && sort === s.key ? ' puc-history__tab--on' : '')}
-              onClick={() => { clearFilter(); setSort(s.key) }}
+              aria-selected={!masters && !player && sort === s.key}
+              className={'puc-history__tab' + (!masters && !player && sort === s.key ? ' puc-history__tab--on' : '')}
+              onClick={() => { setMasters(false); clearFilter(); setSort(s.key) }}
             >
               {s.label}
             </button>
           ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={masters}
+            className={'puc-history__tab' + (masters ? ' puc-history__tab--on' : '')}
+            onClick={() => setMasters(true)}
+          >
+            ♛ Masters
+          </button>
         </div>
-        <div className="puc-history__filter">
+        <div className="puc-history__filter" hidden={masters}>
           {player ? (
             <button type="button" className="puc-history__filter-chip" onClick={clearFilter}>
               Player: <b>{player}</b> ✕
@@ -188,9 +200,10 @@ export function GameArchiveScreen() {
       </div>
 
       <main className="puc-history__main">
-        {state.kind === 'loading' && <p className="puc-history__empty">Opening the archive…</p>}
-        {state.kind === 'error' && <p className="puc-history__empty">Couldn&apos;t load the archive: {state.error}</p>}
-        {state.kind === 'ready' && state.games.length === 0 && (
+        {masters && <MastersView />}
+        {!masters && state.kind === 'loading' && <p className="puc-history__empty">Opening the archive…</p>}
+        {!masters && state.kind === 'error' && <p className="puc-history__empty">Couldn&apos;t load the archive: {state.error}</p>}
+        {!masters && state.kind === 'ready' && state.games.length === 0 && (
           <p className="puc-history__empty">
             {player
               ? `No archived online games for "${player}".`
@@ -201,7 +214,7 @@ export function GameArchiveScreen() {
                   : 'No reviewed games yet — open a game and review it, then it ranks here.'}
           </p>
         )}
-        {state.kind === 'ready' && state.games.length > 0 && (
+        {!masters && state.kind === 'ready' && state.games.length > 0 && (
           <>
             <ul className="puc-history__list">
               {state.games.map((g) => (
