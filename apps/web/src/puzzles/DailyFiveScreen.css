@@ -5,6 +5,7 @@
   color: var(--puc-text);
   font-family: var(--puc-font-body);
   padding: 20px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
   padding-top: calc(20px + env(safe-area-inset-top));
   max-width: 1000px;
   margin: 0 auto;

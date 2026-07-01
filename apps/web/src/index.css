@@ -54,4 +54,5 @@ button {
   /* Small in-list controls: enlarge the hit area without wrecking flow. */
   .puc-review__replay-btn { width: 40px; height: 40px; font-size: 13px; }
   .puc-chat__report { padding: 8px 10px; font-size: 12px; }
+  .puc-chatsheet__close { min-width: 44px; min-height: 44px; }
 }
