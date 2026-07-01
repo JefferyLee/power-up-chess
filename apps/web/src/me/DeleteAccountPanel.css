@@ -1,0 +1,41 @@
+.puc-danger {
+  max-width: 460px;
+  margin: 20px auto 40px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 80, 80, 0.4);
+  background: rgba(60, 20, 20, 0.18);
+}
+.puc-danger__title {
+  margin: 0 0 8px;
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  font-size: 15px;
+  color: #f0a0a0;
+}
+.puc-danger__note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--puc-text-muted, #b9ad8e);
+}
+.puc-danger__note--warn { color: #f0a0a0; }
+.puc-danger__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.puc-danger__btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 80, 80, 0.5);
+  background: transparent;
+  color: #f0a0a0;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.puc-danger__btn:hover { background: rgba(220, 80, 80, 0.12); }
+.puc-danger__btn--go {
+  background: linear-gradient(180deg, #c25c5c, #9c4040);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 700;
+}
+.puc-danger__btn--go:hover { filter: brightness(1.08); }
+.puc-danger__btn--ghost { border-color: rgba(231, 184, 65, 0.32); color: var(--puc-text-muted, #b9ad8e); }

@@ -10,6 +10,7 @@ import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
 import { callGetPublicProfile, type GetPublicProfileResponse } from '../firebase/callables'
 import { PlaqueCard } from './PlaqueCard'
+import { DeleteAccountPanel } from './DeleteAccountPanel'
 import './AdventurerPlaqueScreen.css'
 
 type State =
@@ -117,6 +118,7 @@ export function AdventurerPlaqueScreen() {
       {state.kind === 'loading' && <div className="puc-plaque-status">Fetching your plaque…</div>}
       {state.kind === 'error' && <div className="puc-plaque-status">{state.message}</div>}
       {state.kind === 'ready' && <PlaqueCard profile={state.profile} />}
+      {state.kind === 'ready' && <DeleteAccountPanel />}
     </div>
   )
 }

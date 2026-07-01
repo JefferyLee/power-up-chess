@@ -380,6 +380,16 @@ export async function callReportChatMessage(messageId: string) {
   return data
 }
 
+const forgetMeFn = httpsCallable<
+  { normalizedName: string },
+  { ok: boolean; deleted: Record<string, number> }
+>(functions, 'forgetMe')
+/** Irreversibly delete the caller's account + data across Firestore. */
+export async function callForgetMe(normalizedName: string) {
+  const { data } = await forgetMeFn({ normalizedName })
+  return data
+}
+
 export async function callSetPresence(req: SetPresenceRequest): Promise<SetPresenceResponse> {
   const { data } = await setPresenceFn(req)
   return data
