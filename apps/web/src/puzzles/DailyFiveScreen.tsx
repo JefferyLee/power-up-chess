@@ -24,6 +24,7 @@ import { useSound } from '../sound/useSound'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useCastle } from '../castle/useCastle'
 import { useAuthUid } from '../auth/useAuthUid'
+import { track } from '../firebase/analytics'
 import {
   callGetDailyFive,
   callSubmitPuzzleAttempt,
@@ -49,6 +50,9 @@ export function DailyFiveScreen() {
   const authReady = authState.status === 'ready'
   const normalizedName = identity?.normalizedName ?? ''
   const canPlay = !!identity && !identity.isBypass
+
+  // Observability: opening this screen = starting today's practice (Phase 1B funnel).
+  useEffect(() => { track('daily_practice_started') }, [])
 
   // 3D view — same legality/judging flow, different renderer.
   const [view3d, setView3d] = useState(false)

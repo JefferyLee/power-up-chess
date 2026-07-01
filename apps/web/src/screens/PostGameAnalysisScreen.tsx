@@ -384,6 +384,7 @@ function ReviewView({
       return
     }
     setRecap({ status: 'loading' })
+    track('story_review_opened', { spectator: state.award === false })
 
     const summary = countClassifications(analysis, brilliantIdx)
     const result: 'white' | 'black' | 'draw' = deriveResult(analysis)

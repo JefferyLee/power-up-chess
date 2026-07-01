@@ -82,12 +82,12 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
 | LLM/TTS daily quota enforcement | shipped | `consumeDailyQuota`, chat rate-limit |
 | Billing budget alert (COST_GUARDRAILS Layer 3) | **planned** | documented, not configured (manual GCP) |
-| First-visit onboarding funnel | **planned** | `isFirstVisit` only swaps a greeting today |
-| "Today's practice" aggregation | **planned** | `DailyStrip` links to Daily Five only |
+| First-visit onboarding funnel | shipped | `FirstVisitGuide` — one-time, skippable (Phase 1A) |
+| "Today's practice" aggregation | shipped | `TodaysPractice` card: Daily Five + practice + review-last (Phase 1B) |
+| Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | shipped | wired into DailyFive / LessonScreen / review (Phase 4C) |
 | Mistake-streak host handling | **planned** | no consecutive-mistake tracking |
 | Server-side "delete my data" | **planned** | only local `clearIdentity` exists |
 | Template-only (no-LLM) toggle | **planned** | |
-| Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | **planned** | current events: screen_view, game_end, host_commentary, *_position_clear |
 
 ---
 

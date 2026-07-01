@@ -18,6 +18,7 @@ import { lessonById, LESSONS } from './lessons'
 import type { LessonStep, TryMoveStep } from './lessonTypes'
 import { useCastle } from '../castle/useCastle'
 import { callAwardTutorialComplete } from '../firebase/callables'
+import { track } from '../firebase/analytics'
 import { markLessonDone } from './progress'
 import './LessonScreen.css'
 
@@ -90,6 +91,8 @@ export function LessonScreen() {
     if (next >= lesson.steps.length) {
       // Lesson complete — mark client-side so /learn shows a checkmark.
       markLessonDone(lesson.id)
+      // Observability: finishing the last lesson = tutorial series done.
+      if (isLastLesson) track('tutorial_completed', { lesson_id: lesson.id })
       // If this is the LAST lesson and the kid is signed in (not a
       // bypass), claim the one-time tutorial-complete reward. Server
       // enforces once-ever; we only update local state on a real award.
