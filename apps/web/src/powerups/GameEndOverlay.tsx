@@ -1,7 +1,22 @@
+import { useState } from 'react'
 import type { Color, GameStatus } from '../chess/types'
 import type { HostId } from '../hosts/hosts'
 import { BrilliantWinCeremony } from './BrilliantWinCeremony'
 import './GameEndOverlay.css'
+
+const FIRST_WIN_KEY = 'puc:first-win-done'
+
+/** The grand crown ceremony is reserved for milestones, not every win.
+ *  Returns true once — the very first win ever — then false forever. */
+function consumeFirstWinMilestone(): boolean {
+  try {
+    if (localStorage.getItem(FIRST_WIN_KEY) === '1') return false
+    localStorage.setItem(FIRST_WIN_KEY, '1')
+    return true
+  } catch {
+    return false
+  }
+}
 
 interface Props {
   status: GameStatus
@@ -14,6 +29,9 @@ interface Props {
    *  this undefined — both colours are at the same screen, so any win shows
    *  the ceremony. */
   viewerColor?: Color
+  /** Force the grand crown ceremony for a milestone win (e.g. a tournament).
+   *  When omitted, only the player's first win ever is grand. */
+  grand?: boolean
   onNewGame: () => void
   onBackToMenu: () => void
   onReview?: () => void
@@ -28,17 +46,22 @@ export function GameEndOverlay({
   hostRecap,
   hostId,
   viewerColor,
+  grand,
   onNewGame,
   onBackToMenu,
   onReview,
 }: Props) {
-  if (status.kind === 'in_progress') return null
-
-  const winColor = winnerColor(status)
+  const winColor = status.kind === 'in_progress' ? null : winnerColor(status)
   const isWin = winColor !== null
   // "viewer is the winner" — true in local 2P for any win, or in
   // AI/online when viewerColor matches the winning side.
   const viewerWon = isWin && (viewerColor === undefined || viewerColor === winColor)
+  // The grand crown ceremony is a milestone moment — the player's first win
+  // ever, or a caller-forced milestone — not every game. Ordinary wins still
+  // get a warm celebration (fireworks + recap) via the lighter card below.
+  const [isGrand] = useState(() => viewerWon && (grand === true || consumeFirstWinMilestone()))
+
+  if (status.kind === 'in_progress') return null
 
   const headline = headlineFor(status, whiteName, blackName)
   const winnerName = winColor === 'w' ? whiteName : winColor === 'b' ? blackName : ''
@@ -66,7 +89,7 @@ export function GameEndOverlay({
       <div
         className={`puc-end__card ${viewerWon ? 'puc-end__card--win' : 'puc-end__card--draw'}`}
       >
-        {viewerWon ? (
+        {viewerWon && isGrand ? (
           <BrilliantWinCeremony
             winnerName={winnerName}
             hostId={hostId}

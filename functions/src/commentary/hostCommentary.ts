@@ -125,6 +125,7 @@ function buildUserPrompt(data: HostCommentaryRequest, playerName: string): strin
     `FEN after: ${data.fenAfter}`,
     ``,
     `Write 1-2 sentences in your own voice commenting on this move. Be concrete, be honest, be brief.`,
+    `This is a post-game review and the player is looking at the board, so naming a move in simple notation (e.g. ${data.moveSan}) is fine when it helps.`,
   ]
     .filter(Boolean)
     .join('\n')

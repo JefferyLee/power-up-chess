@@ -86,6 +86,8 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | "Today's practice" aggregation | shipped | `TodaysPractice` card: Daily Five + practice + review-last (Phase 1B) |
 | Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | shipped | wired into DailyFive / LessonScreen / review (Phase 4C) |
 | Rough-game softening (Phase 2 #1) | shipped | 3+ own mistakes/blunders → one-time gentle nudge + softened recap |
+| Grand win ceremony frequency (Phase 2 #4) | shipped | full crown ceremony reserved for first-win/milestone; ordinary wins get a lighter celebration (fireworks + recap) |
+| Host notation scope (Phase 2 #5) | shipped | conversation = plain language; per-move review may name moves in simple SAN |
 | Server-side "delete my data" | shipped | `forgetMe` erases guest doc/games/chat/teams/tournament/feedback + full local wipe; control on `/me` (Phase 5) |
 | Template-only (no-LLM) toggle | shipped | `/me` → Settings; gates review commentary + recap + story/ask-host (Gemini) |
 | Privacy statement + COPPA self-check | shipped (docs) | `docs/PRIVACY.md` (parent-facing draft) + `docs/COPPA_CHECKLIST.md` |
