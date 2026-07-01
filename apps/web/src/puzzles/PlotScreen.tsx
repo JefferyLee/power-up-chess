@@ -28,6 +28,7 @@ import {
   type Plot,
   type ServerPuzzle,
 } from '../firebase/callables'
+import { PuzzleExplanation } from './PuzzleExplanation'
 import './PlotScreen.css'
 
 const MAX_SQUARE_SIZE = 64
@@ -59,7 +60,7 @@ export function PlotScreen() {
   const navigate = useNavigate()
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
-  const { identity, setCastlePoints } = useCastle()
+  const { identity, hostId, setCastlePoints } = useCastle()
   const authState = useAuthUid()
   const authReady = authState.status === 'ready'
 
@@ -468,6 +469,7 @@ export function PlotScreen() {
                   +{phase.pointsAdded} castle points
                 </p>
               )}
+              {puzzle && <PuzzleExplanation puzzle={puzzle} hostId={hostId} />}
               <button
                 type="button"
                 className="puc-plot__btn puc-plot__btn--primary"

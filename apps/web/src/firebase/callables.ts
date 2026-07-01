@@ -380,6 +380,21 @@ export async function callReportChatMessage(messageId: string) {
   return data
 }
 
+const explainPuzzleFn = httpsCallable<
+  { host: 'lucy' | 'luca'; fen: string; solutionSan: string[]; motifs?: string[] },
+  { text: string; source: 'cache' | 'llm' }
+>(functions, 'explainPuzzle')
+/** Short host-voiced "why that move works" for a solved puzzle. */
+export async function callExplainPuzzle(req: {
+  host: 'lucy' | 'luca'
+  fen: string
+  solutionSan: string[]
+  motifs?: string[]
+}) {
+  const { data } = await explainPuzzleFn(req)
+  return data
+}
+
 const forgetMeFn = httpsCallable<
   { normalizedName: string },
   { ok: boolean; deleted: Record<string, number> }

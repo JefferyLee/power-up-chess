@@ -1,0 +1,25 @@
+.puc-pexplain {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 200, 140, 0.4);
+  background: rgba(40, 70, 48, 0.35);
+  text-align: left;
+}
+.puc-pexplain__fig { flex: none; width: 48px; height: 48px; }
+.puc-pexplain__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.puc-pexplain__name {
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  font-size: 13px;
+  color: #a7e0b8;
+}
+.puc-pexplain__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--puc-text, #e8dcc0);
+}
+.puc-pexplain__text--wait { opacity: 0.6; font-style: italic; }

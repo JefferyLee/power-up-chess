@@ -43,6 +43,7 @@ export {
 } from './games/wizard/wizardRoom'
 export { postWizardMessage, postWizardVoice } from './games/wizard/wizardChat'
 export { getNextPuzzle } from './puzzles/getNextPuzzle'
+export { explainPuzzle } from './puzzles/explainPuzzle'
 export { submitPuzzleAttempt } from './puzzles/submitPuzzleAttempt'
 export { getCalibrationSet, submitCalibration } from './puzzles/calibration'
 export { refreshPuzzleLeaderboards } from './puzzles/refreshPuzzleLeaderboards'

@@ -30,6 +30,7 @@ import {
   callSubmitPuzzleAttempt,
   type ServerPuzzle,
 } from '../firebase/callables'
+import { PuzzleExplanation } from './PuzzleExplanation'
 import './DailyFiveScreen.css'
 
 const MAX_SQUARE_SIZE = 56
@@ -45,7 +46,7 @@ export function DailyFiveScreen() {
   const navigate = useNavigate()
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
-  const { identity, setCastlePoints } = useCastle()
+  const { identity, hostId, setCastlePoints } = useCastle()
   const authState = useAuthUid()
   const authReady = authState.status === 'ready'
   const normalizedName = identity?.normalizedName ?? ''
@@ -461,6 +462,7 @@ export function DailyFiveScreen() {
                   + {phase.bonusAdded} daily-completion bonus 🎉
                 </p>
               )}
+              {phase.success && current && <PuzzleExplanation puzzle={current} hostId={hostId} />}
               <button
                 type="button"
                 className="puc-daily__btn puc-daily__btn--primary"

@@ -65,6 +65,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Host commentary (Lucy/Luca via Gemini) | shipped | selective LLM; template fallback; cached |
 | Post-game review + host story recap | shipped | 3rd-person "spectator" recap for masters/others' games |
 | Puzzle Garden + Daily Five + Calibration + Leaderboard | shipped | |
+| Puzzle-solve host explanations (Phase 6) | shipped | after a solve: authored `explanation` → else on-demand host line (`explainPuzzle`, engine/motif-constrained) → motif template fallback |
 | Legends Hall + Master Atrium (puzzle museums) | shipped | already share `MuseumScreen` |
 | Learn lessons (5) + tutorial reward | shipped | reward fires once for the series |
 | Endgame drills, Opening trainer | shipped | |
