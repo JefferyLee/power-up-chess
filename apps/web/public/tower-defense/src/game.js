@@ -54,6 +54,7 @@ function showNameError(text, id = 'name-error-start') {
 
 export function initGame() {
   resetGameState();
+  state.waveCountdown = 3;
   selectTowerBtn('arrow');
   updateSelectedTowerPanel();
   updateUI();
@@ -138,6 +139,7 @@ function bindStartForm() {
 
 export function startWave() {
   if (state.waveActive || state.waveNum >= WAVES.length) return;
+  state.waveCountdown = 0;
   state.waveNum++;
   state.waveActive = true;
   state.spawnTimer = 0;
@@ -371,6 +373,7 @@ function updateUI() {
   const wb = document.getElementById('wave-btn');
   if (state.waveActive) { wb.textContent = `Wave ${state.waveNum} in progress…`; wb.disabled = true; }
   else if (state.waveNum >= WAVES.length) { wb.textContent = 'All waves done!'; wb.disabled = true; }
+  else if (state.waveCountdown > 0) { wb.textContent = `Wave ${state.waveNum + 1} in ${Math.ceil(state.waveCountdown)}s · Start now`; wb.disabled = state.paused; }
   else { wb.textContent = `Start Wave ${state.waveNum + 1}`; wb.disabled = state.paused; }
   if (state.selectedTower) updateSelectedTowerPanel();
 }
@@ -386,6 +389,20 @@ function update(dt) {
   }
   if (state.comboTimer > 0) { state.comboTimer -= dt; if (state.comboTimer <= 0) state.combo = 0; }
   if (state.comboDisplayTimer > 0) state.comboDisplayTimer -= dt;
+
+  // Waves auto-start on a countdown: 3s after the first deploy, then 5s
+  // after each wave is cleared. The timer runs on its own; the Start-Wave
+  // button just skips the remaining wait.
+  if (!state.waveActive && state.waveCountdown > 0 && state.waveNum < WAVES.length) {
+    state.waveCountdown -= dt;
+    if (state.waveCountdown <= 0) {
+      state.waveCountdown = 0;
+      startWave();
+    } else {
+      const wb = document.getElementById('wave-btn');
+      if (wb) { wb.textContent = `Wave ${state.waveNum + 1} in ${Math.ceil(state.waveCountdown)}s · Start now`; wb.disabled = state.paused; }
+    }
+  }
 
   if (state.waveActive && state.spawnQueue.length > 0) {
     state.spawnTimer += dt;
@@ -412,7 +429,8 @@ function update(dt) {
     state.gold += bonus;
     state.score += bonus;
     sfx.waveClear();
-    setMsg(`Wave ${state.waveNum} cleared! +${bonus}g — press Start Wave when ready`);
+    state.waveCountdown = 5;
+    setMsg(`Wave ${state.waveNum} cleared! +${bonus}g — next wave in 5s`);
     updateUI();
   }
 }

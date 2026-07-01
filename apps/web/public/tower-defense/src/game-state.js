@@ -3,6 +3,7 @@ export const state = {
   lives: 20,
   score: 0,
   waveNum: 0,
+  waveCountdown: 0,
   gameOver: false,
   gameWon: false,
   waveActive: false,
@@ -33,6 +34,7 @@ export function resetGameState() {
   state.lives = 20;
   state.score = 0;
   state.waveNum = 0;
+  state.waveCountdown = 0;
   state.gameOver = false;
   state.gameWon = false;
   state.waveActive = false;
