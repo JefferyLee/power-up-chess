@@ -20,6 +20,7 @@ import { addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import { TemplatePicker, type TemplateKind } from '../hosts/templates'
+import { isTemplateOnly } from '../hosts/templateOnly'
 import type { Classification } from '../engine/classify'
 import type { Square } from '../chess/types'
 import './PostGameAnalysisScreen.css'
@@ -338,6 +339,9 @@ function ReviewView({
       })
     }
 
+    // Template-only mode: never send the move to the LLM — use the template.
+    if (isTemplateOnly()) { fillFallback(); return }
+
     const timer = setTimeout(fillFallback, COMMENTARY_TIMEOUT_MS)
 
     callHostCommentary({
@@ -402,6 +406,12 @@ function ReviewView({
     if (analysis.moves.length === 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecap({ status: 'ready', text: `${host.name} has nothing to recap — no moves were played.`, source: 'cache' })
+      return
+    }
+    // Template-only mode: no LLM recap — show a warm templated summary.
+    if (isTemplateOnly()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRecap({ status: 'ready', text: templateRecap(deriveResult(analysis)), source: 'cache' })
       return
     }
     setRecap({ status: 'loading' })
@@ -809,6 +819,15 @@ function countClassifications(
     counts[m.classification] = (counts[m.classification] ?? 0) + 1
   }
   return counts
+}
+
+/** Warm, name-light recap used in template-only mode (no LLM). */
+function templateRecap(result: 'white' | 'black' | 'draw'): string {
+  const outcome =
+    result === 'draw'
+      ? 'It ended in a hard-fought draw.'
+      : 'What a finish!'
+  return `Good game! ${outcome} Step through the moves below and look for your best moments — every game teaches us something new.`
 }
 
 function deriveResult(analysis: AnalyzedGame): 'white' | 'black' | 'draw' {

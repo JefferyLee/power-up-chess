@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import type { HostId } from '../hosts/hosts'
 import { callHostTellStory } from '../firebase/callables'
+import { useTemplateOnly } from '../hosts/templateOnly'
 import './StoryRequestButton.css'
 
 type UiState =
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function StoryRequestButton({ hostId, hostName, enabled }: Props) {
+  const templateOnly = useTemplateOnly()
   const [state, setState] = useState<UiState>({ kind: 'idle' })
   const [nowMs, setNowMs] = useState<number>(() => Date.now())
 
@@ -41,6 +43,9 @@ export function StoryRequestButton({ hostId, hostName, enabled }: Props) {
     const t = window.setTimeout(() => setState({ kind: 'idle' }), remaining)
     return () => window.clearTimeout(t)
   }, [state])
+
+  // Template-only mode makes no AI story calls — hide the ask entirely.
+  if (templateOnly) return null
 
   const handleClick = async () => {
     if (state.kind !== 'idle' || !enabled) return

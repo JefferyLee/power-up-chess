@@ -87,7 +87,8 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | shipped | wired into DailyFive / LessonScreen / review (Phase 4C) |
 | Rough-game softening (Phase 2 #1) | shipped | 3+ own mistakes/blunders → one-time gentle nudge + softened recap |
 | Server-side "delete my data" | shipped | `forgetMe` erases guest doc/games/chat/teams/tournament/feedback + full local wipe; control on `/me` (Phase 5) |
-| Template-only (no-LLM) toggle | **planned** | |
+| Template-only (no-LLM) toggle | shipped | `/me` → Settings; gates review commentary + recap + story/ask-host (Gemini) |
+| Privacy statement + COPPA self-check | shipped (docs) | `docs/PRIVACY.md` (parent-facing draft) + `docs/COPPA_CHECKLIST.md` |
 
 ---
 

@@ -2147,6 +2147,10 @@ registerCommand({
       pushPrivate('reply', 'Ask a real question — at least a few words.')
       return
     }
+    if ((await import('../../hosts/templateOnly')).isTemplateOnly()) {
+      pushPrivate('reply', `${host === 'lucy' ? 'Lucy' : 'Luca'} smiles: "Ask-a-host is off right now — template-only mode. Switch it back on from your plaque settings."`)
+      return
+    }
     pushPrivate('reply', `${host === 'lucy' ? 'Lucy' : 'Luca'} listens…`)
     try {
       // Lazy import so the askHost callable doesn't add to first paint.
