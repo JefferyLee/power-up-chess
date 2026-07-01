@@ -94,6 +94,8 @@ export interface ChatMessageDoc {
   ts: number
   /** Hidden by moderation flag count ≥ 3 (Phase D++). */
   hidden?: boolean
+  /** Distinct user reports accumulated; message auto-hides at ≥ 3. */
+  flags?: number
   /** For 'host' messages — which persona spoke. */
   hostId?: HostId
   /** Optional CTA button rendered with the message. Used today for

@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { callHostStoryAnswer, callPostChat } from '../firebase/callables'
+import { callHostStoryAnswer, callPostChat, callReportChatMessage } from '../firebase/callables'
 import { useClearedAt, setClearedAtNow } from './clearedAt'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
@@ -152,8 +152,19 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
 }
 
 function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean }) {
+  const { identity } = useCastle()
   const isHost = message.kind === 'host'
   const isSystem = message.kind === 'system'
+  // A kid can flag another guest's message; 3 distinct reports auto-hide it.
+  // Not your own, not host/system lines.
+  const canReport =
+    message.kind === 'user' &&
+    !(message.normalizedName && message.normalizedName === identity?.normalizedName)
+  const [reportState, setReportState] = useState<'idle' | 'confirm' | 'sent'>('idle')
+  const doReport = () => {
+    setReportState('sent')
+    void callReportChatMessage(message.id).catch(() => setReportState('idle'))
+  }
   // Host stories are usually 2-5 sentences — split them into short
   // paragraphs so a 4-sentence anecdote doesn't render as one wall of text.
   const paragraphs = isHost ? splitForReading(message.text) : null
@@ -194,6 +205,25 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
       )}
       {message.action && <ActionButton action={message.action} />}
       {message.quiz && showQuiz && <QuizBlock messageId={message.id} quiz={message.quiz} />}
+      {canReport && (
+        <div className="puc-chat__mod">
+          {reportState === 'idle' && (
+            <button type="button" className="puc-chat__report" onClick={() => setReportState('confirm')} title="Report this message">
+              ⚑ Report
+            </button>
+          )}
+          {reportState === 'confirm' && (
+            <span className="puc-chat__report-confirm">
+              Report this message?
+              <button type="button" className="puc-chat__report" onClick={doReport}>Yes</button>
+              <button type="button" className="puc-chat__report" onClick={() => setReportState('idle')}>No</button>
+            </span>
+          )}
+          {reportState === 'sent' && (
+            <span className="puc-chat__reported">Reported ✓ — thanks for telling us</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }

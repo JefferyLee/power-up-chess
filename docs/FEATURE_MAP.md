@@ -72,7 +72,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Castle points + unlock gates | shipped | see §2 |
 | Paid takeback (all modes) | shipped | online = opponent-accepted offer |
 | Hall of Games archive (browse/curate/masters) | shipped | classics + GM games, curator/admin tools |
-| Great Hall shared chat | **partial** | profanity filter + rate-limit shipped; **report-flag & auto-hide not built** |
+| Great Hall shared chat | shipped | profanity + rate-limit + report-flag → auto-hide at 3 distinct reports |
 | Tournament | **partial** | signup + champion crown; pairings/play "coming soon" |
 | Teams | shipped | `/team/:teamId` |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |

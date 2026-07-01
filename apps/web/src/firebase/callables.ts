@@ -370,6 +370,16 @@ export async function callPostChat(req: PostChatRequest): Promise<PostChatRespon
   return data
 }
 
+const reportChatMessageFn = httpsCallable<
+  { messageId: string },
+  { ok: boolean; hidden: boolean; flags: number; already?: boolean }
+>(functions, 'reportChatMessage')
+/** Flag a Great Hall message; it auto-hides once 3 distinct users report it. */
+export async function callReportChatMessage(messageId: string) {
+  const { data } = await reportChatMessageFn({ messageId })
+  return data
+}
+
 export async function callSetPresence(req: SetPresenceRequest): Promise<SetPresenceResponse> {
   const { data } = await setPresenceFn(req)
   return data
