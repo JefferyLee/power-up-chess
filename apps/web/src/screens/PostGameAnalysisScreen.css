@@ -130,6 +130,42 @@
   gap: 12px;
 }
 
+/* Rough-game nudge — one-time gentle "take a break / Daily Five" note
+ * shown in review when the kid had 3+ mistakes/blunders of their own. */
+.puc-review__nudge {
+  margin: 0 auto 14px;
+  max-width: 640px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  background: linear-gradient(180deg, rgba(241, 195, 76, 0.14), rgba(241, 195, 76, 0.05));
+}
+.puc-review__nudge-text {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--puc-text);
+}
+.puc-review__nudge-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.puc-review__nudge-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  background: transparent;
+  color: var(--puc-text-accent);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-review__nudge-btn:hover { background: rgba(241, 195, 76, 0.12); }
+.puc-review__nudge-btn--primary {
+  background: linear-gradient(180deg, #f4c266, #d79a2b);
+  border-color: transparent;
+  color: #2a1c05;
+  font-weight: 700;
+}
+.puc-review__nudge-btn--primary:hover { filter: brightness(1.06); }
+
 /* 2D / 3D view switch — small pills above the board. */
 .puc-review__view-tools {
   display: flex;

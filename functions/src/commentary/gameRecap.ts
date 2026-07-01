@@ -33,6 +33,9 @@ export interface GameRecapRequest {
   /** Viewing someone else's game (masters/classics/Hall): narrate in the
    *  third person about both players, not "you" to the local audience. */
   spectator?: boolean
+  /** The kid had a rough game (3+ of their own moves were mistakes/blunders):
+   *  soften the recap — extra gentle, no dwelling on errors, suggest a reset. */
+  playerStruggled?: boolean
 }
 
 export interface GameRecapResponse {
@@ -58,7 +61,11 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
     // Cache by host + PGN + audience (player name) + framing. Same game
     // replay should produce a deterministic recap; the spectator flag flips
     // the whole voice, so it must be part of the key.
-    const hash = commentaryHash([data.host, 'recap', data.pgn, playerName, data.spectator ? 'spectator' : 'player'])
+    const hash = commentaryHash([
+      data.host, 'recap', data.pgn, playerName,
+      data.spectator ? 'spectator' : 'player',
+      data.playerStruggled ? 'gentle' : 'normal',
+    ])
     const cached = await readCachedCommentary(hash)
     if (cached) {
       return { text: cached, source: 'cache' }
@@ -134,6 +141,9 @@ function buildPrompt(data: GameRecapRequest, playerName: string): string {
     `Write a short story-style recap of this chess game for ${playerName || 'the player'}.`,
     `Audience: an 8-10 year old learner around 300-500 rating.`,
     `Tone: warm, honest, encouraging, never fake. Reference 1-2 specific moments if you can, but stay broad — you're a host, not the analyst.`,
+    data.playerStruggled
+      ? `This was a tough game — several mistakes. Be extra gentle: normalise that hard games happen to every player (even champions), find one genuinely good or brave moment to praise, and warmly suggest a short break or a quick puzzle warm-up before the next game. Do NOT list, count, or dwell on the mistakes.`
+      : null,
     `Length: 3-5 sentences, plain prose, no bullet lists.`,
     ``,
     `Game: ${data.whiteName} (White) vs ${data.blackName} (Black). ${resultLine}`,

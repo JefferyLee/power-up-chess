@@ -60,6 +60,9 @@ export interface GameRecapRequest {
   /** Viewing someone else's game (masters/classics/Hall): narrate in the
    *  third person about both players, not "you" to the local audience. */
   spectator?: boolean
+  /** The kid had a rough game (3+ of their own moves were mistakes/blunders):
+   *  soften the recap — extra gentle, no dwelling on errors, suggest a reset. */
+  playerStruggled?: boolean
 }
 export interface GameRecapResponse {
   text: string

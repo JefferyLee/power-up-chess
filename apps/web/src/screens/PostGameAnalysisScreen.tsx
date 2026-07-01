@@ -207,6 +207,27 @@ function ReviewView({
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const host = HOSTS[state.hostId]
   const picker = useMemo(() => new TemplatePicker(), [])
+  const navigate = useNavigate()
+  const { identity } = useCastle()
+  // "Rough game" softening (Phase 2 #1): only for the kid's OWN game, count
+  // THEIR side's mistakes/blunders. 3+ → a one-time gentle nudge here + a
+  // softened host story (playerStruggled flag to the recap). Spectator /
+  // master browsing (award === false, or no name match) never triggers it.
+  const roughGame = useMemo(() => {
+    if (state.award === false) return false
+    const me = identity?.displayName?.trim().toLowerCase()
+    if (!me) return false
+    const color: 'w' | 'b' | null =
+      state.whiteName.trim().toLowerCase() === me ? 'w'
+        : state.blackName.trim().toLowerCase() === me ? 'b' : null
+    if (!color) return false
+    let n = 0
+    for (const m of analysis.moves) {
+      if (m.color === color && (m.classification === 'mistake' || m.classification === 'blunder')) n++
+    }
+    return n >= 3
+  }, [analysis, state, identity])
+  const [nudgeDismissed, setNudgeDismissed] = useState(false)
   // Alternate 3D view of the board (read-only here, like the 2D one).
   const [view3d, setView3d] = useState(false)
   const board3dRef = useRef<HTMLDivElement>(null)
@@ -401,6 +422,8 @@ function ReviewView({
       // Masters / classics / viewing another player's game: narrate in the
       // third person, not "you" addressed to a historical player.
       spectator: state.award === false,
+      // Rough game → softer, encouraging recap that doesn't dwell on errors.
+      playerStruggled: roughGame,
     })
       .then((res) => {
         setRecap({ status: 'ready', text: res.text, source: res.source })
@@ -442,6 +465,22 @@ function ReviewView({
           </p>
         )}
       </section>
+
+      {roughGame && !nudgeDismissed && (
+        <div className="puc-review__nudge" role="note">
+          <p className="puc-review__nudge-text">
+            Tough game — that happens to every chess player, even champions. Want a quick Daily Five to reset your tactics?
+          </p>
+          <div className="puc-review__nudge-btns">
+            <button type="button" className="puc-review__nudge-btn puc-review__nudge-btn--primary" onClick={() => navigate('/puzzles/daily')}>
+              Today&apos;s Five
+            </button>
+            <button type="button" className="puc-review__nudge-btn" onClick={() => setNudgeDismissed(true)}>
+              Keep reviewing
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="puc-review__main">
         <div className="puc-review__board-col">

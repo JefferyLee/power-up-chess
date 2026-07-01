@@ -85,7 +85,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | First-visit onboarding funnel | shipped | `FirstVisitGuide` — one-time, skippable (Phase 1A) |
 | "Today's practice" aggregation | shipped | `TodaysPractice` card: Daily Five + practice + review-last (Phase 1B) |
 | Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | shipped | wired into DailyFive / LessonScreen / review (Phase 4C) |
-| Mistake-streak host handling | **planned** | no consecutive-mistake tracking |
+| Rough-game softening (Phase 2 #1) | shipped | 3+ own mistakes/blunders → one-time gentle nudge + softened recap |
 | Server-side "delete my data" | **planned** | only local `clearIdentity` exists |
 | Template-only (no-LLM) toggle | **planned** | |
 
