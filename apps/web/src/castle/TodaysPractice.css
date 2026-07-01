@@ -1,0 +1,103 @@
+/* Phase 1A/1B — first-visit guide + "Today's practice" card. */
+
+/* ── 1A first-visit guide ── */
+.puc-firstguide {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border-radius: var(--puc-radius, 14px);
+  border: 1px solid var(--puc-accent, #f1c34c);
+  background: linear-gradient(180deg, rgba(241, 195, 76, 0.16), rgba(241, 195, 76, 0.06));
+}
+.puc-firstguide__msg {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--puc-text, #e8dcc0);
+}
+.puc-firstguide__host {
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  color: var(--puc-text-accent, #f4c266);
+}
+.puc-firstguide__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.puc-firstguide__btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  background: transparent;
+  color: var(--puc-text-accent, #f4c266);
+  font-family: var(--puc-font-body, inherit);
+  font-size: 14px;
+  cursor: pointer;
+}
+.puc-firstguide__btn:hover { background: rgba(241, 195, 76, 0.12); }
+.puc-firstguide__btn--primary {
+  background: linear-gradient(180deg, #f4c266, #d79a2b);
+  border-color: transparent;
+  color: #2a1c05;
+  font-weight: 700;
+}
+.puc-firstguide__btn--primary:hover { filter: brightness(1.06); background: linear-gradient(180deg, #f4c266, #d79a2b); }
+.puc-firstguide__btn--ghost { border-color: rgba(231, 184, 65, 0.28); color: var(--puc-text-muted, #b9ad8e); }
+
+/* ── 1B Today's practice card ── */
+.puc-today {
+  margin: 0 0 14px;
+  padding: 14px 16px 12px;
+  border-radius: var(--puc-radius, 14px);
+  border: 1px solid var(--puc-surface-edge, rgba(231, 184, 65, 0.18));
+  background: var(--puc-surface, rgba(20, 30, 22, 0.5));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.puc-today__title {
+  margin: 0;
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  font-size: 16px;
+  color: var(--puc-text-accent, #f4c266);
+  letter-spacing: 0.3px;
+}
+/* The DailyStrip renders itself; the action rows below match its footprint. */
+.puc-today__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--puc-surface-edge, rgba(231, 184, 65, 0.18));
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--puc-text, #e8dcc0);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+.puc-today__row:hover {
+  border-color: var(--puc-accent, #f1c34c);
+  transform: translateY(-1px);
+}
+.puc-today__glyph {
+  font-size: 22px;
+  line-height: 1;
+  width: 28px;
+  text-align: center;
+  flex: none;
+}
+.puc-today__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.puc-today__row-title {
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  font-size: 15px;
+  color: var(--puc-text, #e8dcc0);
+}
+.puc-today__row-sub { font-size: 12.5px; color: var(--puc-text-muted, #b9ad8e); }
+.puc-today__cta {
+  flex: none;
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  font-size: 13px;
+  color: var(--puc-text-accent, #f4c266);
+}

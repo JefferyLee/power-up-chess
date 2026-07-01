@@ -11,7 +11,8 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
 import { useCastle } from './useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
-import { DailyStrip, type DailyStripState } from '../puzzles/DailyStrip'
+import { type DailyStripState } from '../puzzles/DailyStrip'
+import { FirstVisitGuide, TodaysPractice } from './TodaysPractice'
 import { HostFigure } from './HostFigure'
 import { useIsNarrow } from './useIsNarrow'
 import { ChatSheet } from './ChatSheet'
@@ -277,11 +278,17 @@ export function HallScreen() {
       {/* ── RIGHT MAIN: daily strip / hearth ticker / door corridor ── */}
       <main className="puc-hall__main">
       {!identity.isBypass && (
-        <DailyStrip
-          daily={puzzleDaily}
-          onOpen={() => navigate('/puzzles/daily')}
-          compact
-        />
+        <>
+          <FirstVisitGuide isFirstVisit={identity.isFirstVisit} hostName={host.name} />
+          <TodaysPractice
+            hostName={host.name}
+            aiUnlocked={isUnlocked}
+            pointsToUnlock={Math.max(0, UNLOCK_THRESHOLD - castlePoints)}
+            puzzleDaily={puzzleDaily}
+            onPractice={handlePractice}
+            onOpenDaily={() => navigate('/puzzles/daily')}
+          />
+        </>
       )}
 
       {/* The Hearth — collapsed ticker by default (latest few chat
