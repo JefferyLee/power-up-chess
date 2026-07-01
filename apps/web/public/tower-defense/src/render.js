@@ -1,8 +1,8 @@
-import { CELL, COLS, ROWS, CW, CH, PATH_CELLS, TDEFS, WAYPOINTS } from './config.js';
-import { drawTileBg } from './assets.js';
-import { state } from './game-state.js';
-import { drawParticles } from './particles.js';
-import { wpx, wpy } from './utils.js';
+import { CELL, COLS, ROWS, CW, CH, PATH_CELLS, TDEFS, WAYPOINTS } from './config.js?v=2';
+import { drawTileBg } from './assets.js?v=2';
+import { state } from './game-state.js?v=2';
+import { drawParticles } from './particles.js?v=2';
+import { wpx, wpy } from './utils.js?v=2';
 
 export function drawMap(ctx) {
   for (let r = 0; r < ROWS; r++) {

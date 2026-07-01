@@ -1,11 +1,11 @@
-import { CELL, COLS, ROWS, CW, CH, PATH_CELLS, TDEFS, WAVES } from './config.js';
-import { resumeAC, startMusic, stopMusic, sfx, setMusicOn, setSfxOn, getMusicOn, getSfxOn } from './audio.js';
-import { Enemy, Tower, rebuildEnemyGrid } from './entities.js';
-import { updateParticles } from './particles.js';
-import { state, resetGameState } from './game-state.js';
-import { render } from './render.js';
-import { submitScore, showLeaderboard } from './api.js';
-import { buildSpawnQueue } from './utils.js';
+import { CELL, COLS, ROWS, CW, CH, PATH_CELLS, TDEFS, WAVES } from './config.js?v=2';
+import { resumeAC, startMusic, stopMusic, sfx, setMusicOn, setSfxOn, getMusicOn, getSfxOn } from './audio.js?v=2';
+import { Enemy, Tower, rebuildEnemyGrid } from './entities.js?v=2';
+import { updateParticles } from './particles.js?v=2';
+import { state, resetGameState } from './game-state.js?v=2';
+import { render } from './render.js?v=2';
+import { submitScore, showLeaderboard } from './api.js?v=2';
+import { buildSpawnQueue } from './utils.js?v=2';
 
 let canvas;
 let ctx;
@@ -120,7 +120,7 @@ function bindStartForm() {
     resumeAC();
     startMusic();
     state.running = true;
-    import('./api.js').then((api) => api.startPresence(state.playerName));
+    import('./api.js?v=2').then((api) => api.startPresence(state.playerName));
     requestAnimationFrame((ts) => { state.lastTs = ts; requestAnimationFrame(tick); });
   };
   if (preset) {
@@ -303,7 +303,7 @@ function bindUI() {
     hideOverlayPanels();
     initGame();
     startMusic();
-    import('./api.js').then((api) => api.startPresence(state.playerName));
+    import('./api.js?v=2').then((api) => api.startPresence(state.playerName));
   });
   document.getElementById('lb-close').addEventListener('click', () => {
     document.getElementById('leaderboard-overlay').style.display = 'none';

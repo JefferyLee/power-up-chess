@@ -1,10 +1,10 @@
-import { CELL, EDEFS, TDEFS, WAYPOINTS } from './config.js';
-import { drawSprite } from './assets.js';
-import { sfx } from './audio.js';
-import { state } from './game-state.js';
-import { spawnDmgNumber, spawnSparks, triggerShake, registerKill } from './particles.js';
-import { SpatialGrid } from './spatial.js';
-import { calcArmorDamage, pickTarget, wpx, wpy } from './utils.js';
+import { CELL, EDEFS, TDEFS, WAYPOINTS } from './config.js?v=2';
+import { drawSprite } from './assets.js?v=2';
+import { sfx } from './audio.js?v=2';
+import { state } from './game-state.js?v=2';
+import { spawnDmgNumber, spawnSparks, triggerShake, registerKill } from './particles.js?v=2';
+import { SpatialGrid } from './spatial.js?v=2';
+import { calcArmorDamage, pickTarget, wpx, wpy } from './utils.js?v=2';
 
 export const enemyGrid = new SpatialGrid(CELL);
 

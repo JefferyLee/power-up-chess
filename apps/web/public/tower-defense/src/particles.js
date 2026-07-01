@@ -1,4 +1,4 @@
-import { state } from './game-state.js';
+import { state } from './game-state.js?v=2';
 
 export function triggerShake(amount) {
   state.shakeAmt = Math.max(state.shakeAmt, amount);

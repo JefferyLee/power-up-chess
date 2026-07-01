@@ -1,4 +1,4 @@
-import { esc } from './utils.js';
+import { esc } from './utils.js?v=2';
 
 const SCORES_KEY = 'td_scores';
 const SESSION_ID = Math.random().toString(36).slice(2);

@@ -1,5 +1,5 @@
-import { SPRITE_CFG, SPRITE_BASE, SFX_CFG } from './config.js';
-import { initAC, setAudioBuffers } from './audio.js';
+import { SPRITE_CFG, SPRITE_BASE, SFX_CFG } from './config.js?v=2';
+import { initAC, setAudioBuffers } from './audio.js?v=2';
 
 export const sprites = {};
 export const audioBuffers = {};
@@ -36,7 +36,7 @@ export async function loadAllAssets() {
       const resp = await fetch(path);
       if (!resp.ok) throw new Error(String(resp.status));
       const ab = await resp.arrayBuffer();
-      const { AC } = await import('./audio.js');
+      const { AC } = await import('./audio.js?v=2');
       if (AC) audioBuffers[name] = await AC.decodeAudioData(ab);
     } catch {
       loadErrors.push(`sfx:${name}`);

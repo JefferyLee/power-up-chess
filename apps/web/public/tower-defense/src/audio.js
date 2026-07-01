@@ -1,4 +1,4 @@
-import { MUSIC_SRC } from './config.js';
+import { MUSIC_SRC } from './config.js?v=2';
 
 let audioBuffersRef = {};
 export function setAudioBuffers(bufs) { audioBuffersRef = bufs; }

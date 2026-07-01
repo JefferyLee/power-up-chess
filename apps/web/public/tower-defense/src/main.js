@@ -1,7 +1,7 @@
-import { SPRITE_CFG } from './config.js';
-import { loadAllAssets } from './assets.js';
-import { detectApi } from './api.js';
-import { initGame, initGameModule, showLoading, showLoadError, showStartScreen } from './game.js';
+import { SPRITE_CFG } from './config.js?v=2';
+import { loadAllAssets } from './assets.js?v=2';
+import { detectApi } from './api.js?v=2';
+import { initGame, initGameModule, showLoading, showLoadError, showStartScreen } from './game.js?v=2';
 
 try {
   const savedSprites = JSON.parse(localStorage.getItem('spriteCfg') || '{}');

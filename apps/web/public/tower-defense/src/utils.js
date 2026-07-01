@@ -1,4 +1,4 @@
-import { CELL } from './config.js';
+import { CELL } from './config.js?v=2';
 
 export function wpx(wp) { return (wp[0] + 0.5) * CELL; }
 export function wpy(wp) { return (wp[1] + 0.5) * CELL; }

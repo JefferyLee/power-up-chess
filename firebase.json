@@ -40,6 +40,12 @@
           "headers": [
             { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
           ]
+        },
+        {
+          "source": "/tower-defense/**/*.@(js|html|css)",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+          ]
         }
       ],
       "predeploy": ["pnpm --filter @power-up-chess/web build"]

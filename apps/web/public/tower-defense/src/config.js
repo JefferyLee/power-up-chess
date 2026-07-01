@@ -1,4 +1,4 @@
-import { buildPathCells } from './utils.js';
+import { buildPathCells } from './utils.js?v=2';
 
 export const SPRITE_CFG = {
   grass:          'towerDefense_tile039.png',
