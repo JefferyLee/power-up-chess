@@ -150,7 +150,7 @@ export function MastersView() {
     try {
       const classic = indexCache.classics.find((c) => c.id === g.id)
       const payload: ReviewState = classic
-        ? { pgn: classic.pgn, hostId: classic.hostId, whiteName: classic.white, blackName: classic.black, award: false }
+        ? { pgn: classic.pgn, hostId: classic.hostId, whiteName: classic.white, blackName: classic.black, award: false, intro: classic.blurb }
         : { pgn: await loadMasterPgn(g.id, indexCache.shardSize), hostId: hostForMaster(g.id), whiteName: g.white, blackName: g.black, award: false }
       navigate('/review', { state: payload })
     } catch {

@@ -57,6 +57,10 @@ export interface ReviewState {
   /** Online room id, when this game is in the Hall of Games. Set →
    *  the computed analysis is uploaded so the archive can rank it. */
   roomId?: string
+  /** Hand-written lead-in for a curated classic — shown immediately
+   *  (even while the engine is still analysing) so the game opens with
+   *  its "why it's famous" note, not a blank minute. */
+  intro?: string
 }
 
 type Phase =
@@ -155,6 +159,7 @@ export function PostGameAnalysisScreen() {
       <div className="puc-review puc-review--centered">
         <div className="puc-review__progress">
           <h2>{state.award === false ? 'Reviewing the game…' : 'Reviewing your game…'}</h2>
+          {state.intro && <p className="puc-review__intro">{state.intro}</p>}
           <p>The engine is checking every move. This takes about a minute.</p>
           <div className="puc-review__bar" aria-label={`${pct} percent`}>
             <div className="puc-review__bar-fill" style={{ width: `${pct}%` }} />
@@ -394,6 +399,8 @@ function ReviewView({
           <p className="puc-review__sub">{state.whiteName} vs {state.blackName} — with {host.name}</p>
         </div>
       </header>
+
+      {state.intro && <p className="puc-review__intro puc-review__intro--banner">{state.intro}</p>}
 
       <section className="puc-review__recap" aria-labelledby="puc-recap-heading">
         <h2 id="puc-recap-heading" className="puc-review__recap-title">{host.name}'s story</h2>

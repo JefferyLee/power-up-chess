@@ -54,6 +54,24 @@
   font-size: 13px;
 }
 
+/* Hand-written lead-in for a curated classic. Shown immediately (under
+ * the analysing spinner) and as a banner atop the ready review. */
+.puc-review__intro {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--puc-text-accent);
+}
+.puc-review__intro--banner {
+  margin: 18px auto 0;
+  width: min(920px, calc(100% - 48px));
+  background: rgba(241, 195, 76, 0.1);
+  border: 1px solid rgba(241, 195, 76, 0.32);
+  border-radius: var(--puc-radius);
+  padding: 14px 20px;
+}
+
 .puc-review__recap {
   margin: 18px auto 0;
   width: min(920px, calc(100% - 48px));
