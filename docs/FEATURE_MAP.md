@@ -88,6 +88,8 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Rough-game softening (Phase 2 #1) | shipped | 3+ own mistakes/blunders → one-time gentle nudge + softened recap |
 | Grand win ceremony frequency (Phase 2 #4) | shipped | full crown ceremony reserved for first-win/milestone; ordinary wins get a lighter celebration (fireworks + recap) |
 | Host notation scope (Phase 2 #5) | shipped | conversation = plain language; per-move review may name moves in simple SAN |
+| Review commentary intensity cap (Phase 3C) | shipped | brilliancies always LLM; mistakes/blunders capped at 2 LLM comments each, rest varied templates |
+| Classification thresholds (tuning) | **planned** | spec-compliant + real-world anchor tests; tuning for beginners needs Ada's real games (your call) |
 | Server-side "delete my data" | shipped | `forgetMe` erases guest doc/games/chat/teams/tournament/feedback + full local wipe; control on `/me` (Phase 5) |
 | Template-only (no-LLM) toggle | shipped | `/me` → Settings; gates review commentary + recap + story/ask-host (Gemini) |
 | Privacy statement + COPPA self-check | shipped (docs) | `docs/PRIVACY.md` (parent-facing draft) + `docs/COPPA_CHECKLIST.md` |

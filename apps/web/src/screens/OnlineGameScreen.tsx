@@ -12,6 +12,7 @@ import { ChessGame } from '../chess/game'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { useAuthUid } from '../auth/useAuthUid'
 import { HOSTS } from '../hosts/hosts'
+import { HostByline } from '../hosts/HostByline'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
@@ -711,11 +712,9 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         <button type="button" className="puc-local__exit" onClick={onBack} aria-label="Back to menu">
           ←
         </button>
-        <div className="puc-local__host">
-          <span className="puc-local__host-name">{host.name}</span>
-          <span className="puc-local__host-blurb">is your host today</span>
+        <HostByline name={host.name} blurb="is your host today">
           {!yourColor && <span className="puc-online__spectator-chip">Spectating</span>}
-        </div>
+        </HostByline>
         <div className="puc-local__actions">
           {yourColor && <CrownBadge variant="inline" watch={room.status} />}
           <button

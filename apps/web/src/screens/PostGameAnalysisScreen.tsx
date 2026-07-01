@@ -314,6 +314,12 @@ function ReviewView({
   const [commentaryByIdx, setCommentaryByIdx] = useState<
     Map<number, { text: string; source: 'llm' | 'cache' | 'template' }>
   >(new Map())
+  // Intensity curve (Phase 3C): how many rich LLM comments we've fetched per
+  // classification this review. The first couple of each type get the LLM;
+  // further same-type moves fall back to varied templates so a rough game
+  // doesn't become a wall of AI paragraphs.
+  const llmSeen = useRef<Record<string, number>>({})
+  const LLM_CAP_PER_CLASS = 2
 
   // Fetch LLM commentary for the selected move (notable moves only), with a
   // 3s timeout. On timeout / error, fall back to a template line so the panel
@@ -341,6 +347,14 @@ function ReviewView({
 
     // Template-only mode: never send the move to the LLM — use the template.
     if (isTemplateOnly()) { fillFallback(); return }
+
+    // Intensity cap: brilliancies are rare + precious (always LLM); cap the
+    // wordy mistake/blunder LLM comments so repeats read as brief templates.
+    const cls = isBrill ? 'brilliant' : selected.classification
+    if (cls === 'mistake' || cls === 'blunder') {
+      if ((llmSeen.current[cls] ?? 0) >= LLM_CAP_PER_CLASS) { fillFallback(); return }
+      llmSeen.current[cls] = (llmSeen.current[cls] ?? 0) + 1
+    }
 
     const timer = setTimeout(fillFallback, COMMENTARY_TIMEOUT_MS)
 

@@ -68,3 +68,42 @@ describe('classifyMove', () => {
     ).toBe('blunder')
   })
 })
+
+// Real-game-flavoured anchors — the same thresholds, but labelled with the
+// kinds of moves a 300-500 kid actually makes, so a threshold tweak that
+// silently reclassified them would fail loudly here.
+describe('classifyMove — real-world anchors', () => {
+  const cls = (before: number, after: number, side: 'w' | 'b') =>
+    classifyMove({ evalBeforeWhite: before, evalAfterWhite: after, sideToMove: side, isBestMove: false })
+
+  it('hanging the queen (~900cp) is a blunder', () => {
+    // White was slightly better, then left the queen en prise.
+    expect(cls(20, -880, 'w')).toBe('blunder')
+  })
+
+  it('dropping a knight (~320cp) is a blunder', () => {
+    expect(cls(0, -320, 'w')).toBe('blunder')
+  })
+
+  it('black hanging a rook (~500cp) is a blunder', () => {
+    // White was -20 (black a touch better); after black's slip White is +480.
+    expect(cls(-20, 480, 'b')).toBe('blunder')
+  })
+
+  it('a ~150cp positional slip is a mistake', () => {
+    expect(cls(0, -150, 'w')).toBe('mistake')
+  })
+
+  it('losing a single pawn (~100cp) is an inaccuracy', () => {
+    expect(cls(0, -100, 'w')).toBe('inaccuracy')
+  })
+
+  it('a tiny ~30cp imprecision is still a good move', () => {
+    expect(cls(0, -30, 'w')).toBe('good')
+  })
+
+  it('finding the only defence (best move) beats any eval swing', () => {
+    // Even if the eval looks bad afterwards, the engine-best move is "best".
+    expect(classifyMove({ evalBeforeWhite: 0, evalAfterWhite: -600, sideToMove: 'w', isBestMove: true })).toBe('best')
+  })
+})

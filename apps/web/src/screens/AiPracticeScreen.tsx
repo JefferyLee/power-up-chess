@@ -19,6 +19,7 @@ import { awardPoints } from '../castle/awardPoints'
 import { callSpendOnTakeback } from '../firebase/callables'
 import { takebackCost } from '../games/takeback'
 import { hostsLabel, type HostId } from '../hosts/hosts'
+import { HostByline } from '../hosts/HostByline'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
@@ -487,12 +488,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         <button type="button" className="puc-local__exit" onClick={onExit} aria-label="Back to menu">
           ←
         </button>
-        <div className="puc-local__host">
-          <span className="puc-local__host-name">{hostsLabel(hostId, coHostId)}</span>
-          <span className="puc-local__host-blurb">
-            practicing vs AI · {preset.label}
-          </span>
-        </div>
+        <HostByline name={hostsLabel(hostId, coHostId)} blurb={`practicing vs AI · ${preset.label}`} />
         <div className="puc-local__actions">
           <div className="puc-local__difficulty" role="radiogroup" aria-label="AI strength">
             {DIFFICULTY_PRESETS.map((p) => (
