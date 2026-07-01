@@ -1,5 +1,7 @@
 # MVP Roadmap
 
+> **Status note (2026-07-01):** This roadmap captures *intent/sequence*. For the current build status of any module (shipped / partial / planned), see **[`FEATURE_MAP.md`](FEATURE_MAP.md)** — that file is authoritative. MVP0–MVP2 have shipped and the app is deployed.
+
 ## MVP0: Playable Web Prototype
 
 Goal: prove that standard chess plus immediate joyful feedback feels fun enough for Ada to want another game.

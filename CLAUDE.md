@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Status
 
-This repository starts **docs-only**. Implementation work begins by scaffolding the project from `docs/DEVELOPMENT_PLAN.md`.
+**Implemented and deployed.** The app is live at <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, behind Cloudflare). MVP0–MVP2 shipped and MVP2+ side features are in; the `docs/` folder is planning/intent, so cross-check any doc against the running app before assuming something is unbuilt.
+
+- **What exists / how done it is:** `docs/FEATURE_MAP.md` (living source of truth — Hall doors → routes → points → status).
+- **Run it:** `pnpm install && pnpm dev` (starts the web app on Vite). See `README.md` → Quickstart.
+- **Stack & data model:** `docs/TECHNICAL_ARCHITECTURE.md`. **Still-open decisions:** `docs/OPEN_QUESTIONS.md`.
 
 ## Product Context (load before designing or coding)
 

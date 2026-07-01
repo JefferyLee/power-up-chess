@@ -6,8 +6,21 @@ The game uses standard chess rules, but wraps every meaningful moment in playful
 
 The first audience is Ada, currently around 300-500 rating strength. The long-term ambition is an online browser game that can support many children safely, with rich themes, puzzles, match history, review, and engine-backed feedback.
 
+## Quickstart
+
+```bash
+pnpm install          # pnpm 10 monorepo (Node 22)
+pnpm dev              # web app on Vite → http://localhost:5173
+```
+
+Other scripts (run from repo root): `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm emulators` (Firebase). Cloud Functions and Firestore back the live app; most screens work against the deployed backend during local `dev`.
+
+- **Live app:** <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, via Cloudflare)
+- **What's built + all routes/doors:** [Feature Map & Status](docs/FEATURE_MAP.md) — start here to see current reality vs. the planning docs below.
+
 ## Product Documents
 
+- [Feature Map & Status](docs/FEATURE_MAP.md) — **living source of truth** (what exists, where, how done)
 - [Product Requirements](docs/PRD.md)
 - [Product Decisions](docs/DECISIONS.md)
 - [MVP Roadmap](docs/MVP_ROADMAP.md)

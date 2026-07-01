@@ -2,6 +2,8 @@
 
 Last updated: 2026-05-31
 
+> **Build status (2026-07-01):** For which decisions below are actually live in the app, and the status of every feature, see **[`FEATURE_MAP.md`](FEATURE_MAP.md)** (authoritative). This file records *what was decided*; the feature map records *what is built*.
+
 ## Confirmed Decisions
 
 1. MVP0 must support private room link online play across two different computers.

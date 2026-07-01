@@ -1,0 +1,101 @@
+# Feature Map & Status (living)
+
+Last updated: 2026-07-01
+
+This is the **one-page source of truth** for "what exists, where it lives, and how done it is." When docs and the running app disagree, trust this file (and the code). Older planning docs (`MVP_ROADMAP.md`, `PRD.md`, `OPEN_QUESTIONS.md`) describe intent; this describes reality.
+
+Live app: <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, behind Cloudflare).
+Landing: <https://powerupcastle-landing.web.app>.
+Run locally: see [README](../README.md#quickstart) → `pnpm install && pnpm dev`.
+
+---
+
+## 1. The Great Hall doors
+
+Every door in the Hall (`apps/web/src/castle/HallScreen.tsx`), its route, whether it **earns/spends castle points**, and whether it's **standard chess** (real rules via chess.js) or a fun/rest diversion.
+
+The Hall today shows **two** visual sections: "Learn and play chess" (learn + play merged) and "Take a break". The **Tier** column below is the intended three-way split (learn / play / break) — splitting the UI is Phase 1C, not yet done.
+
+| Door | Route | Tier | Points | Standard chess? |
+| --- | --- | --- | --- | --- |
+| Learn chess (5 lessons) | `/learn` | learn | **+50** on series complete | yes (teaching) |
+| Puzzle Garden | `/puzzles` | learn | earns on solve; **+10** Daily Five | yes (tactics) |
+| Knight's Hop | `/knights-hop` | learn | — | piece-movement game |
+| Endgame Drills | `/endgame` | learn | — | yes |
+| Opening Trainer | `/openings` | learn | — | yes |
+| Online Chess | `/r/:roomId` | play | **gated ≥200**; review earns; takeback spends | yes |
+| Local Chess | `/local` | play | ungated; review earns | yes |
+| Practice with host (AI) | `/ai` | play | **gated ≥200**; review earns | yes |
+| Hall of Games | `/archive` | play | review-only, **no award** | yes (replay/review) |
+| Weekly Tournament | `/tournament` | play | — | yes (meta; pairings/play WIP) |
+| Forest Adventure | `/forest` | break | — | no (arcade) |
+| Wizard's Duel | `/wizard` | break | **gated ≥1000** | **no** — "chess with magic spells, for fun, not practice" |
+| Theme Shop | `/shop` | break | spends (cosmetics) | no |
+| The Library (Book Owl) | `/library` | break | — | no (reading) |
+| Knight's Run | `/knights-run` | break | — | no (auto-runner) |
+| Tower Defense | `/arcade/tower-defense` | break | — | no (vendored mini-game) |
+
+Other routes not fronted by a Hall door: `/review` (post-game analysis), `/history` + `/history/:name` (match history), `/puzzles/{calibration,daily,leaderboard,legends,master,plot/:plot}`, `/learn/:lessonId`, `/endgame/:id`, `/openings/:id`, `/me` (adventurer plaque), `/team/:teamId`, `/wizard/:roomId`, `/wizard/v2/:roomId`.
+
+**Ada's-eye rule of thumb:** *learn* doors teach chess, *play* doors are real games (some need points to unlock), *break* doors are for fun and never change your chess. The one to watch is **Wizard's Duel** — it looks like chess but is a spell game, deliberately not chess practice.
+
+---
+
+## 2. Castle-point economy (quick reference)
+
+- **Earn:** tutorial series complete **+50**; Daily Five complete **+10**; reviewing your *own* game awards crowns/points for Best/Excellent/Brilliant moves (server-authoritative). Viewing someone else's game or a Master game earns nothing (`award: false`).
+- **Gates (checked against current balance, not lifetime):** Online **200**, AI Practice **200**, Wizard's Duel **1000** (server-configurable `wizardGateMinPoints`). Local is ungated.
+- **Spend:** takeback costs escalate **100 / 200 / 800** (3 per game); cosmetics in the Shop.
+
+---
+
+## 3. Module status snapshot
+
+Legend: **shipped** = live & working · **partial** = usable but incomplete/planned parts remain · **planned** = not built.
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Standard chess rules (chess.js, client+server validator) | shipped | authoritative move validation in Cloud Functions |
+| Online play (private room links) | shipped | no public matchmaking |
+| Local pass-and-play | shipped | |
+| AI practice (Stockfish opponent) | shipped | default untimed |
+| Post-game Stockfish analysis | shipped | depth 14 |
+| Move classification (Best…Blunder) | shipped | matches locked thresholds in `engine/classify.ts` |
+| Brilliant heuristic | shipped | 6-condition, precision-over-recall (`engine/brilliant.ts`) |
+| Host commentary (Lucy/Luca via Gemini) | shipped | selective LLM; template fallback; cached |
+| Post-game review + host story recap | shipped | 3rd-person "spectator" recap for masters/others' games |
+| Puzzle Garden + Daily Five + Calibration + Leaderboard | shipped | |
+| Legends Hall + Master Atrium (puzzle museums) | shipped | already share `MuseumScreen` |
+| Learn lessons (5) + tutorial reward | shipped | reward fires once for the series |
+| Endgame drills, Opening trainer | shipped | |
+| Castle identity (name + sha256 magic word) | shipped | not real auth by design |
+| Castle points + unlock gates | shipped | see §2 |
+| Paid takeback (all modes) | shipped | online = opponent-accepted offer |
+| Hall of Games archive (browse/curate/masters) | shipped | classics + GM games, curator/admin tools |
+| Great Hall shared chat | **partial** | profanity filter + rate-limit shipped; **report-flag & auto-hide not built** |
+| Tournament | **partial** | signup + champion crown; pairings/play "coming soon" |
+| Teams | shipped | `/team/:teamId` |
+| Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |
+| Library / Book Owl | shipped | proxies book-seek |
+| Side games (Forest, Wizard's Duel + v2, Knight's Hop, Knight's Run, Tower Defense) | shipped | |
+| Terminal / MUD easter-egg | shipped | |
+| PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
+| LLM/TTS daily quota enforcement | shipped | `consumeDailyQuota`, chat rate-limit |
+| Billing budget alert (COST_GUARDRAILS Layer 3) | **planned** | documented, not configured (manual GCP) |
+| First-visit onboarding funnel | **planned** | `isFirstVisit` only swaps a greeting today |
+| "Today's practice" aggregation | **planned** | `DailyStrip` links to Daily Five only |
+| Mistake-streak host handling | **planned** | no consecutive-mistake tracking |
+| Server-side "delete my data" | **planned** | only local `clearIdentity` exists |
+| Template-only (no-LLM) toggle | **planned** | |
+| Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | **planned** | current events: screen_view, game_end, host_commentary, *_position_clear |
+
+---
+
+## 4. Where to look
+
+- Routes: `apps/web/src/App.tsx`
+- Hall doors: `apps/web/src/castle/HallScreen.tsx`
+- Engine feedback: `apps/web/src/engine/{classify,brilliant,analyzeGame}.ts`
+- Host commentary / recap: `functions/src/commentary/`
+- Castle identity + points: `apps/web/src/castle/`, `functions/src/castle/`
+- Open product questions still unresolved: `docs/OPEN_QUESTIONS.md` (cross-check against §3 before assuming something is unbuilt)
