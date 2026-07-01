@@ -81,6 +81,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Side games (Forest, Wizard's Duel + v2, Knight's Hop, Knight's Run, Tower Defense) | shipped | |
 | Terminal / MUD easter-egg | shipped | |
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
+| Mobile/iPad polish v2 (Phase 6) | shipped | safe-area insets on headers; `pointer:coarse` ≥44px tap targets; Plot/Daily/Leaderboard stack in iPad portrait |
 | LLM/TTS daily quota enforcement | shipped | `consumeDailyQuota`, chat rate-limit |
 | Billing budget alert (COST_GUARDRAILS Layer 3) | **planned** | documented, not configured (manual GCP) |
 | First-visit onboarding funnel | shipped | `FirstVisitGuide` — one-time, skippable (Phase 1A) |

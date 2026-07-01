@@ -5,6 +5,7 @@
   color: var(--puc-text);
   font-family: var(--puc-font-body);
   padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
   max-width: 1000px;
   margin: 0 auto;
   display: flex;
@@ -71,7 +72,7 @@
   gap: 16px;
   align-items: start;
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .puc-daily__main { grid-template-columns: 1fr; }
 }
 
@@ -179,7 +180,7 @@
   width: 100%;
   height: min(64dvh, 640px);
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .puc-daily__board--3d { height: min(56dvh, 480px); }
 }
 .puc-daily__btn--on {

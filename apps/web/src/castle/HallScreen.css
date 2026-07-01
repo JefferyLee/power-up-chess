@@ -20,6 +20,7 @@
 .puc-hall > *:not(.puc-ambient) { position: relative; z-index: 1; }
 
 .puc-hall__header {
+  padding-top: env(safe-area-inset-top);
   display: flex;
   align-items: center;
   justify-content: space-between;

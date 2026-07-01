@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -41,7 +42,7 @@
   gap: 16px;
   align-items: start;
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .puc-plot__main { grid-template-columns: 1fr; }
 }
 @media (max-width: 540px) {
@@ -159,7 +160,7 @@
   width: 100%;
   height: min(64dvh, 640px);
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .puc-plot__board--3d { height: min(56dvh, 480px); }
 }
 .puc-plot__btn--on {

@@ -20,3 +20,38 @@ body {
 button {
   font: inherit;
 }
+
+/* ── Touch targets (Phase 6 mobile v2) ──────────────────────────────
+ * The per-screen 44px bumps are gated on phone WIDTH (max-width:540px),
+ * so on an iPad (768px+) many controls stay 36-40px. pointer:coarse
+ * catches every touch device regardless of width, so kids on a tablet
+ * get comfortable ≥44px tap targets. */
+@media (pointer: coarse) {
+  .puc-plot__back,
+  .puc-daily__back,
+  .puc-cal__back,
+  .puc-history__back,
+  .puc-review__back {
+    width: 44px;
+    height: 44px;
+  }
+  .puc-plot__btn,
+  .puc-daily__btn,
+  .puc-cal__btn,
+  .puc-history__tab,
+  .puc-history__filter-go,
+  .puc-history__filter-chip,
+  .puc-history__curate,
+  .puc-history__more,
+  .puc-review__view-toggle,
+  .puc-review__move-btn,
+  .puc-hall__link,
+  .puc-hall__hearth-fold,
+  .puc-chat__action,
+  .puc-chat__quiz-send {
+    min-height: 44px;
+  }
+  /* Small in-list controls: enlarge the hit area without wrecking flow. */
+  .puc-review__replay-btn { width: 40px; height: 40px; font-size: 13px; }
+  .puc-chat__report { padding: 8px 10px; font-size: 12px; }
+}
