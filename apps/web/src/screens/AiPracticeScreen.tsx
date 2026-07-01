@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Board } from '../board/Board'
 
@@ -32,6 +32,7 @@ import { ResignDialog } from '../powerups/ResignDialog'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
 import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
+import { getAdaptiveIndex, recordAdaptiveResult, isAdaptiveOn, setAdaptiveOn } from '../ai/adaptive'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
@@ -112,7 +113,14 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
   // Difficulty is local state so the player can switch mid-screen
   // (next game uses the new setting). Prop is just the initial value.
   const [activeDifficultyId, setActiveDifficultyId] = useState<DifficultyId>(difficultyId)
-  const preset = difficultyById(activeDifficultyId)
+  // Adaptive mode climbs/descends the preset ladder by win/loss instead of a
+  // fixed level. When on, the effective preset comes from the stored index.
+  const [adaptive, setAdaptive] = useState(() => isAdaptiveOn())
+  const [adaptiveIdx, setAdaptiveIdx] = useState(() => getAdaptiveIndex())
+  // Guards the once-per-game ladder step against StrictMode's double-fire.
+  const adaptiveRecordedRef = useRef<string | null>(null)
+  const effectiveDifficultyId = adaptive ? DIFFICULTY_PRESETS[adaptiveIdx]!.id : activeDifficultyId
+  const preset = difficultyById(effectiveDifficultyId)
   // For MVP1, player always plays white; AI always plays black. Colour choice
   // lands later if Ada asks for it.
   const playerColor: Color = 'w'
@@ -441,6 +449,14 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     }).catch((err) => {
       console.warn('[history] failed to save ai game', err)
     })
+    // Adaptive ladder: nudge the level by this game's result (Ada is white).
+    // Ref-guarded so StrictMode's dev double-fire can't double-step it.
+    if (adaptive && adaptiveRecordedRef.current !== gameId) {
+      adaptiveRecordedRef.current = gameId
+      const outcome = parts.result === 'white' ? 'win' : parts.result === 'black' ? 'loss' : 'draw'
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAdaptiveIdx(recordAdaptiveResult(outcome))
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSavedThisGame(true)
   }, [effectiveStatus, savedThisGame, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
@@ -491,14 +507,24 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         <HostByline name={hostsLabel(hostId, coHostId)} blurb={`practicing vs AI · ${preset.label}`} />
         <div className="puc-local__actions">
           <div className="puc-local__difficulty" role="radiogroup" aria-label="AI strength">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={adaptive}
+              className={`puc-local__diff-chip${adaptive ? ' puc-local__diff-chip--on' : ''}`}
+              onClick={() => { if (!adaptive) { setAdaptive(true); setAdaptiveOn(true); handleRestart() } }}
+              title={`Adaptive — gets harder when you win, easier when you lose (now: ${DIFFICULTY_PRESETS[adaptiveIdx]!.label})`}
+            >
+              ⚖️ Auto
+            </button>
             {DIFFICULTY_PRESETS.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 role="radio"
-                aria-checked={p.id === activeDifficultyId}
-                className={`puc-local__diff-chip${p.id === activeDifficultyId ? ' puc-local__diff-chip--on' : ''}`}
-                onClick={() => handlePickDifficulty(p.id)}
+                aria-checked={!adaptive && p.id === activeDifficultyId}
+                className={`puc-local__diff-chip${!adaptive && p.id === activeDifficultyId ? ' puc-local__diff-chip--on' : ''}`}
+                onClick={() => { setAdaptive(false); setAdaptiveOn(false); handlePickDifficulty(p.id) }}
                 title={`${p.label} — ${p.blurb}`}
               >
                 {p.short}

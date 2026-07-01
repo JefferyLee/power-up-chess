@@ -27,7 +27,7 @@ The Hall today shows **two** visual sections: "Learn and play chess" (learn + pl
 | Local Chess | `/local` | play | ungated; review earns | yes |
 | Practice with host (AI) | `/ai` | play | **gated ≥200**; review earns | yes |
 | Hall of Games | `/archive` | play | review-only, **no award** | yes (replay/review) |
-| Weekly Tournament | `/tournament` | play | — | yes (meta; pairings/play WIP) |
+| Weekly Tournament | `/tournament` | play | — | yes (weekly cycle) |
 | Forest Adventure | `/forest` | break | — | no (arcade) |
 | Wizard's Duel | `/wizard` | break | **gated ≥1000** | **no** — "chess with magic spells, for fun, not practice" |
 | Theme Shop | `/shop` | break | spends (cosmetics) | no |
@@ -58,14 +58,14 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Standard chess rules (chess.js, client+server validator) | shipped | authoritative move validation in Cloud Functions |
 | Online play (private room links) | shipped | no public matchmaking |
 | Local pass-and-play | shipped | |
-| AI practice (Stockfish opponent) | shipped | default untimed |
+| AI practice (Stockfish opponent) | shipped | default untimed; 5 fixed presets + **⚖️ Adaptive** (win→harder, loss→easier, Phase 6 C6) |
 | Post-game Stockfish analysis | shipped | depth 14 |
 | Move classification (Best…Blunder) | shipped | matches locked thresholds in `engine/classify.ts` |
 | Brilliant heuristic | shipped | 6-condition, precision-over-recall (`engine/brilliant.ts`) |
 | Host commentary (Lucy/Luca via Gemini) | shipped | selective LLM; template fallback; cached |
 | Post-game review + host story recap | shipped | 3rd-person "spectator" recap for masters/others' games |
 | Puzzle Garden + Daily Five + Calibration + Leaderboard | shipped | |
-| Puzzle-solve host explanations (Phase 6) | shipped | after a solve: authored `explanation` → else on-demand host line (`explainPuzzle`, engine/motif-constrained) → motif template fallback |
+| Puzzle-solve host explanations (Phase 6) | shipped | authored `explanation` → else on-demand `explainPuzzle` → motif template; candidate pre-authoring tool in `tools/puzzle-explain/` (B4) |
 | Legends Hall + Master Atrium (puzzle museums) | shipped | already share `MuseumScreen` |
 | Learn lessons (5) + tutorial reward | shipped | reward fires once for the series |
 | Endgame drills, Opening trainer | shipped | |
@@ -74,7 +74,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Paid takeback (all modes) | shipped | online = opponent-accepted offer |
 | Hall of Games archive (browse/curate/masters) | shipped | classics + GM games, curator/admin tools |
 | Great Hall shared chat | shipped | profanity + rate-limit + report-flag → auto-hide at 3 distinct reports |
-| Tournament | **partial** | signup + champion crown; pairings/play "coming soon" |
+| Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |
 | Library / Book Owl | shipped | proxies book-seek |
