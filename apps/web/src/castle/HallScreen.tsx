@@ -487,6 +487,14 @@ export function HallScreen() {
             variant="starry"
             onClick={() => navigate('/knights-run')}
           />
+          <RoomDoor
+            icon="⚔️"
+            iconKey="tower-defense"
+            label="Tower Defense"
+            blurb="Build towers, stop the waves. NEW."
+            variant="oak"
+            onClick={() => navigate('/arcade/tower-defense')}
+          />
         </div>
       </section>
 

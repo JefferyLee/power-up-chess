@@ -1,0 +1,17 @@
+A single ornate medieval castle door, viewed straight on from the front, centered, the COMPLETE arched doorway shown in full from top to bottom with the whole rounded arch visible.
+
+CRITICAL FRAMING: the entire stone archway is ONE freestanding structure floating in the middle of the frame, COMPLETELY surrounded by a wide margin of flat pure solid black (#000000) empty space on all four sides. The stone arch must NOT touch or reach any edge of the frame — leave clear black space above the top of the arch and to the left and right of it. The outer silhouette of the object is the rounded shape of the stone arch itself; there is nothing outside it but pure black void, so it can be cleanly cut out. Do NOT fill the frame with a flat wall of stone blocks.
+
+Architecture: a rounded Romanesque archway of rough, weathered sandstone voussoir blocks framing the door, with a carved trapezoidal keystone at the apex. Genuinely ANCIENT chiseled, pitted, sun-bleached rustic stone with chips and cracks — heavily textured.
+
+The door opening is a RECTANGULAR wooden door. In the semicircular tympanum — the half-moon of stone directly above the rectangular door and below the curve of the arch — sits a single PROMINENT sandstone BAS-RELIEF EMBLEM carved into the rock, the clear focal point: a tall stout crenellated defense tower (a stone watchtower turret) seen head-on, with square battlements and merlons across its top and a narrow vertical arrow-slit window, a small triangular pennant flag flying from a short pole at its peak, and two slender arrows crossed behind the tower pointing up and outward. The emblem is unmistakably chiseled into the stone in raised relief, catching the warm light.
+
+The door itself: a single heavy rectangular slab of dark aged oak warmed to honey by the firelight, with a few simple geometric carved grooves and scattered rows of black iron studs. Black wrought-iron strap hinges along the LEFT edge. A single round black iron knocker-ring mounted on the RIGHT edge of the door at exactly mid-height. A single forged iron nail driven into the upper-center of the wooden door, about one-fifth of the way down from the top of the wood, bare with nothing hanging from it yet. The wood is worn, scratched, full of character.
+
+Lighting: warm directional firelight coming from the LOWER-RIGHT, casting a soft orange glow and deep shadows, the upper-left falling into cooler shadow — one coherent cozy light source. Do NOT draw a fireplace, torch, or any light-source object anywhere; render ONLY the light it casts on the door and stone.
+
+Style: painterly, richly textured storybook fantasy game art for children ages 8 to 10. Warm, inviting, magical — NOT grim, NOT scary. High detail in the stone pitting and the oak grain.
+
+Background: plain pure-black void surrounding the isolated arch on every side.
+
+Output: tall portrait orientation, high quality PNG.
