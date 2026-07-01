@@ -153,51 +153,67 @@ export function GameArchiveScreen() {
         <h1 className="puc-history__title">Hall of Games</h1>
       </header>
 
-      <div className="puc-history__toolbar">
-        <div className="puc-history__tabs" role="tablist" aria-label="Sort games">
-          {SORTS.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              role="tab"
-              aria-selected={!masters && !player && sort === s.key}
-              className={'puc-history__tab' + (!masters && !player && sort === s.key ? ' puc-history__tab--on' : '')}
-              onClick={() => { setMasters(false); clearFilter(); setSort(s.key) }}
-            >
-              {s.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={masters}
-            className={'puc-history__tab' + (masters ? ' puc-history__tab--on' : '')}
-            onClick={() => setMasters(true)}
-          >
-            ♛ Masters
-          </button>
-        </div>
-        <div className="puc-history__filter" hidden={masters}>
-          {player ? (
-            <button type="button" className="puc-history__filter-chip" onClick={clearFilter}>
-              Player: <b>{player}</b> ✕
-            </button>
-          ) : (
-            <>
-              <input
-                className="puc-history__filter-input"
-                placeholder="Filter by player…"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') applyFilter() }}
-              />
-              <button type="button" className="puc-history__filter-go" onClick={applyFilter}>
-                Find
-              </button>
-            </>
-          )}
-        </div>
+      <div className="puc-history__tiers" role="tablist" aria-label="Archive section">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!masters}
+          className={'puc-history__tier' + (!masters ? ' puc-history__tier--on' : '')}
+          onClick={() => setMasters(false)}
+        >
+          <span className="puc-history__tier-title">🏰 Castle Games</span>
+          <span className="puc-history__tier-sub">Games played here in the Castle</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={masters}
+          className={'puc-history__tier' + (masters ? ' puc-history__tier--on' : '')}
+          onClick={() => setMasters(true)}
+        >
+          <span className="puc-history__tier-title">♛ Masters</span>
+          <span className="puc-history__tier-sub">Famous classics &amp; grandmaster games</span>
+        </button>
       </div>
+
+      {!masters && (
+        <div className="puc-history__toolbar">
+          <div className="puc-history__tabs" role="tablist" aria-label="Sort games">
+            {SORTS.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                role="tab"
+                aria-selected={!player && sort === s.key}
+                className={'puc-history__tab' + (!player && sort === s.key ? ' puc-history__tab--on' : '')}
+                onClick={() => { clearFilter(); setSort(s.key) }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="puc-history__filter">
+            {player ? (
+              <button type="button" className="puc-history__filter-chip" onClick={clearFilter}>
+                Player: <b>{player}</b> ✕
+              </button>
+            ) : (
+              <>
+                <input
+                  className="puc-history__filter-input"
+                  placeholder="Filter by player…"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyFilter() }}
+                />
+                <button type="button" className="puc-history__filter-go" onClick={applyFilter}>
+                  Find
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <main className="puc-history__main">
         {masters && <MastersView />}

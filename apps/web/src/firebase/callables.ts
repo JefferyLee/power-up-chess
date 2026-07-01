@@ -57,6 +57,9 @@ export interface GameRecapRequest {
   blackName: string
   playerName: string
   isAdaSpecialMode?: boolean
+  /** Viewing someone else's game (masters/classics/Hall): narrate in the
+   *  third person about both players, not "you" to the local audience. */
+  spectator?: boolean
 }
 export interface GameRecapResponse {
   text: string

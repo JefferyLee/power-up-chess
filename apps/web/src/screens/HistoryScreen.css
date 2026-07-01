@@ -283,6 +283,43 @@
 .puc-history__more:hover:not(:disabled) { background: rgba(231, 184, 65, 0.12); }
 .puc-history__more:disabled { opacity: 0.6; cursor: default; }
 
+/* Hall of Games — top-level tier split: Castle Games vs Masters. */
+.puc-history__tiers {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 720px;
+  margin: 8px auto 12px;
+  padding: 0 16px;
+}
+.puc-history__tier {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 184, 65, 0.28);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--puc-text-muted, #b9ad8e);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.puc-history__tier:hover { background: rgba(231, 184, 65, 0.08); }
+.puc-history__tier--on {
+  background: rgba(231, 184, 65, 0.16);
+  border-color: var(--puc-accent, #f1c34c);
+}
+.puc-history__tier-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 16px;
+  color: var(--puc-text, #e8dcc0);
+}
+.puc-history__tier--on .puc-history__tier-title { color: var(--puc-text-accent, #f4c266); }
+.puc-history__tier-sub { font-size: 12px; opacity: 0.85; }
+
 /* Hall of Games — sort tabs + per-game quality chip. */
 .puc-history__tabs {
   display: flex;

@@ -209,6 +209,13 @@ function ReviewView({
   const picker = useMemo(() => new TemplatePicker(), [])
   // Alternate 3D view of the board (read-only here, like the 2D one).
   const [view3d, setView3d] = useState(false)
+  const board3dRef = useRef<HTMLDivElement>(null)
+  const toggleFullscreen = () => {
+    const el = board3dRef.current
+    if (!el) return
+    if (document.fullscreenElement) void document.exitFullscreen()
+    else void el.requestFullscreen?.()
+  }
 
   // Move Replay Theater state. When set, the board temporarily shows the
   // move's "before" position with an arrow, then auto-advances to "after"
@@ -228,6 +235,21 @@ function ReviewView({
 
   const selected: AnalyzedMove | null =
     selectedIdx !== null ? analysis.moves[selectedIdx] ?? null : null
+
+  // Shared move stepping — used by the docked nav bar, the 3D overlay
+  // buttons (the only nav visible in fullscreen), and arrow keys.
+  const canPrev = selectedIdx !== null && selectedIdx > 0
+  const canNext = selectedIdx !== null && selectedIdx < analysis.moves.length - 1
+  const goPrev = () => { if (canPrev) setSelectedIdx(selectedIdx! - 1) }
+  const goNext = () => { if (canNext) setSelectedIdx(selectedIdx! + 1) }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') goPrev()
+      else if (e.key === 'ArrowRight') goNext()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   // What the board renders: usually the selected move's fenAfter, but the
   // replay phase can override.
@@ -375,6 +397,9 @@ function ReviewView({
       blackName: state.blackName,
       playerName: myName,
       isAdaSpecialMode: isAdaName(myName),
+      // Masters / classics / viewing another player's game: narrate in the
+      // third person, not "you" addressed to a historical player.
+      spectator: state.award === false,
     })
       .then((res) => {
         setRecap({ status: 'ready', text: res.text, source: res.source })
@@ -419,32 +444,38 @@ function ReviewView({
 
       <div className="puc-review__main">
         <div className="puc-review__board-col">
-          <button
-            type="button"
-            className="puc-review__view-toggle"
-            onClick={() => setView3d((v) => !v)}
-            aria-pressed={view3d}
-            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
-          >
-            {view3d ? '🎲 2D' : '🎲 3D'}
-          </button>
+          <div className="puc-review__view-tools">
+            <button
+              type="button"
+              className="puc-review__view-toggle"
+              onClick={() => setView3d((v) => !v)}
+              aria-pressed={view3d}
+              title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+            >
+              {view3d ? '🎲 2D' : '🎲 3D'}
+            </button>
+            {view3d && (
+              <button
+                type="button"
+                className="puc-review__view-toggle"
+                onClick={toggleFullscreen}
+                title="Fullscreen board"
+              >
+                ⛶ Full
+              </button>
+            )}
+          </div>
           <ReviewBoardSticky
-            onPrev={() => {
-              if (selectedIdx === null || selectedIdx <= 0) return
-              setSelectedIdx(selectedIdx - 1)
-            }}
-            onNext={() => {
-              if (selectedIdx === null) return
-              if (selectedIdx >= analysis.moves.length - 1) return
-              setSelectedIdx(selectedIdx + 1)
-            }}
-            canPrev={selectedIdx !== null && selectedIdx > 0}
-            canNext={selectedIdx !== null && selectedIdx < analysis.moves.length - 1}
+            onPrev={goPrev}
+            onNext={goNext}
+            canPrev={canPrev}
+            canNext={canNext}
             selected={selected}
             selectedIsBrilliant={selected ? brilliantIdx.has(selected.index) : false}
           >
             {view3d ? (
               <div
+                ref={board3dRef}
                 className="puc-review__board3d"
                 style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
               >
@@ -460,6 +491,15 @@ function ReviewView({
                     checkSquare={null}
                   />
                 </Suspense>
+                {/* Overlay nav — the only move controls visible when the
+                 * board is fullscreen (the docked bar is outside it). */}
+                <div className="puc-review__board3d-nav" role="group" aria-label="Move navigation">
+                  <button type="button" onClick={goPrev} disabled={!canPrev} aria-label="Previous move">◀</button>
+                  <span className="puc-review__board3d-move">
+                    {selected ? `${Math.floor(selected.index / 2) + 1}${selected.color === 'w' ? '.' : '…'} ${selected.san}` : '—'}
+                  </span>
+                  <button type="button" onClick={goNext} disabled={!canNext} aria-label="Next move">▶</button>
+                </div>
               </div>
             ) : (
               <Board

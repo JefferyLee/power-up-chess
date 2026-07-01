@@ -30,6 +30,9 @@ export interface GameRecapRequest {
   /** The name we should address the recap to (usually the local player). */
   playerName: string
   isAdaSpecialMode?: boolean
+  /** Viewing someone else's game (masters/classics/Hall): narrate in the
+   *  third person about both players, not "you" to the local audience. */
+  spectator?: boolean
 }
 
 export interface GameRecapResponse {
@@ -52,9 +55,10 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
     }
     const playerName = (data.playerName ?? '').toString().trim().slice(0, 32)
 
-    // Cache by host + PGN + audience (player name). Same game replay should
-    // produce a deterministic recap for the same audience.
-    const hash = commentaryHash([data.host, 'recap', data.pgn, playerName])
+    // Cache by host + PGN + audience (player name) + framing. Same game
+    // replay should produce a deterministic recap; the spectator flag flips
+    // the whole voice, so it must be part of the key.
+    const hash = commentaryHash([data.host, 'recap', data.pgn, playerName, data.spectator ? 'spectator' : 'player'])
     const cached = await readCachedCommentary(hash)
     if (cached) {
       return { text: cached, source: 'cache' }
@@ -75,6 +79,11 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
       userPrompt,
       temperature: 0.7,
       maxOutputTokens: 280,
+      // gemini-3.5-flash reasons by default; without this the thinking
+      // tokens eat the 280-token budget and the recap clips mid-sentence
+      // ("Hey there! I'm Luca, and I…"). A 3-5 sentence recap needs no
+      // internal reasoning — disable it so the whole budget is visible text.
+      thinkingBudget: 0,
     })
 
     const clipped = text.trim()
@@ -98,6 +107,28 @@ function buildPrompt(data: GameRecapRequest, playerName: string): string {
     data.result === 'draw'
       ? 'The game ended in a draw.'
       : `${data.result === 'white' ? data.whiteName : data.blackName} won.`
+
+  if (data.spectator) {
+    // Watching a famous / someone-else's game. Narrate ABOUT the players in
+    // the third person — never address them as "you". Stay anchored to what
+    // happened on the board; invent no outside history or biography.
+    return [
+      `Narrate a short story-style recap of this chess game for a young viewer watching it back.`,
+      `Audience: an 8-10 year old learner around 300-500 rating.`,
+      `Voice: third person about the two players by name (e.g. "${data.whiteName} kept every piece busy"). Never say "you" — the players are not in the room.`,
+      `Tone: warm, honest, excited to share a great game. Reference 1-2 specific moments if you can, but stay broad — you're the host sharing the game, not the analyst.`,
+      `Facts: describe only what happened in these moves and the result. Do NOT add historical background, dates, tournaments, or biography you are not given.`,
+      `Length: 3-5 sentences, plain prose, no bullet lists.`,
+      ``,
+      `Game: ${data.whiteName} (White) vs ${data.blackName} (Black). ${resultLine}`,
+      `Move quality breakdown: ${countsLine}.`,
+      ``,
+      `Full PGN:`,
+      data.pgn,
+    ]
+      .filter(Boolean)
+      .join('\n')
+  }
 
   return [
     `Write a short story-style recap of this chess game for ${playerName || 'the player'}.`,
