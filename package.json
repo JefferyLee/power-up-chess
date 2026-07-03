@@ -16,9 +16,11 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "emulators": "firebase emulators:start",
-    "test:rules": "firebase emulators:exec --only firestore \"pnpm --filter @power-up-chess/functions test:rules\""
+    "test:rules": "firebase emulators:exec --only firestore \"pnpm --filter @power-up-chess/functions test:rules\"",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "firebase-tools": "15.9.1"
   }
 }

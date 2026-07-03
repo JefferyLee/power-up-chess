@@ -16,7 +16,8 @@
 
     /* Path aliases — must mirror vite.config.ts */
     "paths": {
-      "@data/*": ["../../data/*"]
+      "@data/*": ["../../data/*"],
+      "@shared/*": ["../../functions/src/shared/*"]
     },
     "resolveJsonModule": true,
 

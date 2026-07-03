@@ -159,6 +159,8 @@ export default defineConfig({
       // e.g. `import seed from '@data/puzzles/seed.json'`. Phase 9's Lichess
       // pipeline emits into the same folder.
       '@data': resolve(repoRoot, 'data'),
+      // Phase 3.1 — single-source shared definitions (see functions/src/shared/README.md).
+      '@shared': resolve(repoRoot, 'functions/src/shared'),
     },
   },
   server: {
