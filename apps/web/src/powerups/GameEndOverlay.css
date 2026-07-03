@@ -120,3 +120,8 @@
   color: #1f1408;
   filter: brightness(1.05);
 }
+
+/* Phase 2.4 — calm mode: kill the fireworks for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .puc-end__fireworks { display: none; }
+}

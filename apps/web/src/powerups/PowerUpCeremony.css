@@ -228,3 +228,8 @@
   30%  { opacity: 1; }
   100% { opacity: 0; transform: rotate(var(--puc-angle, 0deg)) translateY(calc(var(--puc-distance, 120px) * -1)) scale(0.9); }
 }
+
+/* Phase 2.4 — calm mode. */
+@media (prefers-reduced-motion: reduce) {
+  .puc-ceremony, .puc-ceremony * { animation-duration: 0.01s !important; }
+}

@@ -1,0 +1,28 @@
+.puc-whisper {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(20, 32, 22, 0.92);
+  border: 1px solid rgba(241, 195, 76, 0.45);
+  color: var(--puc-text, #e8dcc0);
+  font-size: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  animation: puc-whisper-in 240ms ease-out;
+  pointer-events: none;
+}
+.puc-whisper__name {
+  font-family: var(--puc-font-display, 'Cinzel', Georgia, serif);
+  color: var(--puc-text-accent, #f4c266);
+}
+@keyframes puc-whisper-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .puc-whisper { animation: none; }
+}

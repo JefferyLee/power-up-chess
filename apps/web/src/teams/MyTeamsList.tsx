@@ -69,7 +69,13 @@ function MyTeamRow({ teamId, onOpen }: { teamId: string; onOpen: () => void }) {
   }
   const team = state.team
   return (
-    <li className="puc-myteams__row" onClick={onOpen} role="button" tabIndex={0}>
+    <li
+      className="puc-myteams__row"
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
+    >
       <span className="puc-myteams__badge">
         <TeamBadge badge={team.badge} size={28} />
       </span>

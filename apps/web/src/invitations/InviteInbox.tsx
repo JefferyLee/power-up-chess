@@ -6,7 +6,7 @@
 // countdown bar. Accept navigates to the spawned room; decline / ignore /
 // expire just dismiss.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthUid } from '../auth/useAuthUid'
@@ -50,6 +50,28 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
   const secondsLeft = Math.max(0, Math.ceil((invite.expiresAt - now) / 1000))
   const pct = Math.max(0, Math.min(100, Math.round(((invite.expiresAt - now) / 60000) * 100)))
 
+  // A11y (Phase 2.8): focus the dialog on open, trap Tab inside it, and let
+  // Escape decline — so the whole invite flow works without a pointer.
+  const overlayRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const first = overlayRef.current?.querySelector<HTMLElement>('button')
+    first?.focus()
+  }, [])
+  const onDialogKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      void respond('decline')
+      return
+    }
+    if (e.key !== 'Tab') return
+    const focusables = overlayRef.current?.querySelectorAll<HTMLElement>('button, a[href]')
+    if (!focusables || focusables.length === 0) return
+    const first = focusables[0]!
+    const last = focusables[focusables.length - 1]!
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
+
   const respond = async (response: 'accept' | 'decline' | 'ignore') => {
     const nextPhase = response === 'accept' ? 'accepting' : response === 'decline' ? 'declining' : 'ignoring'
     setPhase(nextPhase)
@@ -85,7 +107,10 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
     <div
       className="puc-inbox-overlay"
       role="dialog"
+      aria-modal="true"
       aria-label={isWizard ? 'Wizard\'s Duel invitation' : 'Chess invitation'}
+      ref={overlayRef}
+      onKeyDown={onDialogKeyDown}
     >
       <div className="puc-inbox__card">
         <p className="puc-inbox__eyebrow">

@@ -136,3 +136,9 @@
   10%  { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--puc-bf-x, 0), 320px) rotate(220deg); }
 }
+
+/* Phase 2.4 — calm mode: no falling flowers / crown bounce. */
+@media (prefers-reduced-motion: reduce) {
+  .puc-brilliant__flowers { display: none; }
+  .puc-brilliant__crown, .puc-brilliant__recap-caret { animation: none !important; }
+}

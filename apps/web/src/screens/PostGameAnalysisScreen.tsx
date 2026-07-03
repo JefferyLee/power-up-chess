@@ -231,6 +231,15 @@ function ReviewView({
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   // Alternate 3D view of the board (read-only here, like the 2D one).
   const [view3d, setView3d] = useState(false)
+  // Engine-details fold (Phase 2.3) — collapsed for kids by default;
+  // remembered so a parent/coach who opens it keeps it open.
+  const [engineOpen, setEngineOpen] = useState(() => {
+    try { return localStorage.getItem('puc:review-engine-open') === '1' } catch { return false }
+  })
+  const rememberEngineOpen = (open: boolean) => {
+    setEngineOpen(open)
+    try { localStorage.setItem('puc:review-engine-open', open ? '1' : '0') } catch { /* ok */ }
+  }
   const board3dRef = useRef<HTMLDivElement>(null)
   const toggleFullscreen = () => {
     const el = board3dRef.current
@@ -578,13 +587,18 @@ function ReviewView({
               />
             )}
           </ReviewBoardSticky>
-          <EvalBar evalCp={evalCp} />
           <div className="puc-review__host-panel">
             <p className="puc-review__host-name">
               {host.name} says
               {commentSource === 'template' && <span className="puc-review__source-pill"> · quick</span>}
             </p>
             <p className="puc-review__host-text">{hostComment}</p>
+          </div>
+          {/* Kid-mode default (Phase 2.3): the host's words + move badges carry
+           *  the review; raw engine numbers live behind this fold. */}
+          <details className="puc-review__engine" open={engineOpen} onToggle={(e) => rememberEngineOpen((e.target as HTMLDetailsElement).open)}>
+            <summary className="puc-review__engine-summary">🔍 Engine details (for curious grown-ups)</summary>
+            <EvalBar evalCp={evalCp} />
             {selected && (
               <p className="puc-review__detail">
                 Engine eval: {formatEval(selected.evalAfterCp)}
@@ -594,7 +608,7 @@ function ReviewView({
                 {selected.cpLoss > 0 && <> · CP loss {selected.cpLoss}</>}
               </p>
             )}
-          </div>
+          </details>
         </div>
 
         <div className="puc-review__moves-col">

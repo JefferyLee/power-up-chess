@@ -57,7 +57,8 @@ export function VisitorCard() {
               </p>
               {toUnlock > 0 && (
                 <p className="puc-visitor__progress">
-                  {toUnlock} more to open the chess rooms
+                  {toUnlock} more to open the chess rooms — about{' '}
+                  {Math.max(1, Math.ceil(toUnlock / 10))} Daily Five{Math.ceil(toUnlock / 10) === 1 ? '' : 's'}
                 </p>
               )}
               {toUnlock === 0 && (

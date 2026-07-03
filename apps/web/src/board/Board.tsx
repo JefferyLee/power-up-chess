@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 import clsx from 'clsx'
 import type { Color, MoveInput, Piece as PieceModel, Square as SquareName } from '../chess/types'
 import { useCosmetics } from '../cosmetics/useCosmetics'
@@ -71,6 +71,10 @@ export function Board({
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
   const [selected, setSelected] = useState<SquareName | null>(null)
+  // Keyboard cursor (Phase 2.9): arrows walk the grid, Enter/Space acts like
+  // a click on the cursor square, Escape clears. Orientation-aware so "up"
+  // is always visually up.
+  const [kbFocus, setKbFocus] = useState<SquareName | null>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
   const [hoverSquare, setHoverSquare] = useState<SquareName | null>(null)
 
@@ -217,6 +221,26 @@ export function Board({
     return vars as CSSProperties
   }, [squareSize, pieceSet])
 
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const DIRS: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1],
+    }
+    if (e.key === 'Escape') { setSelected(null); setKbFocus(null); return }
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (kbFocus) { e.preventDefault(); handleSquareClick(kbFocus) }
+      return
+    }
+    const dir = DIRS[e.key]
+    if (!dir) return
+    e.preventDefault()
+    const cur = kbFocus ?? (orientation === 'w' ? ('e2' as SquareName) : ('e7' as SquareName))
+    const sign = orientation === 'w' ? 1 : -1
+    const file = cur.charCodeAt(0) - 97 + dir[0] * sign
+    const rank = Number(cur[1]) - 1 + dir[1] * sign
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) { setKbFocus(cur); return }
+    setKbFocus(`${String.fromCharCode(97 + file)}${rank + 1}` as SquareName)
+  }
+
   return (
     <div
       ref={boardRef}
@@ -224,6 +248,9 @@ export function Board({
       style={styleVars}
       role="grid"
       aria-label="Chess board"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onBlur={() => setKbFocus(null)}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -249,6 +276,7 @@ export function Board({
           lastMoveTo: lastMove?.to === sq,
           check: checkSquare === sq,
           dragOver: hoverSquare === sq && drag !== null && drag.from !== sq,
+          kbFocus: kbFocus === sq,
         }
         const isLeftFile = isLeftColumn(file, orientation)
         const isBottomRank = isBottomRow(rank, orientation)

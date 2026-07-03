@@ -127,3 +127,10 @@
   border: 4px solid var(--puc-move-hint, rgba(40, 30, 20, 0.32));
   pointer-events: none;
 }
+
+/* Keyboard cursor (Phase 2.9). */
+.puc-sq--kbfocus {
+  outline: 3px solid var(--puc-accent, #f1c34c);
+  outline-offset: -3px;
+  z-index: 2;
+}

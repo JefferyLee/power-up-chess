@@ -13,6 +13,8 @@ import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess
 import { useAuthUid } from '../auth/useAuthUid'
 import { HOSTS } from '../hosts/hosts'
 import { HostByline } from '../hosts/HostByline'
+import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
+import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
@@ -280,6 +282,7 @@ interface RoomViewProps {
 
 function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
+  const whisper = useHostWhisper(room.hostMode)
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const { identity, setCastlePoints } = useCastle()
@@ -499,6 +502,13 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           })
         }
       } else if (applied) {
+        // Phase 2.6 — throttled host presence on notable non-capture moments.
+        whisper.observe({
+          san: applied.san,
+          captured: false,
+          promotion: m.uci.length === 5,
+          givesCheck,
+        })
         sawNonCaptureMoveInNew = true
       }
       if (givesCheck) sawCheckInNew = true
@@ -712,10 +722,12 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         <button type="button" className="puc-local__exit" onClick={onBack} aria-label="Back to menu">
           ←
         </button>
+        <HostWhisper hostId={room.hostMode} line={whisper.line} />
         <HostByline name={host.name} blurb="is your host today">
           {!yourColor && <span className="puc-online__spectator-chip">Spectating</span>}
         </HostByline>
         <div className="puc-local__actions">
+          <MuteButton />
           {yourColor && <CrownBadge variant="inline" watch={room.status} />}
           <button
             type="button"

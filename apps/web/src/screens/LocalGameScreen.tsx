@@ -31,6 +31,8 @@ import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
 import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { useSound } from '../sound/useSound'
+import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
+import { MuteButton } from '../sound/MuteButton'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
 import { ChampionCrown } from '../tournament/ChampionCrown'
@@ -109,6 +111,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // Pair it with a snapshot in state so React re-renders after each move.
   const [game, setGame] = useState(() => new ChessGame())
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
+  const whisper = useHostWhisper(hostId)
   const [picker] = useState(() => new TemplatePicker())
   const [sparks, setSparks] = useState<CaptureSparkData[]>([])
   const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
@@ -194,6 +197,13 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
       if (newStatus.kind === 'in_progress' && newStatus.inCheck) {
         sound.play('check')
       }
+      // Phase 2.6 — throttled host presence on notable non-capture moments.
+      whisper.observe({
+        san: result.san,
+        captured: !!result.captured,
+        promotion: result.uci.length === 5,
+        givesCheck: newStatus.kind === 'in_progress' && newStatus.inCheck,
+      })
 
       // Advance the clock: the moving side's elapsed comes off their clock,
       // then we add the increment, and start the opposite side's clock.
@@ -457,6 +467,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
   return (
     <div className="puc-local">
+      <HostWhisper hostId={hostId} line={whisper.line} />
       <header className="puc-local__header">
         <button type="button" className="puc-local__exit" onClick={onExit} aria-label="Back to menu">
           ←
@@ -468,6 +479,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           </span>
         </div>
         <div className="puc-local__actions">
+          <MuteButton />
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <button
             type="button"

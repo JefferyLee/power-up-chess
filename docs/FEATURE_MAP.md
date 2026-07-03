@@ -14,7 +14,7 @@ Run locally: see [README](../README.md#quickstart) → `pnpm install && pnpm dev
 
 Every door in the Hall (`apps/web/src/castle/HallScreen.tsx`), its route, whether it **earns/spends castle points**, and whether it's **standard chess** (real rules via chess.js) or a fun/rest diversion.
 
-The Hall today shows **two** visual sections: "Learn and play chess" (learn + play merged) and "Take a break". The **Tier** column below is the intended three-way split (learn / play / break) — splitting the UI is Phase 1C, not yet done.
+The Hall shows **three** visual sections matching the Tier column: "Learn chess" / "Play a game" / "Take a break" (Phase 2.2, 2026-07-03).
 
 | Door | Route | Tier | Points | Standard chess? |
 | --- | --- | --- | --- | --- |
@@ -79,6 +79,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Gemini safetySettings (Phase 1.6) | shipped | BLOCK_LOW_AND_ABOVE on all 4 harm categories, single wrapper covers all 6 call sites |
 | App Check (Phase 1.7) | **partial** | client LIVE in monitor mode (reCAPTCHA v3, 2026-07-03); watch console metrics a few days, then enforce per-callable |
 | Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
+| Ada UX pass (Phase 2) | shipped | AI Hint ×3/game (engine arrow) · Hall 3-tier split · review kid-mode (engine numbers folded) · MuteButton mounted + reduced-motion celebrations · friendly unlock copy ("N Daily Fives") · in-game host whispers (check/castle/promote, throttled templates) · invite dialog focus-trap/Escape · board keyboard cursor + aria · honest Shop/Tournament copy |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |

@@ -20,6 +20,8 @@ import { callSpendOnTakeback } from '../firebase/callables'
 import { takebackCost } from '../games/takeback'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { HostByline } from '../hosts/HostByline'
+import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
+import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
 import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
@@ -31,6 +33,7 @@ import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
+import { StockfishEngine } from '../engine/stockfish'
 import { difficultyById, DIFFICULTY_PRESETS, type DifficultyId } from '../ai/difficulty'
 import { getAdaptiveIndex, recordAdaptiveResult, isAdaptiveOn, setAdaptiveOn } from '../ai/adaptive'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
@@ -160,6 +163,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
 
   // Boot one AiOpponent for the lifetime of the screen. We terminate it on
   // unmount; the post-game review screen spins up its own analysis engine.
+  const whisper = useHostWhisper(hostId)
   const [opponent] = useState(() => new AiOpponent())
   useEffect(() => () => opponent.terminate(), [opponent])
 
@@ -181,6 +185,33 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     return snap.status
   }, [timeoutLoser, resignation, snap.status])
   const gameOver = effectiveStatus.kind !== 'in_progress'
+  // Hint (Phase 2.1): 3 per game, engine-backed single-move arrow. Uses a
+  // separate analysis engine (lazy) so the opponent's search is untouched;
+  // hints never change the rules — they only point at a strong move.
+  const HINTS_PER_GAME = 3
+  const [hintsLeft, setHintsLeft] = useState(HINTS_PER_GAME)
+  const [hintArrow, setHintArrow] = useState<{ from: Square; to: Square } | null>(null)
+  const [hintBusy, setHintBusy] = useState(false)
+  const hintEngineRef = useRef<StockfishEngine | null>(null)
+  useEffect(() => () => hintEngineRef.current?.terminate(), [])
+  const handleHint = useCallback(async () => {
+    if (hintBusy || hintsLeft <= 0 || gameOver || snap.turn !== playerColor) return
+    setHintBusy(true)
+    try {
+      if (!hintEngineRef.current) hintEngineRef.current = new StockfishEngine()
+      const res = await hintEngineRef.current.analyze(snap.fen, 12)
+      const uci = res.bestMoveUci
+      if (uci && uci.length >= 4) {
+        setHintArrow({ from: uci.slice(0, 2) as Square, to: uci.slice(2, 4) as Square })
+        setHintsLeft((n) => n - 1)
+        window.setTimeout(() => setHintArrow(null), 6000)
+      }
+    } catch (err) {
+      console.warn('hint failed:', err)
+    } finally {
+      setHintBusy(false)
+    }
+  }, [hintBusy, hintsLeft, gameOver, snap.turn, snap.fen, playerColor])
 
   const pieces = useMemo(() => piecesFromFen(snap.fen), [snap.fen])
 
@@ -203,6 +234,13 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
       if (result.captured) sound.play('capture')
       else sound.play('move')
       if (newStatus.kind === 'in_progress' && newStatus.inCheck) sound.play('check')
+      // Phase 2.6 — throttled host presence on notable non-capture moments.
+      whisper.observe({
+        san: result.san,
+        captured: !!result.captured,
+        promotion: result.uci.length === 5,
+        givesCheck: newStatus.kind === 'in_progress' && newStatus.inCheck,
+      })
 
       // Advance the clock just like LocalGameScreen — applyMove runs for
       // both the player and the AI, so this single block covers both.
@@ -339,6 +377,8 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     setEngineError(null)
     setClocks(initialClockState(timeControl ?? null))
     setTimeoutLoser(null)
+    setHintsLeft(HINTS_PER_GAME)
+    setHintArrow(null)
     setTakebacksUsed(0)
   }, [timeControl])
 
@@ -504,7 +544,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           ←
         </button>
         <HostByline name={hostsLabel(hostId, coHostId)} blurb={`practicing vs AI · ${preset.label}`} />
+        <HostWhisper hostId={hostId} line={whisper.line} />
         <div className="puc-local__actions">
+          <MuteButton />
           <div className="puc-local__difficulty" role="radiogroup" aria-label="AI strength">
             <button
               type="button"
@@ -545,6 +587,14 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
               ⛶
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => { void handleHint() }}
+            disabled={gameOver || hintBusy || hintsLeft <= 0 || snap.turn !== playerColor}
+            title={hintsLeft > 0 ? `Show a strong move (${hintsLeft} left this game)` : 'No hints left this game'}
+          >
+            {hintBusy ? '💡…' : `💡 Hint ×${hintsLeft}`}
+          </button>
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
           </button>
@@ -619,6 +669,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
                 onMove={handleUserMove}
                 lastMove={lastMove}
                 checkSquare={checkSquare}
+                arrows={hintArrow ? [hintArrow] : undefined}
                 squareSize={SQUARE_SIZE}
               />
             )}

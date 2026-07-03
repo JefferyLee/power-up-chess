@@ -13,6 +13,7 @@ import { useCastle } from './useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
 import { type DailyStripState } from '../puzzles/DailyStrip'
 import { FirstVisitGuide, TodaysPractice } from './TodaysPractice'
+import { MuteButton } from '../sound/MuteButton'
 import { HostFigure } from './HostFigure'
 import { useIsNarrow } from './useIsNarrow'
 import { ChatSheet } from './ChatSheet'
@@ -206,6 +207,10 @@ export function HallScreen() {
   if (!identity) return null
 
   const lockedTitle = `Earn ${UNLOCK_THRESHOLD} castle points first`
+  // 2.5 — "how far away am I" in kid units: Daily Five pays +10 on completion.
+  const pointsToGo = Math.max(0, UNLOCK_THRESHOLD - castlePoints)
+  const dailiesToGo = Math.max(1, Math.ceil(pointsToGo / 10))
+  const lockedBlurb = `Locked — ${pointsToGo} points to go (about ${dailiesToGo} Daily Five${dailiesToGo === 1 ? '' : 's'}).`
 
   return (
     <div className="puc-hall">
@@ -213,6 +218,7 @@ export function HallScreen() {
       <header className="puc-hall__header">
         <h1 className="puc-hall__title">The Great Hall</h1>
         <div className="puc-hall__header-right">
+          <MuteButton />
           <FeedbackInbox />
           <button
             type="button"
@@ -329,7 +335,7 @@ export function HallScreen() {
 
       {/* Learning + serious chess — the start of the door corridor. */}
       <section className="puc-hall__doors puc-hall__doors--learn">
-        <h2 className="puc-hall__doors-title">Learn and play chess</h2>
+        <h2 className="puc-hall__doors-title">Learn chess</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
           <RoomDoor
             icon="📖"
@@ -346,43 +352,6 @@ export function HallScreen() {
             blurb="Tactical puzzles, your own pace."
             variant="mossy"
             onClick={handlePuzzles}
-          />
-          <RoomDoor
-            icon="🏰"
-            iconKey="online"
-            label={creating ? 'Opening…' : 'Online Chess'}
-            blurb={isUnlocked ? 'Play a friend with a private link.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
-            variant="oak"
-            locked={!isUnlocked}
-            loading={creating}
-            onClick={handleOnlineDoor}
-            disabled={creating || !isUnlocked}
-            title={!isUnlocked ? lockedTitle : undefined}
-            badge={waiting.chess.length > 0 ? formatRoomCount(waiting.chess.length) : undefined}
-            badgeTitle={
-              waiting.chess.length > 0
-                ? `${waiting.chess.length} chess room${waiting.chess.length === 1 ? '' : 's'} waiting`
-                : undefined
-            }
-          />
-          <RoomDoor
-            icon="👥"
-            iconKey="local"
-            label="Local Chess"
-            blurb="Pass-and-play at one device."
-            variant="oak"
-            onClick={handleLocal}
-          />
-          <RoomDoor
-            icon="♞"
-            iconKey="practice-ai"
-            label={`Practice with ${host.name}`}
-            blurb={isUnlocked ? 'Gentle AI sparring.' : `Locked — needs ${UNLOCK_THRESHOLD} points.`}
-            variant={hostId === 'lucy' ? 'mossy' : 'starry'}
-            locked={!isUnlocked}
-            onClick={handlePractice}
-            disabled={!isUnlocked}
-            title={!isUnlocked ? lockedTitle : undefined}
           />
           <RoomDoor
             icon="♞"
@@ -408,6 +377,59 @@ export function HallScreen() {
             variant="starry"
             onClick={() => navigate('/openings')}
           />
+        </div>
+        {error && <p className="puc-hall__error">{error}</p>}
+      </section>
+
+      {/* Real games — the play tier (Phase 2.2). */}
+      <section className="puc-hall__doors puc-hall__doors--play">
+        <h2 className="puc-hall__doors-title">Play a game</h2>
+        <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
+          <RoomDoor
+            icon="🏰"
+            iconKey="online"
+            label={creating ? 'Opening…' : 'Online Chess'}
+            blurb={isUnlocked ? 'Play a friend with a private link.' : lockedBlurb}
+            variant="oak"
+            locked={!isUnlocked}
+            loading={creating}
+            onClick={handleOnlineDoor}
+            disabled={creating || !isUnlocked}
+            title={!isUnlocked ? lockedTitle : undefined}
+            badge={waiting.chess.length > 0 ? formatRoomCount(waiting.chess.length) : undefined}
+            badgeTitle={
+              waiting.chess.length > 0
+                ? `${waiting.chess.length} chess room${waiting.chess.length === 1 ? '' : 's'} waiting`
+                : undefined
+            }
+          />
+          <RoomDoor
+            icon="👥"
+            iconKey="local"
+            label="Local Chess"
+            blurb="Pass-and-play at one device."
+            variant="oak"
+            onClick={handleLocal}
+          />
+          <RoomDoor
+            icon="♞"
+            iconKey="practice-ai"
+            label={`Practice with ${host.name}`}
+            blurb={isUnlocked ? 'Gentle AI sparring.' : lockedBlurb}
+            variant={hostId === 'lucy' ? 'mossy' : 'starry'}
+            locked={!isUnlocked}
+            onClick={handlePractice}
+            disabled={!isUnlocked}
+            title={!isUnlocked ? lockedTitle : undefined}
+          />
+          <RoomDoor
+            icon="🏆"
+            iconKey="tournament"
+            label="Weekly Tournament"
+            blurb="Weekly Swiss — sign up, get paired, play your rounds."
+            variant="oak"
+            onClick={() => navigate('/tournament')}
+          />
           <RoomDoor
             icon="📜"
             iconKey="archive"
@@ -417,7 +439,6 @@ export function HallScreen() {
             onClick={() => navigate('/archive')}
           />
         </div>
-        {error && <p className="puc-hall__error">{error}</p>}
       </section>
 
       <ChampionBanner />
@@ -465,7 +486,7 @@ export function HallScreen() {
             icon="🎨"
             iconKey="shop"
             label="Theme Shop"
-            blurb="Pick the look of your chess pieces. New sets unlock soon."
+            blurb="Pick the look of your chess pieces — 8 sets to collect."
             variant="parchment"
             onClick={() => navigate('/shop')}
           />
@@ -477,14 +498,6 @@ export function HallScreen() {
             variant="parchment"
             companionImg="/sprites/hall/book-owl.png?v=1"
             onClick={() => navigate('/library')}
-          />
-          <RoomDoor
-            icon="🏆"
-            iconKey="tournament"
-            label="Weekly Tournament"
-            blurb="Sign up Mon–Sun. Pairings + play coming soon."
-            variant="oak"
-            onClick={() => navigate('/tournament')}
           />
           <RoomDoor
             icon="🐎"

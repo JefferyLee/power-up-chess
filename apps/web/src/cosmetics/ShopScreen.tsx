@@ -147,7 +147,7 @@ export function ShopScreen() {
         <div className="puc-shop__title-wrap">
           <h1 className="puc-shop__title">Theme Shop</h1>
           <p className="puc-shop__sub">
-            Pick the look of your chess pieces. More sets unlock soon.
+            Pick the look of your chess pieces — 8 sets to collect.
           </p>
         </div>
         <div className="puc-shop__points" aria-label="Castle points">

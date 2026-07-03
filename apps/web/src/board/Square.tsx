@@ -11,6 +11,7 @@ export interface SquareHighlights {
   lastMoveTo?: boolean
   check?: boolean
   dragOver?: boolean
+  kbFocus?: boolean
 }
 
 interface Props {
@@ -33,10 +34,16 @@ export function Square({ square, color, highlights, fileLabel, rankLabel, childr
         highlights.lastMoveTo && 'puc-sq--last-to',
         highlights.check && 'puc-sq--check',
         highlights.dragOver && 'puc-sq--drag-over',
+        highlights.kbFocus && 'puc-sq--kbfocus',
       )}
       data-square={square}
       role="gridcell"
-      aria-label={square}
+      aria-selected={highlights.selected || undefined}
+      aria-label={
+        highlights.legalCapture ? `${square}, capture available`
+          : highlights.legalDestination ? `${square}, legal move`
+            : square
+      }
     >
       {fileLabel && <span className="puc-sq__file-label">{fileLabel}</span>}
       {rankLabel && <span className="puc-sq__rank-label">{rankLabel}</span>}

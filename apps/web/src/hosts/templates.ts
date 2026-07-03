@@ -14,6 +14,8 @@ export type TemplateKind =
   | 'ordinary'
   | 'capture'
   | 'check'
+  | 'castle'
+  | 'promote'
   | 'brilliant'
   | 'mistake'
   | 'blunder'
@@ -75,6 +77,16 @@ const LUCY: Record<TemplateKind, Template[]> = {
     s('Nice. Check changes their plan.'),
     s('Check. Watch what they have to give up.'),
     s('Check! Look for what opens up next.'),
+  ],
+  castle: [
+    s('Castled — your king is tucked in safe.'),
+    s('Good habit: king safe, rook ready to work.'),
+    s('The castle doors close. Now your rook can join in.'),
+  ],
+  promote: [
+    s('A new queen! The little pawn made it all the way.'),
+    s('Promotion! That pawn earned its crown.'),
+    s('All the way across the board — what a journey for that pawn.'),
   ],
   brilliant: [
     s('That was a brilliant move — you found a hidden idea on the board.'),
@@ -144,6 +156,16 @@ const LUCA: Record<TemplateKind, Template[]> = {
     s('Nice, you put their king to work.'),
     s('Check. Look for what falls off after the king moves.'),
     s('Check! Forcing moves are powerful.'),
+  ],
+  castle: [
+    s('Castled! Safety first, attack second — smart.'),
+    s('King safe, rook activated. Two jobs, one move.'),
+    s('Into the castle! Now you can plan something fun.'),
+  ],
+  promote: [
+    s('BOOM — new queen on the board!'),
+    s('That pawn just leveled up. Maximum rank!'),
+    s('Promotion! The bravest pawn gets the biggest reward.'),
   ],
   brilliant: [
     s('That is a serious power move. You saw the trap and trusted it.'),
