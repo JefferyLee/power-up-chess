@@ -88,7 +88,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | E2E smoke (Phase 3.6) | **partial** | Playwright gate+privacy specs green vs live site, weekly workflow; full sign-in happy path needs a disposable-identity story |
 | Leaderboard opt-out (Phase 3.7) | shipped | `hideFromLeaderboards` via setPrivacyPrefs; enforced in gate top-5 / puzzle boards / find-player; toggle in Settings |
 | In-app privacy note (Phase 3.8) | shipped | `/privacy`, linked from gate + Settings |
-| callables.ts split (Phase 3.2) | **planned** | attempted, reverted — interleaved sections need a careful dedicated pass |
+| callables.ts split (Phase 3.2) | won’t do | attempted + reverted; Jeff declined the dedicated pass (2026-07-03) — pure refactor, zero user value |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
 | Invitations (play/duel invites) | shipped | sendInvite/respond/cancel + InviteInbox (focus-trapped dialog) |
