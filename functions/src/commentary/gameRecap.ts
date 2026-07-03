@@ -44,7 +44,7 @@ export interface GameRecapResponse {
 }
 
 export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
-  { secrets: [GEMINI_API_KEY] },
+  { enforceAppCheck: true, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before requesting a recap.')

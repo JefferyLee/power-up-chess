@@ -18,7 +18,7 @@ interface FullPresenceRequest extends SetPresenceRequest {
   isBypass: boolean
 }
 
-export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceResponse>>(
+export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceResponse>>({ enforceAppCheck: true },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in before joining the Hall.')
     const uid = req.auth.uid

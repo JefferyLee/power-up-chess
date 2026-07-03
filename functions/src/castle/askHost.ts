@@ -57,7 +57,7 @@ export type AskHostResponse =
   | { status: 'blocked' }
 
 export const askHost = onCall<AskHostRequest, Promise<AskHostResponse>>(
-  { secrets: [GEMINI_API_KEY], timeoutSeconds: 10 },
+  { enforceAppCheck: true, secrets: [GEMINI_API_KEY], timeoutSeconds: 10 },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const uid = req.auth.uid

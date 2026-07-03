@@ -14,7 +14,7 @@ import { postGameStarted } from '../castle/postGameStarted'
  * your own room is a no-op success so that returning to a waiting-room link
  * does not error.
  */
-export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async (req) => {
+export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>({ enforceAppCheck: true },async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in before joining a room.')
   }

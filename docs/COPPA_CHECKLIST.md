@@ -18,7 +18,7 @@ that requires it.
 | AI data flow + opt-out | Child data to an LLM is controlled | ✅ Gemini server-side only, strictest safetySettings, LLM output scrubbed; **template-only toggle** in Settings | B ✅ |
 | Public exposure | Minimize a child's public footprint | ✅ leaderboard **opt-out** (`hideFromLeaderboards`) covers gate top-5 / puzzle boards / search | B ✅ |
 | Parental notice | Clear privacy statement | ✅ in-app `/privacy` (gate + Settings) synced with `PRIVACY.md` draft | B ✅ (C: legal-reviewed final) |
-| Abuse hardening | Bots/scripts can't farm the API | ✅ per-uid + per-name rate limits, App Check client live (monitor) | B ✅ (C: App Check **enforce**) |
+| Abuse hardening | Bots/scripts can't farm the API | ✅ per-uid + per-name rate limits; **App Check ENFORCED on key callables (2026-07-03)** | B ✅ |
 | No behavioral ads | No ad targeting of kids | ✅ no ads/ad SDKs; analytics hashed-uid product metrics only | B ✅ |
 | **Verifiable parental consent** | Required before collecting PII from under-13s at scale | ❌ not implemented — Path B stays invite/family | **C 必需** |
 | **Third-party terms review** | Firebase + Gemini children's-data terms confirmed | ⚠️ not formally reviewed | **C 必需** |

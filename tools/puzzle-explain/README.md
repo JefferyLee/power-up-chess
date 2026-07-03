@@ -36,3 +36,11 @@ Approved `explanation` values go onto the puzzles in Firestore
 shows it directly and never calls the LLM for it (see `PuzzleExplanation.tsx`).
 The merge step needs admin access — do it from the Firebase console or a small
 admin-SDK script; not automated here so nothing unreviewed can reach the app.
+
+## App Check note (2026-07-03)
+
+`explainPuzzle` now **enforces App Check**, so this tool's raw fetch is
+rejected (`UNAUTHENTICATED`). To run a batch: register a debug token in
+Firebase console → App Check → Apps → Manage debug tokens, then send it as
+the `X-Firebase-AppCheck` header — or ask Claude to temporarily lift
+enforcement on `explainPuzzle` for the run and restore it after.

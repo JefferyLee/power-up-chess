@@ -78,7 +78,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Wizard chat → Hall mirror (Phase 1.1/1.2) | shipped | duel text mirrored verbatim, voice as metadata notice; report cascade hides room copy; NO private channels anywhere (audited 2026-07-03) |
 | Moderation ban (Phase 1.3) | shipped | `setUserBan` (admin): guest.banned + banned_uids; blocks Hall + presence + Wizard posting |
 | Gemini safetySettings (Phase 1.6) | shipped | BLOCK_LOW_AND_ABOVE on all 4 harm categories, single wrapper covers all 6 call sites |
-| App Check (Phase 1.7) | **partial** | client LIVE in monitor mode (reCAPTCHA v3, 2026-07-03); watch console metrics a few days, then enforce per-callable |
+| App Check (Phase 1.7) | shipped | **ENFORCED** on 19 key callables (chat/enter/moves/LLM/privacy/sync, 2026-07-03) after a clean monitor window; scripted no-token calls verified rejected |
 | Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
 | Ada UX pass (Phase 2) | shipped | AI Hint ×3/game (engine arrow) · Hall 3-tier split · review kid-mode (engine numbers folded) · MuteButton mounted + reduced-motion celebrations · friendly unlock copy ("N Daily Fives") · in-game host whispers (check/castle/promote, throttled templates) · invite dialog focus-trap/Escape · board keyboard cursor + aria · honest Shop/Tournament copy |
 | Shared definitions (Phase 3.1) | shipped | one source of truth in `functions/src/shared/` (roomTypes, personas, wizard types+spells); web imports via `@shared` alias |

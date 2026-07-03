@@ -21,7 +21,7 @@ export interface SetUserBanResponse {
   uidsFlagged: number
 }
 
-export const setUserBan = onCall<SetUserBanRequest, Promise<SetUserBanResponse>>(async (req) => {
+export const setUserBan = onCall<SetUserBanRequest, Promise<SetUserBanResponse>>({ enforceAppCheck: true },async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const db = getFirestore()
 

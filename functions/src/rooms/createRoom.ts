@@ -18,7 +18,7 @@ const MAX_TRIES = 5
  * Returns the freshly-minted roomId; the client builds the share URL from its
  * own origin (so we don't have to know the hosting domain server-side).
  */
-export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>(
+export const createRoom = onCall<CreateRoomRequest, Promise<CreateRoomResponse>>({ enforceAppCheck: true },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before creating a room.')

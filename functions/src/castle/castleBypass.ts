@@ -11,7 +11,7 @@ import type { CastleBypassResponse } from './types'
  *  minting hundreds is abuse (Phase 1.8). */
 const BYPASS_PER_DAY = 10
 
-export const castleBypass = onCall<void, Promise<CastleBypassResponse>>(
+export const castleBypass = onCall<void, Promise<CastleBypassResponse>>({ enforceAppCheck: true },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before bypassing.')

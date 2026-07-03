@@ -16,7 +16,7 @@ export interface SetPrivacyPrefsResponse {
   hideFromLeaderboards: boolean
 }
 
-export const setPrivacyPrefs = onCall<SetPrivacyPrefsRequest, Promise<SetPrivacyPrefsResponse>>(async (req) => {
+export const setPrivacyPrefs = onCall<SetPrivacyPrefsRequest, Promise<SetPrivacyPrefsResponse>>({ enforceAppCheck: true },async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const uid = req.auth.uid
   const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()

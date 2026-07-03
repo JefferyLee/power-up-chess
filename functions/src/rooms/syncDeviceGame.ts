@@ -39,7 +39,7 @@ export interface SyncDeviceGameResponse {
   ok: boolean
 }
 
-export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGameResponse>>(async (req) => {
+export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGameResponse>>({ enforceAppCheck: true },async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const uid = req.auth.uid
   const d = req.data ?? ({} as SyncDeviceGameRequest)

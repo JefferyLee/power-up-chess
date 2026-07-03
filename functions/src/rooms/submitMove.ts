@@ -12,7 +12,7 @@ import type { RoomDoc, SubmitMoveRequest, SubmitMoveResponse } from './types'
  * of turn. The validation itself lives in the pure `applyMove` (unit-tested);
  * this wrapper owns the transaction, the write, and the HttpsError mapping.
  */
-export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>(async (req) => {
+export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>({ enforceAppCheck: true },async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in before submitting a move.')
   }
