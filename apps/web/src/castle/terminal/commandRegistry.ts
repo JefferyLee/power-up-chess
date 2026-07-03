@@ -1222,7 +1222,7 @@ registerCommand({
 
 /** Use-effects. Lives outside the items registry because a use can
  *  mutate game state (unlocking the Cellar door). */
-function useItem(item: Item, target: string, ctx: CommandContext): string {
+function applyItemUse(item: Item, target: string, ctx: CommandContext): string {
   const room = ctx.world.currentRoom
   switch (item.id) {
     case 'lantern':
@@ -1275,7 +1275,7 @@ registerCommand({
       pushPrivate('reply', `You don't have ${item.longName}.`)
       return
     }
-    pushPrivate('reply', useItem(item, target.toLowerCase(), ctx))
+    pushPrivate('reply', applyItemUse(item, target.toLowerCase(), ctx))
   },
 })
 
@@ -1441,7 +1441,7 @@ registerCommand({
     // re-claim).
     markSolvedToday(mystery.id)
     const id = ctx.identity
-    let pointsLine = ''
+    let pointsLine: string
     if (id && !id.isBypass) {
       try {
         const { callAwardCastlePoints } = await import('../../firebase/callables')
@@ -1923,7 +1923,7 @@ registerCommand({
       pushPrivate('reply', "The duelling board is in the Wizard's Antechamber. Go east from the Great Hall (/e) to reach it.")
       return
     }
-    let state = loadPlayState()
+    const state = loadPlayState()
 
     // /play <number> — start a new game at that rating.
     // /play new — start a new game at last rating (or default).

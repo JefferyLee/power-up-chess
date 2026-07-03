@@ -440,8 +440,8 @@ export class GameScene extends Phaser.Scene {
   private spawnSweep(): void {
     const isRook = Math.random() < 0.55
     const cells = new Set<string>()
-    let iconX = 0
-    let iconY = 0
+    let iconX: number
+    let iconY: number
     let iconKey = 'rook-b'
 
     if (isRook) {

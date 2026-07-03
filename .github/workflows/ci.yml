@@ -1,0 +1,54 @@
+# CI — Path B Phase 0.1 (docs/AUDIT_AND_PLAN.md).
+#
+# Two jobs:
+#   checks      — typecheck + lint + unit tests + build across the monorepo.
+#   rules-test  — Firestore security-rules tests against the emulator
+#                 (kept separate: needs Java + emulator download).
+#
+# Node 22 everywhere, matching package.json engines and the Functions runtime.
+# pnpm version comes from the root packageManager field via pnpm/action-setup.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  rules-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: pnpm install --frozen-lockfile
+      # Root script wraps: firebase emulators:exec --only firestore
+      #   "pnpm --filter @power-up-chess/functions test:rules"
+      - run: pnpm test:rules

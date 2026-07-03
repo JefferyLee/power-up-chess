@@ -153,7 +153,7 @@ function step(
   // Drop the rows the player just traversed; spawn new rows at the
   // top (which is the back of the array — closest-to-player = front).
   const remaining = board.rows.slice(move.rowDelta)
-  let topRows: number[] = []
+  let topRows: number[]
   let tries = 0
   while (true) {
     topRows = []

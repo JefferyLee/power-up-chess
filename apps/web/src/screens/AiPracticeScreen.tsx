@@ -454,12 +454,11 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     if (adaptive && adaptiveRecordedRef.current !== gameId) {
       adaptiveRecordedRef.current = gameId
       const outcome = parts.result === 'white' ? 'win' : parts.result === 'black' ? 'loss' : 'draw'
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAdaptiveIdx(recordAdaptiveResult(outcome))
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSavedThisGame(true)
-  }, [effectiveStatus, savedThisGame, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
+  }, [effectiveStatus, savedThisGame, adaptive, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
 
   useEffect(() => {
     if (effectiveStatus.kind === 'in_progress') return

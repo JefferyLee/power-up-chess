@@ -33,12 +33,17 @@ let env: RulesTestEnvironment
 
 beforeAll(async () => {
   setLogLevel('error')
+  // Under `firebase emulators:exec` the env var points at the running
+  // emulator (host:port from firebase.json); the fallback matches the
+  // firebase.json port for anyone running the emulator by hand.
+  const emulator = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8180'
+  const [host, port] = emulator.split(':')
   env = await initializeTestEnvironment({
     projectId: 'puc-rules-test',
     firestore: {
       rules: readFileSync(RULES_PATH, 'utf8'),
-      host: '127.0.0.1',
-      port: 8080,
+      host: host || '127.0.0.1',
+      port: Number(port) || 8180,
     },
   })
 })
