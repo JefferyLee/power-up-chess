@@ -49,7 +49,9 @@ docs/books_and_references/*
 !docs/books_and_references/README.md
 
 # Generated puzzle data (regenerated from sources; not committed)
-data/puzzles/*.json
+# Generated puzzle-explanation review batches (tools/puzzle-explain).
+# NOTE: lichess.json is build-critical source data (CC0) and IS committed.
+data/puzzles/explanations-review.json
 
 # Local Stockfish builds if any
 *.wasm.tmp
