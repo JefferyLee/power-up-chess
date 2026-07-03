@@ -17,6 +17,7 @@ export type RateBucket =
   | 'story-day'
   | 'ask-day'
   | 'report-day'
+  | 'bypass-day'
 
 const WINDOW_MS: Record<RateBucket, number> = {
   'chat-min': MINUTE_MS,
@@ -26,6 +27,7 @@ const WINDOW_MS: Record<RateBucket, number> = {
   'story-day': DAY_MS,
   'ask-day': DAY_MS,
   'report-day': DAY_MS,
+  'bypass-day': DAY_MS,
 }
 
 interface CounterDoc {

@@ -73,7 +73,12 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Castle points + unlock gates | shipped | see §2 |
 | Paid takeback (all modes) | shipped | online = opponent-accepted offer |
 | Hall of Games archive (browse/curate/masters) | shipped | classics + GM games, curator/admin tools |
-| Great Hall shared chat | shipped | profanity + rate-limit + report-flag → auto-hide at 3 distinct reports |
+| Great Hall shared chat | shipped | two-tier profanity (severe → reject, evasion-normalised) + rate-limit + report → auto-hide; LLM replies scrubbed; server-bound display names |
+| Wizard chat → Hall mirror (Phase 1.1/1.2) | shipped | duel text mirrored verbatim, voice as metadata notice; report cascade hides room copy; NO private channels anywhere (audited 2026-07-03) |
+| Moderation ban (Phase 1.3) | shipped | `setUserBan` (admin): guest.banned + banned_uids; blocks Hall + presence + Wizard posting |
+| Gemini safetySettings (Phase 1.6) | shipped | BLOCK_LOW_AND_ABOVE on all 4 harm categories, single wrapper covers all 6 call sites |
+| App Check (Phase 1.7) | **partial** | client scaffold behind VITE_APPCHECK_SITE_KEY; console registration + enforcement pending (Jeff step) |
+| Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |

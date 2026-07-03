@@ -4,12 +4,21 @@
 // other guests in the live Hall.
 
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { bumpAndCheck } from './chatRateLimit'
 import type { CastleBypassResponse } from './types'
+
+/** A visitor should only need a couple of bypass names; a scripted client
+ *  minting hundreds is abuse (Phase 1.8). */
+const BYPASS_PER_DAY = 10
 
 export const castleBypass = onCall<void, Promise<CastleBypassResponse>>(
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before bypassing.')
+    }
+    const gate = await bumpAndCheck(req.auth.uid, 'bypass-day', BYPASS_PER_DAY)
+    if (!gate.allowed) {
+      throw new HttpsError('resource-exhausted', 'Too many guest names today — try again tomorrow.')
     }
     const n = Math.floor(1000 + Math.random() * 9000)
     return { displayName: `Guest-${n}` }

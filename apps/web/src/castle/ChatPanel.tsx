@@ -194,6 +194,11 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
             · 🌀 from the secret tunnel
           </span>
         )}
+        {message.viaWizard && (
+          <span className="puc-chat__tunnel" title="Said inside a Wizard's Duel — duel chat is always visible here too">
+            · ⚔️ from a Wizard duel
+          </span>
+        )}
         <span className="puc-chat__time">{formatChatTime(message.ts)}</span>
       </span>
       {paragraphs ? (

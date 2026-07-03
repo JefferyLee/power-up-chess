@@ -52,6 +52,15 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     }
     const { displayName, normalizedName, isBypass, hostId } = idData
 
+    // Banned bypass guests have no guest doc to flag — check the uid list.
+    // (Non-bypass bans are checked on the guest doc below.)
+    if (isBypass) {
+      const bannedSnap = await db.doc(`banned_uids/${uid}`).get()
+      if (bannedSnap.exists) {
+        throw new HttpsError('permission-denied', 'This account can’t post in the Hall.')
+      }
+    }
+
     // For non-bypass callers, verify the guest doc + uids[] AND charge
     // 1 castle point per message. Bypass guests get to chat for free
     // since they have no persistent balance.
@@ -66,6 +75,9 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
       const guest = gSnap.data() as GuestDoc | undefined
       if (!guest || !guest.uids.includes(uid)) {
         throw new HttpsError('permission-denied', 'You can only post as yourself.')
+      }
+      if (guest.banned) {
+        throw new HttpsError('permission-denied', 'This account can’t post in the Hall.')
       }
       if (guest.castlePoints < HALL_CHAT_COST) {
         throw new HttpsError(
@@ -86,6 +98,12 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     }
 
     const scrub = scrubMessage(text)
+    // Severe tier: the message must not land at all — not even starred out
+    // (Phase 1.9). No point charge, no host reply; the client shows the error.
+    if (scrub.reject) {
+      console.warn(`postChat: severe-content reject (uid=${uid})`)
+      throw new HttpsError('invalid-argument', 'That message can’t be posted in the Hall.')
+    }
 
     // Deduct cost atomically (FieldValue.increment avoids a read-write race
     // if two posts arrive back-to-back). We already verified balance ≥ cost

@@ -54,7 +54,8 @@ function uciToSan(fen, uci) {
 
 async function anonToken() {
   const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    // The browser key is referrer-restricted (Phase 1.8) — identify as the app.
+    method: 'POST', headers: { 'Content-Type': 'application/json', Referer: 'https://power-up-chess-dev.web.app/' },
     body: JSON.stringify({ returnSecureToken: true }),
   })
   const data = await res.json()

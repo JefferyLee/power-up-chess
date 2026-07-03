@@ -23,6 +23,7 @@ import {
   type GuestDoc,
 } from './types'
 import { applyDecay } from './decay'
+import { scrubMessage } from './profanity'
 import { extractIp, hashIp, lookupGeo, type GeoResult } from './ipGeo'
 import { appendAudit } from './audit'
 
@@ -125,7 +126,15 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
     let nextConsecutiveWrong: number
 
     if (!existing) {
-      // New guest — register + starter pack.
+      // New guest — the name itself passes the chat scrub (Phase 1.4):
+      // profane or severe names can't be registered in the first place.
+      // Only enforced at registration so wordlist updates never lock out
+      // an existing guest's stored name.
+      const nameScrub = scrubMessage(displayName)
+      if (nameScrub.reject || nameScrub.censored) {
+        return { status: 'invalid-input', reason: 'Please pick a friendlier name.' }
+      }
+      // Register + starter pack.
       const starter = AWARD_CAPS.newAccountStarter
       const todayKey = Math.floor(now / DAY_MS)
       const sessionId = mintSessionId()

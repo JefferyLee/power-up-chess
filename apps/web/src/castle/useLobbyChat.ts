@@ -59,6 +59,10 @@ export interface ChatMessage {
   /** Streak crown — 3+ consecutive Wizard's Duel wins. Overrides halo. */
   hasCrown?: boolean
   /** P2.H — Weekly Tournament champion crown. Highest priority. */
+  /** Set on mirrors of Wizard-duel chat: the duel room id. */
+  viaWizard?: string
+  /** True when the mirror stands in for a voice clip (audio lives in the room). */
+  wizardVoice?: boolean
   hasTournamentCrown?: boolean
   /** Lifetime-earn title at send time (Apprentice/Adept/Sorcerer/Archmage). */
   title?: string

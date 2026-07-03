@@ -23,7 +23,7 @@ export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async
   if (!/^[A-Za-z0-9]{4,12}$/.test(roomId)) {
     throw new HttpsError('invalid-argument', 'Invalid room id.')
   }
-  const displayName = (req.data.displayName ?? '').trim().slice(0, 32)
+  let displayName = (req.data.displayName ?? '').trim().slice(0, 32)
   if (displayName.length === 0) {
     throw new HttpsError('invalid-argument', 'displayName is required.')
   }
@@ -43,6 +43,11 @@ export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(async
   const verifiedNormalizedName = idData && !idData.isBypass
     ? idData.normalizedName
     : String(req.data.normalizedName ?? '').trim().toLowerCase()
+  // Phase 1.4: when a verified identity exists, the seat shows THAT name —
+  // a modified client can't sit down under someone else's nickname.
+  if (idData?.displayName) {
+    displayName = idData.displayName.trim().slice(0, 32) || displayName
+  }
 
   const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref)

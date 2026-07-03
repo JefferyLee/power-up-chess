@@ -230,6 +230,9 @@ export interface GuestDoc {
   castlePoints: number
   createdAt: number
   lastVisitAt: number
+  /** Moderation ban (Phase 1.3, set via setUserBan): blocks Hall chat,
+   *  presence and Wizard posting. Absent = not banned. */
+  banned?: boolean
   /** Time-limited cosmetic effects active on the guest's name/avatar.
    *  Currently just the post-duel-win golden halo. */
   cosmetics?: GuestCosmetics

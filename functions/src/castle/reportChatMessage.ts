@@ -53,7 +53,10 @@ export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatRes
     if (!msgSnap.exists) {
       throw new HttpsError('not-found', 'That message is no longer here.')
     }
-    const msg = msgSnap.data() as { hidden?: boolean; flags?: number; kind?: string }
+    const msg = msgSnap.data() as {
+      hidden?: boolean; flags?: number; kind?: string
+      viaWizard?: string; wizardMessageId?: string
+    }
     const flags0 = typeof msg.flags === 'number' ? msg.flags : 0
 
     if (msg.hidden) return { ok: true, hidden: true, flags: flags0 }
@@ -67,6 +70,11 @@ export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatRes
     const hidden = flags >= FLAG_THRESHOLD
     tx.set(flagRef, { uid, messageId, ts: Date.now() })
     tx.update(msgRef, hidden ? { flags, hidden: true } : { flags })
+    // Phase 1.1/1.3 — hiding a Wizard mirror also hides the SOURCE message
+    // inside the duel room, so the content disappears everywhere at once.
+    if (hidden && msg.viaWizard && msg.wizardMessageId && !msg.viaWizard.includes('/') && !msg.wizardMessageId.includes('/')) {
+      tx.update(db.doc(`wizard_rooms/${msg.viaWizard}/messages/${msg.wizardMessageId}`), { hidden: true })
+    }
     return { ok: true, hidden, flags }
   })
 })

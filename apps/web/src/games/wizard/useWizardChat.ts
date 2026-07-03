@@ -21,6 +21,7 @@ interface WizardChatTextMessage extends WizardChatMessageBase {
   text: string
 }
 
+
 interface WizardChatVoiceMessage extends WizardChatMessageBase {
   kind: 'voice'
   audioBase64: string
@@ -45,7 +46,8 @@ export function useWizardChatMessages(roomId: string): WizardChatMessage[] {
       q,
       (snap) => {
         const rows = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() } as WizardChatMessage))
+          .map((d) => ({ id: d.id, ...d.data() } as WizardChatMessage & { hidden?: boolean }))
+          .filter((m) => !m.hidden) // moderation: hidden via Hall report cascade
           .reverse()
         setMessages(rows)
       },

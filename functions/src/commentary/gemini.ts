@@ -1,9 +1,19 @@
 // Thin wrapper around the @google/generative-ai SDK so the rest of the
 // commentary module doesn't have to know about model setup.
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
 
 const MODEL = 'gemini-3.5-flash'
+
+// Every host string in the app is read by an 8-10 year old, so run the
+// strictest blocking tier on all four harm categories. This is the single
+// Gemini entry point — every caller inherits these settings (Phase 1.6).
+const SAFETY_SETTINGS = [
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE },
+]
 
 let cachedClient: GoogleGenerativeAI | null = null
 let cachedKey: string | null = null
@@ -47,6 +57,7 @@ export async function callGemini(opts: GeminiCallOptions): Promise<string> {
     model: MODEL,
     systemInstruction: opts.systemPrompt,
     generationConfig,
+    safetySettings: SAFETY_SETTINGS,
   })
   const result = await model.generateContent(opts.userPrompt)
   const text = result.response.text().trim()

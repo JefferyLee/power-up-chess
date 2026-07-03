@@ -1,7 +1,9 @@
-// Per-duel chat. Lives separately from the Hall (lobby/messages) so a
-// duel's chat doesn't pollute the public scroll. Both the two players
-// AND spectators can post; spectators pay a higher price per message
-// to keep the duel's chat focused.
+// Per-duel chat. Message docs live under the room, but every text/voice
+// post is ALSO mirrored into the Hall feed (Phase 1.1/1.2) so nothing in
+// a Wizard duel is room-private: parents/moderators see it, the report →
+// auto-hide pipeline covers it. Both the two players AND spectators can
+// post; spectators pay a higher price per message to keep the duel's
+// chat focused.
 //
 // Storage: wizard_rooms/{roomId}/messages/{messageId}
 // Cost:    1 / 5 pt for players (text / voice), 2 / 20 pt for spectators.
@@ -14,6 +16,7 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { scrubMessage } from '../../castle/profanity'
 import type { GuestDoc } from '../../castle/types'
+import type { ChatMessageDoc } from '../../castle/chatTypes'
 
 const MAX_CHARS = 240
 const PER_MIN_CAP = 6
@@ -103,6 +106,9 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
       const guestSnap = await tx.get(guestRef)
       if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
       const guest = guestSnap.data() as GuestDoc
+      if (guest.banned) {
+        throw new HttpsError('permission-denied', 'This account can’t post messages.')
+      }
       if (guest.castlePoints < cost) {
         throw new HttpsError(
           'failed-precondition',
@@ -120,6 +126,9 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
       }
 
       const scrub = scrubMessage(text)
+      if (scrub.reject) {
+        throw new HttpsError('invalid-argument', 'That message can’t be sent.')
+      }
       const nextPoints = guest.castlePoints - cost
 
       const msgRef = db.collection(`wizard_rooms/${roomId}/messages`).doc()
@@ -135,6 +144,22 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>(
         ts: now,
         serverTs: FieldValue.serverTimestamp(),
       })
+      // Phase 1.1 — mirror into the Hall feed, atomically with the room
+      // write. Same scrubbed text, tagged with the duel room so the bubble
+      // can say where it came from and moderation can trace it back.
+      const mirrorRef = db.collection('lobby/messages/items').doc()
+      const mirror: ChatMessageDoc = {
+        name: callerPre.displayName,
+        uid,
+        normalizedName: callerPre.normalizedName,
+        isBypass: false,
+        kind: 'user',
+        text: scrub.text,
+        ts: now,
+        viaWizard: roomId,
+        wizardMessageId: msgRef.id,
+      }
+      tx.set(mirrorRef, mirror)
       tx.set(rateRef, {
         minStart: minFresh ? now : cur.minStart,
         minCount,
@@ -194,6 +219,9 @@ export const postWizardVoice = onCall<PostVoiceRequest, Promise<PostVoiceRespons
       const guestSnap = await tx.get(guestRef)
       if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
       const guest = guestSnap.data() as GuestDoc
+      if (guest.banned) {
+        throw new HttpsError('permission-denied', 'This account can’t post messages.')
+      }
       if (guest.castlePoints < cost) {
         throw new HttpsError(
           'failed-precondition',
@@ -227,6 +255,22 @@ export const postWizardVoice = onCall<PostVoiceRequest, Promise<PostVoiceRespons
         ts: now,
         serverTs: FieldValue.serverTimestamp(),
       })
+      // Phase 1.2 — metadata-only Hall mirror for voice (the audio bytes
+      // stay on the room doc): visible, reportable, traceable to source.
+      const mirrorRef = db.collection('lobby/messages/items').doc()
+      const mirror: ChatMessageDoc = {
+        name: callerPre.displayName,
+        uid,
+        normalizedName: callerPre.normalizedName,
+        isBypass: false,
+        kind: 'user',
+        text: `🎙 sent a ${Math.max(1, Math.round(durationMs / 1000))}s voice message in a Wizard duel`,
+        ts: now,
+        viaWizard: roomId,
+        wizardMessageId: msgRef.id,
+        wizardVoice: true,
+      }
+      tx.set(mirrorRef, mirror)
       tx.set(rateRef, {
         minStart: minFresh ? now : cur.minStart,
         minCount,

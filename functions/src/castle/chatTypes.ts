@@ -123,6 +123,16 @@ export interface ChatMessageDoc {
    *  bridge instead of the normal chat input. Lets the bubble render
    *  a "secret tunnel" tag so onlookers know where it came from. */
   viaTerminal?: boolean
+  /** Phase 1.1 — set on Hall mirrors of Wizard-room chat: the duel room id.
+   *  Wizard text/voice is never room-private; it surfaces here under the
+   *  same moderation (report → auto-hide cascades back to the room copy). */
+  viaWizard?: string
+  /** The mirrored message's id inside wizard_rooms/{viaWizard}/messages —
+   *  lets moderation locate and hide the source doc. */
+  wizardMessageId?: string
+  /** True when the mirror represents a voice clip (metadata-only in the
+   *  Hall; the audio itself lives on the room message). */
+  wizardVoice?: boolean
 }
 
 /** Where the user currently is in the app. `hall` is the default; any

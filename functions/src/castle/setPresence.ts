@@ -24,12 +24,21 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     const uid = req.auth.uid
 
     const sessionId = String(req.data?.sessionId ?? '').trim()
-    const displayName = String(req.data?.displayName ?? '').trim().slice(0, 40)
+    // Client-passed name is only a HINT — for non-bypass guests the server
+    // substitutes the guest doc's displayName below (Phase 1.4: no
+    // impersonating a registered nickname by editing the client).
+    let displayName = String(req.data?.displayName ?? '').trim().slice(0, 40)
     const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()
     const isBypass = req.data?.isBypass === true
 
     if (!sessionId || sessionId.length > 40) throw new HttpsError('invalid-argument', 'Bad sessionId.')
     if (!displayName) throw new HttpsError('invalid-argument', 'displayName required.')
+    // Bypass guests only ever get server-minted "Guest-N" names
+    // (castleBypass) — enforce the shape so a modified client can't pick
+    // an arbitrary or impersonating name.
+    if (isBypass && !/^Guest-\d{1,8}$/.test(displayName)) {
+      throw new HttpsError('invalid-argument', 'Bypass guests use their assigned Guest name.')
+    }
 
     // Server decides the host on duty — same for every visitor at this instant.
     const hostId = hostOnDuty()
@@ -49,6 +58,12 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
       if (!guest || !guest.uids.includes(uid)) {
         throw new HttpsError('permission-denied', 'You can only set presence as yourself.')
       }
+      if (guest.banned) {
+        throw new HttpsError('permission-denied', 'This account can’t join the Hall.')
+      }
+      // Server-authoritative display name (Phase 1.4): whatever the client
+      // sent, the Hall shows the name registered on the guest doc.
+      displayName = guest.displayName
       // H.7 — single-active-session check. If the client's stamped
       // sessionId no longer matches what castleEnter most recently
       // minted, this device's session has been superseded by another

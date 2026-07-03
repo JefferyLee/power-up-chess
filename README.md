@@ -16,6 +16,7 @@ pnpm dev              # web app on Vite → http://localhost:5173
 Other scripts (run from repo root): `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm emulators` (Firebase). Cloud Functions and Firestore back the live app; most screens work against the deployed backend during local `dev`.
 
 - **Live app:** <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, via Cloudflare)
+- **Deploy checklist:** `functions/.env` must define `IP_HASH_SECRET` (random, non-default — gitignored); the Firebase browser API key is referrer-restricted to the app domains + localhost.
 - **What's built + all routes/doors:** [Feature Map & Status](docs/FEATURE_MAP.md) — start here to see current reality vs. the planning docs below.
 
 ## Product Documents

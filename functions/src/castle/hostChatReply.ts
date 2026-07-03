@@ -10,6 +10,7 @@ import { callGemini } from '../commentary/gemini'
 import { HOST_PERSONAS } from '../commentary/personas'
 import { bumpAndCheck } from './chatRateLimit'
 import { CHAT_LIMITS } from './chatTypes'
+import { scrubMessage } from './profanity'
 import type { HostId } from '../shared/hostId'
 
 export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
@@ -84,7 +85,19 @@ export async function generateHostReply(args: ReplyArgs): Promise<string | null>
     ])
     if (!text || text.length < 4) return null
     // Strip any quotation marks the model added around its reply.
-    return text.replace(/^["']|["']$/g, '').trim()
+    const reply = text.replace(/^["']|["']$/g, '').trim()
+    // Phase 1.5 — the model's OUTPUT goes through the same scrub as user
+    // posts before it lands in front of every kid in the Hall. Severe hit
+    // → drop the reply entirely (call site falls back to the template).
+    const scrub = scrubMessage(reply)
+    if (scrub.reject) {
+      console.warn('hostChatReply: LLM output rejected by severe filter')
+      return null
+    }
+    if (scrub.censored) {
+      console.warn(`hostChatReply: LLM output scrubbed (${scrub.reasons.join(',')})`)
+    }
+    return scrub.text
   } catch (err) {
     console.warn('hostChatReply LLM call failed:', err)
     return null

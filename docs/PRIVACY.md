@@ -31,11 +31,21 @@ old). We designed it to collect as little as possible about a child.
 
 - **Play is private-link only.** There is **no public matchmaking** — a child
   can only play someone they share a private room link with.
-- **One shared chat** (the Great Hall). It is moderated server-side: a profanity
-  filter and an automatic scrub of anything that looks like an email or phone
-  number, per-child rate limits, and a **report button** that auto-hides a
-  message once three different people flag it. There are **no private messages**
-  and **no in-game chat**.
+- **One shared chat** (the Great Hall). It is moderated server-side: a two-tier
+  profanity filter (ordinary words are starred out; slurs/sexual content are
+  rejected outright, with common letter-substitution tricks detected), an
+  automatic scrub of anything that looks like an email or phone number,
+  per-child rate limits, and a **report button** that auto-hides a message once
+  three different people flag it. There are **no private messages**.
+- **Standard chess games have no chat at all** (online, local, AI practice).
+- **Wizard's Duel** (the fun spell game) has room chat, including short voice
+  clips (≤15s). **Nothing in a duel room is private**: every text message is
+  mirrored into the Great Hall feed under the same moderation, and every voice
+  clip posts a visible "sent a voice message" notice there — so parents and
+  moderators always see duel activity, and the report button covers it. Hiding
+  a reported duel message hides it in the room too.
+- Display names are **server-verified**: a modified app cannot post or take a
+  game seat under someone else's registered nickname.
 
 ## The AI hosts (Lucy & Luca)
 
