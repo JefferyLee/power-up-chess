@@ -38,7 +38,10 @@ export const refreshCastlePublicStats = onSchedule(
       .limit(TOP_N)
       .get()
 
-    const topGuests: TopGuest[] = topSnap.docs.map((d) => {
+    const topGuests: TopGuest[] = topSnap.docs
+      // Phase 3.7 — privacy opt-out keeps a guest off the public board.
+      .filter((d) => !(d.data() as GuestDoc).hideFromLeaderboards)
+      .map((d) => {
       const g = d.data() as GuestDoc
       const lifetime = g.lifetimeEarned ?? Math.max(0, g.castlePoints)
       const titleLabel = titleFor(lifetime)?.label

@@ -37,7 +37,7 @@ export interface HostCommentaryRequest {
 }
 export interface HostCommentaryResponse {
   text: string
-  source: 'cache' | 'llm'
+  source: 'cache' | 'llm' | 'fallback'
 }
 
 export interface GameRecapRequest {
@@ -66,7 +66,7 @@ export interface GameRecapRequest {
 }
 export interface GameRecapResponse {
   text: string
-  source: 'cache' | 'llm'
+  source: 'cache' | 'llm' | 'fallback'
 }
 
 const hostCommentaryFn = httpsCallable<HostCommentaryRequest, HostCommentaryResponse>(functions, 'hostCommentary')
@@ -382,7 +382,7 @@ export async function callReportChatMessage(messageId: string) {
 
 const explainPuzzleFn = httpsCallable<
   { host: 'lucy' | 'luca'; fen: string; solutionSan: string[]; motifs?: string[] },
-  { text: string; source: 'cache' | 'llm' }
+  { text: string; source: 'cache' | 'llm' | 'fallback' }
 >(functions, 'explainPuzzle')
 /** Short host-voiced "why that move works" for a solved puzzle. */
 export async function callExplainPuzzle(req: {
@@ -392,6 +392,16 @@ export async function callExplainPuzzle(req: {
   motifs?: string[]
 }) {
   const { data } = await explainPuzzleFn(req)
+  return data
+}
+
+const setPrivacyPrefsFn = httpsCallable<
+  { normalizedName: string; hideFromLeaderboards: boolean },
+  { ok: boolean; hideFromLeaderboards: boolean }
+>(functions, 'setPrivacyPrefs')
+/** Toggle public-leaderboard visibility (Phase 3.7). */
+export async function callSetPrivacyPrefs(normalizedName: string, hideFromLeaderboards: boolean) {
+  const { data } = await setPrivacyPrefsFn({ normalizedName, hideFromLeaderboards })
   return data
 }
 
@@ -1450,6 +1460,30 @@ export interface ArchivedGameSummary {
   endReason: import('../rooms/types').EndReason
   moveCount: number
   hostId: 'lucy' | 'luca'
+  /** Phase 3.4 — set on device-synced local/AI games. */
+  mode?: 'local' | 'ai'
+  pgn?: string
+  aiDifficulty?: string
+}
+
+const syncDeviceGameFn = httpsCallable<
+  {
+    id: string; playedAt: number; mode: 'local' | 'ai'
+    whiteName: string; blackName: string; hostId: 'lucy' | 'luca'
+    result: 'white' | 'black' | 'draw'; endReason: string
+    pgn: string; moveCount: number; aiDifficulty?: string
+  },
+  { ok: boolean }
+>(functions, 'syncDeviceGame')
+/** Upload a finished local/AI game to the account archive (Phase 3.4). */
+export async function callSyncDeviceGame(req: {
+  id: string; playedAt: number; mode: 'local' | 'ai'
+  whiteName: string; blackName: string; hostId: 'lucy' | 'luca'
+  result: 'white' | 'black' | 'draw'; endReason: string
+  pgn: string; moveCount: number; aiDifficulty?: string
+}) {
+  const { data } = await syncDeviceGameFn(req)
+  return data
 }
 export interface GetPlayerGamesResponse { games: ArchivedGameSummary[] }
 const getPlayerGamesFn = httpsCallable<

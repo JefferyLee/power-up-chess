@@ -29,3 +29,5 @@
   accent-color: var(--puc-accent, #f1c34c);
   cursor: pointer;
 }
+
+.puc-settings__link { color: var(--puc-text-accent, #f4c266); }

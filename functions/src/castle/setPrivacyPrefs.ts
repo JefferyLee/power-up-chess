@@ -1,0 +1,36 @@
+// setPrivacyPrefs — self-service privacy toggles (Phase 3.7). Currently one
+// switch: hideFromLeaderboards, which keeps the guest off the gate top-5,
+// the puzzle leaderboards, and out of find-player search. The boards refresh
+// on their scheduled cadence, so the change propagates within minutes.
+
+import { getFirestore } from 'firebase-admin/firestore'
+import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import type { GuestDoc } from './types'
+
+export interface SetPrivacyPrefsRequest {
+  normalizedName: string
+  hideFromLeaderboards: boolean
+}
+export interface SetPrivacyPrefsResponse {
+  ok: boolean
+  hideFromLeaderboards: boolean
+}
+
+export const setPrivacyPrefs = onCall<SetPrivacyPrefsRequest, Promise<SetPrivacyPrefsResponse>>(async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+  const uid = req.auth.uid
+  const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()
+  const hide = req.data?.hideFromLeaderboards === true
+  if (!normalizedName || normalizedName.includes('/')) {
+    throw new HttpsError('invalid-argument', 'Bad name.')
+  }
+  const db = getFirestore()
+  const ref = db.doc(`guests/${normalizedName}`)
+  const snap = await ref.get()
+  const guest = snap.data() as GuestDoc | undefined
+  if (!guest || !guest.uids.includes(uid)) {
+    throw new HttpsError('permission-denied', 'You can only change your own settings.')
+  }
+  await ref.update({ hideFromLeaderboards: hide })
+  return { ok: true, hideFromLeaderboards: hide }
+})

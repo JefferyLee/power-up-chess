@@ -61,6 +61,7 @@ export const refreshPuzzleLeaderboards = onSchedule(
     const candidates = allGuests.docs
       .map((d) => d.data() as GuestDoc)
       .filter((g) => g && g.puzzleRatings && Object.keys(g.puzzleRatings).length > 0)
+      .filter((g) => !g.hideFromLeaderboards) // Phase 3.7 privacy opt-out
 
     // Week rollover: batch-write puzzleWeekStarts = current ratings.
     // Do this BEFORE computing the new leaderboards so the climbers

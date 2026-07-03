@@ -1,0 +1,46 @@
+.puc-privacy {
+  min-height: 100dvh;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+}
+.puc-privacy__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(231, 184, 65, 0.12);
+}
+.puc-privacy__header h1 {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 19px;
+  color: var(--puc-text-accent);
+}
+.puc-privacy__back {
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 184, 65, 0.28);
+  background: transparent;
+  color: var(--puc-text);
+  font-size: 18px;
+  cursor: pointer;
+}
+.puc-privacy__body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 20px calc(40px + env(safe-area-inset-bottom));
+  line-height: 1.6;
+  font-size: 15px;
+}
+.puc-privacy__body h2 {
+  font-family: var(--puc-font-display);
+  font-size: 16px;
+  color: var(--puc-text-accent);
+  margin: 22px 0 6px;
+}
+.puc-privacy__body ul { padding-left: 20px; }
+.puc-privacy__body li { margin: 6px 0; }
+.puc-privacy__foot { margin-top: 24px; color: var(--puc-text-muted); font-size: 13.5px; }

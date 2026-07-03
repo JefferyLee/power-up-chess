@@ -14,7 +14,7 @@ import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { saveGame } from '../history/api'
 import { track } from '../firebase/analytics'
-import { callSpendOnTakeback } from '../firebase/callables'
+import { callSpendOnTakeback, callSyncDeviceGame } from '../firebase/callables'
 import { takebackCost } from '../games/takeback'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
@@ -431,6 +431,15 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     }).catch((err) => {
       console.warn('[history] failed to save local game', err)
     })
+    // Phase 3.4 — mirror to the account archive (see AiPracticeScreen).
+    if (identity && !identity.isBypass) {
+      void callSyncDeviceGame({
+        id: gameId, playedAt: Date.now(), mode: 'local',
+        whiteName, blackName, hostId,
+        result: parts.result, endReason: parts.endReason,
+        pgn: game.pgn(), moveCount: snap.history.length,
+      }).catch(() => { /* offline is fine */ })
+    }
     // savedThisGame is a one-shot guard; setting it here just blocks re-fires
     // of this same effect, not a render cascade.
     // eslint-disable-next-line react-hooks/set-state-in-effect

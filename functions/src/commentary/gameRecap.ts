@@ -1,7 +1,7 @@
 import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
-import { callGemini } from './gemini'
+import { callGeminiWithTimeout } from './gemini'
 import { consumeDailyQuota } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
@@ -40,7 +40,7 @@ export interface GameRecapRequest {
 
 export interface GameRecapResponse {
   text: string
-  source: 'cache' | 'llm'
+  source: 'cache' | 'llm' | 'fallback'
 }
 
 export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
@@ -80,7 +80,9 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
 
     const userPrompt = buildPrompt(data, playerName)
 
-    const text = await callGemini({
+    let text: string
+    try {
+      text = await callGeminiWithTimeout({
       apiKey: GEMINI_API_KEY.value(),
       systemPrompt: HOST_PERSONAS[data.host],
       userPrompt,
@@ -91,7 +93,12 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
       // ("Hey there! I'm Luca, and I…"). A 3-5 sentence recap needs no
       // internal reasoning — disable it so the whole budget is visible text.
       thinkingBudget: 0,
-    })
+      })
+      if (!text.trim()) throw new Error('empty completion')
+    } catch (err) {
+      console.warn('gameRecap: LLM failed, fallback:', err instanceof Error ? err.message : err)
+      return { text: fallbackRecap(data.result), source: 'fallback' }
+    }
 
     const clipped = text.trim()
     writeCachedCommentary(hash, clipped, 'gemini-3.5-flash').catch(() => {})
@@ -155,4 +162,10 @@ function buildPrompt(data: GameRecapRequest, playerName: string): string {
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+/** Server-side fallback recap (Phase 3.3) — warm, result-aware, no LLM. */
+function fallbackRecap(result: 'white' | 'black' | 'draw'): string {
+  const outcome = result === 'draw' ? 'It ended in a hard-fought draw.' : 'What a finish!'
+  return `Good game! ${outcome} Step through the moves below and look for your best moments — every game teaches us something new.`
 }

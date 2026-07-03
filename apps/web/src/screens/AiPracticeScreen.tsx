@@ -16,7 +16,7 @@ import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
-import { callSpendOnTakeback } from '../firebase/callables'
+import { callSpendOnTakeback, callSyncDeviceGame } from '../firebase/callables'
 import { takebackCost } from '../games/takeback'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { HostByline } from '../hosts/HostByline'
@@ -489,6 +489,18 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     }).catch((err) => {
       console.warn('[history] failed to save ai game', err)
     })
+    // Phase 3.4 — mirror to the account archive so "my games" follow the
+    // name + magic word to any device. Fire-and-forget; IndexedDB is the
+    // local source of truth either way.
+    if (identity && !identity.isBypass) {
+      void callSyncDeviceGame({
+        id: gameId, playedAt: Date.now(), mode: 'ai',
+        whiteName, blackName, hostId,
+        result: parts.result, endReason: parts.endReason,
+        pgn: game.pgn(), moveCount: snap.history.length,
+        aiDifficulty: preset.id,
+      }).catch(() => { /* offline is fine */ })
+    }
     // Adaptive ladder: nudge the level by this game's result (Ada is white).
     // Ref-guarded so StrictMode's dev double-fire can't double-step it.
     if (adaptive && adaptiveRecordedRef.current !== gameId) {

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearAllGames, listGames } from '../history/api'
+import { callGetPlayerGames } from '../firebase/callables'
+import { useCastle } from '../castle/useCastle'
+import type { SavedGame } from '../history/db'
 import type { SavedGame } from '../history/db'
 import { HOSTS } from '../hosts/hosts'
 import type { EndReason } from '../rooms/types'
@@ -17,12 +20,40 @@ export function HistoryScreen() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [reloadTick, setReloadTick] = useState(0)
 
+  const { identity } = useCastle()
   useEffect(() => {
     let cancelled = false
-    listGames()
-      .then((games) => {
+    // Phase 3.4 — merge this device's IndexedDB games with the account's
+    // synced archive, so a fresh device still shows "my games". Local rows
+    // win on id collisions; cloud-only rows get a ☁️ badge.
+    const cloudPromise: Promise<SavedGame[]> = identity && !identity.isBypass
+      ? callGetPlayerGames(identity.normalizedName, 50)
+          .then((res) => res.games
+            .filter((g) => (g.mode === 'local' || g.mode === 'ai') && typeof g.pgn === 'string')
+            .map((g): SavedGame & { remote: boolean } => ({
+              id: g.roomId,
+              playedAt: g.playedAt,
+              mode: g.mode!,
+              whiteName: g.whiteName,
+              blackName: g.blackName,
+              hostId: g.hostId,
+              result: g.result,
+              endReason: g.endReason,
+              pgn: g.pgn!,
+              finalFen: '',
+              moveCount: g.moveCount,
+              ...(g.aiDifficulty ? { aiDifficulty: g.aiDifficulty } : {}),
+              remote: true,
+            })))
+          .catch(() => [])
+      : Promise.resolve([])
+    Promise.all([listGames(), cloudPromise])
+      .then(([local, cloud]) => {
         if (cancelled) return
-        setState({ kind: 'ready', games })
+        const seen = new Set(local.map((g) => g.id))
+        const merged = [...local, ...cloud.filter((g) => !seen.has(g.id))]
+          .sort((a, b) => b.playedAt - a.playedAt)
+        setState({ kind: 'ready', games: merged })
       })
       .catch((err) => {
         if (cancelled) return
@@ -31,7 +62,8 @@ export function HistoryScreen() {
     return () => {
       cancelled = true
     }
-  }, [reloadTick])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadTick, identity?.normalizedName])
 
   const handleClear = async () => {
     await clearAllGames()

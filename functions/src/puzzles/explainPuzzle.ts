@@ -10,7 +10,7 @@
 import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from '../commentary/cache'
-import { callGemini } from '../commentary/gemini'
+import { callGeminiWithTimeout } from '../commentary/gemini'
 import { consumeDailyQuota } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from '../commentary/personas'
 
@@ -25,7 +25,7 @@ export interface ExplainPuzzleRequest {
 }
 export interface ExplainPuzzleResponse {
   text: string
-  source: 'cache' | 'llm'
+  source: 'cache' | 'llm' | 'fallback'
 }
 
 export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleResponse>>(
@@ -61,7 +61,9 @@ export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleR
       .filter(Boolean)
       .join('\n')
 
-    const text = await callGemini({
+    let text: string
+    try {
+      text = await callGeminiWithTimeout({
       apiKey: GEMINI_API_KEY.value(),
       systemPrompt: HOST_PERSONAS[data.host],
       userPrompt,
@@ -69,7 +71,12 @@ export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleR
       maxOutputTokens: 140,
       // Short answer — disable reasoning so the whole budget is visible text.
       thinkingBudget: 0,
-    })
+      })
+      if (!text.trim()) throw new Error('empty completion')
+    } catch (err) {
+      console.warn('explainPuzzle: LLM failed, fallback:', err instanceof Error ? err.message : err)
+      return { text: 'Great solve — you found the winning idea!', source: 'fallback' }
+    }
     const clipped = text.trim()
     writeCachedCommentary(hash, clipped, 'gemini-3.5-flash').catch(() => {})
     return { text: clipped, source: 'llm' }

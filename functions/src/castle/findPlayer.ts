@@ -44,7 +44,9 @@ export const findPlayer = onCall<Request, Promise<Response>>(async (req) => {
     .limit(MAX_RESULTS)
     .get()
 
-  const matches: Match[] = snap.docs.map((d) => {
+  const matches: Match[] = snap.docs
+    .filter((d) => !(d.data() as GuestDoc).hideFromLeaderboards) // Phase 3.7
+    .map((d) => {
     const g = d.data() as GuestDoc
     return {
       normalizedName: g.normalizedName,

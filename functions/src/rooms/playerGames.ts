@@ -56,6 +56,13 @@ export interface ArchivedGame {
   endReason: NonNullable<RoomDoc['endReason']>
   moveCount: number
   hostId: 'lucy' | 'luca'
+  /** Phase 3.4 — device-synced games (local pass-and-play / AI practice).
+   *  Absent on online-room archives. */
+  mode?: 'local' | 'ai'
+  /** Full PGN for device-synced games so any signed-in device can review
+   *  without a room doc. Online games fetch PGN via getRoomGame instead. */
+  pgn?: string
+  aiDifficulty?: string
 }
 
 /** Per-side classification tally from a review-time engine analysis. */

@@ -41,6 +41,16 @@ export interface GeminiCallOptions {
   thinkingBudget?: number
 }
 
+/** callGemini raced against a hard timeout (Phase 3.3) — callers use this
+ *  to guarantee a structured fallback instead of a hung/naked-500 response. */
+export async function callGeminiWithTimeout(opts: GeminiCallOptions, timeoutMs = 8000): Promise<string> {
+  return Promise.race([
+    callGemini(opts),
+    new Promise<string>((_, reject) =>
+      setTimeout(() => reject(new Error(`gemini timeout after ${timeoutMs}ms`)), timeoutMs)),
+  ])
+}
+
 export async function callGemini(opts: GeminiCallOptions): Promise<string> {
   const client = getClient(opts.apiKey)
   const generationConfig: Record<string, unknown> = {

@@ -233,6 +233,10 @@ export interface GuestDoc {
   /** Moderation ban (Phase 1.3, set via setUserBan): blocks Hall chat,
    *  presence and Wizard posting. Absent = not banned. */
   banned?: boolean
+  /** Privacy opt-out (Phase 3.7, set via setPrivacyPrefs): keep this guest
+   *  off public leaderboards (gate top-5, puzzle boards) and out of
+   *  find-player search. Absent = visible. */
+  hideFromLeaderboards?: boolean
   /** Time-limited cosmetic effects active on the guest's name/avatar.
    *  Currently just the post-duel-win golden halo. */
   cosmetics?: GuestCosmetics

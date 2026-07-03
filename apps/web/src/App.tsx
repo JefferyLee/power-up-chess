@@ -27,6 +27,7 @@ import { LibraryRoute } from './library/LibraryRoute'
 import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
 import { KnightsRunRoute } from './games/knightsrun/KnightsRunRoute'
 import { TowerDefenseScreen } from './screens/TowerDefenseScreen'
+import { PrivacyScreen } from './screens/PrivacyScreen'
 import { EndgameRoute } from './endgame/EndgameRoute'
 import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
 import { OpeningsRoute } from './openings/OpeningsRoute'
@@ -122,6 +123,7 @@ export function App() {
           <Route path="/knights-hop" element={<KnightsHopRoute />} />
           <Route path="/knights-run" element={<KnightsRunRoute />} />
           <Route path="/arcade/tower-defense" element={<TowerDefenseScreen />} />
+          <Route path="/privacy" element={<PrivacyScreen />} />
           <Route path="/endgame" element={<EndgameRoute />} />
           <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
           <Route path="/openings" element={<OpeningsRoute />} />

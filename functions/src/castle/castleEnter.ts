@@ -117,6 +117,18 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
       return { status: 'rate-limited', retryAfterMs: DAY_MS - (now % DAY_MS) }
     }
 
+    // Phase 3.5 — per-NAME window on top of the per-uid one: a distributed
+    // guesser rotating anonymous uids against one nickname still hits this.
+    const nameAttemptsRef = db.doc(`castle_enter_attempts_byname/${normalizedName}`)
+    const nameSnap = await nameAttemptsRef.get()
+    const nameAttempts = (nameSnap.data() as { windowStart: number; totalInWindow: number } | undefined)
+      ?? { windowStart: now, totalInWindow: 0 }
+    const nameRoll = rollEnterWindow(nameAttempts, now)
+    await nameAttemptsRef.set({ windowStart: nameRoll.windowStart, totalInWindow: nameRoll.totalInWindow })
+    if (nameRoll.blockedUntil !== undefined) {
+      return { status: 'rate-limited', retryAfterMs: nameRoll.blockedUntil - now }
+    }
+
     // Look up the guest doc.
     const guestRef = db.doc(`guests/${normalizedName}`)
     const guestSnap = await guestRef.get()

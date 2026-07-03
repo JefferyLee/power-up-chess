@@ -624,3 +624,16 @@ button.puc-gate__lb-name--link:hover {
   .puc-gate-overlay { padding: 14px; }
   .puc-gate-overlay__card { max-height: 88vh; }
 }
+
+/* Phase 3.8 — quiet privacy link pinned to the gate's corner. */
+.puc-gate__privacy {
+  position: fixed;
+  right: 14px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  z-index: 5;
+  font-size: 12px;
+  color: var(--puc-text-muted, #b9ad8e);
+  opacity: 0.7;
+  text-decoration: underline dotted;
+}
+.puc-gate__privacy:hover { opacity: 1; color: var(--puc-text-accent, #f4c266); }

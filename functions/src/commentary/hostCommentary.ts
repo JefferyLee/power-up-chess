@@ -1,7 +1,7 @@
 import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
-import { callGemini } from './gemini'
+import { callGeminiWithTimeout } from './gemini'
 import { consumeDailyQuota } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
@@ -40,7 +40,7 @@ export interface HostCommentaryRequest {
 
 export interface HostCommentaryResponse {
   text: string
-  source: 'cache' | 'llm'
+  source: 'cache' | 'llm' | 'fallback'
 }
 
 export const hostCommentary = onCall<HostCommentaryRequest, Promise<HostCommentaryResponse>>(
@@ -91,13 +91,24 @@ export const hostCommentary = onCall<HostCommentaryRequest, Promise<HostCommenta
     // its prose too tightly.
     const userPrompt = buildUserPrompt(data, playerName)
 
-    const text = await callGemini({
-      apiKey: GEMINI_API_KEY.value(),
-      systemPrompt: HOST_PERSONAS[data.host],
-      userPrompt,
-      temperature: 0.7,
-      maxOutputTokens: 120,
-    })
+    // Phase 3.3 — server-side fallback: a Gemini timeout / 5xx / safety
+    // block returns a warm template line instead of a naked 500 (the client
+    // has its own 3s fallback, but slow-not-dead calls used to surface as
+    // errors).
+    let text: string
+    try {
+      text = await callGeminiWithTimeout({
+        apiKey: GEMINI_API_KEY.value(),
+        systemPrompt: HOST_PERSONAS[data.host],
+        userPrompt,
+        temperature: 0.7,
+        maxOutputTokens: 120,
+      })
+      if (!text.trim()) throw new Error('empty completion')
+    } catch (err) {
+      console.warn('hostCommentary: LLM failed, template fallback:', err instanceof Error ? err.message : err)
+      return { text: fallbackLine(data.classification), source: 'fallback' }
+    }
 
     // Trim to 1-2 sentences if the model went long. Most replies will already
     // be short; this is a safety net.
@@ -137,4 +148,14 @@ function clipToSentences(text: string, maxSentences: number): string {
   const parts = trimmed.match(/[^.!?]+[.!?]+/g)
   if (!parts || parts.length <= maxSentences) return trimmed
   return parts.slice(0, maxSentences).join(' ').trim()
+}
+
+/** Server-side template fallback (Phase 3.3) — honest, classification-aware. */
+function fallbackLine(classification: string): string {
+  switch (classification) {
+    case 'brilliant': return 'What a move — genuinely special. Take a bow!'
+    case 'blunder': return 'Ouch — that one hurt. Take a breath; the next move is a fresh start.'
+    case 'mistake': return 'Not the best square for that piece. See what it left undefended?'
+    default: return 'Solid choice. Keep an eye on what your opponent wants to do next.'
+  }
 }

@@ -391,7 +391,7 @@ function ReviewView({
           // If the timeout already filled a template, replace it with the LLM
           // result — the LLM line is what we wanted in the first place.
           const next = new Map(prev)
-          next.set(selected.index, { text: res.text, source: res.source })
+          next.set(selected.index, { text: res.text, source: res.source === 'fallback' ? 'template' : res.source })
           return next
         })
       })
@@ -421,7 +421,7 @@ function ReviewView({
 
   // Story Review — fired once when analysis is ready.
   const [recap, setRecap] = useState<
-    { status: 'loading' } | { status: 'ready'; text: string; source: 'llm' | 'cache' } | { status: 'error' } | null
+    { status: 'loading' } | { status: 'ready'; text: string; source: 'llm' | 'cache' | 'fallback' } | { status: 'error' } | null
   >(null)
 
   useEffect(() => {
