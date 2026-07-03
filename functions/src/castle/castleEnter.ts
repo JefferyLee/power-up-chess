@@ -35,11 +35,11 @@ const MAX_ATTEMPTS_PER_DAY = 50
 const MINUTE_MS = 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
 
-function normalize(name: string): string {
+export function normalize(name: string): string {
   return name.trim().toLowerCase()
 }
 
-function sanitizeDisplayName(name: string): string {
+export function sanitizeDisplayName(name: string): string {
   // Strip control chars + clamp to NAME_MAX. Allow Unicode letters/emoji.
   // eslint-disable-next-line no-control-regex
   const stripped = name.replace(/[\u0000-\u001f\u007f]/g, '').trim()
@@ -90,12 +90,12 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
     }
 
     // Roll the 1-minute window.
-    const windowFresh = now - attempts.windowStart < MINUTE_MS
-    const nextWindowStart = windowFresh ? attempts.windowStart : now
-    const nextTotal = windowFresh ? attempts.totalInWindow + 1 : 1
+    const roll = rollEnterWindow(attempts, now)
+    const nextWindowStart = roll.windowStart
+    const nextTotal = roll.totalInWindow
 
-    if (nextTotal > MAX_ATTEMPTS_PER_MINUTE) {
-      const blockedUntil = nextWindowStart + MINUTE_MS
+    if (roll.blockedUntil !== undefined) {
+      const blockedUntil = roll.blockedUntil
       await attemptsRef.set({
         ...attempts,
         windowStart: nextWindowStart,
@@ -259,9 +259,9 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
       }
     } else {
       // Wrong magic.
-      nextConsecutiveWrong = attempts.consecutiveWrong + 1
-      const attemptsRemaining = Math.max(0, 3 - nextConsecutiveWrong)
-      result = { status: 'wrong-magic', attemptsRemaining }
+      const strike = wrongMagicStrike(attempts.consecutiveWrong)
+      nextConsecutiveWrong = strike.nextConsecutiveWrong
+      result = { status: 'wrong-magic', attemptsRemaining: strike.attemptsRemaining }
     }
 
     // Persist the attempts state + daily counter.
@@ -309,7 +309,7 @@ function mintSessionId(): string {
  *  Streak rule: dayKey delta of 1 continues; 0 means already claimed today;
  *  anything ≥ 2 resets the streak to 1. Same-day re-entries are bonus-free
  *  to keep the system honest. */
-function computeEnterBonus(existing: GuestDoc, now: number): EnterBonus {
+export function computeEnterBonus(existing: GuestDoc, now: number): EnterBonus {
   const todayKey = Math.floor(now / DAY_MS)
   const lastKey = existing.lastCheckInDayKey ?? -Infinity
   const delta = todayKey - lastKey
@@ -327,4 +327,28 @@ function computeEnterBonus(existing: GuestDoc, now: number): EnterBonus {
     streakDays: nextStreak,
     total: checkIn + streak,
   }
+}
+
+/** Pure per-minute window roll for castleEnter rate limiting (Phase 0.5).
+ *  Counts this attempt; `blockedUntil` is set when it exceeds the cap. */
+export function rollEnterWindow(
+  attempts: Pick<EnterAttemptsDoc, 'windowStart' | 'totalInWindow'>,
+  now: number,
+): { windowStart: number; totalInWindow: number; blockedUntil?: number } {
+  const fresh = now - attempts.windowStart < MINUTE_MS
+  const windowStart = fresh ? attempts.windowStart : now
+  const totalInWindow = fresh ? attempts.totalInWindow + 1 : 1
+  if (totalInWindow > MAX_ATTEMPTS_PER_MINUTE) {
+    return { windowStart, totalInWindow, blockedUntil: windowStart + MINUTE_MS }
+  }
+  return { windowStart, totalInWindow }
+}
+
+/** Pure 3-strike arithmetic for a wrong magic word (Phase 0.5). */
+export function wrongMagicStrike(prevConsecutiveWrong: number): {
+  nextConsecutiveWrong: number
+  attemptsRemaining: number
+} {
+  const nextConsecutiveWrong = prevConsecutiveWrong + 1
+  return { nextConsecutiveWrong, attemptsRemaining: Math.max(0, 3 - nextConsecutiveWrong) }
 }

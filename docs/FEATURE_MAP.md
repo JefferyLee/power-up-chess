@@ -83,7 +83,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
 | Mobile/iPad polish v2 (Phase 6) | shipped | safe-area insets on headers; `pointer:coarse` ≥44px tap targets; Plot/Daily/Leaderboard stack in iPad portrait |
 | LLM/TTS daily quota enforcement | shipped | `consumeDailyQuota`, chat rate-limit |
-| Billing budget alert (COST_GUARDRAILS Layer 3) | **planned** | documented, not configured (manual GCP) |
+| Billing budget alert (COST_GUARDRAILS Layer 3) | shipped | $25/mo budget, 50/90/100% email alerts (verified 2026-07-03) |
 | First-visit onboarding funnel | shipped | `FirstVisitGuide` — one-time, skippable (Phase 1A) |
 | "Today's practice" aggregation | shipped | `TodaysPractice` card: Daily Five + practice + review-last (Phase 1B) |
 | Learning GA events (daily_practice_started, tutorial_completed, story_review_opened) | shipped | wired into DailyFive / LessonScreen / review (Phase 4C) |

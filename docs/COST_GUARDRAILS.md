@@ -36,25 +36,22 @@ Every LLM result is cached by
 a position never re-calls the LLM. Same-shape positions (e.g. opening
 positions) get especially cheap once warm.
 
-## Layer 3: GCP Billing budget alerts (manual setup)
+## Layer 3: GCP Billing budget alerts — CONFIGURED (2026-07-03)
 
-The CLI can't create a billing budget — set up in the Cloud Console.
-Suggested config for the `power-up-chess-dev` project:
+Verified live on billing account `0119DC-C09A0D-F85476`:
 
-1. <https://console.cloud.google.com/billing/01D3F4-XXXXX-XXXXX/budgets>
-   (Billing > Budgets & alerts > **Create budget**)
-2. **Scope**: This billing account → `power-up-chess-dev` project only.
-3. **Amount**: $20/month is a reasonable starting target.
-4. **Threshold rules**:
-   - 50% — informational ("watch this")
-   - 90% — escalation ("act soon")
-   - 100% — emergency
-5. **Notification email**: zhipeng.li@gmail.com (the project owner).
-6. Optionally connect a Pub/Sub topic if you want a Cloud Function to
-   programmatically disable the user-facing buttons on 100%.
+- **Budget**: "Firebase Project power-up-chess-dev"
+  (`budgets/1be652f9-fe38-470a-b946-924a6c931324`)
+- **Scope**: `power-up-chess-dev` project only, calendar month.
+- **Amount**: **$25 USD / month** (per Jeff, 2026-07-03).
+- **Threshold alerts**: 50% / 90% / 100% of current spend.
+- **Notifications**: default rule → email to the Billing Account
+  Admins/Users (zhipeng.li@gmail.com).
 
-Run this once. The dashboard alone won't surface a problem in real time
-— the email alerts will.
+Console: Billing → Budgets & alerts. Optionally connect a Pub/Sub topic
+later if a Cloud Function should programmatically disable user-facing
+buttons at 100%. The dashboard alone won't surface a problem in real
+time — the email alerts will.
 
 ## Layer 4: What we're *not* doing (and why)
 

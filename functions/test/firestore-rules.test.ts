@@ -141,3 +141,106 @@ describe('firestore rules: /commentary/{hash}', () => {
     await assertFails(setDoc(doc(alice.firestore(), 'commentary/abc'), { text: 'Hi' }))
   })
 })
+
+// ── Phase 0.3 (AUDIT_AND_PLAN) — coverage for the remaining main collections ──
+
+async function seed(path: string, data: Record<string, unknown>) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), path), data)
+  })
+}
+
+describe('firestore rules: /guests/{normalizedName}', () => {
+  it('the owner (uid listed on the doc) can read their guest doc', async () => {
+    await seed('guests/ada', { displayName: 'Ada', uids: ['uid-ada'], castlePoints: 100 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertSucceeds(getDoc(doc(ada.firestore(), 'guests/ada')))
+  })
+  it('another signed-in user cannot read someone else’s guest doc', async () => {
+    await seed('guests/ada', { displayName: 'Ada', uids: ['uid-ada'], castlePoints: 100 })
+    const eve = env.authenticatedContext('uid-eve')
+    await assertFails(getDoc(doc(eve.firestore(), 'guests/ada')))
+  })
+  it('clients cannot write guest docs (points are server-authoritative)', async () => {
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'guests/ada'), { castlePoints: 999999 }))
+  })
+})
+
+describe('firestore rules: lobby chat + presence', () => {
+  it('signed-in users can read lobby messages', async () => {
+    await seed('lobby/messages/items/m1', { name: 'Ada', text: 'hi', kind: 'user', ts: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertSucceeds(getDoc(doc(ada.firestore(), 'lobby/messages/items/m1')))
+  })
+  it('anonymous clients cannot read lobby messages', async () => {
+    await seed('lobby/messages/items/m2', { name: 'Ada', text: 'hi', kind: 'user', ts: 1 })
+    const anon = env.unauthenticatedContext()
+    await assertFails(getDoc(doc(anon.firestore(), 'lobby/messages/items/m2')))
+  })
+  it('clients cannot post chat directly (postChat function only)', async () => {
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'lobby/messages/items/mine'), { text: 'spoof', kind: 'user', ts: 1 }))
+  })
+  it('clients cannot write presence directly', async () => {
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'lobby/presence/items/s1'), { name: 'Ada' }))
+  })
+})
+
+describe('firestore rules: /chat_identity/{uid}', () => {
+  it('is fully function-only — even the owner cannot read or write', async () => {
+    await seed('chat_identity/uid-ada', { displayName: 'Ada', normalizedName: 'ada' })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(getDoc(doc(ada.firestore(), 'chat_identity/uid-ada')))
+    await assertFails(setDoc(doc(ada.firestore(), 'chat_identity/uid-ada'), { displayName: 'Fake' }))
+  })
+})
+
+describe('firestore rules: /invitations/{inviteId}', () => {
+  it('signed-in users can read invitations; writes are function-only', async () => {
+    await seed('invitations/i1', { from: 'ada', to: 'bob', status: 'pending' })
+    const bob = env.authenticatedContext('uid-bob')
+    await assertSucceeds(getDoc(doc(bob.firestore(), 'invitations/i1')))
+    await assertFails(setDoc(doc(bob.firestore(), 'invitations/i2'), { from: 'bob', to: 'ada' }))
+  })
+})
+
+describe('firestore rules: wizard rooms + chat', () => {
+  it('signed-in users (incl. spectators) can read wizard rooms and messages', async () => {
+    await seed('wizard_rooms/W1', { status: 'live' })
+    await seed('wizard_rooms/W1/messages/m1', { text: 'gg', uid: 'uid-ada', ts: 1 })
+    const eve = env.authenticatedContext('uid-eve')
+    await assertSucceeds(getDoc(doc(eve.firestore(), 'wizard_rooms/W1')))
+    await assertSucceeds(getDoc(doc(eve.firestore(), 'wizard_rooms/W1/messages/m1')))
+  })
+  it('even a player cannot write wizard chat directly (function-only)', async () => {
+    await seed('wizard_rooms/W2', { status: 'live', white: { playerId: 'uid-ada' } })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'wizard_rooms/W2/messages/mine'), { text: 'spoof', uid: 'uid-ada', ts: 1 }))
+  })
+})
+
+describe('firestore rules: server-only counters & ledgers', () => {
+  it('castle_enter_attempts is unreadable + unwritable by its own uid', async () => {
+    await seed('castle_enter_attempts/uid-ada', { consecutiveWrong: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(getDoc(doc(ada.firestore(), 'castle_enter_attempts/uid-ada')))
+    await assertFails(setDoc(doc(ada.firestore(), 'castle_enter_attempts/uid-ada'), { consecutiveWrong: 0 }))
+  })
+  it('castle_point_audit is fully closed to clients', async () => {
+    await seed('castle_point_audit/e1', { delta: 10 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(getDoc(doc(ada.firestore(), 'castle_point_audit/e1')))
+    await assertFails(setDoc(doc(ada.firestore(), 'castle_point_audit/e2'), { delta: 99999 }))
+  })
+})
+
+describe('firestore rules: /tournaments/{weekKey}', () => {
+  it('signed-in users can read; writes are function-only', async () => {
+    await seed('tournaments/2026-W27', { participants: [] })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertSucceeds(getDoc(doc(ada.firestore(), 'tournaments/2026-W27')))
+    await assertFails(setDoc(doc(ada.firestore(), 'tournaments/2026-W27'), { participants: [{ normalizedName: 'ada' }] }))
+  })
+})
