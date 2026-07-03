@@ -77,7 +77,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Wizard chat → Hall mirror (Phase 1.1/1.2) | shipped | duel text mirrored verbatim, voice as metadata notice; report cascade hides room copy; NO private channels anywhere (audited 2026-07-03) |
 | Moderation ban (Phase 1.3) | shipped | `setUserBan` (admin): guest.banned + banned_uids; blocks Hall + presence + Wizard posting |
 | Gemini safetySettings (Phase 1.6) | shipped | BLOCK_LOW_AND_ABOVE on all 4 harm categories, single wrapper covers all 6 call sites |
-| App Check (Phase 1.7) | **partial** | client scaffold behind VITE_APPCHECK_SITE_KEY; console registration + enforcement pending (Jeff step) |
+| App Check (Phase 1.7) | **partial** | client LIVE in monitor mode (reCAPTCHA v3, 2026-07-03); watch console metrics a few days, then enforce per-callable |
 | Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
