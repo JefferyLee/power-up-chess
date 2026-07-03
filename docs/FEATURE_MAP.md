@@ -80,6 +80,14 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | App Check (Phase 1.7) | **partial** | client LIVE in monitor mode (reCAPTCHA v3, 2026-07-03); watch console metrics a few days, then enforce per-callable |
 | Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
 | Ada UX pass (Phase 2) | shipped | AI Hint ×3/game (engine arrow) · Hall 3-tier split · review kid-mode (engine numbers folded) · MuteButton mounted + reduced-motion celebrations · friendly unlock copy ("N Daily Fives") · in-game host whispers (check/castle/promote, throttled templates) · invite dialog focus-trap/Escape · board keyboard cursor + aria · honest Shop/Tournament copy |
+| Shared definitions (Phase 3.1) | shipped | one source of truth in `functions/src/shared/` (roomTypes, personas, wizard types+spells); web imports via `@shared` alias |
+| Server LLM fallback (Phase 3.3) | shipped | commentary/recap/explain race an 8s timeout → honest template (`source:'fallback'`), never a naked 500 |
+| Cross-device "my games" (Phase 3.4) | shipped | `syncDeviceGame` uploads local/AI games; `/history` merges account archive with device games |
+| Per-name enter throttle (Phase 3.5) | shipped | `castle_enter_attempts_byname` window on top of per-uid |
+| E2E smoke (Phase 3.6) | **partial** | Playwright gate+privacy specs green vs live site, weekly workflow; full sign-in happy path needs a disposable-identity story |
+| Leaderboard opt-out (Phase 3.7) | shipped | `hideFromLeaderboards` via setPrivacyPrefs; enforced in gate top-5 / puzzle boards / find-player; toggle in Settings |
+| In-app privacy note (Phase 3.8) | shipped | `/privacy`, linked from gate + Settings |
+| callables.ts split (Phase 3.2) | **planned** | attempted, reverted — interleaved sections need a careful dedicated pass |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |
