@@ -1,5 +1,9 @@
 # MVP2 — Power Up Castle
 
+> **已交付，归档参考 (Delivered — archived for reference, 2026-07-03).** This plan
+> shipped; for current build status see [`FEATURE_MAP.md`](FEATURE_MAP.md). Do not
+> implement from this document.
+
 Last updated: 2026-06-01
 Status: **Locked — ready for implementation (Phase A starts next)**
 

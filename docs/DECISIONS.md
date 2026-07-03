@@ -42,6 +42,7 @@ Last updated: 2026-05-31
     - Good / Excellent: cp loss ≤ 50, with Excellent reserved for top-engine matches in tactical positions
     - Brilliant: dedicated heuristic (best or near-best engine move + material sacrifice not immediately recovered + eval preserved or improved + position non-trivial). See `TECHNICAL_ARCHITECTURE.md` for full spec.
 20. **MVP0 Power-up scope**: only **Capture Spark**. Tactic Bloom, Crown Spark, Replay Ribbon, Hint Sparkle are deferred.
+    - **Update 2026-07-03 (shipped reality):** in-game power-ups now are **Capture Spark** (template lines), **Tactic Bloom** (value-≥3 capture with check context) and **Crown Badge**; the grand win ceremony is milestone-only. **Hint Sparkle was superseded** by the generic AI-practice 💡 Hint (engine arrow, 3/game). Replay Ribbon exists as the review screen's per-move Replay (▶).
 21. **MVP0 Host UI**: single active host only. Player picks Lucy or Luca at session start. "Both" and "Surprise" defer to MVP1.
 22. **Devices in MVP0**: desktop + tablet web only. No mobile-phone layout.
 23. **Puzzle source**: puzzles may be extracted from the books in `docs/books_and_references/`. The user owns rights review for each source; engineering should not block on it but must store `rightsStatus` per puzzle.

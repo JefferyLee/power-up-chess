@@ -1,5 +1,9 @@
 # MVP3 — Next Steps Plan
 
+> **已交付，归档参考 (Delivered — archived for reference, 2026-07-03).** This plan
+> shipped; for current build status see [`FEATURE_MAP.md`](FEATURE_MAP.md). Do not
+> implement from this document.
+
 Adopted 2026-06-02 after a full-project review. Slots into the
 roadmap after the MVP2 castle / hall / puzzles / wizard / feedback /
 sign work completes.

@@ -15,9 +15,9 @@ Last reviewed: 2026-05-31
 | Hosting | Firebase Hosting |
 | Local storage | Browser IndexedDB (via `idb` or `Dexie`) for match history |
 | Host commentary LLM | `gemini-3.5-flash` (Google Generative AI SDK) |
-| Devices | Desktop and tablet browsers only in MVP0 |
+| Devices | Desktop + tablet are the primary targets. **Phones are supported (safe-area, ≥44px touch targets, portrait-locked PWA) but are not a primary optimization target** — Jeff's ruling, AUDIT_AND_PLAN 2026-07-02 |
 
-MVP1 extensions: Firestore-backed cross-device match history, deeper Stockfish analysis (possibly server-side), more themes, puzzle import pipeline producing `data/puzzles/*.json`.
+Shipped since: Firestore-backed cross-device match history (`syncDeviceGame`, Phase 3.4), the Lichess puzzle import (`data/puzzles/lichess.json`), 8 cosmetic piece sets, and the Castle/Hall social layer.
 
 References:
 - Firebase Hosting: https://firebase.google.com/docs/hosting
@@ -41,12 +41,17 @@ Each private game lives in a Firestore document tree:
   - theme: "magic-forest"
   - createdAt, updatedAt
 
-/rooms/{roomId}/moves/{moveIndex}
-  - san, uci
-  - fenBefore, fenAfter
-  - byPlayerId
-  - clientTimestamp, serverTimestamp
+  - moves: Move[]        // INLINE array on the room doc (not a subcollection)
+  - timeControl, whiteTimeMs, blackTimeMs, lastTickServerTs
+  - takeback, takebacksUsed
+
+Move = { san, uci, fenBefore, fenAfter, byPlayerId, clientTs, serverTs }
 ```
+
+> **Revised 2026-07-03:** moves live as an **inline `moves[]` array** on the
+> room document (see `functions/src/shared/roomTypes.ts`) — one listener, one
+> transaction, and a 200-move game is only ~40 KB, far under the 1 MB doc cap.
+> The `/moves` subcollection described in earlier drafts was never shipped.
 
 ### Move write path
 
@@ -56,13 +61,12 @@ Each private game lives in a Firestore document tree:
    - Confirms `auth.uid` matches the side to move.
    - Replays the move list with chess.js to derive the authoritative current FEN.
    - Validates the submitted UCI is legal in that position.
-   - Writes the new `moves/{n}` doc and updates `currentFen` / `status` / timestamps in a single Firestore transaction.
-3. Both clients are subscribed to the room and `moves` subcollection via realtime listeners; they re-render on the snapshot.
+   - Appends to the inline `moves[]` and updates `currentFen` / `status` / clocks / timestamps in a single Firestore transaction (validation core: pure `applyMove()`, unit-tested).
+3. Both clients subscribe to the room document via one realtime listener; they re-render on the snapshot.
 
 ### Security rules
 
-- `/rooms/{roomId}`: read allowed for the two listed `playerId`s; writes only by Cloud Function (service account).
-- `/rooms/{roomId}/moves/{n}`: read by the two players; **no** client writes.
+- `/rooms/{roomId}`: read for any signed-in user (spectators welcome); **all** writes only by Cloud Functions. Rules are emulator-tested in CI (`functions/test/firestore-rules.test.ts`).
 
 This pattern keeps chess.js as the single source of truth for legal moves and means a hostile client cannot inject illegal moves.
 
@@ -251,12 +255,20 @@ For MVP0:
 - Match history in browser IndexedDB.
 - LLM calls server-side from Cloud Functions; API key never reaches the client.
 
-For MVP1:
-- Keep private rooms by default.
-- Avoid open chat.
-- Store minimal personal data in Firestore (only when needed for cross-device history).
-- Add data deletion support before broader release.
-- Review COPPA requirements before any public release directed to children under 13 in the US.
+Chat architecture as SHIPPED (revised 2026-07-03):
+- **Standard chess games (online / local / AI) have no chat at all.**
+- The Great Hall has ONE shared chat: server-side two-tier profanity filter
+  (severe → reject with evasion normalisation), PII scrub, per-uid rate
+  limits, report → auto-hide at 3 distinct flags, server-bound display
+  names, LLM host replies scrubbed on output.
+- **Wizard's Duel room chat (text + ≤15s voice) is never room-private:**
+  every text message mirrors into the Hall feed atomically; voice posts a
+  metadata notice there. Report-hide cascades back to the room copy.
+  There are NO two-uid-only channels anywhere (audited 2026-07-03).
+- Data deletion shipped (`forgetMe`); leaderboard opt-out shipped
+  (`hideFromLeaderboards`); privacy note in-app at `/privacy`.
+- COPPA review remains a Path C (public release) gate — see
+  `COPPA_CHECKLIST.md`.
 
 Reference:
 - FTC children's privacy guidance: https://www.ftc.gov/business-guidance/privacy-security/childrens-privacy

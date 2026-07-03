@@ -1,12 +1,13 @@
 # Feature Map & Status (living)
 
-Last updated: 2026-07-01
+Last updated: 2026-07-03 (Path B Phase 4 doc sprint)
 
 This is the **one-page source of truth** for "what exists, where it lives, and how done it is." When docs and the running app disagree, trust this file (and the code). Older planning docs (`MVP_ROADMAP.md`, `PRD.md`, `OPEN_QUESTIONS.md`) describe intent; this describes reality.
 
 Live app: <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, behind Cloudflare).
 Landing: <https://powerupcastle-landing.web.app>.
 Run locally: see [README](../README.md#quickstart) → `pnpm install && pnpm dev`.
+Device policy: desktop + tablet primary; **phones supported (safe-area, ≥44px targets) but not a primary optimization target** (Jeff, 2026-07-02).
 
 ---
 
@@ -21,8 +22,8 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Learn chess (5 lessons) | `/learn` | learn | **+50** on series complete | yes (teaching) |
 | Puzzle Garden | `/puzzles` | learn | earns on solve; **+10** Daily Five | yes (tactics) |
 | Knight's Hop | `/knights-hop` | learn | — | piece-movement game |
-| Endgame Drills | `/endgame` | learn | — | yes |
-| Opening Trainer | `/openings` | learn | — | yes |
+| Endgame Drills | `/endgame` | learn | earns on first clear + lesson-master bonus | yes |
+| Opening Trainer | `/openings` | learn | earns on first clear | yes |
 | Online Chess | `/r/:roomId` | play | **gated ≥200**; review earns; takeback spends | yes |
 | Local Chess | `/local` | play | ungated; review earns | yes |
 | Practice with host (AI) | `/ai` | play | **gated ≥200**; review earns | yes |
@@ -90,6 +91,9 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | callables.ts split (Phase 3.2) | **planned** | attempted, reverted — interleaved sections need a careful dedicated pass |
 | Tournament | shipped | weekly cycle built: signup, pairings (`pairing.ts`), rounds (`startNextRound`), tournament rooms, result reporting, champion crown |
 | Teams | shipped | `/team/:teamId` |
+| Invitations (play/duel invites) | shipped | sendInvite/respond/cancel + InviteInbox (focus-trapped dialog) |
+| Presence + Hearth ticker | shipped | 20s heartbeat, `chat_identity` shadow (server-bound names), online list + find player |
+| CI (GitHub Actions) | shipped | typecheck+lint+test+build + emulator rules-tests on every push/PR; weekly E2E smoke workflow |
 | Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |
 | Library / Book Owl | shipped | proxies book-seek |
 | Side games (Forest, Wizard's Duel + v2, Knight's Hop, Knight's Run, Tower Defense) | shipped | |

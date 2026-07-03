@@ -1,33 +1,41 @@
-# COPPA / child-safety self-check (draft)
+# COPPA / child-safety self-check
 
-**Status: DRAFT self-assessment, not legal advice.** 2026-07-01. Per
-`DECISIONS.md`, a real COPPA review is required before any public,
-child-facing release; this checklist is an engineering-side pre-read to make
-that review faster. Owner: Jeff.
+**Status: engineering self-assessment, not legal advice.** Updated 2026-07-03
+(Path B Phase 4.6). Owner: Jeff.
 
-COPPA applies to operators of online services directed at children under 13 in
-the US, and governs collection/use/disclosure of a child's **personal
-information**. The core mitigations below.
+Paths (per `AUDIT_AND_PLAN.md`): **B** = friends-and-family testing (current);
+**C** = public child-facing release (future). Each row is tagged with the path
+that requires it.
 
-| Area | Requirement (paraphrased) | Where we stand | Gap / action |
+| Area | Requirement (paraphrased) | Where we stand | Path |
 | --- | --- | --- | --- |
-| **Data minimization** | Collect only what's needed | Display name + `sha256(magic word)` only; no real name/email/phone/DOB/password | ✅ strong. Keep resisting new PII fields |
-| **No PII in free text** | Don't let kids leak PII | Chat scrubs email/phone patterns + profanity server-side | ✅ implemented; ⚠️ pattern-based, not perfect — periodic review |
-| **Parental notice** | Clear privacy notice | `docs/PRIVACY.md` draft (parent-facing) | ⚠️ draft; finalize + surface in-app before public release |
-| **Verifiable parental consent** | Required before collecting PII from under-13 (public release) | Not implemented — currently family/private testing | ❌ **needed before public release**; decide consent flow (or keep invite-only/family) |
-| **Right to review/delete** | Parents can review & delete a child's data | `forgetMe` deletes account+data (server) + full local wipe; control on `/me` | ✅ deletion shipped; review = the plaque/profile view |
-| **Data retention** | Don't keep longer than needed | Local-first; presence TTLs out; dormant-guest sweep exists | ⚠️ document a retention policy; confirm chat/audit retention |
-| **No behavioral advertising** | No ad targeting of kids | No ads, no ad SDKs, no cross-site trackers | ✅ |
-| **Third-party disclosure** | Limit sharing; vet processors | Only Google (Firebase + Gemini), server-side keys | ⚠️ confirm Google's child-data terms (Firebase COPPA guidance, Gemini data-use for API calls) cover our usage |
-| **AI content to third party** | Sending kids' data to an AI | Game moves sent to Gemini for commentary; **opt-out shipped** (template-only hosts) | ⚠️ consider default-off or explicit parent opt-in for public release |
-| **Security** | Reasonable safeguards | Anonymous Auth; server-authoritative validators; Firestore rules; magic word is **deliberately weak** (not protecting PII, since none collected) | ✅ for the data held; note the weak-auth stance in the review |
-| **Public exposure of a child** | Minimize public profile | Display name only; leaderboards show display name; **ranking is automatic (no opt-in)** | ⚠️ consider leaderboard opt-in before public release |
+| Data minimization | Collect only what's needed | ✅ display name + sha256(magic word) only; no real name/email/phone/DOB | B ✅ |
+| No PII in free text | Kids can't leak contact info | ✅ email/phone scrub + two-tier profanity (severe → reject, evasion-normalised); unit-tested | B ✅ |
+| No private channels | No unsupervised 1:1 contact | ✅ standard games chat-free; Hall single moderated stream; Wizard chat mirrors to Hall; no-DM audit 2026-07-03 | B ✅ |
+| Reporting & moderation | Users can report; action follows | ✅ report → auto-hide at 3 flags (cascades to Wizard source); admin `setUserBan` | B ✅ |
+| Identity integrity | No impersonation | ✅ display names server-bound (presence/chat/seats); profane names rejected at registration | B ✅ |
+| Right to review/delete | Parents can erase a child's data | ✅ `forgetMe` (server + full local wipe), control on `/me` | B ✅ |
+| AI data flow + opt-out | Child data to an LLM is controlled | ✅ Gemini server-side only, strictest safetySettings, LLM output scrubbed; **template-only toggle** in Settings | B ✅ |
+| Public exposure | Minimize a child's public footprint | ✅ leaderboard **opt-out** (`hideFromLeaderboards`) covers gate top-5 / puzzle boards / search | B ✅ |
+| Parental notice | Clear privacy statement | ✅ in-app `/privacy` (gate + Settings) synced with `PRIVACY.md` draft | B ✅ (C: legal-reviewed final) |
+| Abuse hardening | Bots/scripts can't farm the API | ✅ per-uid + per-name rate limits, App Check client live (monitor) | B ✅ (C: App Check **enforce**) |
+| No behavioral ads | No ad targeting of kids | ✅ no ads/ad SDKs; analytics hashed-uid product metrics only | B ✅ |
+| **Verifiable parental consent** | Required before collecting PII from under-13s at scale | ❌ not implemented — Path B stays invite/family | **C 必需** |
+| **Third-party terms review** | Firebase + Gemini children's-data terms confirmed | ⚠️ not formally reviewed | **C 必需** |
+| **Data-retention policy** | Written retention schedule | ⚠️ TTLs + dormant-guest sweep exist; no written policy | **C 必需** |
+| **Legal COPPA sign-off** | Counsel review, dated | ❌ | **C 必需** |
+| Wizard voice STT moderation | Transcribe + filter voice clips | ⚠️ Path B mitigation = Hall mirror notice + limits + report; full STT pipeline | **C 必需** |
 
-## Before any public / non-family release
-1. Finalize `PRIVACY.md` and surface it in-app (gate + footer).
-2. Decide the consent model: stay invite-only/family, or build verifiable
-   parental consent.
-3. Confirm Google Firebase + Gemini terms for children's data.
-4. Decide AI default (on vs. parent-opt-in) and leaderboard opt-in.
-5. Write a short data-retention policy.
-6. Record the outcome (dated sign-off or accepted-risk) in `DECISIONS.md`.
+## Path B verdict (2026-07-03)
+
+Every Path-B row is ✅. Remaining human steps before inviting families:
+Jeff walks the report→hide and forget-me flows once on production, and flips
+App Check to enforce after a clean monitor window.
+
+## Before Path C (public release)
+
+1. Verifiable parental consent flow (or stay invite-only).
+2. Legal review: COPPA + Google (Firebase/Gemini) children's-data terms.
+3. Written data-retention policy.
+4. Wizard voice STT moderation pipeline.
+5. Final, legal-reviewed privacy statement replacing the draft.
