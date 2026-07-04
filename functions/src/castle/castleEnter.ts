@@ -47,7 +47,7 @@ export function sanitizeDisplayName(name: string): string {
   return stripped.slice(0, NAME_MAX)
 }
 
-export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterResponse>>({ enforceAppCheck: true },
+export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterResponse>>({ enforceAppCheck: false },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before entering the castle.')

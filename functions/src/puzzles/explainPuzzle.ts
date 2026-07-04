@@ -29,7 +29,7 @@ export interface ExplainPuzzleResponse {
 }
 
 export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleResponse>>(
-  { enforceAppCheck: true, secrets: [GEMINI_API_KEY] },
+  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const data = req.data

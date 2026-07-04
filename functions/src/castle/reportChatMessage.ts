@@ -29,7 +29,7 @@ export interface ReportChatResponse {
   already?: boolean
 }
 
-export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatResponse>>({ enforceAppCheck: true },async (req) => {
+export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatResponse>>({ enforceAppCheck: false },async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in to report a message.')
   }

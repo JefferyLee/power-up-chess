@@ -48,7 +48,7 @@ async function deleteQuery(db: Firestore, query: Query): Promise<number> {
   return total
 }
 
-export const forgetMe = onCall<ForgetMeRequest, Promise<ForgetMeResponse>>({ enforceAppCheck: true },async (req) => {
+export const forgetMe = onCall<ForgetMeRequest, Promise<ForgetMeResponse>>({ enforceAppCheck: false },async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const uid = req.auth.uid
   const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()

@@ -79,7 +79,7 @@ function emptyEarn(dayKey: number): GuestDailyEarn {
   return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0, mystery: 0 }
 }
 
-export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>({ enforceAppCheck: true },
+export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>({ enforceAppCheck: false },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before earning points.')

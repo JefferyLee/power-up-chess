@@ -44,7 +44,7 @@ export interface HostCommentaryResponse {
 }
 
 export const hostCommentary = onCall<HostCommentaryRequest, Promise<HostCommentaryResponse>>(
-  { enforceAppCheck: true, secrets: [GEMINI_API_KEY] },
+  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before requesting commentary.')

@@ -23,7 +23,7 @@ const HALL_CHAT_COST = 1
 const GENERIC_REPLY = 'I just listened in.'
 
 export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
-  { enforceAppCheck: true, secrets: [GEMINI_API_KEY] },
+  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in before chatting.')
     const uid = req.auth.uid

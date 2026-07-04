@@ -77,7 +77,7 @@ interface PostVoiceResponse {
   castlePoints: number
 }
 
-export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>({ enforceAppCheck: true },
+export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>({ enforceAppCheck: false },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const uid = req.auth.uid
@@ -187,7 +187,7 @@ export const postWizardMessage = onCall<PostRequest, Promise<PostResponse>>({ en
 // Cost is 5 castle points per clip — same atomicity guarantee as the
 // text post (deduct + write or neither).
 
-export const postWizardVoice = onCall<PostVoiceRequest, Promise<PostVoiceResponse>>({ enforceAppCheck: true },
+export const postWizardVoice = onCall<PostVoiceRequest, Promise<PostVoiceResponse>>({ enforceAppCheck: false },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const uid = req.auth.uid
