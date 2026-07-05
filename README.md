@@ -42,3 +42,7 @@ Other scripts (run from repo root): `pnpm build`, `pnpm typecheck`, `pnpm test`,
 - The interface should be in English.
 - The tone should feel magical and celebratory, but never fake. Lucy and Luca should be honest, kind, and accurate.
 - Ada Special Mode should emphasize Ada as a smart, brave chess player.
+
+## License
+
+[MIT](LICENSE)
