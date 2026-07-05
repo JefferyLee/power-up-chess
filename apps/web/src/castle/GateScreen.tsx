@@ -117,8 +117,15 @@ export function GateScreen() {
 
   return (
     <div className="puc-gate">
-      {/* Phase 3.8 — privacy note reachable before sign-in. */}
-      <a className="puc-gate__privacy" href="/privacy">Privacy</a>
+      {/* Phase 3.8 — privacy note reachable before sign-in; the whole
+          project is open source, so the gate links to the repository. */}
+      <footer className="puc-gate__links">
+        <a href="https://github.com/JefferyLee/power-up-chess" target="_blank" rel="noreferrer">
+          Open source on GitHub
+        </a>
+        <span aria-hidden="true">·</span>
+        <a href="/privacy">Privacy</a>
+      </footer>
       <div
         className={`puc-gate__door puc-gate__door--${phase}${knockShake ? ' puc-gate__door--knocked' : ''}`}
         role="button"
