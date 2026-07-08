@@ -9,7 +9,7 @@
 
     <title>Power Up Castle — a warm, safe home where kids learn chess by playing</title>
     <link rel="canonical" href="https://powerupcastle.app/" />
-    <meta name="description" content="A safe-by-design online chess castle for kids ages 5+. Chess Basics, 5,300+ adaptive puzzles, Wizard's Duel, story bookshelf, daily quests, and play with friends — all moderated, no DMs, no public matchmaking." />
+    <meta name="description" content="A safe-by-design, open-source chess castle for kids ages 5+. Lessons, 5,300+ adaptive puzzles, honest Stockfish-backed coaching, a 9,400+ game masters library, and play with friends — all moderated, no DMs, no public matchmaking." />
 
     <!-- Open Graph -->
     <meta property="og:title" content="Power Up Castle" />
@@ -119,7 +119,7 @@
         </a>
 
         <p class="mt-6 text-xs sm:text-sm text-mist/70 font-fell italic">
-          Ages 5+ &nbsp;·&nbsp; Free &nbsp;·&nbsp; Works in any browser, installs as a phone app
+          Ages 5+ &nbsp;·&nbsp; Free &nbsp;·&nbsp; Open source &nbsp;·&nbsp; Works in any browser, installs as a phone app
         </p>
       </div>
     </section>
@@ -133,19 +133,27 @@
         <div class="feature-grid grid gap-4 sm:gap-5 sm:grid-cols-2">
           <div class="feature p-5 sm:p-6">
             <h3 class="font-display text-brass text-lg mb-1">Learn</h3>
-            <p class="text-mist text-sm leading-relaxed">Chess Basics + Knight's Hop — short interactive lessons that take a beginner from zero.</p>
+            <p class="text-mist text-sm leading-relaxed">Chess Basics lessons, endgame drills, an opening trainer, and Knight's Hop — short interactive steps from zero.</p>
           </div>
           <div class="feature p-5 sm:p-6">
             <h3 class="font-display text-brass text-lg mb-1">Solve</h3>
-            <p class="text-mist text-sm leading-relaxed">5,300+ adaptive puzzles across six themed plots, with a daily Today's Five quest.</p>
+            <p class="text-mist text-sm leading-relaxed">5,300+ adaptive puzzles across six themed plots, with a daily Today's Five quest and kid-friendly explanations.</p>
           </div>
           <div class="feature p-5 sm:p-6">
             <h3 class="font-display text-brass text-lg mb-1">Play</h3>
-            <p class="text-mist text-sm leading-relaxed">Invite friends by private link, join the weekly tournament, or train against Lucy and Luca.</p>
+            <p class="text-mist text-sm leading-relaxed">Invite friends by private link, join the weekly tournament, or face a practice partner that adapts to every win and loss.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Review</h3>
+            <p class="text-mist text-sm leading-relaxed">Every game ends with real Stockfish analysis — Best to Blunder, honestly labeled — and Lucy &amp; Luca retell it as a story.</p>
+          </div>
+          <div class="feature p-5 sm:p-6">
+            <h3 class="font-display text-brass text-lg mb-1">Masters Library</h3>
+            <p class="text-mist text-sm leading-relaxed">Replay the classics and 9,400+ grandmaster games — Morphy to Gukesh — with engine commentary on a fullscreen 3D board.</p>
           </div>
           <div class="feature p-5 sm:p-6">
             <h3 class="font-display text-brass text-lg mb-1">Explore</h3>
-            <p class="text-mist text-sm leading-relaxed">Side quests: Forest Adventure, Wizard's Duel, Knight's Run, and a 108-story chess bookshelf.</p>
+            <p class="text-mist text-sm leading-relaxed">Side quests: Forest Adventure, Wizard's Duel, Knight's Run, Tower Defense, and a 108-story chess bookshelf.</p>
           </div>
           <div class="feature p-5 sm:p-6">
             <h3 class="font-display text-brass text-lg mb-1">Collect</h3>
@@ -182,6 +190,14 @@
             <span class="text-brassDeep font-bold flex-none">·</span>
             <span><b>Honest praise only.</b> "Brilliant / Excellent / Mistake / Blunder" comes from Stockfish analysis, not templates — your kid never gets fake compliments.</span>
           </li>
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>AI on a leash.</b> Host commentary runs server-side with the strictest safety filters — and a settings toggle turns AI-generated text off entirely.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="text-brassDeep font-bold flex-none">·</span>
+            <span><b>Leave without a trace.</b> One tap on "forget me" erases everything, server and device. Leaderboards are opt-out too.</span>
+          </li>
         </ul>
       </div>
     </section>
@@ -198,10 +214,25 @@
         <p class="text-mist text-base sm:text-lg leading-relaxed font-fell italic">
           So I built the castle she'd actually want to live in. Every feature you see here is something Ada (or one of her test players) asked for at the kitchen table.
         </p>
-        <p class="text-mist text-base sm:text-lg leading-relaxed font-fell italic mt-4">
-          The whole castle is open source — every line of it is on
-          <a href="https://github.com/JefferyLee/power-up-chess" class="text-brass underline decoration-dotted hover:text-cream">GitHub</a>.
+      </div>
+    </section>
+
+    <!-- ──────────────── Open source ──────────────── -->
+    <section class="px-6 py-16 sm:py-20">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="font-display text-xl sm:text-2xl tracking-widest text-brass mb-6">
+          OPEN SOURCE, ALL OF IT
+        </h2>
+        <p class="text-mist text-base sm:text-lg leading-relaxed font-fell italic mb-8">
+          The whole castle is MIT-licensed. Read every line before your kid signs in,
+          open an issue, or fork it and raise a castle of your own.
         </p>
+        <a
+          href="https://github.com/JefferyLee/power-up-chess"
+          class="inline-block px-8 py-3 rounded-full font-display text-sm sm:text-base tracking-wider border border-brass/60 text-brass hover:bg-brass hover:text-ink transition"
+        >
+          View on GitHub →
+        </a>
       </div>
     </section>
 
@@ -221,10 +252,10 @@
     <!-- ──────────────── Footer ──────────────── -->
     <footer class="px-6 py-10 border-t border-mist/10 text-center">
       <p class="text-xs text-mist/50 mb-2">
-        Powered by chess.js · Stockfish · Anthropic Claude · Firebase
+        Powered by chess.js · Stockfish · Gemini · Firebase &nbsp;·&nbsp; Built with Claude Code
       </p>
       <p class="text-xs text-mist/50 mb-2">
-        Open source ·
+        Open source (MIT) ·
         <a href="https://github.com/JefferyLee/power-up-chess" class="underline decoration-dotted hover:text-brass">github.com/JefferyLee/power-up-chess</a>
       </p>
       <p class="text-xs text-mist/40">
