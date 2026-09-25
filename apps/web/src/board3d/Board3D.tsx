@@ -122,7 +122,7 @@ const PALETTES: Record<Palette3dName, Palette3d> = {
     squareLight: '#9e7f4c',
     squareDark: new THREE.Color(2.5, 2.1, 1.6),
     frame: new THREE.Color(0.92, 0.8, 0.64),
-    white: '#fffaf0',
+    white: '#efe3c4',        // ivory, not white — Jeff's call; renders ≈ #ddd2b6
     black: '#1a100a',
     ambient: 0.42,
     clearcoat: 0.7,
@@ -141,7 +141,7 @@ const PALETTES: Record<Palette3dName, Palette3d> = {
     squareLight: '#a99461',  // sand — renders ≈ #cbbb90
     squareDark: '#1e4d7d',   // navy — renders ≈ #3d70a2
     frame: '#2f3b52',        // dark slate-blue rail
-    white: '#ffffff',        // renders ≈ #f0ede6 — pops on sand and navy alike
+    white: '#f2e9d2',        // ivory — renders ≈ #e0d8c6, still clear of the sand
     black: '#141a26',        // near-black navy — reads on both squares
     ambient: 0.52,
     clearcoat: 0.4,
