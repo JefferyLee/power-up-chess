@@ -7,27 +7,34 @@
 // up, tap one to move (mirrors the 2D click flow — no 3D dragging,
 // which is miserable on touch). Promotion auto-queens, same as 2D.
 //
-// The camera orbits freely (OrbitControls) and stays wherever the
-// player leaves it — no automatic re-orientation between turns.
+// The camera orbits freely (OrbitControls). It swings round smoothly
+// when `facing` changes (pass-and-play) or on the Flip button, and
+// otherwise stays wherever the player leaves it.
 //
 // Move/capture choreography (all cosmetic — chess.js already decided):
-//   - movers tween square→square over MOVE_DUR with cubic ease;
-//     knights hop a parabolic arc
+//   - movers glide square→square, duration scaling with distance
+//     (moveDuration); sliders lift a touch, knights hop a parabolic arc
 //   - the landing square flashes an expanding golden ring
-//   - a captured piece stands its ground until the attacker lands,
-//     then pops (scale up → gone) in a burst of sparkles
+//   - a capture is a short DUEL (duel.ts): the attacker halts short of
+//     the victim, feints twice (sparks + a clash sound), then hops on
+//     while the victim pops (scale up → gone) in a burst of sparkles.
+//     Skippable — button or any tap — by speeding the timeline up.
 // Move/capture SOUNDS stay with the screens (they already play
-// 'move'/'capture'/'check' at move time) — none here, or they'd double.
+// 'move'/'capture'/'check' at move time). The one sound here is the
+// duel clash, which exists nowhere else, panned by view-space x.
 
-import { createContext, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { createContext, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type RefObject } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Html, OrbitControls, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Color, MoveInput, Piece as PieceModel, PieceSymbol, Square as SquareName } from '../chess/types'
 import { FILES, RANKS, squareColor, type File, type Rank } from '../board/squares'
+import { playSound } from '../sound/synth'
 import { pieceGeometries } from './pieceGeometry'
 import { useGltfPieceAssets } from './gltfPieces'
 import { usePieceTracking, type CapturedPiece, type TrackedPiece } from './usePieceTracking'
+import { easeInOutCubic, easeOutBack } from './timeline'
+import { buildDuel, finishDuel, moveDuration, HOP_HEIGHT, LIFT, type DuelState } from './duel'
 
 export interface Board3DProps {
   pieces: Partial<Record<SquareName, PieceModel>>
@@ -39,6 +46,10 @@ export interface Board3DProps {
   /** Which side the camera starts behind. Online passes the viewer's
    *  colour so Black opens facing their own camp. Default: white. */
   initialSide?: Color
+  /** Pass-and-play: the side whose turn it is. When it changes the
+   *  camera swings smoothly round behind that side. Undefined = the
+   *  camera stays wherever the player left it. */
+  facing?: Color
   /** Wizard's Duel spell-targeting mode: taps pick a target instead of
    *  moving. firstPick is the already-chosen half of a 2-arity spell. */
   spellPick?: { validTargets: ReadonlySet<SquareName>; firstPick?: SquareName | null } | null
@@ -85,36 +96,69 @@ interface Palette3d {
   ambient: number
   /** Piece clearcoat — soft sheen, dialled down from the old toy gloss. */
   clearcoat: number
+  /** Scene background (and fog) colour, and the table under the board. */
+  bg: THREE.ColorRepresentation
+  ground: THREE.ColorRepresentation
+  /** Rank/file labels painted on the frame (CSS colour). */
+  coords: string
 }
 
 const PALETTES: Record<Palette3dName, Palette3d> = {
+  // Measured on screenshots (2026-09-24): with the grain multiplied into
+  // BOTH square colours the "light" squares rendered #90462d and the
+  // dark ones #663223 — a 1.5:1 ratio, and black pieces vanished on
+  // dark squares (1.15:1). The wood.jpg grain is too dark and red to
+  // multiply up to maple, so only the dark squares (walnut) keep it;
+  // light squares are flat tan, pieces are flat boxwood / ebony.
   wood: {
     texturedBoard: true,
-    texturedPieces: true,
-    squareLight: new THREE.Color(2.4, 2.42, 2.42),
-    squareDark: new THREE.Color(1.18, 1.06, 0.92),
+    texturedPieces: false,
+    // Flat colours render ~+30 sRGB brighter than specified under the
+    // scene lights (a tan spec reads as maple); pieces render darker
+    // than spec (curved, half in shadow). Specs are set for the
+    // RENDERED result: maple ≈ #cdb076, walnut ≈ #944229, boxwood ≈
+    // #e7e0d5, ebony ≈ #3c2c1a — 3.4:1 squares, 1.6:1 white piece on
+    // maple, 2:1 ebony on walnut.
+    squareLight: '#9e7f4c',
+    squareDark: new THREE.Color(2.5, 2.1, 1.6),
     frame: new THREE.Color(0.92, 0.8, 0.64),
-    white: new THREE.Color(2.0, 1.88, 1.66),
-    black: new THREE.Color(1.55, 1.32, 1.12),
+    white: '#fffaf0',
+    black: '#1a100a',
     ambient: 0.42,
     clearcoat: 0.7,
+    bg: '#120e0b',
+    ground: '#1c1511',
+    coords: 'rgba(255, 234, 196, 0.7)',
   },
-  // Cream + deep-blue board, ivory vs navy pieces. No pink anywhere.
+  // Sand + navy board, ivory vs charcoal pieces. No pink anywhere.
+  // The old cream (#ecdfc4) rendered near-white (#ede7dc) under the
+  // scene lights, so ivory pieces sat on it at 1.08:1; the old blue
+  // washed out to #8cb8d1. Darker sand + deeper navy spread the four
+  // tones out: white piece > light square > dark square > black piece.
   candy: {
     texturedBoard: false,
     texturedPieces: false,
-    squareLight: '#ecdfc4',  // warm cream
-    squareDark: '#4f86b5',   // deep blue (toned down from the pale glary one)
+    squareLight: '#a99461',  // sand — renders ≈ #cbbb90
+    squareDark: '#1e4d7d',   // navy — renders ≈ #3d70a2
     frame: '#2f3b52',        // dark slate-blue rail
-    white: '#f5eede',        // bright ivory — pops on the blue squares
-    black: '#2b3340',        // deep navy charcoal — reads on blue and cream
+    white: '#ffffff',        // renders ≈ #f0ede6 — pops on sand and navy alike
+    black: '#141a26',        // near-black navy — reads on both squares
     ambient: 0.52,
     clearcoat: 0.4,
+    bg: '#0f1424',
+    ground: '#171e33',
+    coords: 'rgba(236, 223, 196, 0.92)',
   },
 }
 
 const PaletteContext = createContext<Palette3d>(PALETTES.wood)
 const usePalette = () => useContext(PaletteContext)
+
+/** The duel in flight (or null), shared with the piece meshes as a REF
+ *  so they read/mutate it from their frame loops — never during render.
+ *  Same reconciler-boundary caveat as PaletteContext: provided inside
+ *  the Canvas. */
+const DuelContext = createContext<RefObject<DuelState | null>>({ current: null })
 
 /** Untextured pieces (candy mode, or the procedural fallback before the
  *  GLTF set lands) take the flat colour; textured wood pieces multiply
@@ -143,8 +187,12 @@ const TINT_SPELL = '#a06bff'
 const ENV_URL = '/models3d/env/st_fagans_interior_1k.hdr'
 const WOOD_URL = '/models3d/env/wood.jpg'
 
+/** Fallback wait before a captured piece pops when no duel could be
+ *  staged (the attacker wasn't identified) — roughly one glide. */
 const MOVE_DUR = 0.45
-const HOP_HEIGHT = 0.8
+/** A duel that never gets going (mesh never registered) still pops
+ *  the victim after this long, so nothing is left standing. */
+const DUEL_TIMEOUT = 6
 const POP_DUR = 0.38
 /** Sparkles keep twinkling this long after the pop finishes. */
 const POP_LINGER = 0.5
@@ -152,15 +200,13 @@ const RING_DUR = 0.5
 /** Captured pieces re-materialise at this size in the side trays. */
 const GRAVE_SCALE = 0.5
 const GRAVE_IN_DUR = 0.35
-
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
-function easeOutBack(t: number): number {
-  const c1 = 1.70158
-  return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2)
-}
+/** Outer size of the board frame (8 squares + a 0.6 rail each side). */
+const FRAME_SIZE = 9.2
+/** Corner braziers, just outside the capture trays. */
+const TORCHES: Array<[number, number]> = [[-5.3, -6.1], [5.3, -6.1], [-5.3, 6.1], [5.3, 6.1]]
+const TORCH_INTENSITY = 9
+const SPARK_COUNT = 26
+const SPARK_LIFE = 0.55
 
 /** Tray slot for the i-th captured piece of a colour. White's fallen
  *  pieces line up on Black's side of the board and vice versa — like
@@ -233,17 +279,42 @@ function Squares({
     return out
   }, [])
 
+  const tints = useMemo(() => {
+    const out = new Map<SquareName, string>()
+    for (const { sq } of cells) {
+      let tint: string | null = null
+      if (checkSquare === sq) tint = TINT_CHECK
+      else if (firstPick === sq) tint = TINT_SELECTED
+      else if (selected === sq) tint = TINT_SELECTED
+      else if (spellTargets?.has(sq)) tint = TINT_SPELL
+      else if (capture.has(sq)) tint = TINT_CAPTURE
+      else if (legal.has(sq)) tint = TINT_LEGAL
+      else if (lastMove && (lastMove.from === sq || lastMove.to === sq)) tint = TINT_LASTMOVE
+      if (tint) out.set(sq, tint)
+    }
+    return out
+  }, [cells, selected, legal, capture, lastMove, checkSquare, spellTargets, firstPick])
+
+  // Check and selection BREATHE; everything else holds a steady glow.
+  // The frame loop writes emissiveIntensity straight onto the materials
+  // (useFrame re-reads its callback every render, so these props are
+  // always current).
+  const mats = useRef(new Map<SquareName, THREE.MeshStandardMaterial>())
+  const pulsing = firstPick ?? selected
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    for (const [sq, mat] of mats.current) {
+      if (!tints.has(sq)) mat.emissiveIntensity = 0
+      else if (sq === checkSquare) mat.emissiveIntensity = 0.5 + 0.3 * Math.sin(6 * t)
+      else if (sq === pulsing) mat.emissiveIntensity = 0.55 + 0.15 * Math.sin(3 * t)
+      else mat.emissiveIntensity = 0.55
+    }
+  })
+
   return (
     <group>
       {cells.map(({ sq, x, z, dark }) => {
-        let tint: string | null = null
-        if (checkSquare === sq) tint = TINT_CHECK
-        else if (firstPick === sq) tint = TINT_SELECTED
-        else if (selected === sq) tint = TINT_SELECTED
-        else if (spellTargets?.has(sq)) tint = TINT_SPELL
-        else if (capture.has(sq)) tint = TINT_CAPTURE
-        else if (legal.has(sq)) tint = TINT_LEGAL
-        else if (lastMove && (lastMove.from === sq || lastMove.to === sq)) tint = TINT_LASTMOVE
+        const tint = tints.get(sq) ?? null
         return (
           <mesh
             key={sq}
@@ -258,7 +329,8 @@ function Squares({
               * directional shadows right off the board. */}
             <meshStandardMaterial
               key={wood ? 'wood' : 'flat'}
-              map={wood}
+              ref={(m) => { if (m) mats.current.set(sq, m) }}
+              map={dark ? wood : null}
               color={dark ? palette.squareDark : palette.squareLight}
               emissive={tint ?? '#000000'}
               emissiveIntensity={tint ? 0.55 : 0}
@@ -270,6 +342,281 @@ function Squares({
       })}
     </group>
   )
+}
+
+/** Rank/file labels on the frame — reading a1…h8 is half of learning
+ *  chess, and the 3D board had none. Painted once per palette into a
+ *  canvas laid over the frame; upright from White's side. */
+function BoardCoords() {
+  const palette = usePalette()
+  const texture = useMemo(() => {
+    const size = 1024
+    const c = document.createElement('canvas')
+    c.width = size
+    c.height = size
+    const g = c.getContext('2d')
+    if (!g) return null
+    const px = size / FRAME_SIZE
+    // World x/z → canvas x/y. Canvas row 0 is the far (Black) edge.
+    const toC = (w: number) => (w + FRAME_SIZE / 2) * px
+    g.font = `bold ${Math.round(0.34 * px)}px Georgia, serif`
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillStyle = palette.coords
+    FILES.forEach((f, i) => {
+      g.fillText(f, toC(i - 3.5), toC(4.3))
+      g.fillText(f, toC(i - 3.5), toC(-4.3))
+    })
+    RANKS.forEach((r, i) => {
+      g.fillText(r, toC(-4.3), toC(3.5 - i))
+      g.fillText(r, toC(4.3), toC(3.5 - i))
+    })
+    const t = new THREE.CanvasTexture(c)
+    t.colorSpace = THREE.SRGBColorSpace
+    t.anisotropy = 4
+    return t
+  }, [palette.coords])
+  useEffect(() => () => texture?.dispose(), [texture])
+  if (!texture) return null
+  return (
+    <mesh position={[0, -0.094, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[FRAME_SIZE, FRAME_SIZE]} />
+      <meshBasicMaterial map={texture} transparent depthWrite={false} toneMapped={false} />
+    </mesh>
+  )
+}
+
+/** A corner brazier — the castle's own light. Flame and point light
+ *  flicker on two summed sines. */
+function Torch({ x, z, phase }: { x: number; z: number; phase: number }) {
+  const light = useRef<THREE.PointLight>(null)
+  const flame = useRef<THREE.Mesh>(null)
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    const s = 0.85 + Math.sin(9 * t + phase) * 0.1 + Math.sin(23 * t + phase) * 0.05
+    if (light.current) light.current.intensity = TORCH_INTENSITY * s
+    if (flame.current) flame.current.scale.set(s, s * 1.15 + 0.1 * Math.sin(13 * t + phase), s)
+  })
+  return (
+    <group position={[x, -0.22, z]}>
+      <mesh position={[0, 0.65, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.1, 1.3, 10]} />
+        <meshStandardMaterial color="#2b2622" roughness={0.7} metalness={0.5} />
+      </mesh>
+      <mesh position={[0, 1.38, 0]}>
+        <cylinderGeometry args={[0.2, 0.12, 0.22, 12]} />
+        <meshStandardMaterial color="#2b2622" roughness={0.7} metalness={0.5} />
+      </mesh>
+      <mesh ref={flame} position={[0, 1.6, 0]}>
+        <sphereGeometry args={[0.13, 10, 8]} />
+        <meshBasicMaterial color="#ffb347" toneMapped={false} />
+      </mesh>
+      <pointLight
+        ref={light}
+        position={[0, 1.85, 0]}
+        color="#ff9a4a"
+        intensity={TORCH_INTENSITY}
+        distance={12}
+        decay={2}
+      />
+    </group>
+  )
+}
+
+/** A puff of sparks where blades meet: points under gravity, additive,
+ *  gone after SPARK_LIFE. Velocities are rolled by the parent's clash
+ *  handler (an event, not render) and simulated in a ref here. */
+function SparkBurst({
+  id,
+  x,
+  y,
+  z,
+  vel,
+  onDone,
+}: {
+  id: number
+  x: number
+  y: number
+  z: number
+  vel: Float32Array
+  onDone: (id: number) => void
+}) {
+  const geometry = useMemo(() => {
+    const pos = new Float32Array(SPARK_COUNT * 3)
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      pos[i * 3] = x
+      pos[i * 3 + 1] = y
+      pos[i * 3 + 2] = z
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    return g
+  }, [x, y, z])
+  useEffect(() => () => geometry.dispose(), [geometry])
+  const velRef = useRef(vel)
+  const mat = useRef<THREE.PointsMaterial>(null)
+  const life = useRef(0)
+  const done = useRef(false)
+  useFrame((_, dt) => {
+    life.current += dt
+    const v = velRef.current
+    const attr = geometry.getAttribute('position') as THREE.BufferAttribute
+    const arr = attr.array as Float32Array
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      const k = i * 3
+      let vy = (v[k + 1] ?? 0) - 7 * dt
+      let py = (arr[k + 1] ?? 0) + vy * dt
+      if (py < 0.02) {
+        py = 0.02
+        vy *= -0.3
+      }
+      v[k + 1] = vy
+      arr[k] = (arr[k] ?? 0) + (v[k] ?? 0) * dt
+      arr[k + 1] = py
+      arr[k + 2] = (arr[k + 2] ?? 0) + (v[k + 2] ?? 0) * dt
+    }
+    attr.needsUpdate = true
+    if (mat.current) mat.current.opacity = Math.max(0, 1 - life.current / SPARK_LIFE)
+    if (life.current >= SPARK_LIFE && !done.current) {
+      done.current = true
+      onDone(id)
+    }
+  })
+  return (
+    <points geometry={geometry} frustumCulled={false}>
+      <pointsMaterial
+        ref={mat}
+        color="#ffd27a"
+        size={0.07}
+        transparent
+        opacity={1}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </points>
+  )
+}
+
+/** Random outward-and-up spark velocities for one clash. */
+function rollSparks(): Float32Array {
+  const vel = new Float32Array(SPARK_COUNT * 3)
+  for (let i = 0; i < SPARK_COUNT; i++) {
+    const a = Math.random() * Math.PI * 2
+    const h = 0.6 + Math.random() * 1.8
+    vel[i * 3] = Math.cos(a) * h
+    vel[i * 3 + 1] = 1.5 + Math.random() * 2.2
+    vel[i * 3 + 2] = Math.sin(a) * h
+  }
+  return vel
+}
+
+/** OrbitControls plus two things they don't do: an eased swing to a
+ *  target azimuth (pass-and-play `facing` / the Flip button), and a
+ *  soft fill light that rides with the camera so whichever side you
+ *  view from, the near faces of the pieces are never in the dark. */
+function CameraRig({ facing, flipSeq }: { facing: Color | undefined; flipSeq: number }) {
+  const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const duelRef = useContext(DuelContext)
+  const fill = useRef<THREE.PointLight>(null)
+  const { camera } = useThree()
+  /** Desired azimuth (radians), or null when nothing is pending. */
+  const goal = useRef<number | null>(null)
+  const dragging = useRef(false)
+
+  const prevFacing = useRef(facing)
+  useEffect(() => {
+    if (facing !== undefined && facing !== prevFacing.current) goal.current = facing === 'w' ? 0 : Math.PI
+    prevFacing.current = facing
+  }, [facing])
+  const prevFlip = useRef(flipSeq)
+  useEffect(() => {
+    if (flipSeq === prevFlip.current) return
+    prevFlip.current = flipSeq
+    const c = controls.current
+    if (c) goal.current = (goal.current ?? c.getAzimuthalAngle()) + Math.PI
+  }, [flipSeq])
+
+  useFrame((_, dt) => {
+    if (fill.current) fill.current.position.set(camera.position.x, camera.position.y + 2, camera.position.z)
+    const c = controls.current
+    const g = goal.current
+    if (!c || g === null || dragging.current) return
+    // A pending swing waits for a duel to play out — the turn changes
+    // the moment the capture is made, and spinning the camera away from
+    // the fight was the first thing the screenshots showed.
+    const duel = duelRef.current
+    if (duel && !duel.done) return
+    let d = g - c.getAzimuthalAngle()
+    d = Math.atan2(Math.sin(d), Math.cos(d)) // shortest way round
+    if (Math.abs(d) < 0.002) {
+      goal.current = null
+      return
+    }
+    // Exponential ease: ~0.8 s for a full half-turn, frame-rate free.
+    const step = d * (1 - Math.pow(0.02, dt))
+    const off = camera.position.clone().sub(c.target)
+    off.applyAxisAngle(Y_AXIS, step)
+    camera.position.copy(c.target).add(off)
+    camera.lookAt(c.target)
+    c.update()
+  })
+
+  return (
+    <>
+      <pointLight ref={fill} intensity={5} color="#c9d6f0" distance={26} decay={2} />
+      <OrbitControls
+        ref={controls}
+        enablePan={false}
+        minDistance={5}
+        maxDistance={16}
+        maxPolarAngle={Math.PI / 2.15}
+        /* A hand on the camera cancels any pending swing. */
+        onStart={() => { dragging.current = true; goal.current = null }}
+        onEnd={() => { dragging.current = false }}
+      />
+    </>
+  )
+}
+const Y_AXIS = new THREE.Vector3(0, 1, 0)
+
+/** Ticks the duel timeline. Builds it on the first frame both meshes
+ *  have registered (the attacker's AnimatedPiece and the victim's
+ *  DyingPiece hand themselves over through the DuelContext ref). */
+function DuelRunner({
+  onClash,
+  onLanded,
+  onDone,
+}: {
+  onClash: (x: number, y: number, z: number) => void
+  onLanded: (sq: SquareName) => void
+  onDone: () => void
+}) {
+  const duelRef = useContext(DuelContext)
+  const { camera } = useThree()
+  const v = useMemo(() => new THREE.Vector3(), [])
+  useFrame((_, dt) => {
+    const d = duelRef.current
+    if (!d || d.done) return
+    if (!d.timeline) {
+      if (!d.attacker || !d.victimMesh) return
+      d.timeline = buildDuel(d, {
+        onClash: (x, y, z) => {
+          onClash(x, y, z)
+          // Pan by where the clash sits on screen, not on the board.
+          v.set(x, y, z).applyMatrix4(camera.matrixWorldInverse)
+          playSound('duel-clash', { pan: Math.max(-1, Math.min(1, v.x / 4)) * 0.7 })
+        },
+        onLanded: () => onLanded(d.toSquare),
+      })
+      if (d.skipRequested) d.timeline.skip()
+    }
+    if (d.timeline.tick(dt)) {
+      d.done = true
+      onDone()
+    }
+  })
+  return null
 }
 
 /** Expanding golden ring on the square a piece just landed on. */
@@ -323,14 +670,21 @@ interface MoveAnim {
   toX: number
   toZ: number
   t: number
+  dur: number
   hop: boolean
+}
+
+function startMove(fromX: number, fromZ: number, toX: number, toZ: number, hop: boolean): MoveAnim {
+  return { fromX, fromZ, toX, toZ, t: 0, dur: moveDuration(Math.hypot(toX - fromX, toZ - fromZ)), hop }
 }
 
 /** One persistent mesh per tracked piece. A move starts an explicit
  *  0→1 tween (knights arc over the board); when it completes the
- *  parent gets onLanded() to flash the landing ring. Position is
- *  imperative-only — NEVER a reactive prop, or every re-render would
- *  teleport long-since-moved pieces back to their mount square. */
+ *  parent gets onLanded() to flash the landing ring. If the move is a
+ *  capture, the frame loop hands the mesh to the duel instead, which
+ *  drives it until done. Position is imperative-only — NEVER a reactive
+ *  prop, or every re-render would teleport long-since-moved pieces back
+ *  to their mount square. */
 function AnimatedPiece({
   tracked,
   geometry,
@@ -353,6 +707,7 @@ function AnimatedPiece({
   onLanded: (sq: SquareName) => void
 }) {
   const palette = usePalette()
+  const duelRef = useContext(DuelContext)
   const ref = useRef<THREE.Mesh>(null)
   const anim = useRef<MoveAnim | null>(null)
   const prevSquare = useRef(tracked.square)
@@ -374,7 +729,7 @@ function AnimatedPiece({
     const [fx, fz] = m
       ? [m.position.x, m.position.z]
       : squareToWorld(tracked.movedFrom ?? tracked.square)
-    anim.current = { fromX: fx, fromZ: fz, toX: tx, toZ: tz, t: 0, hop: tracked.piece.type === 'n' }
+    anim.current = startMove(fx, fz, tx, tz, tracked.piece.type === 'n')
   }
 
   const placed = useRef(false)
@@ -388,7 +743,7 @@ function AnimatedPiece({
         const [fx, fz] = squareToWorld(tracked.movedFrom)
         const [sx, sz] = squareToWorld(tracked.square)
         m.position.set(fx, 0, fz)
-        anim.current = { fromX: fx, fromZ: fz, toX: sx, toZ: sz, t: 0, hop: tracked.piece.type === 'n' }
+        anim.current = startMove(fx, fz, sx, sz, tracked.piece.type === 'n')
       } else {
         const [sx, sz] = squareToWorld(tracked.square)
         m.position.set(sx, 0, sz)
@@ -400,6 +755,18 @@ function AnimatedPiece({
   useFrame((_, delta) => {
     const m = ref.current
     if (!m) return
+    const d = duelRef.current
+    if (d && !d.done && d.attackerId === tracked.id) {
+      if (d.toSquare === tracked.square) {
+        // This move IS the duel: hand the mesh over, drop our own glide.
+        d.attacker = m
+        anim.current = null
+        return
+      }
+      // Moved on while the duel still ran (quick pass-and-play): wrap
+      // it up and glide on from here.
+      finishDuel(d)
+    }
     // Decaying wobble around z — composes fine with the colour-facing
     // rotation around y.
     if (wobble.current !== null) {
@@ -414,11 +781,11 @@ function AnimatedPiece({
     }
     const a = anim.current
     if (a) {
-      a.t = Math.min(1, a.t + delta / MOVE_DUR)
+      a.t = Math.min(1, a.t + delta / a.dur)
       const e = easeInOutCubic(a.t)
       m.position.x = a.fromX + (a.toX - a.fromX) * e
       m.position.z = a.fromZ + (a.toZ - a.fromZ) * e
-      m.position.y = a.hop ? HOP_HEIGHT * 4 * e * (1 - e) : 0
+      m.position.y = a.hop ? HOP_HEIGHT * 4 * e * (1 - e) : LIFT * Math.sin(Math.PI * e)
       if (a.t >= 1) {
         anim.current = null
         m.position.set(a.toX, 0, a.toZ)
@@ -461,9 +828,11 @@ function AnimatedPiece({
   )
 }
 
-/** A captured piece's last moment: it stands its ground while the
- *  attacker glides in (MOVE_DUR), then pops — a quick swell and
- *  collapse inside a burst of sparkles. */
+/** A captured piece's last moment. In a duel it reels under the
+ *  attacker's feints (duel.ts drives its transform) until the pop cue;
+ *  otherwise it stands its ground for one glide (MOVE_DUR). Either way
+ *  it then pops — a quick swell and collapse inside a burst of
+ *  sparkles — and re-materialises in the tray. */
 function DyingPiece({
   info,
   geometry,
@@ -480,18 +849,37 @@ function DyingPiece({
   onDone: (info: CapturedPiece) => void
 }) {
   const palette = usePalette()
+  const duelRef = useContext(DuelContext)
   const ref = useRef<THREE.Mesh>(null)
   const life = useRef(0)
+  /** Reading on `life` when the pop began; null until it does. */
+  const popStart = useRef<number | null>(null)
   const done = useRef(false)
   const [sparkling, setSparkling] = useState(false)
   const [x, z] = squareToWorld(info.square)
 
   useFrame((_, delta) => {
     life.current += delta
-    const t = life.current - MOVE_DUR
+    const m = ref.current
+    if (popStart.current === null) {
+      const d = duelRef.current
+      if (d && d.id === info.id) {
+        if (m && d.victimMesh !== m) {
+          d.victimMesh = m
+          d.victimBase = m.quaternion.clone()
+        }
+        // Wait for the cue — or bail if the duel died before it built,
+        // so nothing is left standing on the square.
+        if (!d.popped && !d.done && life.current < DUEL_TIMEOUT) return
+      } else if (life.current < MOVE_DUR) {
+        // No duel staged for this capture: stand for one glide, then pop.
+        return
+      }
+      popStart.current = life.current
+    }
+    const t = life.current - popStart.current
     if (t <= 0) return
     if (!sparkling) setSparkling(true)
-    const m = ref.current
     if (m) {
       const p = Math.min(1, t / POP_DUR)
       const s = p < 0.35
@@ -514,6 +902,7 @@ function DyingPiece({
         scale={scale}
         position={[x, 0, z]}
         rotation={[0, rotateBlack && info.piece.color === 'b' ? Math.PI : 0, 0]}
+        castShadow
         dispose={null}
       >
         <meshPhysicalMaterial
@@ -731,6 +1120,7 @@ export function Board3D({
   lastMove = null,
   checkSquare = null,
   initialSide = 'w',
+  facing,
   spellPick = null,
   onSpellTarget,
   badges,
@@ -753,6 +1143,58 @@ export function Board3D({
   const woodTex = useWoodTexture()
   // Candy mode renders flat (untextured) board + frame.
   const wood = palette.texturedBoard ? woodTex : null
+
+  // A capture stages a duel. Derived DURING render (React's "adjust
+  // state on prop change" pattern) so the attacker's AnimatedPiece can
+  // hand its mesh over on the very next frame; the piece meshes reach
+  // the record through DuelContext (a ref, synced below) from their
+  // frame loops. A board reset drops any duel in flight; a second
+  // capture arriving mid-duel (fast pass-and-play) wraps the first up.
+  const [duel, setDuel] = useState<DuelState | null>(null)
+  const [duelActive, setDuelActive] = useState(false)
+  const victim = captured.length === 1 ? captured[0] : undefined
+  if (bulkChange) {
+    if (duel) {
+      finishDuel(duel)
+      setDuel(null)
+      setDuelActive(false)
+    }
+  } else if (victim && duel?.id !== victim.id) {
+    const attacker = tracked.find(
+      (t): t is TrackedPiece & { movedFrom: SquareName } => t.movedFrom !== null,
+    )
+    if (attacker) {
+      if (duel) finishDuel(duel)
+      setDuel({
+        id: victim.id,
+        attackerId: attacker.id,
+        toSquare: attacker.square,
+        from: squareToWorld(attacker.movedFrom),
+        to: squareToWorld(attacker.square),
+        victim: squareToWorld(victim.square),
+        hop: attacker.piece.type === 'n',
+        attacker: null,
+        victimMesh: null,
+        victimBase: null,
+        popped: false,
+        timeline: null,
+        skipRequested: false,
+        done: false,
+      })
+      setDuelActive(true)
+    }
+  }
+  const duelRef = useRef<DuelState | null>(null)
+  useLayoutEffect(() => {
+    duelRef.current = duel
+  }, [duel])
+  const onDuelDone = useCallback(() => setDuelActive(false), [])
+  const skipDuel = useCallback(() => {
+    const d = duelRef.current
+    if (!d || d.done) return
+    if (d.timeline) d.timeline.skip()
+    else d.skipRequested = true
+  }, [])
 
   // Captured pieces linger as "dying" meshes until their pop finishes,
   // then re-materialise in the side trays. A board reset (next puzzle,
@@ -788,6 +1230,21 @@ export function Board3D({
     (id: number) => setRings((r) => r.filter((x) => x.id !== id)),
     [],
   )
+  // Spark bursts where duel blades meet.
+  const burstSeq = useRef(0)
+  const [bursts, setBursts] = useState<
+    Array<{ id: number; x: number; y: number; z: number; vel: Float32Array }>
+  >([])
+  const onClash = useCallback((x: number, y: number, z: number) => {
+    const vel = rollSparks()
+    setBursts((b) => [...b, { id: burstSeq.current++, x, y, z, vel }])
+  }, [])
+  const onBurstDone = useCallback(
+    (id: number) => setBursts((b) => b.filter((x) => x.id !== id)),
+    [],
+  )
+  // Flip button — each press asks the rig for another half-turn.
+  const [flipSeq, setFlipSeq] = useState(0)
 
   const legal = useMemo(
     () => new Set(selected ? legalDestinationsFrom(selected) : []),
@@ -830,12 +1287,29 @@ export function Board3D({
     [pieces, selected, legal, turn, onMove, spellPick, onSpellTarget],
   )
 
+  const chip: React.CSSProperties = {
+    position: 'absolute',
+    zIndex: 5,
+    border: 'none',
+    borderRadius: 999,
+    padding: '6px 12px',
+    font: '600 14px system-ui, sans-serif',
+    color: '#fff',
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+  }
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div
+      style={{ position: 'relative', width: '100%', height: '100%' }}
+      /* Any tap during a duel skips it — a kid mid-game shouldn't have
+       * to find the button. */
+      onPointerDownCapture={duelActive ? skipDuel : undefined}
+    >
     <Canvas
       shadows="soft"
-      /* Camera mounts behind the viewer's side; OrbitControls owns it
-       * from then on (initialSide never changes mid-game). */
+      /* Camera mounts behind the viewer's side; the rig + OrbitControls
+       * own it from then on (initialSide never changes mid-game). */
       camera={{ position: [0, 7.2, initialSide === 'w' ? 7.4 : -7.4], fov: 40 }}
       dpr={[1, 2]}
       style={{ touchAction: 'none' }}
@@ -844,6 +1318,11 @@ export function Board3D({
         * the R3F reconciler boundary, so the scene meshes read the
         * palette from here, not from a provider outside <Canvas>. */}
       <PaletteContext.Provider value={palette}>
+      <DuelContext.Provider value={duelRef}>
+      {/* A dark hall around the table: solid backdrop + fog so the
+        * trays and torches fade off instead of ending in mid-air. */}
+      <color attach="background" args={[palette.bg]} />
+      <fog attach="fog" args={[palette.bg, 16, 34]} />
       <Suspense fallback={null}>
         {/* Image-based lighting (warm wooden interior, CC0 Poly Haven).
           * Own Suspense so the board paints before the 1.5 MB HDR
@@ -856,9 +1335,10 @@ export function Board3D({
           position={[6, 10, 4]}
           intensity={1.7}
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
           shadow-bias={-0.0005}
+          shadow-normalBias={0.02}
           shadow-camera-left={-6}
           shadow-camera-right={6}
           shadow-camera-top={6}
@@ -866,13 +1346,26 @@ export function Board3D({
           shadow-camera-near={1}
           shadow-camera-far={30}
         />
+        {/* Cool rim from behind-left so piece silhouettes separate from
+          * the board — the warm key alone flattened them. */}
+        <directionalLight position={[-7, 6, -8]} intensity={0.9} color="#6f9be0" />
         {/* Soft golden fill from the side — toned down from the old
           * orange hearth light, which pushed the whole board red. */}
         <pointLight position={[-7, 3, 6]} intensity={11} color="#ffdcae" />
 
+        {/* The table under everything: catches shadows, gives the fog
+          * something to fade. */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.24, 0]} receiveShadow>
+          <circleGeometry args={[22, 48]} />
+          <meshStandardMaterial color={palette.ground} roughness={0.95} />
+        </mesh>
+        {TORCHES.map(([x, z], i) => (
+          <Torch key={i} x={x} z={z} phase={i * 1.7} />
+        ))}
+
         {/* Board frame under the squares. */}
         <mesh position={[0, -0.16, 0]} receiveShadow>
-          <boxGeometry args={[9.2, 0.12, 9.2]} />
+          <boxGeometry args={[FRAME_SIZE, 0.12, FRAME_SIZE]} />
           <meshStandardMaterial
             key={wood ? 'wood' : 'flat'}
             map={wood}
@@ -881,6 +1374,7 @@ export function Board3D({
             envMapIntensity={0.55}
           />
         </mesh>
+        <BoardCoords />
 
         {/* Capture trays flanking the board — fallen pieces line up
           * here, doubling as a who's-ahead-on-material reminder. */}
@@ -956,14 +1450,16 @@ export function Board3D({
         {rings.map((r) => (
           <RingPulse key={r.id} id={r.id} x={r.x} z={r.z} onDone={onRingDone} />
         ))}
+        {bursts.map((b) => (
+          <SparkBurst key={b.id} id={b.id} x={b.x} y={b.y} z={b.z} vel={b.vel} onDone={onBurstDone} />
+        ))}
+        {duel && duelActive && (
+          <DuelRunner key={duel.id} onClash={onClash} onLanded={onLanded} onDone={onDuelDone} />
+        )}
 
-        <OrbitControls
-          enablePan={false}
-          minDistance={5}
-          maxDistance={16}
-          maxPolarAngle={Math.PI / 2.15}
-        />
+        <CameraRig facing={facing} flipSeq={flipSeq} />
       </Suspense>
+      </DuelContext.Provider>
       </PaletteContext.Provider>
     </Canvas>
     {/* Ada's look-picker — flips the 3D set between the realistic
@@ -974,22 +1470,38 @@ export function Board3D({
       aria-pressed={paletteName === 'candy'}
       title={paletteName === 'candy' ? 'Switch to the wooden set' : 'Switch to the blue board'}
       style={{
-        position: 'absolute',
+        ...chip,
         top: 10,
         right: 10,
-        zIndex: 5,
-        border: 'none',
-        borderRadius: 999,
-        padding: '6px 12px',
-        font: '600 14px system-ui, sans-serif',
-        color: '#fff',
-        cursor: 'pointer',
         background: paletteName === 'candy' ? 'rgba(47,59,82,0.92)' : 'rgba(123,89,52,0.9)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}
     >
       {paletteName === 'candy' ? '🟦 Blue' : '🪵 Wood'}
     </button>
+    <button
+      type="button"
+      onClick={() => setFlipSeq((n) => n + 1)}
+      title="Swing the camera round to the other side"
+      style={{ ...chip, top: 10, left: 10, background: 'rgba(40,40,48,0.85)' }}
+    >
+      ↻ Flip
+    </button>
+    {duelActive && (
+      <button
+        type="button"
+        onClick={skipDuel}
+        title="Skip the duel"
+        style={{
+          ...chip,
+          bottom: 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(40,40,48,0.85)',
+        }}
+      >
+        ⏭ Skip
+      </button>
+    )}
     </div>
   )
 }

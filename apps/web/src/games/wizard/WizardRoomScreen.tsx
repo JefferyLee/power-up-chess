@@ -9,6 +9,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 const Board3D = lazy(() =>
   import('../../board3d/Board3D').then((m) => ({ default: m.Board3D })),
 )
+import { useView3d } from '../../board3d/useView3d'
 import { useNavigate } from 'react-router-dom'
 import { piecesFromFen } from '../../chess/fen'
 import type { Color, Piece, Square } from '../../chess/types'
@@ -58,7 +59,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   // Presence ("in this wizard duel") is published by the App-level
   // GlobalPresenceHeartbeat, which derives the location from the URL.
   const [cast, setCast] = useState<CastFlow>({ stage: 'idle' })
-  const [view3d, setView3d] = useState(false)
+  const [view3d, setView3d] = useView3d()
   const [fs3d, setFs3d] = useState(false)
   useEffect(() => {
     if (!fs3d) return

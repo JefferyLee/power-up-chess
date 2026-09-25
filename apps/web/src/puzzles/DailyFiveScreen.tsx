@@ -17,6 +17,7 @@ import { Board } from '../board/Board'
 const Board3D = lazy(() =>
   import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
 )
+import { useView3d } from '../board3d/useView3d'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { MoveInput, Square } from '../chess/types'
@@ -56,7 +57,7 @@ export function DailyFiveScreen() {
   useEffect(() => { track('daily_practice_started') }, [])
 
   // 3D view — same legality/judging flow, different renderer.
-  const [view3d, setView3d] = useState(false)
+  const [view3d, setView3d] = useView3d()
   const [fs3d, setFs3d] = useState(false)
   useEffect(() => {
     if (!fs3d) return

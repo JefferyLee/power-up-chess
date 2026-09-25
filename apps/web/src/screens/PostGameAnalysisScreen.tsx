@@ -7,6 +7,7 @@ import { Board } from '../board/Board'
 const Board3D = lazy(() =>
   import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
 )
+import { useView3d } from '../board3d/useView3d'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { piecesFromFen } from '../chess/fen'
 import { isBrilliant } from '../engine/brilliant'
@@ -230,7 +231,7 @@ function ReviewView({
   }, [analysis, state, identity])
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   // Alternate 3D view of the board (read-only here, like the 2D one).
-  const [view3d, setView3d] = useState(false)
+  const [view3d, setView3d] = useView3d()
   // Engine-details fold (Phase 2.3) — collapsed for kids by default;
   // remembered so a parent/coach who opens it keeps it open.
   const [engineOpen, setEngineOpen] = useState(() => {

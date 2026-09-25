@@ -6,6 +6,7 @@ import { Board } from '../board/Board'
 const Board3D = lazy(() =>
   import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
 )
+import { useView3d } from '../board3d/useView3d'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { ChessGame } from '../chess/game'
@@ -351,7 +352,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   // 3D view + fullscreen — local to this client; the opponent's view
   // is unaffected. Same renderer swap as Local Chess.
-  const [view3d, setView3d] = useState(false)
+  const [view3d, setView3d] = useView3d()
   const [fs3d, setFs3d] = useState(false)
   useEffect(() => {
     if (!fs3d) return

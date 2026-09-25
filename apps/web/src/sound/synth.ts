@@ -18,6 +18,8 @@ export type SoundName =
   | 'small-solve' | 'big-solve' | 'streak'
   | 'level-up' | 'badge-earned'
   | 'shop-purchase' | 'shop-browse' | 'plot-enter'
+  // 3D board capture duel — blades meeting (Board3D only).
+  | 'duel-clash'
 
 /** Sounds backed by a real audio file (vs. one of the RECIPES synths).
  *  When a name is in this map, playSound() routes to an Audio element
@@ -38,6 +40,12 @@ const ASSET_URLS: Partial<Record<SoundName, {
 
 let ctx: AudioContext | null = null
 let masterGain: GainNode | null = null
+/** Where tone()/noiseBurst() connect: the master bus, or a StereoPanner
+ *  in front of it while playSound() runs a recipe with `pan` set. */
+let panOut: AudioNode | null = null
+function out(): AudioNode {
+  return panOut ?? (masterGain as GainNode)
+}
 
 function ensureContext(): AudioContext | null {
   if (ctx) return ctx
@@ -87,7 +95,7 @@ function tone(opts: {
   gain.gain.exponentialRampToValueAtTime(peak, t0 + attack)
   gain.gain.setValueAtTime(peak, t0 + attack)
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + opts.duration + release)
-  osc.connect(gain).connect(masterGain)
+  osc.connect(gain).connect(out())
   osc.start(t0)
   osc.stop(t0 + opts.duration + release + 0.02)
 }
@@ -101,6 +109,15 @@ function move(): void {
 function capture(): void {
   tone({ freq: [220, 110], type: 'triangle', duration: 0.08, peakGain: 0.28, release: 0.08 })
   tone({ freq: 660, type: 'sine', duration: 0.05, peakGain: 0.1, release: 0.06, startOffset: 0.01 })
+}
+
+// Toy blades meeting — a bright metallic tick over a short clatter.
+// ±6 % pitch jitter so the two beats of a duel don't sound stamped.
+function duelClash(): void {
+  const j = 1 + (Math.random() * 2 - 1) * 0.06
+  tone({ freq: [1900 * j, 1200 * j], type: 'triangle', duration: 0.05, peakGain: 0.14, release: 0.1 })
+  tone({ freq: [2700 * j, 1900 * j], type: 'sine', duration: 0.04, peakGain: 0.07, release: 0.14, startOffset: 0.01 })
+  noiseBurst({ startOffset: 0, duration: 0.09, freq: 3200 * j, q: 0.9, peakGain: 0.22, type: 'bandpass' })
 }
 
 function check(): void {
@@ -259,7 +276,7 @@ function noiseBurst(opts: {
   gain.gain.setValueAtTime(0.0001, t0)
   gain.gain.exponentialRampToValueAtTime(Math.min(0.6, opts.peakGain), t0 + 0.006)
   gain.gain.exponentialRampToValueAtTime(0.0001, t0 + opts.duration)
-  src.connect(filter).connect(gain).connect(masterGain)
+  src.connect(filter).connect(gain).connect(out())
   src.start(t0)
   src.stop(t0 + opts.duration + 0.02)
 }
@@ -444,6 +461,7 @@ const RECIPES: Record<SoundName, () => void> = {
   'shop-purchase': shopPurchase,
   'shop-browse': shopBrowse,
   'plot-enter': plotEnter,
+  'duel-clash': duelClash,
 }
 
 /** Module-level mute flag for one-shot SFX. Mirrors the React useSound
@@ -454,7 +472,10 @@ export function setSfxMuted(muted: boolean): void {
   sfxMuted = muted
 }
 
-export function playSound(name: SoundName): void {
+/** `pan` (-1 left … 1 right) positions a synthesized recipe in the
+ *  stereo field — the 3D board pans duel clashes by where the fight is
+ *  on screen. Ignored for asset-backed sounds. */
+export function playSound(name: SoundName, opts?: { pan?: number }): void {
   if (sfxMuted) return
   const c = ensureContext()
   if (!c) return
@@ -467,7 +488,18 @@ export function playSound(name: SoundName): void {
     asset.overlay?.()
     return
   }
-  RECIPES[name]()
+  const pan = opts?.pan ?? 0
+  if (pan !== 0 && masterGain && typeof c.createStereoPanner === 'function') {
+    const panner = c.createStereoPanner()
+    panner.pan.value = Math.max(-1, Math.min(1, pan))
+    panner.connect(masterGain)
+    panOut = panner
+  }
+  try {
+    RECIPES[name]()
+  } finally {
+    panOut = null
+  }
 }
 
 // Cache one HTMLAudioElement per asset URL. Reusing the same element

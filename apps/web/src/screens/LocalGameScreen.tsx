@@ -7,6 +7,7 @@ import { Board } from '../board/Board'
 const Board3D = lazy(() =>
   import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
 )
+import { useView3d } from '../board3d/useView3d'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
@@ -131,7 +132,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   const [faceToFace, setFaceToFace] = useState(true)
   // 3D view — same game, alternate renderer. The Board3D chunk
   // (three.js) is lazy-loaded on first flip.
-  const [view3d, setView3d] = useState(false)
+  const [view3d, setView3d] = useView3d()
   // Fullscreen 3D — a fixed overlay fills the viewport; player names
   // + clocks float as compact chips. ESC or ✕ exits.
   const [fs3d, setFs3d] = useState(false)
@@ -589,6 +590,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
               >
                 <Board3D
                   pieces={pieces}
+                  facing={faceToFace ? snap.turn : undefined}
                   turn={snap.turn}
                   legalDestinationsFrom={legalDestinationsFrom}
                   onMove={handleMove}
@@ -655,6 +657,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           >
             <Board3D
               pieces={pieces}
+              facing={faceToFace ? snap.turn : undefined}
               turn={snap.turn}
               legalDestinationsFrom={legalDestinationsFrom}
               onMove={handleMove}
