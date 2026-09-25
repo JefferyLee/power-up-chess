@@ -4,8 +4,13 @@
 // comet trail. Each pairs with a matching synth sound (synth.ts).
 //
 // Lifetime ~1.4 s so the chess flow is never blocked.
+//
+// On the 3D board a capture is a ~2 s duel (board3d/duel.ts) and this
+// full-width overlay landed right on top of the fight, so the screens
+// pass `delayMs` there and the ceremony waits for the pop.
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { playSound } from '../sound/synth'
 import type { PowerUpVariant } from './powerUpVariant'
 import './PowerUpCeremony.css'
 
@@ -15,18 +20,34 @@ export interface PowerUpData {
 }
 
 const LIFETIME_MS = 1800
+/** How long the 3D duel takes to reach the pop (approach + two feints). */
+export const DUEL_CEREMONY_DELAY_MS = 1900
 
 interface Props {
   data: PowerUpData
+  /** Hold the overlay back this long before it plays (0 = at once). */
+  delayMs?: number
   onDone: (id: number) => void
 }
 
-export function PowerUpCeremony({ data, onDone }: Props) {
+export function PowerUpCeremony({ data, delayMs = 0, onDone }: Props) {
+  const [started, setStarted] = useState(delayMs === 0)
   useEffect(() => {
-    const t = window.setTimeout(() => onDone(data.id), LIFETIME_MS)
+    if (delayMs === 0) return
+    const t = window.setTimeout(() => setStarted(true), delayMs)
     return () => window.clearTimeout(t)
-  }, [data.id, onDone])
+  }, [delayMs])
+  useEffect(() => {
+    const t = window.setTimeout(() => onDone(data.id), delayMs + LIFETIME_MS)
+    return () => window.clearTimeout(t)
+  }, [data.id, delayMs, onDone])
+  // The matching synth cue plays when the overlay appears, so a delayed
+  // ceremony sounds delayed too (the screens used to fire it at move time).
+  useEffect(() => {
+    if (started) playSound(`powerup-${data.variant}` as const)
+  }, [started, data.variant])
 
+  if (!started) return null
   return (
     <div className={`puc-powerup puc-powerup--${data.variant}`} aria-hidden="true">
       {data.variant === 'classic' && <Classic />}

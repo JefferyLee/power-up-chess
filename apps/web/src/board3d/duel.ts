@@ -49,14 +49,15 @@ export interface DuelHooks {
 const STANDOFF = 0.62
 /** Knight arc height; sliders lift a touch so they read as picked up. */
 export const HOP_HEIGHT = 0.8
-export const LIFT = 0.12
+export const LIFT = 0.25
 const JUMP_HEIGHT = 0.35
 const BEAT = 0.5
 
-/** Approach duration by distance (squares) — same idea as ordinary
- *  moves, capped so a queen crossing the board never drags. */
+/** Glide duration by distance (squares): Battle Chess' curve, capped so
+ *  a queen crossing the board never drags. One square ≈ 0.55 s, seven
+ *  ≈ 1.3 s — enough spread to read as "far moves take longer". */
 export function moveDuration(dist: number): number {
-  return Math.min(1.0, Math.max(0.4, 0.3 + 0.1 * dist))
+  return Math.min(1.4, 0.42 + 0.13 * dist)
 }
 
 export function buildDuel(d: DuelState, hooks: DuelHooks): Timeline {

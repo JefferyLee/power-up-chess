@@ -24,7 +24,7 @@ import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
 import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
@@ -248,7 +248,6 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
 
         // Power Up ceremony — random variant per capture.
         const variant = pickPowerUpVariant()
-        sound.play(`powerup-${variant}` as const)
         setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
 
         // Tactic Bloom: forcing capture of a piece worth ≥3 — either delivers
@@ -621,7 +620,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} onDone={handleBloomDone} />
             ))}
             {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
+              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
             ))}
           </div>
           <StatusBanner status={effectiveStatus} activeName={activeName} whiteName={whiteName} blackName={blackName} />

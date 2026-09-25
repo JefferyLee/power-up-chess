@@ -25,7 +25,7 @@ import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
 import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
 import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
@@ -279,7 +279,6 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         }])
 
         const variant = pickPowerUpVariant()
-        sound.play(`powerup-${variant}` as const)
         setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
 
         const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
@@ -693,7 +692,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
               <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} orientation={playerColor} onDone={handleBloomDone} />
             ))}
             {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
+              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
             ))}
           </div>
           <StatusBanner

@@ -18,7 +18,7 @@ import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
 import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
 import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
+import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
 import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
@@ -520,7 +520,6 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     else if (sawNonCaptureMoveInNew) sound.play('move')
     if (sawCheckInNew) sound.play('check')
     // Power Up ceremony sound per fresh capture (one sound per ceremony).
-    for (const p of newPowerUps) sound.play(`powerup-${p.variant}` as const)
 
     // This is a legitimate sync from an external system (Firestore snapshots)
     // into UI state; the lint rule's general advice doesn't apply here.
@@ -876,7 +875,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
               />
             ))}
             {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} onDone={handlePowerUpDone} />
+              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
             ))}
           </div>
           <RoomStatusLine
