@@ -71,6 +71,11 @@ export const refreshSiegeLeaderboards = onSchedule(
       refreshedAt: now,
     }
     await db.doc('siege_leaderboards/global').set(doc)
+    // Counts only — enough to tell "nobody has submitted" from "everyone
+    // is filtered out" in functions:log without exposing names.
+    console.log(
+      `refreshSiegeLeaderboards scores=${scoresSnap.size} hidden=${hidden.size} endless=${topEndless.length} campaign=${topCampaign.length} daily=${dailyTop.length}`,
+    )
   },
 )
 
