@@ -135,7 +135,7 @@ export function Results({ outcome, mode, mapName, signedIn, hasNext, onNext, onR
           {submit === 'sending' && 'Sending your score to the board…'}
           {submit === 'done' && 'Your score is on the board.'}
           {submit === 'failed' && 'The board did not answer — your score is saved here, try again later.'}
-          {submit === 'idle' && !signedIn && mode !== 'campaign' && 'Enter the castle with your name and magic word to put a score on the board.'}
+          {submit === 'idle' && !signedIn && 'Enter the castle with your name and magic word to put this on the Defenders\u2019 Board.'}
         </p>
 
         <div className="puc-siege-card__actions">

@@ -105,6 +105,9 @@ export const submitSiegeScore = onCall<SubmitSiegeScoreRequest, Promise<SubmitSi
       }
 
       const improved = Object.keys(patch).length > 0
+      // One line per call so `firebase functions:log` can answer "did the
+      // client ever reach us?" — callables log nothing on their own.
+      console.log(`submitSiegeScore ${normalizedName} ${mode} score=${score} wave=${wave} improved=${improved}`)
       if (improved) {
         tx.set(
           scoreRef,
