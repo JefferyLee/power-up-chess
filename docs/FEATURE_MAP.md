@@ -34,7 +34,7 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Theme Shop | `/shop` | break | spends (cosmetics) | no |
 | The Library (Book Owl) | `/library` | break | — | no (reading) |
 | Knight's Run | `/knights-run` | break | — | no (auto-runner) |
-| Tower Defense | `/arcade/tower-defense` | break | — | no (vendored mini-game) |
+| Tower Defense ("The Siege") | `/arcade/tower-defense` | break | — (own leaderboard, puzzle-board rules) | yes — chess-themed 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; see `docs/SIEGE_DESIGN.md` |
 
 Other routes not fronted by a Hall door: `/review` (post-game analysis), `/history` + `/history/:name` (match history), `/puzzles/{calibration,daily,leaderboard,legends,master,plot/:plot}`, `/learn/:lessonId`, `/endgame/:id`, `/openings/:id`, `/me` (adventurer plaque), `/team/:teamId`, `/wizard/:roomId`, `/wizard/v2/:roomId`.
 

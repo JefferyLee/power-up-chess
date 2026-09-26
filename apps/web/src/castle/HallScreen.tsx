@@ -511,7 +511,7 @@ export function HallScreen() {
             icon="⚔️"
             iconKey="tower-defense"
             label="Tower Defense"
-            blurb="Build towers, stop the waves. NEW."
+            blurb="Your pieces defend the castle."
             variant="oak"
             onClick={() => navigate('/arcade/tower-defense')}
           />

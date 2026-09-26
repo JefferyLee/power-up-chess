@@ -213,6 +213,25 @@ export interface SubmitForestScoreResponse {
 
 const submitForestScoreFn = httpsCallable<SubmitForestScoreRequest, SubmitForestScoreResponse>(functions, 'submitForestScore')
 
+// Siege (chess tower defense) — global leaderboard, no castle points.
+export interface SubmitSiegeScoreRequest {
+  normalizedName: string
+  mode: 'endless' | 'daily' | 'campaign'
+  score: number
+  wave: number
+  /** Daily only — the challenge's date key. */
+  dateKey?: string
+  /** Campaign only — total stars across the 12 maps. */
+  stars?: number
+}
+export interface SubmitSiegeScoreResponse {
+  ok: true
+  /** True if this run improved the stored best for its mode. */
+  improved: boolean
+}
+
+const submitSiegeScoreFn = httpsCallable<SubmitSiegeScoreRequest, SubmitSiegeScoreResponse>(functions, 'submitSiegeScore')
+
 // MVP2 W.3: Wizard's Duel online.
 export interface WizardPlayerInfo {
   displayName: string
@@ -422,6 +441,11 @@ export async function callSetPresence(req: SetPresenceRequest): Promise<SetPrese
 
 export async function callSubmitForestScore(req: SubmitForestScoreRequest): Promise<SubmitForestScoreResponse> {
   const { data } = await submitForestScoreFn(req)
+  return data
+}
+
+export async function callSubmitSiegeScore(req: SubmitSiegeScoreRequest): Promise<SubmitSiegeScoreResponse> {
+  const { data } = await submitSiegeScoreFn(req)
   return data
 }
 

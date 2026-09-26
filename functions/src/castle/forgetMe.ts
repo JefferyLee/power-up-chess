@@ -118,6 +118,7 @@ export const forgetMe = onCall<ForgetMeRequest, Promise<ForgetMeResponse>>({ enf
 
   // 5. Forest leaderboard row.
   try { await db.doc(`forest_leaderboard/${normalizedName}`).delete() } catch { /* best-effort */ }
+  try { await db.doc(`siege_scores/${normalizedName}`).delete() } catch { /* best-effort */ }
 
   // 6. Per-uid shadow identities.
   for (const u of uids) {

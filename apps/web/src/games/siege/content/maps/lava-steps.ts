@@ -1,0 +1,120 @@
+import type { MapDef } from '../../sim/types'
+import { g } from '../waves'
+
+export const lavaSteps: MapDef = {
+  id: 'lava-steps',
+  order: 9,
+  name: 'Lava Steps',
+  subtitle: 'No queens across the fire',
+  theme: 'lava',
+  cols: 18,
+  rows: 11,
+  cells: [
+    '##################',
+    'S...ppp#ppppp#ppp#',
+    'ppp.ppppp#ppp...p#',
+    'ppp.........p.p.p#',
+    '#ppp#pppppp.p.p.pp',
+    'ppppp#ppppp...p.pp',
+    '#ppp#pppppp.ppp.pp',
+    'ppp.........ppp.pp',
+    'ppp.ppppp#ppppp..G',
+    'S...ppp#ppppp#ppp#',
+    '##################',
+  ],
+  waves: [
+    { hpMult: 1.45, groups: [g('pawn', 8, 1.0, 0, 0), g('pawn', 8, 1.0, 3, 1)] },
+    { hpMult: 1.45, groups: [g('knight', 12, 0.45, 0, 0), g('pawn', 10, 0.8, 0, 1)] },
+    { hpMult: 1.45, groups: [g('rook', 2, 3.0, 0, 1), g('bishop', 2, 2.0, 1, 1), g('pawn', 8, 0.8, 0, 0)] },
+    {
+      hpMult: 1.5,
+      groups: [g('knight', 12, 0.4, 0, 0), g('knight', 12, 0.4, 0, 1), g('pawn', 6, 0.8, 8, 0), g('pawn', 6, 0.8, 8, 1)],
+    },
+    {
+      hpMult: 1.5,
+      groups: [g('queen', 2, 4.0, 0, 0), g('queen', 1, 4.0, 0, 1), g('bishop', 2, 2.0, 1, 0), g('bishop', 2, 2.0, 1, 1)],
+    },
+    { hpMult: 1.55, groups: [g('pawn', 16, 0.6, 0, 0), g('rook', 4, 3.0, 0, 1), g('bishop', 2, 2.0, 1, 1)] },
+    {
+      hpMult: 1.55,
+      groups: [
+        g('knight', 14, 0.4, 0, 0),
+        g('knight', 14, 0.4, 0, 1),
+        g('bishop', 3, 2.0, 2, 0),
+        g('bishop', 3, 2.0, 2, 1),
+        g('rook', 2, 3.0, 8, 0),
+        g('pawn', 10, 0.7, 8, 1),
+      ],
+    },
+    {
+      hpMult: 1.6,
+      groups: [g('queen', 3, 4.0, 0, 0), g('bishop', 4, 2.0, 1, 0), g('pawn', 12, 0.7, 0, 1), g('rook', 2, 3.0, 6, 1)],
+    },
+    {
+      hpMult: 1.65,
+      groups: [
+        g('rook', 4, 3.0, 0, 0),
+        g('rook', 4, 3.0, 0, 1),
+        g('bishop', 3, 2.0, 1, 0),
+        g('bishop', 3, 2.0, 1, 1),
+        g('knight', 8, 0.4, 12, 0),
+        g('knight', 8, 0.4, 12, 1),
+      ],
+    },
+    {
+      hpMult: 1.7,
+      groups: [
+        g('pawn', 18, 0.5, 0, 0),
+        g('pawn', 18, 0.5, 0, 1),
+        g('bishop', 3, 2.0, 4, 0),
+        g('bishop', 3, 2.0, 4, 1),
+        g('knight', 10, 0.4, 8, 0),
+        g('knight', 10, 0.4, 8, 1),
+        g('rook', 2, 3.0, 12, 0),
+        g('rook', 2, 3.0, 12, 1),
+      ],
+    },
+    {
+      hpMult: 1.75,
+      groups: [
+        g('queen', 2, 4.0, 0, 0),
+        g('queen', 2, 4.0, 0, 1),
+        g('bishop', 3, 2.0, 1, 0),
+        g('bishop', 3, 2.0, 1, 1),
+        g('rook', 3, 3.0, 2, 0),
+        g('rook', 3, 3.0, 2, 1),
+      ],
+    },
+    {
+      hpMult: 1.8,
+      groups: [
+        g('rook', 3, 3.0, 0, 0),
+        g('rook', 3, 3.0, 0, 1),
+        g('bishop', 2, 2.0, 2, 0),
+        g('bishop', 2, 2.0, 2, 1),
+        g('queen', 2, 4.0, 4, 0),
+        g('queen', 2, 4.0, 4, 1),
+        g('knight', 12, 0.4, 10, 0),
+        g('knight', 12, 0.4, 10, 1),
+      ],
+    },
+    {
+      hpMult: 1.9,
+      groups: [
+        g('queen', 3, 4.0, 0, 0),
+        g('queen', 3, 4.0, 0, 1),
+        g('bishop', 4, 2.0, 1, 0),
+        g('bishop', 4, 2.0, 1, 1),
+        g('rook', 3, 3.0, 3, 0),
+        g('rook', 3, 3.0, 3, 1),
+        g('pawn', 10, 0.6, 12, 0),
+        g('pawn', 10, 0.6, 12, 1),
+      ],
+    },
+  ],
+  modifiers: ['noQueens'],
+  startGold: 140,
+  lives: 20,
+  intro:
+    'Two roads cross the lava, and you get no queen this time. A rook and a bishop side by side cover the same lines a queen would.',
+}

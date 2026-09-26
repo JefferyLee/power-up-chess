@@ -35,6 +35,8 @@ export { hostTellStory } from './castle/hostTellStory'
 export { askHost } from './castle/askHost'
 export { cleanupPresence } from './castle/cleanupPresence'
 export { submitForestScore } from './forest/submitForestScore'
+export { submitSiegeScore } from './siege/submitSiegeScore'
+export { refreshSiegeLeaderboards } from './siege/refreshSiegeLeaderboards'
 export {
   createWizardRoom,
   joinWizardRoom,

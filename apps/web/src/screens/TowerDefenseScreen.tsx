@@ -1,36 +1,33 @@
-// TowerDefenseScreen — hosts the standalone Tower Defense game (a static
-// vanilla-JS build served from /public/tower-defense) in a full-viewport
-// iframe. It's a "take a break" diversion reached from the Hall.
-//
-// The game is self-contained: its optional /api/* calls fall back to
-// localStorage when no backend answers, so it runs fine under the castle
-// domain. The app-wide <FloatingBack /> button (bottom-left on every
-// non-Hall route) provides the return path — essential in PWA standalone
-// mode where there's no browser chrome.
-//
-// We pass the Castle display name into the game via ?name= so the kid is
-// never asked to type a name — the game uses who they already are here.
+// TowerDefenseScreen — hosts the Siege (chess-themed tower defense) at
+// /arcade/tower-defense. The game (three.js + R3F + sim) lives in its
+// own chunk and is only fetched when a kid opens this door; the
+// app-wide <FloatingBack /> button provides the return path.
 
-import { useCastle } from '../castle/useCastle'
+import { lazy, Suspense } from 'react'
+
+const SiegeScreen = lazy(() => import('../games/siege/ui/SiegeScreen'))
 
 export function TowerDefenseScreen() {
-  const { identity } = useCastle()
-  const name = identity?.displayName?.trim()
-  const src = name
-    ? `/tower-defense/index.html?name=${encodeURIComponent(name)}`
-    : '/tower-defense/index.html'
   return (
-    <iframe
-      src={src}
-      title="Tower Defense"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100vw',
-        height: '100dvh',
-        border: 0,
-        background: '#0b1410',
-      }}
-    />
+    <Suspense
+      fallback={
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'var(--puc-bg-deep, #07081a)',
+            color: 'var(--puc-text-muted, #a9a8cc)',
+            fontFamily: 'Cinzel, var(--puc-font-display, serif)',
+            fontSize: 18,
+          }}
+        >
+          Raising the walls…
+        </div>
+      }
+    >
+      <SiegeScreen />
+    </Suspense>
   )
 }
