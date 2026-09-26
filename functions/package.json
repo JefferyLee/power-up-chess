@@ -2,6 +2,7 @@
   "name": "@power-up-chess/functions",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@10.32.0",
   "main": "lib/index.js",
   "engines": {
     "node": "22"
@@ -20,6 +21,7 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
+    "@google-cloud/functions-framework": "^5.0.5",
     "@google/generative-ai": "^0.24.1",
     "chess.js": "^1.4.0",
     "firebase-admin": "^13.6.0",
