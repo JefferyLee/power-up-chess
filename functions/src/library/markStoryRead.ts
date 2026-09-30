@@ -8,7 +8,7 @@
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { findOwnedGuest } from '../castle/requireOwner'
 import { loadBundle } from '../castle/storyBank'
 
 /** "Other tales" — same fallback the client uses when source.book is missing. */
@@ -53,17 +53,15 @@ export const markStoryRead = onCall<Request, Promise<Response>>(async (req) => {
     return { added: false, booksRead: 0 }
   }
 
-  const guestRef = db.doc(`guests/${idData.normalizedName}`)
   // The transaction touches only the guest doc. The library_stats
   // counter is bumped OUTSIDE the transaction with FieldValue.increment
   // — it's an aggregate that doesn't need atomicity with the per-guest
   // state, and keeping it out lets us still no-op cheaply when the
   // guest has already read this story.
   const result = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(guestRef)
-    if (!snap.exists) return { added: false, booksRead: 0, bookKeyToBump: null as string | null }
-    const guest = snap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) return { added: false, booksRead: 0, bookKeyToBump: null }
+    const owned = await findOwnedGuest(db, uid, idData.normalizedName, tx)
+    if (!owned) return { added: false, booksRead: 0, bookKeyToBump: null as string | null }
+    const { ref: guestRef, guest } = owned
     const ids = Array.isArray(guest.booksReadIds) ? [...guest.booksReadIds] : []
     if (ids.includes(storyId)) {
       return { added: false, booksRead: ids.length, bookKeyToBump: null }

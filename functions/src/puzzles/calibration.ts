@@ -11,6 +11,7 @@
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import type { GuestDoc } from '../castle/types'
 import {
   CALIBRATION_RUNGS,
@@ -91,16 +92,8 @@ export const submitCalibration = onCall<
   const seed = seedRatingFor(results)
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
   await db.runTransaction(async (tx) => {
-    const guestSnap = await tx.get(guestRef)
-    const guest = guestSnap.data() as GuestDoc | undefined
-    if (!guest || !guest.uids.includes(req.auth!.uid)) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only calibrate yourself.',
-      )
-    }
+    const { ref: guestRef } = await requireOwnedGuest(db, req.auth!.uid, normalizedName, tx)
     const ratings: Record<string, number> = {}
     for (const plot of PLOTS) ratings[plot] = seed
     tx.update(guestRef, {

@@ -10,8 +10,8 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { ChatMessageDoc, QuizState } from './chatTypes'
+import { findOwnedGuest } from './requireOwner'
 import { normalizeAnswer } from './storyQuiz'
-import type { GuestDoc } from './types'
 
 const MAX_ATTEMPTS = 3
 const ANSWER_AWARD = 1
@@ -70,19 +70,18 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
     const keyRef = db.doc(`story_quiz_keys/${messageId}`)
     const attemptRef = db.doc(`story_quiz_attempts/${messageId}/uids/${uid}`)
 
-    // Pre-resolve the guest ref so we can read it inside the transaction's
-    // read phase (Firestore requires ALL reads before ANY writes).
-    const guestRef = !idData.isBypass && idData.normalizedName
-      ? db.doc(`guests/${idData.normalizedName}`)
-      : null
+    // Bypass guests have no guest doc to credit. The ownership lookup runs
+    // inside the transaction's read phase (Firestore requires ALL reads
+    // before ANY writes).
+    const guestName = !idData.isBypass && idData.normalizedName ? idData.normalizedName : null
 
     return db.runTransaction(async (tx) => {
       // ── Phase 1: all reads ──────────────────────────────────────────
-      const [msgSnap, keySnap, attemptSnap, guestSnap] = await Promise.all([
+      const [msgSnap, keySnap, attemptSnap, owned] = await Promise.all([
         tx.get(msgRef),
         tx.get(keyRef),
         tx.get(attemptRef),
-        guestRef ? tx.get(guestRef) : Promise.resolve(null),
+        guestName ? findOwnedGuest(db, uid, guestName, tx) : Promise.resolve(null),
       ])
       if (!msgSnap.exists) throw new HttpsError('not-found', 'Message not found.')
       const msg = msgSnap.data() as ChatMessageDoc
@@ -117,13 +116,13 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
       // single update payload. Both the quiz counters and the point award
       // need to be coalesced or the second tx.update would clobber
       // partial fields from the first.
-      const guest = guestRef && guestSnap?.exists ? (guestSnap.data() as GuestDoc) : null
-      const guestEligible = guest && guest.uids.includes(uid)
+      const guest = owned?.guest ?? null
+      const guestRef = owned?.ref ?? null
       const guestUpdate: Record<string, unknown> = {}
       let earnedPoint = false
       let castlePoints = 0
 
-      if (guest && guestEligible) {
+      if (guest) {
         // Always bump quizAttempted (correct or wrong) — drives the
         // Adventurer's Plaque library section.
         guestUpdate.quizAttempted = (guest.quizAttempted ?? 0) + 1
@@ -141,7 +140,7 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
       }
 
       // Correct — claim the win + award the point + bump quizCorrect.
-      if (guest && guestEligible) {
+      if (guest) {
         castlePoints = guest.castlePoints + ANSWER_AWARD
         const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, guest.castlePoints)
         guestUpdate.castlePoints = castlePoints

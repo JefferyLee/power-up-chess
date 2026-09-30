@@ -4,11 +4,12 @@
 // on what's stored. NO castle points — the Siege is a diversion.
 //
 // Mirrors submitForestScore: requires auth, the caller must be one of
-// the guest's uids, and a missing guest (bypass) is a 200 no-op.
+// the guest's uids, and a missing guest (bypass) is rejected by
+// requireOwnedGuest.
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 
 const MAX_SCORE = 1_000_000
 const MAX_WAVE = 999
@@ -75,20 +76,14 @@ export const submitSiegeScore = onCall<SubmitSiegeScoreRequest, Promise<SubmitSi
     }
 
     const db = getFirestore()
-    const guestRef = db.doc(`guests/${normalizedName}`)
     const scoreRef = db.doc(`siege_scores/${normalizedName}`)
     const now = Date.now()
 
     return db.runTransaction(async (tx) => {
-      const [guestSnap, scoreSnap] = await Promise.all([tx.get(guestRef), tx.get(scoreRef)])
-      const guest = guestSnap.data() as GuestDoc | undefined
-      if (!guest) {
-        // Bypass guest snuck through — no-op.
-        return { ok: true as const, improved: false }
-      }
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only submit scores for yourself.')
-      }
+      const [{ guest }, scoreSnap] = await Promise.all([
+        requireOwnedGuest(db, uid, normalizedName, tx),
+        tx.get(scoreRef),
+      ])
 
       const prior = scoreSnap.exists ? (scoreSnap.data() as SiegeScoreDoc) : undefined
       const patch: Partial<SiegeScoreDoc> = {}

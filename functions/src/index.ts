@@ -1,9 +1,18 @@
 // Power Up Chess Cloud Functions entrypoint.
 
 import { initializeApp } from 'firebase-admin/app'
+import { setGlobalOptions } from 'firebase-functions/v2'
 import { onRequest } from 'firebase-functions/v2/https'
 
 initializeApp()
+
+// Defaults for every function below. This must run before the function
+// modules load: the CommonJS build keeps the `export … from` requires in
+// source order, so it does. us-central1 is already the v2 default (and
+// pinned explicitly by two schedulers), so nothing changes region;
+// maxInstances caps a runaway loop's bill; 256MiB is the v2 default —
+// nothing here holds more than a room doc, a PGN or one TTS clip.
+setGlobalOptions({ region: 'us-central1', maxInstances: 10, memory: '256MiB' })
 
 export const healthcheck = onRequest((_req, res) => {
   res.json({ ok: true, service: 'power-up-chess', phase: 3 })

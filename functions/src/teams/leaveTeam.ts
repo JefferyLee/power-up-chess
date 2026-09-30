@@ -8,7 +8,8 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { disbandTeamTx } from './disbandHelpers'
-import type { GuestDoc, TeamDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
+import type { TeamDoc } from '../castle/types'
 
 export interface LeaveTeamRequest {
   teamId: string
@@ -35,17 +36,14 @@ export const leaveTeam = onCall<LeaveTeamRequest, Promise<LeaveTeamResponse>>(
     }
 
     const teamRef = db.doc(`teams/${teamId}`)
-    const guestRef = db.doc(`guests/${idData.normalizedName}`)
 
     return db.runTransaction(async (tx) => {
-      const [teamSnap, guestSnap] = await Promise.all([tx.get(teamRef), tx.get(guestRef)])
+      const [teamSnap, { ref: guestRef }] = await Promise.all([
+        tx.get(teamRef),
+        requireOwnedGuest(db, uid, idData.normalizedName, tx),
+      ])
       if (!teamSnap.exists) throw new HttpsError('not-found', 'Team not found.')
-      if (!guestSnap.exists) throw new HttpsError('not-found', 'Guest record missing.')
       const team = teamSnap.data() as TeamDoc
-      const guest = guestSnap.data() as GuestDoc
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only leave as yourself.')
-      }
       const inTeam = team.members.some((m) => m.normalizedName === idData.normalizedName)
       if (!inTeam) {
         throw new HttpsError('failed-precondition', 'You are not on this team.')

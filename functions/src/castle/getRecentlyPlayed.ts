@@ -5,7 +5,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from './types'
+import { findOwnedGuest } from './requireOwner'
 import type { PresenceDoc } from './chatTypes'
 
 const PRESENCE_FRESH_MS = 45_000
@@ -52,10 +52,9 @@ export const getRecentlyPlayed = onCall<unknown, Promise<Response>>(async (req) 
     return { entries: [] }
   }
 
-  const guestSnap = await db.doc(`guests/${idData.normalizedName}`).get()
-  if (!guestSnap.exists) return { entries: [] }
-  const guest = guestSnap.data() as GuestDoc
-  if (!guest.uids.includes(uid)) return { entries: [] }
+  const owned = await findOwnedGuest(db, uid, idData.normalizedName)
+  if (!owned) return { entries: [] }
+  const { guest } = owned
   const raw = Array.isArray(guest.recentlyPlayedWith) ? guest.recentlyPlayedWith : []
   if (raw.length === 0) return { entries: [] }
 

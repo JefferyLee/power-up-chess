@@ -10,7 +10,7 @@
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import {
   ENDGAME_LESSONS,
   LESSON_MASTER_BONUS_PTS,
@@ -72,34 +72,11 @@ export const submitEndgameClear = onCall<
   }
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
   const lessonPositions = ENDGAME_LESSONS[lessonId]!.positions
   const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
-    const snap = await tx.get(guestRef)
-    if (!snap.exists) {
-      return {
-        ok: true,
-        pointsAdded: 0,
-        castlePoints: 0,
-        clearedPositions: [positionLabel],
-        lessonMasteredNow: false,
-      }
-    }
-    const guest = snap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only post progress for yourself.',
-      )
-    }
-    if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Your session is no longer active. Please refresh.',
-      )
-    }
+    const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, normalizedName, tx, { sessionId })
 
     const progress = guest.endgameProgress?.[lessonId]
     const existing = new Set(progress?.clearedPositions ?? [])

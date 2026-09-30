@@ -54,12 +54,23 @@ export const refreshPuzzleLeaderboards = onSchedule(
       ?.weekKey
     const isNewWeek = previousWeekKey !== weekKey
 
-    // Pull every guest doc — Firestore can't filter on "has puzzleRatings"
-    // cheaply without an index, and the active-guest pool stays small
-    // for the foreseeable future. We filter in memory.
-    const allGuests = await db.collection('guests').get()
-    const candidates = allGuests.docs
-      .map((d) => d.data() as GuestDoc)
+    // Candidates: every guest with a puzzleRatings entry. Firestore can't
+    // filter on a map field itself, so query the two scalar markers that
+    // are written with it and never without it (all three landed in the
+    // same commit): puzzleStats.attempted, stamped by submitPuzzleAttempt
+    // on every attempt, and puzzleCalibrated, set by submitCalibration.
+    // Merged by doc id — a calibrated guest who also attempted is read
+    // twice, which still beats scanning guests who never opened the
+    // Garden. The in-memory filter below stays as the source of truth.
+    const [attemptedSnap, calibratedSnap] = await Promise.all([
+      db.collection('guests').where('puzzleStats.attempted', '>=', 1).get(),
+      db.collection('guests').where('puzzleCalibrated', '==', true).get(),
+    ])
+    const byId = new Map<string, GuestDoc>()
+    for (const d of [...attemptedSnap.docs, ...calibratedSnap.docs]) {
+      byId.set(d.id, d.data() as GuestDoc)
+    }
+    const candidates = Array.from(byId.values())
       .filter((g) => g && g.puzzleRatings && Object.keys(g.puzzleRatings).length > 0)
       .filter((g) => !g.hideFromLeaderboards) // Phase 3.7 privacy opt-out
 

@@ -7,11 +7,10 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { isAdmin } from '../castle/requireAdmin'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { BYE_OPPONENT, type PairingResult, type TournamentDoc } from './types'
 import { tournamentWeekKey } from './weekKey'
-
-const ADMIN_NORMALIZED_NAME = 'jeff'
 
 export interface OverrideTournamentResultRequest {
   normalizedName: string
@@ -41,7 +40,7 @@ export const overrideTournamentResult = onCall<
   const pairingIndex = Number(req.data?.pairingIndex)
   const result = req.data?.result
   if (
-    normalizedName !== ADMIN_NORMALIZED_NAME ||
+    !isAdmin(req.auth) ||
     !Number.isInteger(roundIndex) ||
     !Number.isInteger(pairingIndex) ||
     (result !== 'white-wins' && result !== 'black-wins' && result !== 'draw')
@@ -51,26 +50,15 @@ export const overrideTournamentResult = onCall<
 
   const db = getFirestore()
   const tournamentRef = db.doc(`tournaments/${tournamentWeekKey()}`)
-  const guestRef = db.doc(`guests/${normalizedName}`)
 
   return db.runTransaction(async (tx) => {
-    const [tSnap, gSnap] = await Promise.all([
+    // The admin claim decides WHO may override; the owner check still
+    // binds the override to the account the admin is signed in as
+    // (stamped into overriddenBy below).
+    const [tSnap] = await Promise.all([
       tx.get(tournamentRef),
-      tx.get(guestRef),
+      requireOwnedGuest(db, uid, normalizedName, tx, { sessionId }),
     ])
-    if (!gSnap.exists) {
-      throw new HttpsError('permission-denied', 'Guest record not found.')
-    }
-    const guest = gSnap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError('permission-denied', 'You can only act as yourself.')
-    }
-    if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Your session is no longer active. Please refresh.',
-      )
-    }
     if (!tSnap.exists) {
       throw new HttpsError('not-found', 'No tournament this week.')
     }

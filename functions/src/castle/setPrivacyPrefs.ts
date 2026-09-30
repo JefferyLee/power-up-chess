@@ -7,7 +7,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
-import type { GuestDoc } from './types'
+import { requireOwnedGuest } from './requireOwner'
 
 export interface SetPrivacyPrefsRequest {
   normalizedName: string
@@ -27,12 +27,7 @@ export const setPrivacyPrefs = onCall<SetPrivacyPrefsRequest, Promise<SetPrivacy
     throw new HttpsError('invalid-argument', 'Bad name.')
   }
   const db = getFirestore()
-  const ref = db.doc(`guests/${normalizedName}`)
-  const snap = await ref.get()
-  const guest = snap.data() as GuestDoc | undefined
-  if (!guest || !guest.uids.includes(uid)) {
-    throw new HttpsError('permission-denied', 'You can only change your own settings.')
-  }
+  const { ref } = await requireOwnedGuest(db, uid, normalizedName)
   const batch = db.batch()
   batch.update(ref, { hideFromLeaderboards: hide })
   // Deleting a row that isn't there is a no-op, so no existence check.

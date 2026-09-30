@@ -3,7 +3,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { postTournamentRegistration } from '../castle/postTournamentRegistration'
 import {
   TOURNAMENT_ENTRY_MIN_LIFETIME_SOLVES,
@@ -42,33 +42,13 @@ export const registerForTournament = onCall<
   const db = getFirestore()
   const weekKey = tournamentWeekKey()
   const tournamentRef = db.doc(`tournaments/${weekKey}`)
-  const guestRef = db.doc(`guests/${normalizedName}`)
 
   const result = await db.runTransaction<RegisterForTournamentResponse>(async (tx) => {
-    const [tSnap, gSnap] = await Promise.all([
+    const [tSnap, { guest }] = await Promise.all([
       tx.get(tournamentRef),
-      tx.get(guestRef),
+      requireOwnedGuest(db, uid, normalizedName, tx, { sessionId }),
     ])
 
-    if (!gSnap.exists) {
-      throw new HttpsError(
-        'permission-denied',
-        'Tournament entry needs a real magic-word account.',
-      )
-    }
-    const guest = gSnap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only register yourself.',
-      )
-    }
-    if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Your session is no longer active. Please refresh.',
-      )
-    }
     // Spec gate: 50 puzzles solved THIS week. Beta fallback: lifetime
     // solves >= 5 (so kids who already had momentum before weekly
     // tracking went live can still enter). Either passing is fine.

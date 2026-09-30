@@ -7,11 +7,12 @@
 // can't leave the leaderboard out of sync with the points record.
 //
 // Bypass guests don't reach this function (the client skips the call);
-// if one does, we 200-no-op to keep the UX from breaking.
+// if one does, requireOwnedGuest rejects it (no guest doc).
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import { AWARD_CAPS, UNLOCK_THRESHOLD, type GuestDailyEarn, type GuestDoc } from '../castle/types'
+import { AWARD_CAPS, UNLOCK_THRESHOLD, type GuestDailyEarn } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
 
@@ -80,7 +81,6 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
     const score = Math.max(MIN_SCORE, Math.min(MAX_SCORE, Math.floor(rawScore)))
     const db = getFirestore()
 
-    const guestRef = db.doc(`guests/${normalizedName}`)
     const lbRef = db.doc(`forest_leaderboard/${normalizedName}`)
     const runRef = db.doc(`forest_runs/${uid}/runs/${runId}`)
     const now = Date.now()
@@ -89,15 +89,10 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
 
     return db.runTransaction(async (tx) => {
       // ── Phase 1: reads ──────────────────────────────────────────────
-      const [guestSnap, lbSnap] = await Promise.all([tx.get(guestRef), tx.get(lbRef)])
-      const guest = guestSnap.data() as GuestDoc | undefined
-      if (!guest) {
-        // Bypass guest snuck through — no-op.
-        return { ok: true as const, best: 0, improved: false, castlePointsAdded: 0, castlePoints: 0 }
-      }
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only submit scores for yourself.')
-      }
+      const [{ ref: guestRef, guest }, lbSnap] = await Promise.all([
+        requireOwnedGuest(db, uid, normalizedName, tx),
+        tx.get(lbRef),
+      ])
 
       const prior = lbSnap.exists ? (lbSnap.data() as ForestLeaderboardDoc).best : 0
       const improved = score > prior

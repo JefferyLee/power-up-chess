@@ -12,6 +12,7 @@ import { Chess } from 'chess.js'
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { appendAuditTx } from '../castle/audit'
 import type { RoomDoc } from './types'
 
@@ -53,17 +54,8 @@ export const spendOnTakeback = onCall<SpendOnTakebackRequest, Promise<{ castlePo
     const cost = TAKEBACK_COSTS[index - 1]!
 
     const db = getFirestore()
-    const ref = db.doc(`guests/${name}`)
     return db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref)
-      if (!snap.exists) throw new HttpsError('not-found', 'Guest record not found.')
-      const guest = snap.data() as GuestDoc
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only spend your own points.')
-      }
-      if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-        throw new HttpsError('failed-precondition', 'Your session is no longer active. Please refresh.')
-      }
+      const { ref, guest } = await requireOwnedGuest(db, uid, name, tx, { sessionId })
       if (guest.castlePoints < cost) {
         throw new HttpsError('failed-precondition', `Not enough castle points (need ${cost}).`)
       }

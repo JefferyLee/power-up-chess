@@ -1,8 +1,10 @@
-// heraldWaitingRooms — fallback that posts a Hall chat hint when a
-// chess or wizard room has been sitting in `waiting` status with no
-// joiner for longer than HERALD_AFTER_MS. The Hall door badges +
-// chooser are the primary discovery path; this is the safety net for
-// kids who are watching chat rather than the doors.
+// heraldWaitingRooms — every minute: (1) republish the sanitised
+// castle_public/waitingRooms feed that drives the Hall door badges +
+// chooser (clients can't list rooms / wizard_rooms — those docs carry
+// uids), and (2) post a Hall chat hint when a chess or wizard room has
+// been sitting in `waiting` status with no joiner for longer than
+// HERALD_AFTER_MS — the safety net for kids who are watching chat
+// rather than the doors.
 //
 // Per-opener throttle: at most ONE herald per opener per run. With a
 // 1-minute schedule + the 30s threshold, a kid who opens five rooms
@@ -14,6 +16,12 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import type { ChatMessageDoc } from '../castle/chatTypes'
+import {
+  buildFeedRows,
+  WAITING_ROOMS_FEED_PATH,
+  type RawWaitingRoom,
+  type WaitingRoomsFeedDoc,
+} from './waitingRoomsFeed'
 
 /** A waiting room must be at least this old before we herald it. */
 const HERALD_AFTER_MS = 30 * 1000
@@ -36,6 +44,7 @@ export const heraldWaitingRooms = onSchedule(
     const cutoff = now - HERALD_AFTER_MS
 
     const candidates: MinimalRoom[] = []
+    const feed: WaitingRoomsFeedDoc = { rooms: [], wizardRooms: [], refreshedAt: now }
     for (const [kind, colName] of [
       ['chess', 'rooms'],
       ['wizard', 'wizard_rooms'],
@@ -44,12 +53,10 @@ export const heraldWaitingRooms = onSchedule(
         .collection(colName)
         .where('status', '==', 'waiting')
         .get()
+      const raw: RawWaitingRoom[] = []
       for (const doc of snap.docs) {
-        const d = doc.data() as {
-          white?: { displayName?: string; normalizedName?: string }
-          createdAt?: number
-          heraldedAt?: number
-        }
+        const d = doc.data() as Omit<RawWaitingRoom, 'id'> & { heraldedAt?: number }
+        raw.push({ id: doc.id, white: d.white, createdAt: d.createdAt, timeControl: d.timeControl })
         if (typeof d.heraldedAt === 'number') continue
         if (typeof d.createdAt !== 'number' || d.createdAt > cutoff) continue
         const openerNormalizedName = d.white?.normalizedName ?? ''
@@ -62,6 +69,15 @@ export const heraldWaitingRooms = onSchedule(
           createdAt: d.createdAt,
         })
       }
+      feed[kind === 'chess' ? 'rooms' : 'wizardRooms'] = buildFeedRows(raw, kind)
+    }
+
+    // Always rewrite the feed (even when empty) so a room that was
+    // joined or swept disappears from the Hall within a minute.
+    try {
+      await db.doc(WAITING_ROOMS_FEED_PATH).set(feed)
+    } catch (err) {
+      console.warn('heraldWaitingRooms: feed publish failed', err)
     }
 
     if (candidates.length === 0) {

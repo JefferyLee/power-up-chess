@@ -11,7 +11,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { findOwnedGuest } from '../castle/requireOwner'
 import {
   DEFAULT_RATING,
   PLOTS,
@@ -48,11 +48,10 @@ export const getNextPuzzle = onCall<
   let playerRating = DEFAULT_RATING
   let seen: Set<string> = new Set()
   if (normalizedName) {
-    const guestSnap = await db.doc(`guests/${normalizedName}`).get()
-    const guest = guestSnap.data() as GuestDoc | undefined
-    if (guest && guest.uids.includes(req.auth.uid)) {
-      playerRating = guest.puzzleRatings?.[plot as Plot] ?? DEFAULT_RATING
-      seen = new Set(guest.puzzleSeen ?? [])
+    const owned = await findOwnedGuest(db, req.auth.uid, normalizedName)
+    if (owned) {
+      playerRating = owned.guest.puzzleRatings?.[plot as Plot] ?? DEFAULT_RATING
+      seen = new Set(owned.guest.puzzleSeen ?? [])
     }
   }
   if (typeof ratingOverride === 'number' && Number.isFinite(ratingOverride)) {

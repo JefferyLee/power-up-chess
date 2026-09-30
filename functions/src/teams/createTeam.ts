@@ -12,7 +12,6 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import {
   TEAM_CREATE_COST_CP,
   TEAM_PER_USER_MAX,
-  type GuestDoc,
   type TeamBadge,
   type TeamDoc,
 } from '../castle/types'
@@ -22,6 +21,7 @@ import { generateTeamId, normalizeTeamName } from './teamId'
 import { sanitiseBadge } from './sanitiseBadge'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { assertCleanTeamText } from './teamText'
 
 const NAME_MIN = 2
@@ -76,7 +76,6 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
     // transaction would be perfect but Firestore doesn't allow queries
     // inside a tx; we use a small `team_names/{normalizedTeamName}`
     // lock doc as a uniqueness primary key.
-    const guestRef = db.doc(`guests/${idData.normalizedName}`)
     const nameLockRef = db.doc(`team_names/${encodeURIComponent(normalizedTeamName)}`)
 
     // Pre-allocate team id outside the tx — extremely unlikely to
@@ -87,18 +86,11 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
     const now = Date.now()
     const callerIp = extractIp(req)
     return db.runTransaction(async (tx) => {
-      const [guestSnap, lockSnap, teamSnap] = await Promise.all([
-        tx.get(guestRef),
+      const [{ ref: guestRef, guest }, lockSnap, teamSnap] = await Promise.all([
+        requireOwnedGuest(db, uid, idData.normalizedName, tx),
         tx.get(nameLockRef),
         tx.get(teamRef),
       ])
-      if (!guestSnap.exists) {
-        throw new HttpsError('failed-precondition', 'Guest record missing — sign in again.')
-      }
-      const guest = guestSnap.data() as GuestDoc
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only create teams as yourself.')
-      }
       if ((guest.castlePoints ?? 0) < TEAM_CREATE_COST_CP) {
         throw new HttpsError(
           'failed-precondition',

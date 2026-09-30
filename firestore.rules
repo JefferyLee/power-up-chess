@@ -11,15 +11,20 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     match /rooms/{roomId} {
-      // Anyone authenticated with the link can READ a room. The security
+      // Anyone authenticated with the link can GET a room. The security
       // boundary is the unguessable 6-char room id (~1B combinations), same
       // model as a Lichess game URL. This is what enables spectators to watch
       // a game by clicking a shared link.
       //
+      // LISTING is closed: room docs carry uids + normalized names. The
+      // Hall's "rooms waiting" badge reads the sanitised
+      // castle_public/waitingRooms feed (rebuilt by heraldWaitingRooms).
+      //
       // WRITES are still server-only — the submitMove / joinRoom / resignGame
       // Cloud Functions hold the only legitimate path to mutate room state,
       // and they enforce participant identity themselves.
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
       allow write: if false;
     }
 
@@ -30,9 +35,10 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // MVP2 Castle public stats — guest count + top-5 leaderboard.
+    // MVP2 Castle public stats — guest count + top-5 leaderboard (`stats`),
+    // plus the display-name-only waiting-rooms feed (`waitingRooms`).
     // PUBLIC read so the gate page can render before sign-in.
-    // Rebuilt by a scheduled Cloud Function every 30 s.
+    // Rebuilt by scheduled Cloud Functions (30 s / 1 min).
     match /castle_public/{doc} {
       allow read: if true;
       allow write: if false;
@@ -139,14 +145,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Text / voice bytes of chat messages that moderation auto-hid
+    // (reportChatMessage blanks the readable doc and copies the original
+    // here). Function-only — moderators + forgetMe reach it server-side.
+    match /chat_hidden/{messageId} {
+      allow read, write: if false;
+    }
+
     // In-app feedback — written via submitFeedback, read only by the
     // dev (guests/jeff). Cross-doc lookup against guests/jeff lets the
     // Hall snapshot listener show new feedback live without a callable
     // round-trip. Writes are still function-only (no client tampering).
+    // Admin = the `admin` custom claim (tools/admin/grant-admin.mjs),
+    // no longer "whoever holds jeff's magic word".
     match /feedback/{id} {
-      allow read: if request.auth != null
-        && exists(/databases/$(database)/documents/guests/jeff)
-        && get(/databases/$(database)/documents/guests/jeff).data.uids.hasAny([request.auth.uid]);
+      allow read: if request.auth != null && request.auth.token.admin == true;
       allow write: if false;
     }
     // Per-uid feedback rate-limit counters. Function-only.
@@ -245,13 +258,16 @@ service cloud.firestore {
     }
 
     // Wizard's Duel rooms — same security shape as chess rooms.
-    // READ allowed for any signed-in user (so spectators / joiners can
-    // load the room from a shared link). All WRITES go through the
+    // GET allowed for any signed-in user (so spectators / joiners can
+    // load the room from a shared link); LIST closed — the docs carry
+    // uids + normalized names, and the Hall reads the sanitised
+    // castle_public/waitingRooms feed instead. All WRITES go through the
     // submitWizardMove / submitWizardSpell / join / create Cloud
     // Functions, which enforce participant identity + game rules +
     // castle-points deduction atomically.
     match /wizard_rooms/{roomId} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
       allow write: if false;
     }
     // Per-duel chat messages. READ open to any signed-in user (spectators

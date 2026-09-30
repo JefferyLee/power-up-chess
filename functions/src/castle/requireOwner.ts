@@ -21,6 +21,34 @@ export interface OwnedGuest {
   guest: GuestDoc
 }
 
+export interface OwnerCheckOptions {
+  /** Client-supplied sessionId for callables under the single-active-
+   *  session policy (H.7). When the guest doc carries an
+   *  `activeSessionId` that differs, the caller is a stale device or
+   *  tab — throws failed-precondition. Guests from before H.7 have no
+   *  activeSessionId and pass. */
+  sessionId?: string
+}
+
+function normalise(normalizedName: string): string | null {
+  const name = String(normalizedName ?? '').trim().toLowerCase()
+  return !name || name.includes('/') ? null : name
+}
+
+async function load(
+  db: Firestore,
+  name: string,
+  tx?: Transaction,
+): Promise<{ ref: DocumentReference; guest: GuestDoc | undefined }> {
+  const ref = db.doc(`guests/${name}`)
+  const snap = tx ? await tx.get(ref) : await ref.get()
+  return { ref, guest: snap.data() as GuestDoc | undefined }
+}
+
+function owns(guest: GuestDoc, uid: string): boolean {
+  return Array.isArray(guest.uids) && guest.uids.includes(uid)
+}
+
 /**
  * Load `guests/{normalizedName}` and prove the caller owns it.
  *
@@ -35,19 +63,46 @@ export async function requireOwnedGuest(
   uid: string,
   normalizedName: string,
   tx?: Transaction,
+  opts?: OwnerCheckOptions,
 ): Promise<OwnedGuest> {
-  const name = String(normalizedName ?? '').trim().toLowerCase()
-  if (!name || name.includes('/')) {
+  const name = normalise(normalizedName)
+  if (!name) {
     throw new HttpsError('permission-denied', 'Set a magic word in the castle gate first.')
   }
-  const ref = db.doc(`guests/${name}`)
-  const snap = tx ? await tx.get(ref) : await ref.get()
-  const guest = snap.data() as GuestDoc | undefined
+  const { ref, guest } = await load(db, name, tx)
   if (!guest) {
     throw new HttpsError('failed-precondition', 'Guest record missing — sign in again.')
   }
-  if (!Array.isArray(guest.uids) || !guest.uids.includes(uid)) {
+  if (!owns(guest, uid)) {
     throw new HttpsError('permission-denied', 'You can only do that as yourself.')
   }
+  if (
+    opts?.sessionId !== undefined &&
+    guest.activeSessionId &&
+    guest.activeSessionId !== opts.sessionId
+  ) {
+    throw new HttpsError(
+      'failed-precondition',
+      'Your session is no longer active. Please refresh.',
+    )
+  }
   return { ref, guest }
+}
+
+/**
+ * Non-throwing sibling for callables that merely *personalise* their
+ * answer when the caller owns the name (puzzle lists, library shelves,
+ * recently-played). Returns null for a bad name, a missing doc or a
+ * uid that isn't on it — the caller then serves the public view.
+ */
+export async function findOwnedGuest(
+  db: Firestore,
+  uid: string,
+  normalizedName: string,
+  tx?: Transaction,
+): Promise<OwnedGuest | null> {
+  const name = normalise(normalizedName)
+  if (!name) return null
+  const { ref, guest } = await load(db, name, tx)
+  return guest && owns(guest, uid) ? { ref, guest } : null
 }

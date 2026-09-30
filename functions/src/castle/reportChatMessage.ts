@@ -8,6 +8,11 @@
 // Reporter identity is kept OFF the public message doc (which any authed
 // client can read) — dedup lives in a separate chat_flags/{messageId}__{uid}
 // doc, and only an aggregate `flags` count is written back to the message.
+//
+// Hiding also MOVES the content out of the readable doc: `text` (or the
+// voice bytes on a Wizard-room source) is blanked and the original copied
+// to chat_hidden/{messageId} (function-only rule) so a moderator, or
+// forgetMe, can still reach it.
 
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
@@ -57,6 +62,7 @@ export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatRes
     const msg = msgSnap.data() as {
       hidden?: boolean; flags?: number; kind?: string; reportable?: boolean
       viaWizard?: string; wizardMessageId?: string
+      text?: string; uid?: string; normalizedName?: string; name?: string; ts?: number
     }
     const flags0 = typeof msg.flags === 'number' ? msg.flags : 0
 
@@ -71,12 +77,45 @@ export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatRes
 
     const flags = flags0 + 1
     const hidden = flags >= FLAG_THRESHOLD
-    tx.set(flagRef, { uid, messageId, ts: Date.now() })
-    tx.update(msgRef, hidden ? { flags, hidden: true } : { flags })
+    const now = Date.now()
+    if (!hidden) {
+      tx.set(flagRef, { uid, messageId, ts: now })
+      tx.update(msgRef, { flags })
+      return { ok: true, hidden, flags }
+    }
+
     // Phase 1.1/1.3 — hiding a Wizard mirror also hides the SOURCE message
     // inside the duel room, so the content disappears everywhere at once.
-    if (hidden && msg.viaWizard && msg.wizardMessageId && !msg.viaWizard.includes('/') && !msg.wizardMessageId.includes('/')) {
-      tx.update(db.doc(`wizard_rooms/${msg.viaWizard}/messages/${msg.wizardMessageId}`), { hidden: true })
+    // (Read it before any write — Firestore transactions require that.)
+    const wizardRef =
+      msg.viaWizard && msg.wizardMessageId && !msg.viaWizard.includes('/') && !msg.wizardMessageId.includes('/')
+        ? db.doc(`wizard_rooms/${msg.viaWizard}/messages/${msg.wizardMessageId}`)
+        : null
+    const wizardSnap = wizardRef ? await tx.get(wizardRef) : null
+    const author = {
+      uid: msg.uid ?? '',
+      normalizedName: msg.normalizedName ?? '',
+      name: msg.name ?? '',
+      ts: msg.ts ?? 0,
+    }
+
+    tx.set(flagRef, { uid, messageId, ts: now })
+    tx.update(msgRef, { flags, hidden: true, text: '' })
+    tx.set(db.doc(`chat_hidden/${messageId}`), {
+      source: 'lobby', path: msgRef.path, ...author, text: msg.text ?? '', flags, hiddenAt: now,
+    })
+    if (wizardRef && wizardSnap?.exists) {
+      const src = wizardSnap.data() as {
+        kind?: string; text?: string; audioBase64?: string; mimeType?: string; durationMs?: number
+      }
+      const voice = src.kind === 'voice'
+      tx.update(wizardRef, voice ? { hidden: true, audioBase64: '' } : { hidden: true, text: '' })
+      tx.set(db.doc(`chat_hidden/${msg.wizardMessageId}`), {
+        source: 'wizard', path: wizardRef.path, ...author, hiddenAt: now, lobbyMessageId: messageId,
+        ...(voice
+          ? { audioBase64: src.audioBase64 ?? '', mimeType: src.mimeType ?? '', durationMs: src.durationMs ?? 0 }
+          : { text: src.text ?? '' }),
+      })
     }
     return { ok: true, hidden, flags }
   })

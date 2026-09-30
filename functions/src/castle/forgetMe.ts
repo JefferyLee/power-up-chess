@@ -25,7 +25,8 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { disbandTeamTx } from '../teams/disbandHelpers'
 import { tournamentWeekKey } from '../tournament/weekKey'
-import type { GuestDoc, TeamDoc } from './types'
+import { requireOwnedGuest } from './requireOwner'
+import type { TeamDoc } from './types'
 
 export interface ForgetMeRequest {
   normalizedName: string
@@ -72,13 +73,7 @@ export const forgetMe = onCall<ForgetMeRequest, Promise<ForgetMeResponse>>(APP_C
   }
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
-  const guestSnap = await guestRef.get()
-  if (!guestSnap.exists) throw new HttpsError('not-found', 'No such guest.')
-  const guest = guestSnap.data() as GuestDoc
-  if (!Array.isArray(guest.uids) || !guest.uids.includes(uid)) {
-    throw new HttpsError('permission-denied', 'You can only delete your own data.')
-  }
+  const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, normalizedName)
   const uids = guest.uids
   const teamIds = Array.isArray(guest.teamIds) ? guest.teamIds : []
 
@@ -120,10 +115,14 @@ export const forgetMe = onCall<ForgetMeRequest, Promise<ForgetMeResponse>>(APP_C
     })
   } catch { /* best-effort */ }
 
-  // 3. Authored chat messages.
+  // 3. Authored chat messages, plus the server-only copies of any that
+  //    moderation hid (reportChatMessage moves hidden text there).
   try {
     deleted.chatMessages = await deleteQuery(
       db, db.collection('lobby/messages/items').where('normalizedName', '==', normalizedName),
+    )
+    deleted.chatMessages += await deleteQuery(
+      db, db.collection('chat_hidden').where('normalizedName', '==', normalizedName),
     )
   } catch { /* best-effort */ }
 

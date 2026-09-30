@@ -3,14 +3,15 @@
 //
 // Server enforces once-ever via guests/{name}.learnedBasicsAt. If
 // the field already has a value, the call is a no-op. Bypass guests
-// (no doc) silently get 0 added — there's nowhere to persist their
-// "you've done this" mark anyway.
+// (no doc) never reach it: the client skips the call for them and the
+// ownership check rejects a doc-less name.
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import { TUTORIAL_COMPLETE_REWARD, type GuestDoc } from './types'
+import { TUTORIAL_COMPLETE_REWARD } from './types'
 import { appendAuditTx } from './audit'
 import { extractIp } from './ipGeo'
+import { requireOwnedGuest } from './requireOwner'
 
 export interface AwardTutorialCompleteRequest {
   normalizedName: string
@@ -36,18 +37,10 @@ export const awardTutorialComplete = onCall<
   }
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
   const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
-    const snap = await tx.get(guestRef)
-    if (!snap.exists) {
-      return { ok: true, added: 0, castlePoints: 0, alreadyClaimed: false }
-    }
-    const guest = snap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError('permission-denied', 'You can only claim for yourself.')
-    }
+    const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, normalizedName, tx)
     if (typeof guest.learnedBasicsAt === 'number') {
       return {
         ok: true,

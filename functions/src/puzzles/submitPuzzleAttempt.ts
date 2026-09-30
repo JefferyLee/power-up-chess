@@ -10,7 +10,7 @@
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
 import {
@@ -61,16 +61,8 @@ export const submitPuzzleAttempt = onCall<
     }
   }
 
-  const guestRef = db.doc(`guests/${normalizedName}`)
   const result = await db.runTransaction(async (tx) => {
-    const guestSnap = await tx.get(guestRef)
-    const guest = guestSnap.data() as GuestDoc | undefined
-    if (!guest || !guest.uids.includes(req.auth!.uid)) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only post attempts as yourself.',
-      )
-    }
+    const { ref: guestRef, guest } = await requireOwnedGuest(db, req.auth!.uid, normalizedName, tx)
 
     const prior = guest.puzzleRatings?.[puzzle.plot] ?? DEFAULT_RATING
     const newRating = ratingAfter(prior, puzzle.difficulty, success)

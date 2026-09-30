@@ -1,15 +1,15 @@
 // In-app feedback channel — bug reports and suggestions go to Jeff's
 // inbox, which is just the feedback collection plus a Firestore rule
-// that lets the guest with normalizedName === 'jeff' read it.
+// that lets a caller with the `admin` custom claim read it (see
+// castle/requireAdmin.ts and tools/admin/grant-admin.mjs).
 //
 // No email / 3rd-party service; the dev (Jeff) sees new feedback the
 // next time he opens the Hall.
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireAdmin } from '../castle/requireAdmin'
 
-const ADMIN_NORMALIZED_NAME = 'jeff'
 const RATE_LIMIT_PER_DAY = 8
 const MAX_TEXT_LEN = 500
 const MAX_ROUTE_LEN = 80
@@ -140,14 +140,8 @@ export const markFeedbackRead = onCall<MarkFeedbackReadRequest, Promise<{ ok: tr
     const id = String(req.data?.id ?? '').trim()
     if (!id) throw new HttpsError('invalid-argument', 'id required.')
 
+    requireAdmin(req.auth)
     const db = getFirestore()
-    // Only Jeff can mark feedback read. Verify by reading the admin
-    // guest doc + checking the caller's uid is on it.
-    const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
-    const admin = adminSnap.data() as GuestDoc | undefined
-    if (!admin || !admin.uids.includes(req.auth.uid)) {
-      throw new HttpsError('permission-denied', 'Inbox is reserved for the dev.')
-    }
 
     const ref = db.doc(`feedback/${id}`)
     const exists = await ref.get()
@@ -168,12 +162,8 @@ export const deleteFeedback = onCall<DeleteFeedbackRequest, Promise<{ ok: true }
     const id = String(req.data?.id ?? '').trim()
     if (!id) throw new HttpsError('invalid-argument', 'id required.')
 
+    requireAdmin(req.auth)
     const db = getFirestore()
-    const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
-    const admin = adminSnap.data() as GuestDoc | undefined
-    if (!admin || !admin.uids.includes(req.auth.uid)) {
-      throw new HttpsError('permission-denied', 'Inbox is reserved for the dev.')
-    }
 
     const ref = db.doc(`feedback/${id}`)
     const exists = await ref.get()

@@ -111,26 +111,28 @@ export const refreshCastleLivePulse = onSchedule(
       .get()
     const duelsInProgress = liveDuelsSnap.size
 
-    // ── Today's top puzzle solvers (LA day) ───────────────────────────
+    // ── Visitors today + today's top puzzle solvers (LA day) ──────────
     // Guest docs only exist for non-bypass identities, so no extra
     // bypass filter needed here. This doc is readable without sign-in,
     // so the Phase 3.7 opt-out keeps a guest's name out of both the
     // solvers list and the in-Hall list (they still count as a visitor).
-    const guestsSnap = await db.collection('guests').get()
+    // Three narrow queries instead of a full `guests` scan: a count
+    // aggregation for visitors, the guests whose puzzleSolvesToday is
+    // stamped with today's dayKey, and the (few) opted-out guests whose
+    // names the presence list must skip — ids only, no field data.
+    const [visitorsAgg, solversSnap, hiddenSnap] = await Promise.all([
+      db.collection('guests').where('lastVisitAt', '>=', dayAgo).count().get(),
+      db.collection('guests').where('puzzleSolvesToday.dayKey', '==', todayKey).get(),
+      db.collection('guests').where('hideFromLeaderboards', '==', true).select().get(),
+    ])
+    const visitorsToday = visitorsAgg.data().count
+    const hiddenNames = new Set(hiddenSnap.docs.map((d) => d.id))
     const todaysSolvers: PulseSolver[] = []
-    const hiddenNames = new Set<string>()
-    let visitorsToday = 0
-    for (const d of guestsSnap.docs) {
+    for (const d of solversSnap.docs) {
       const g = d.data() as GuestDoc
-      if (typeof g.lastVisitAt === 'number' && g.lastVisitAt >= dayAgo) {
-        visitorsToday++
-      }
-      if (g.hideFromLeaderboards) {
-        hiddenNames.add(d.id)
-        continue
-      }
+      if (g.hideFromLeaderboards) continue
       const ps = g.puzzleSolvesToday
-      if (ps && ps.dayKey === todayKey && ps.count > 0) {
+      if (ps && ps.count > 0) {
         todaysSolvers.push({ displayName: g.displayName, count: ps.count })
       }
     }

@@ -14,37 +14,31 @@
 // a spectator could already have seen.
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
-import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { HttpsError, onCall, type CallableRequest } from 'firebase-functions/v2/https'
 import { Chess } from 'chess.js'
+import { isAdmin, requireAdmin } from '../castle/requireAdmin'
 import type { RoomDoc } from './types'
 
 // Role gates for the Hall of Games. Curators may feature/unfeature a
-// game; the admin may also delete one. Checked against the guest doc's
-// uids server-side, so a client can't spoof the role. Coach Paul's
-// display name is matched in both spaced + unspaced normalised forms.
+// game; the admin may also delete one. Admin is the `admin` custom
+// claim (castle/requireAdmin.ts) and curates under ADMIN_NAME; Coach
+// Paul is checked against his guest doc's uids server-side (spaced +
+// unspaced normalised forms), so a client can't spoof either role.
 const ADMIN_NAME = 'jeff'
-const CURATOR_NAMES = [ADMIN_NAME, 'coach paul', 'coachpaul']
+const CURATOR_NAMES = ['coach paul', 'coachpaul']
 
 /** The curator name the caller is signed into, or null. */
 async function callerCurator(
   db: FirebaseFirestore.Firestore,
-  uid: string,
+  auth: NonNullable<CallableRequest['auth']>,
 ): Promise<string | null> {
+  if (isAdmin(auth)) return ADMIN_NAME
   for (const name of CURATOR_NAMES) {
     const snap = await db.collection('guests').doc(name).get()
     const uids = (snap.data() as { uids?: string[] } | undefined)?.uids ?? []
-    if (uids.includes(uid)) return name
+    if (uids.includes(auth.uid)) return name
   }
   return null
-}
-
-async function callerIsAdmin(
-  db: FirebaseFirestore.Firestore,
-  uid: string,
-): Promise<boolean> {
-  const snap = await db.collection('guests').doc(ADMIN_NAME).get()
-  const uids = (snap.data() as { uids?: string[] } | undefined)?.uids ?? []
-  return uids.includes(uid)
 }
 
 export interface ArchivedGame {
@@ -441,7 +435,7 @@ export const featureGame = onCall<FeatureGameRequest, Promise<{ ok: boolean; fea
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const db = getFirestore()
-    const curator = await callerCurator(db, req.auth.uid)
+    const curator = await callerCurator(db, req.auth)
     if (!curator) throw new HttpsError('permission-denied', 'Curators only.')
 
     const roomId = (req.data?.roomId ?? '').trim()
@@ -475,7 +469,7 @@ export const deleteArchivedGame = onCall<DeleteArchivedGameRequest, Promise<{ ok
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const db = getFirestore()
-    if (!(await callerIsAdmin(db, req.auth.uid))) {
+    if (!isAdmin(req.auth)) {
       throw new HttpsError('permission-denied', 'Admin only.')
     }
     const roomId = (req.data?.roomId ?? '').trim()
@@ -503,8 +497,6 @@ export const deleteArchivedGame = onCall<DeleteArchivedGameRequest, Promise<{ ok
 // completed room. Idempotent (room id keys every doc), so it can be
 // re-run safely. Paginates rooms by document id to bound memory.
 
-const ADMIN_NORMALIZED_NAME = 'jeff'
-
 export interface BackfillGameArchiveResponse {
   scanned: number
   archived: number
@@ -512,14 +504,8 @@ export interface BackfillGameArchiveResponse {
 
 export const backfillGameArchive = onCall<unknown, Promise<BackfillGameArchiveResponse>>(
   async (req) => {
-    if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+    requireAdmin(req.auth)
     const db = getFirestore()
-    // Admin gate: caller must be signed into the jeff guest doc.
-    const adminSnap = await db.collection('guests').doc(ADMIN_NORMALIZED_NAME).get()
-    const uids = (adminSnap.data() as { uids?: string[] } | undefined)?.uids ?? []
-    if (!uids.includes(req.auth.uid)) {
-      throw new HttpsError('permission-denied', 'Admin only.')
-    }
 
     let scanned = 0
     let archived = 0

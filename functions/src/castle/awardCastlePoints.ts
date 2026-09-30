@@ -10,8 +10,8 @@
 // `dailyEarn[source]` so e.g. 50 puzzles a day can't farm unlimited
 // points. The bucket auto-resets when the day rolls over.
 //
-// Bypass guests (no guests doc) silently get a no-op response — points
-// don't persist anywhere for them.
+// Bypass guests (no guests doc) never reach the award path: the client
+// skips the call for them and the ownership check rejects a doc-less name.
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
@@ -27,6 +27,7 @@ import {
 } from './types'
 import { appendAuditTx } from './audit'
 import { extractIp } from './ipGeo'
+import { requireOwnedGuest } from './requireOwner'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -115,15 +116,7 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
     const ip = extractIp(req)
 
     return db.runTransaction(async (tx) => {
-      const snap = await tx.get(guestRef)
-      if (!snap.exists) {
-        // Bypass guest or invalid name — silent no-op.
-        return { castlePoints: 0, added: 0, unlockedJustNow: false }
-      }
-      const guest = snap.data() as GuestDoc
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only earn points for yourself.')
-      }
+      const { guest } = await requireOwnedGuest(db, uid, normalizedName, tx)
 
       const earn = guest.dailyEarn && guest.dailyEarn.dayKey === todayKey
         ? { ...guest.dailyEarn }

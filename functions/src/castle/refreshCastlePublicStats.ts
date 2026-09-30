@@ -1,12 +1,16 @@
 // refreshCastlePublicStats — scheduled rebuild of castle_public/stats.
 //
-// Runs every 1 minute (Cloud Scheduler minimum). Aggregates the guests
-// collection into:
-//   - activeToday: count of guests with lastVisitAt within 24h
-//   - topGuests:   top 5 by castlePoints desc
+// Runs every 3 minutes. Aggregates the guests collection into:
+//   - activeToday:         count of guests with lastVisitAt within 24h
+//   - topGuests:           top 5 by castlePoints desc
+//   - wizardGateMinPoints: looser of the absolute floor and the rolling
+//                          top-10% castlePoints
 //
-// Gate page reads this doc via realtime onSnapshot so updates within the
-// minute are visible without polling.
+// Gate page reads this doc via realtime onSnapshot. Nothing on it is
+// time-critical (the Hall defaults the wizard gate to 1000 until it
+// loads), so a 3-minute cadence is fine and costs a third of every-minute.
+// No full `guests` scan: counts are aggregation queries and the
+// percentile is one rank-offset read.
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
@@ -25,7 +29,7 @@ const TOP_N = 5
 const MIN_GUESTS_FOR_PCT = 10
 
 export const refreshCastlePublicStats = onSchedule(
-  { schedule: 'every 1 minutes', timeoutSeconds: 60 },
+  { schedule: 'every 3 minutes', timeoutSeconds: 60 },
   async () => {
     const db = getFirestore()
     const now = Date.now()
@@ -61,26 +65,29 @@ export const refreshCastlePublicStats = onSchedule(
       }
     })
 
-    // Active-today count — scan + filter. Cheap while the guest list is
-    // small; if it grows past a few thousand we can index lastVisitAt.
-    const recentSnap = await db
-      .collection('guests')
-      .where('lastVisitAt', '>=', cutoff)
-      .get()
-    const activeToday = recentSnap.size
+    // Active-today count — aggregation query (billed per 1,000 index
+    // entries, not per guest doc).
+    const activeToday = (
+      await db.collection('guests').where('lastVisitAt', '>=', cutoff).count().get()
+    ).data().count
 
     // Wizard gate threshold — looser of WIZARD_ABSOLUTE_FLOOR (1000) and
     // the rolling top-10% castlePoints across all guests. With few
-    // guests we just publish the absolute floor.
-    const allGuestsSnap = await db.collection('guests').get()
-    const points = allGuestsSnap.docs
-      .map((d) => (d.data() as GuestDoc).castlePoints ?? 0)
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => b - a)
+    // guests we just publish the absolute floor. Rank-based: count the
+    // guests, then read the one doc sitting at the 10% rank. Skipped
+    // offset docs are billed, so this costs ~10% of a full scan.
+    const total = (await db.collection('guests').count().get()).data().count
     let top10PctMin = WIZARD_ABSOLUTE_FLOOR
-    if (points.length >= MIN_GUESTS_FOR_PCT) {
-      const idx = Math.max(0, Math.floor(points.length * 0.1) - 1)
-      top10PctMin = points[idx] ?? WIZARD_ABSOLUTE_FLOOR
+    if (total >= MIN_GUESTS_FOR_PCT) {
+      const idx = Math.max(0, Math.floor(total * 0.1) - 1)
+      const atRank = await db
+        .collection('guests')
+        .orderBy('castlePoints', 'desc')
+        .offset(idx)
+        .limit(1)
+        .get()
+      const pts = (atRank.docs[0]?.data() as GuestDoc | undefined)?.castlePoints
+      top10PctMin = typeof pts === 'number' && Number.isFinite(pts) ? pts : WIZARD_ABSOLUTE_FLOOR
     }
     const wizardGateMinPoints = Math.max(1, Math.min(WIZARD_ABSOLUTE_FLOOR, top10PctMin))
 

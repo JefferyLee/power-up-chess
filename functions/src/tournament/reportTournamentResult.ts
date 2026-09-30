@@ -5,7 +5,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { BYE_OPPONENT, type PairingResult, type TournamentDoc } from './types'
 import { tournamentWeekKey } from './weekKey'
 
@@ -47,26 +47,12 @@ export const reportTournamentResult = onCall<
 
   const db = getFirestore()
   const tournamentRef = db.doc(`tournaments/${tournamentWeekKey()}`)
-  const guestRef = db.doc(`guests/${normalizedName}`)
 
   return db.runTransaction(async (tx) => {
-    const [tSnap, gSnap] = await Promise.all([
+    const [tSnap] = await Promise.all([
       tx.get(tournamentRef),
-      tx.get(guestRef),
+      requireOwnedGuest(db, uid, normalizedName, tx, { sessionId }),
     ])
-    if (!gSnap.exists) {
-      throw new HttpsError('permission-denied', 'Guest record not found.')
-    }
-    const guest = gSnap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError('permission-denied', 'You can only act as yourself.')
-    }
-    if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Your session is no longer active. Please refresh.',
-      )
-    }
     if (!tSnap.exists) {
       throw new HttpsError('not-found', 'No tournament this week.')
     }

@@ -9,7 +9,8 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import type { LocationTag, SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
-import { titleFor, type GuestDoc } from './types'
+import { requireOwnedGuest } from './requireOwner'
+import { titleFor } from './types'
 import { hostOnDuty } from '../shared/hostOnDuty'
 import { laDayKey } from '../puzzles/dailyFive'
 
@@ -54,11 +55,7 @@ export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceRespon
     // Verify non-bypass identity against the guest doc + read cosmetic state.
     if (!isBypass) {
       if (!normalizedName) throw new HttpsError('invalid-argument', 'normalizedName required for non-bypass guests.')
-      const guestSnap = await db.doc(`guests/${normalizedName}`).get()
-      const guest = guestSnap.data() as GuestDoc | undefined
-      if (!guest || !guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only set presence as yourself.')
-      }
+      const { guest } = await requireOwnedGuest(db, uid, normalizedName)
       if (guest.banned) {
         throw new HttpsError('permission-denied', 'This account can’t join the Hall.')
       }

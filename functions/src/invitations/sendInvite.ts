@@ -29,6 +29,7 @@ import {
 } from './types'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
+import { requireOwnedGuest } from '../castle/requireOwner'
 
 export interface SendInviteRequest {
   fromNormalizedName: string
@@ -71,7 +72,6 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     const cost = kind === 'wizard' ? WIZARD_INVITE_COST_CP : INVITE_COST_CP
 
     const db = getFirestore()
-    const fromRef = db.doc(`guests/${fromNormalized}`)
     const toRef = db.doc(`guests/${toNormalized}`)
 
     // Daily rate limit — same per-uid pattern as the feedback/commentary
@@ -99,14 +99,9 @@ export const sendInvite = onCall<SendInviteRequest, Promise<SendInviteResponse>>
     const wizardGate = kind === 'wizard' ? await wizardGateMinPoints(db) : 0
 
     const result = await db.runTransaction(async (tx) => {
-      const fromSnap = await tx.get(fromRef)
-      if (!fromSnap.exists) {
-        throw new HttpsError('failed-precondition', 'Sender guest record missing.')
-      }
-      const fromGuest = fromSnap.data() as GuestDoc
-      if (!fromGuest.uids?.includes(req.auth!.uid)) {
-        throw new HttpsError('permission-denied', 'You do not own this guest record.')
-      }
+      const { ref: fromRef, guest: fromGuest } = await requireOwnedGuest(
+        db, req.auth!.uid, fromNormalized, tx,
+      )
       if (fromGuest.castlePoints < cost) {
         throw new HttpsError(
           'failed-precondition',

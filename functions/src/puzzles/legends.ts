@@ -6,7 +6,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { findOwnedGuest } from '../castle/requireOwner'
 import type { PuzzleDoc } from './types'
 
 export const LEGENDS_UNLOCK_SOLVES = 50
@@ -39,12 +39,10 @@ export const getLegendsList = onCall<
   let solved: string[] = []
   let totalSolved = 0
   if (normalizedName) {
-    const guest = (await db.doc(`guests/${normalizedName}`).get()).data() as
-      | GuestDoc
-      | undefined
-    if (guest && guest.uids.includes(req.auth.uid)) {
-      solved = guest.puzzleLegendsBadges ?? []
-      totalSolved = guest.puzzleStats?.solved ?? 0
+    const owned = await findOwnedGuest(db, req.auth.uid, normalizedName)
+    if (owned) {
+      solved = owned.guest.puzzleLegendsBadges ?? []
+      totalSolved = owned.guest.puzzleStats?.solved ?? 0
     }
   }
 

@@ -24,7 +24,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { deleteDoc, doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, setLogLevel } from 'firebase/firestore'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const RULES_PATH = resolve(HERE, '../../firestore.rules')
@@ -112,6 +112,23 @@ describe('firestore rules: /rooms/{roomId}', () => {
       }),
     )
   })
+
+  it('signed-in users cannot LIST rooms (get-only; the Hall reads castle_public/waitingRooms)', async () => {
+    await seedRoom('R6', { white: { playerId: 'alice', displayName: 'Alice' }, black: null, status: 'waiting' })
+    const eve = env.authenticatedContext('eve')
+    await assertFails(getDocs(collection(eve.firestore(), 'rooms')))
+    await assertSucceeds(getDoc(doc(eve.firestore(), 'rooms/R6')))
+  })
+})
+
+describe('firestore rules: /castle_public/waitingRooms', () => {
+  it('is readable even before sign-in and never writable', async () => {
+    await seed('castle_public/waitingRooms', { rooms: [], wizardRooms: [], refreshedAt: 1 })
+    const anon = env.unauthenticatedContext()
+    await assertSucceeds(getDoc(doc(anon.firestore(), 'castle_public/waitingRooms')))
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'castle_public/waitingRooms'), { rooms: [{ roomId: 'X' }] }))
+  })
 })
 
 describe('firestore rules: default deny', () => {
@@ -197,6 +214,16 @@ describe('firestore rules: /chat_identity/{uid}', () => {
   })
 })
 
+describe('firestore rules: /chat_hidden/{messageId}', () => {
+  it('hidden chat text is server-only — not even the author can read it', async () => {
+    await seed('chat_hidden/m9', { text: 'hidden words', uid: 'uid-ada', normalizedName: 'ada', hiddenAt: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(getDoc(doc(ada.firestore(), 'chat_hidden/m9')))
+    await assertFails(getDocs(collection(ada.firestore(), 'chat_hidden')))
+    await assertFails(setDoc(doc(ada.firestore(), 'chat_hidden/m9'), { text: '' }))
+  })
+})
+
 describe('firestore rules: /invitations/{inviteId}', () => {
   it('signed-in users can read invitations; writes are function-only', async () => {
     await seed('invitations/i1', { from: 'ada', to: 'bob', status: 'pending' })
@@ -214,6 +241,13 @@ describe('firestore rules: wizard rooms + chat', () => {
     await assertSucceeds(getDoc(doc(eve.firestore(), 'wizard_rooms/W1')))
     await assertSucceeds(getDoc(doc(eve.firestore(), 'wizard_rooms/W1/messages/m1')))
   })
+  it('signed-in users cannot LIST wizard rooms (get-only)', async () => {
+    await seed('wizard_rooms/W3', { status: 'waiting', white: { uid: 'uid-ada', displayName: 'Ada' } })
+    const eve = env.authenticatedContext('eve')
+    await assertFails(getDocs(collection(eve.firestore(), 'wizard_rooms')))
+    await assertSucceeds(getDoc(doc(eve.firestore(), 'wizard_rooms/W3')))
+  })
+
   it('even a player cannot write wizard chat directly (function-only)', async () => {
     await seed('wizard_rooms/W2', { status: 'live', white: { playerId: 'uid-ada' } })
     const ada = env.authenticatedContext('uid-ada')

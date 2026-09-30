@@ -7,7 +7,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import { isKnownPieceSet, priceFor } from './registry'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
@@ -62,27 +62,10 @@ export const purchaseCosmetic = onCall<
   }
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
   const callerIp = extractIp(req)
 
   return db.runTransaction(async (tx) => {
-    const snap = await tx.get(guestRef)
-    if (!snap.exists) {
-      throw new HttpsError('not-found', 'Guest record not found.')
-    }
-    const guest = snap.data() as GuestDoc
-    if (!guest.uids.includes(uid)) {
-      throw new HttpsError(
-        'permission-denied',
-        'You can only buy for yourself.',
-      )
-    }
-    if (guest.activeSessionId && guest.activeSessionId !== sessionId) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Your session is no longer active. Please refresh.',
-      )
-    }
+    const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, normalizedName, tx, { sessionId })
 
     const owned = new Set(guest.cosmetics?.ownedPieceSets ?? [])
     if (owned.has(pieceSetId)) {

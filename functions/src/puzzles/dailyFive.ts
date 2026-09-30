@@ -10,7 +10,7 @@
 import { createHash } from 'node:crypto'
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import {
   DEFAULT_RATING,
   PLOTS,
@@ -53,12 +53,7 @@ export const getDailyFive = onCall<
   if (!normalizedName) return { ok: false, reason: 'invalid-input' }
 
   const db = getFirestore()
-  const guestRef = db.doc(`guests/${normalizedName}`)
-  const guestSnap = await guestRef.get()
-  const guest = guestSnap.data() as GuestDoc | undefined
-  if (!guest || !guest.uids.includes(req.auth.uid)) {
-    throw new HttpsError('permission-denied', 'Sign in as yourself.')
-  }
+  const { ref: guestRef, guest } = await requireOwnedGuest(db, req.auth.uid, normalizedName)
 
   const dayKey = laDayKey(Date.now())
 

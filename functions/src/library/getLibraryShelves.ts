@@ -8,8 +8,8 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { onCall } from 'firebase-functions/v2/https'
+import { findOwnedGuest } from '../castle/requireOwner'
 import { loadBundle } from '../castle/storyBank'
-import type { GuestDoc } from '../castle/types'
 
 const FALLBACK_BOOK_KEY = 'Other tales'
 
@@ -72,12 +72,9 @@ export const getLibraryShelves = onCall<unknown, Promise<GetLibraryShelvesRespon
         | { normalizedName: string; isBypass: boolean }
         | undefined
       if (idData && !idData.isBypass && idData.normalizedName) {
-        const guestSnap = await db.doc(`guests/${idData.normalizedName}`).get()
-        if (guestSnap.exists) {
-          const guest = guestSnap.data() as GuestDoc
-          if (Array.isArray(guest.booksReadIds) && guest.uids.includes(uid)) {
-            kidReadIds = new Set(guest.booksReadIds)
-          }
+        const owned = await findOwnedGuest(db, uid, idData.normalizedName)
+        if (owned && Array.isArray(owned.guest.booksReadIds)) {
+          kidReadIds = new Set(owned.guest.booksReadIds)
         }
       }
     }

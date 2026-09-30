@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { callHostStoryAnswer, callPostChat, callReportChatMessage } from '../firebase/callables'
 import { useClearedAt, setClearedAtNow } from './clearedAt'
+import { hideAuthor, unhideAuthor, useHiddenAuthors } from './hiddenAuthors'
 import { useCastle } from './useCastle'
 import { useLobbyMessages, type ChatMessage, type ChatMessageAction, type QuizState } from './useLobbyChat'
 import { NameLink } from '../invitations/NameLink'
@@ -17,9 +18,18 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
   // /clear hides everything posted BEFORE the local timestamp. Server-
   // side messages are untouched; this is purely a self-view filter.
   const clearedAt = useClearedAt()
-  const messages = clearedAt > 0
+  const unclearedMessages = clearedAt > 0
     ? allMessages.filter((m) => m.ts >= clearedAt)
     : allMessages
+  // "Hide for me" — lines from authors this device muted. Local only;
+  // a toggle lets the kid peek at what they hid.
+  const hiddenAuthors = useHiddenAuthors()
+  const [showHidden, setShowHidden] = useState(false)
+  const isMuted = (m: ChatMessage) => m.kind === 'user' && !!m.normalizedName && hiddenAuthors.has(m.normalizedName)
+  const hiddenCount = hiddenAuthors.size === 0 ? 0 : unclearedMessages.filter(isMuted).length
+  const messages = hiddenCount === 0 || showHidden
+    ? unclearedMessages
+    : unclearedMessages.filter((m) => !isMuted(m))
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -112,10 +122,20 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
             return null
           })()
           return messages.map((m) => (
-            <Bubble key={m.id} message={m} showQuiz={m.id === latestQuizId} />
+            <Bubble key={m.id} message={m} showQuiz={m.id === latestQuizId} muted={isMuted(m)} />
           ))
         })()}
       </div>
+      {hiddenCount > 0 && (
+        <div className="puc-chat__hidden-bar">
+          {showHidden
+            ? `Showing ${hiddenCount} line${hiddenCount === 1 ? '' : 's'} you hid.`
+            : `${hiddenCount} line${hiddenCount === 1 ? '' : 's'} hidden for you.`}
+          <button type="button" className="puc-chat__report" onClick={() => setShowHidden((v) => !v)}>
+            {showHidden ? 'Hide them again' : 'Show hidden'}
+          </button>
+        </div>
+      )}
       <form className="puc-chat__form" onSubmit={handleSubmit}>
         <button
           type="button"
@@ -151,10 +171,14 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
   )
 }
 
-function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean }) {
+function Bubble({ message, showQuiz, muted }: { message: ChatMessage; showQuiz: boolean; muted: boolean }) {
   const { identity } = useCastle()
   const isHost = message.kind === 'host'
   const isSystem = message.kind === 'system'
+  // "Hide for me": any other guest's line can be muted on this device.
+  // Bypass guests have no stable name to mute, so no button for them.
+  const canHide =
+    message.kind === 'user' && !!message.normalizedName && message.normalizedName !== identity?.normalizedName
   // A kid can flag another guest's message; 3 distinct reports auto-hide it.
   // Not your own, not host lines; system lines only when they carry a
   // kid's own words (team founded / recruiting cards are `reportable`).
@@ -170,7 +194,7 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
   // paragraphs so a 4-sentence anecdote doesn't render as one wall of text.
   const paragraphs = isHost ? splitForReading(message.text) : null
   return (
-    <div className={`puc-chat__bubble puc-chat__bubble--${message.kind}${message.hasTournamentCrown ? ' puc-chat__bubble--tcrown' : message.hasCrown ? ' puc-chat__bubble--crown' : message.hasHalo ? ' puc-chat__bubble--halo' : ''}`}>
+    <div className={`puc-chat__bubble puc-chat__bubble--${message.kind}${message.hasTournamentCrown ? ' puc-chat__bubble--tcrown' : message.hasCrown ? ' puc-chat__bubble--crown' : message.hasHalo ? ' puc-chat__bubble--halo' : ''}${muted ? ' puc-chat__bubble--muted' : ''}`}>
       <span className="puc-chat__name">
         {message.isBypass ? '👻 ' : ''}
         {message.hasTournamentCrown
@@ -211,9 +235,18 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
       )}
       {message.action && <ActionButton action={message.action} />}
       {message.quiz && showQuiz && <QuizBlock messageId={message.id} quiz={message.quiz} />}
-      {canReport && (
+      {(canReport || canHide) && (
         <div className="puc-chat__mod">
-          {reportState === 'idle' && (
+          {canHide && (muted ? (
+            <button type="button" className="puc-chat__report" onClick={() => unhideAuthor(message.normalizedName)} title="Show this guest's lines again">
+              Unhide
+            </button>
+          ) : (
+            <button type="button" className="puc-chat__report" onClick={() => hideAuthor(message.normalizedName)} title="Hide this guest's lines — only for you, only on this device">
+              🙈 Hide
+            </button>
+          ))}
+          {canReport && reportState === 'idle' && (
             <button type="button" className="puc-chat__report" onClick={() => setReportState('confirm')} title="Report this message">
               ⚑ Report
             </button>

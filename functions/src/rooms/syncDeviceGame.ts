@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { bumpAndCheck } from '../castle/chatRateLimit'
-import type { GuestDoc } from '../castle/types'
+import { requireOwnedGuest } from '../castle/requireOwner'
 import type { ArchivedGame } from './playerGames'
 
 const MAX_PGN_CHARS = 20_000
@@ -59,11 +59,7 @@ export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGa
   if (!idData || idData.isBypass || !idData.normalizedName) {
     throw new HttpsError('failed-precondition', 'Sign in with a magic word to sync games.')
   }
-  const guestSnap = await db.doc(`guests/${idData.normalizedName}`).get()
-  const guest = guestSnap.data() as GuestDoc | undefined
-  if (!guest || !guest.uids.includes(uid)) {
-    throw new HttpsError('permission-denied', 'You can only sync your own games.')
-  }
+  await requireOwnedGuest(db, uid, idData.normalizedName)
 
   const gate = await bumpAndCheck(uid, 'sync-day', SYNCS_PER_DAY)
   if (!gate.allowed) throw new HttpsError('resource-exhausted', 'Sync limit reached for today.')

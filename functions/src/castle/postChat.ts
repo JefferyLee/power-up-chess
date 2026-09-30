@@ -14,7 +14,8 @@ import { CHAT_LIMITS, type ChatMessageDoc, type PostChatRequest, type PostChatRe
 import { bumpAndCheck } from './chatRateLimit'
 import { scrubMessage } from './profanity'
 import { generateHostReply, GEMINI_API_KEY, mentionedHost } from './hostChatReply'
-import { titleFor, type GuestDoc } from './types'
+import { titleFor } from './types'
+import { requireOwnedGuest } from './requireOwner'
 
 /** Cost per Hall message, in castle points. Kids who can't earn yet
  *  (bypass guests) skip this — they have no balance. Designed to nudge
@@ -71,12 +72,7 @@ export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
     let hasTournamentCrown = false
     let title: string | null = null
     if (!isBypass) {
-      const guestRef = db.doc(`guests/${normalizedName}`)
-      const gSnap = await guestRef.get()
-      const guest = gSnap.data() as GuestDoc | undefined
-      if (!guest || !guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only post as yourself.')
-      }
+      const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, normalizedName)
       if (guest.banned) {
         throw new HttpsError('permission-denied', 'This account can’t post in the Hall.')
       }

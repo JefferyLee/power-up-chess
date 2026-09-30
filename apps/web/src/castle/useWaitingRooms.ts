@@ -1,15 +1,17 @@
-// Hook that subscribes to currently-open chess and wizard rooms — the
-// ones in `waiting` status that need a second player. Drives the
-// "2 waiting" badge on the Hall's Online Chess + Wizard's Duel doors,
-// and the chooser dialog that opens on click.
+// Hook that subscribes to the sanitised castle_public/waitingRooms feed
+// — rebuilt every minute by the heraldWaitingRooms job from the chess
+// and wizard rooms in `waiting` status. Drives the "2 waiting" badge on
+// the Hall's Online Chess + Wizard's Duel doors, and the chooser dialog
+// that opens on click.
 //
-// Each subscription is capped at 25 rooms so we don't accidentally
-// fetch a long tail of stale waiting docs. The cleanup function
-// (cleanupStaleRooms) sweeps anything older than its TTL anyway.
+// Clients can't LIST rooms / wizard_rooms directly (those docs carry
+// uids); the feed holds only what the Hall shows — host display name,
+// clock, age — capped at 25 per kind server-side.
 
 import { useEffect, useState } from 'react'
-import { collection, limit, onSnapshot, query, where } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
+import { normalizeName } from './identity'
 
 export interface WaitingRoom {
   roomId: string
@@ -21,10 +23,35 @@ export interface WaitingRoom {
   timeControl?: { initialMs: number; incrementMs: number } | null
 }
 
-/** Hard cap so a misbehaving listener can't surface dozens of stale
- *  docs to the Hall. The room-cleanup sweep handles old `waiting`
- *  rooms server-side; this is just belt-and-suspenders. */
-const MAX_ROOMS_PER_KIND = 25
+/** One row of the feed — mirrors functions/src/lobby/waitingRoomsFeed.ts. */
+interface FeedRow {
+  roomId: string
+  hostDisplayName: string
+  hostIsBypass?: boolean
+  createdAt?: number
+  timeControl?: { initialMs: number; incrementMs: number } | null
+}
+interface FeedDoc {
+  rooms?: FeedRow[]
+  wizardRooms?: FeedRow[]
+  refreshedAt?: number
+}
+
+function toWaitingRoom(kind: 'chess' | 'wizard', r: FeedRow): WaitingRoom {
+  const room: WaitingRoom = {
+    roomId: r.roomId,
+    kind,
+    openerDisplayName: r.hostDisplayName || 'Someone',
+    createdAt: r.createdAt ?? 0,
+  }
+  // The feed carries display names only. A normalized name is just
+  // trim + lowercase on both sides (identity.normalizeName mirrors the
+  // server's castleEnter.normalize), so derive it here for the chooser's
+  // self-filter + profile link. Bypass hosts have no profile to link to.
+  if (!r.hostIsBypass) room.openerNormalizedName = normalizeName(r.hostDisplayName)
+  if (kind === 'chess') room.timeControl = r.timeControl ?? null
+  return room
+}
 
 export interface WaitingRoomsState {
   chess: WaitingRoom[]
@@ -36,67 +63,14 @@ export function useWaitingRooms(): WaitingRoomsState {
   const [wizard, setWizard] = useState<WaitingRoom[]>([])
 
   useEffect(() => {
-    const chessQ = query(
-      collection(db, 'rooms'),
-      where('status', '==', 'waiting'),
-      limit(MAX_ROOMS_PER_KIND),
-    )
     const unsub = onSnapshot(
-      chessQ,
+      doc(db, 'castle_public', 'waitingRooms'),
       (snap) => {
-        const rows: WaitingRoom[] = []
-        snap.forEach((doc) => {
-          const d = doc.data() as {
-            white?: { displayName?: string; normalizedName?: string }
-            createdAt?: number
-            timeControl?: { initialMs: number; incrementMs: number } | null
-          }
-          rows.push({
-            roomId: doc.id,
-            kind: 'chess',
-            openerDisplayName: d.white?.displayName ?? 'Someone',
-            openerNormalizedName: d.white?.normalizedName,
-            createdAt: d.createdAt ?? 0,
-            timeControl: d.timeControl ?? null,
-          })
-        })
-        // Newest first — most kid-facing room is "who just opened
-        // something I could grab right now".
-        rows.sort((a, b) => b.createdAt - a.createdAt)
-        setChess(rows)
+        const d = (snap.data() as FeedDoc | undefined) ?? {}
+        setChess((d.rooms ?? []).map((r) => toWaitingRoom('chess', r)))
+        setWizard((d.wizardRooms ?? []).map((r) => toWaitingRoom('wizard', r)))
       },
-      (err) => console.warn('[waiting-rooms] chess subscription error', err),
-    )
-    return () => unsub()
-  }, [])
-
-  useEffect(() => {
-    const wizardQ = query(
-      collection(db, 'wizard_rooms'),
-      where('status', '==', 'waiting'),
-      limit(MAX_ROOMS_PER_KIND),
-    )
-    const unsub = onSnapshot(
-      wizardQ,
-      (snap) => {
-        const rows: WaitingRoom[] = []
-        snap.forEach((doc) => {
-          const d = doc.data() as {
-            white?: { displayName?: string; normalizedName?: string }
-            createdAt?: number
-          }
-          rows.push({
-            roomId: doc.id,
-            kind: 'wizard',
-            openerDisplayName: d.white?.displayName ?? 'Someone',
-            openerNormalizedName: d.white?.normalizedName,
-            createdAt: d.createdAt ?? 0,
-          })
-        })
-        rows.sort((a, b) => b.createdAt - a.createdAt)
-        setWizard(rows)
-      },
-      (err) => console.warn('[waiting-rooms] wizard subscription error', err),
+      (err) => console.warn('[waiting-rooms] feed subscription error', err),
     )
     return () => unsub()
   }, [])

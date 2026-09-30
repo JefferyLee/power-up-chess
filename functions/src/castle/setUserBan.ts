@@ -8,9 +8,8 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
+import { requireAdmin } from './requireAdmin'
 import type { GuestDoc } from './types'
-
-const ADMIN_NORMALIZED_NAME = 'jeff'
 
 export interface SetUserBanRequest {
   normalizedName: string
@@ -23,32 +22,26 @@ export interface SetUserBanResponse {
 }
 
 export const setUserBan = onCall<SetUserBanRequest, Promise<SetUserBanResponse>>(APP_CHECK,async (req) => {
-  if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
+  requireAdmin(req.auth)
   const db = getFirestore()
-
-  const adminSnap = await db.doc(`guests/${ADMIN_NORMALIZED_NAME}`).get()
-  const admin = adminSnap.data() as GuestDoc | undefined
-  if (!admin || !admin.uids.includes(req.auth.uid)) {
-    throw new HttpsError('permission-denied', 'Admin only.')
-  }
 
   const normalizedName = String(req.data?.normalizedName ?? '').trim().toLowerCase()
   const banned = req.data?.banned === true
   if (!normalizedName || normalizedName.includes('/')) {
     throw new HttpsError('invalid-argument', 'Bad name.')
   }
-  if (normalizedName === ADMIN_NORMALIZED_NAME) {
-    throw new HttpsError('failed-precondition', 'Cannot ban the admin account.')
-  }
 
   const guestRef = db.doc(`guests/${normalizedName}`)
   const guestSnap = await guestRef.get()
   const guest = guestSnap.data() as GuestDoc | undefined
   if (!guest) throw new HttpsError('not-found', 'No such guest.')
+  const uids = Array.isArray(guest.uids) ? guest.uids : []
+  if (uids.includes(req.auth.uid)) {
+    throw new HttpsError('failed-precondition', 'Cannot ban the account you are signed into.')
+  }
 
   const batch = db.batch()
   batch.update(guestRef, { banned })
-  const uids = Array.isArray(guest.uids) ? guest.uids : []
   for (const uid of uids) {
     const ref = db.doc(`banned_uids/${uid}`)
     if (banned) batch.set(ref, { normalizedName, ts: Date.now() })

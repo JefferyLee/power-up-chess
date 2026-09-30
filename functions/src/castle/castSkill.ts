@@ -27,6 +27,7 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { ChatMessageDoc } from './chatTypes'
 import { hostOnDuty } from '../shared/hostOnDuty'
+import { requireOwnedGuest } from './requireOwner'
 import type { GuestDoc, TeamBadge } from './types'
 
 const RATE_LIMIT_MS = 10_000
@@ -75,20 +76,12 @@ export const castSkill = onCall<CastSkillRequest, Promise<CastSkillResponse>>(
       throw new HttpsError('failed-precondition', 'Sign in with a magic word to cast skills.')
     }
 
-    const guestRef = db.doc(`guests/${idData.normalizedName}`)
     const now = Date.now()
 
     // Rate-limit + CP debit inside a single transaction so a fast
     // double-tap can't double-cast.
     const result = await db.runTransaction(async (tx) => {
-      const guestSnap = await tx.get(guestRef)
-      if (!guestSnap.exists) {
-        throw new HttpsError('not-found', 'Guest record missing — sign in again.')
-      }
-      const guest = guestSnap.data() as GuestDoc
-      if (!guest.uids.includes(uid)) {
-        throw new HttpsError('permission-denied', 'You can only cast as yourself.')
-      }
+      const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, idData.normalizedName, tx)
       const lastCast = (guest as GuestDoc & { lastSkillAt?: number }).lastSkillAt ?? 0
       if (now - lastCast < RATE_LIMIT_MS) {
         const wait = Math.ceil((RATE_LIMIT_MS - (now - lastCast)) / 1000)

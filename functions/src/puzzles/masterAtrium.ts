@@ -10,7 +10,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
-import type { GuestDoc } from '../castle/types'
+import { findOwnedGuest } from '../castle/requireOwner'
 import type { PuzzleDoc } from './types'
 
 export const MASTER_UNLOCK_SOLVES = 25
@@ -56,14 +56,12 @@ export const getMasterAtriumList = onCall<
   let totalSolved = 0
   let solved: string[] = []
   if (normalizedName) {
-    const guest = (await db.doc(`guests/${normalizedName}`).get()).data() as
-      | GuestDoc
-      | undefined
-    if (guest && guest.uids.includes(req.auth.uid)) {
-      totalSolved = guest.puzzleStats?.solved ?? 0
+    const owned = await findOwnedGuest(db, req.auth.uid, normalizedName)
+    if (owned) {
+      totalSolved = owned.guest.puzzleStats?.solved ?? 0
       // puzzleSeen is "served-or-attempted", not "solved" — closest
       // signal we have without per-puzzle attempt history.
-      const seen = guest.puzzleSeen ?? []
+      const seen = owned.guest.puzzleSeen ?? []
       solved = seen.filter((id) => puzzleIdSet.has(id))
     }
   }

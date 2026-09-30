@@ -18,12 +18,10 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { GuestDoc, TeamDoc, TitleRank } from './types'
 import { titleFor } from './types'
 import type { LocationTag, PresenceDoc } from './chatTypes'
+import { isAdmin } from './requireAdmin'
 import { laDayKey } from '../puzzles/dailyFive'
 
 const PRESENCE_FRESH_MS = 45_000 // matches the heartbeat cadence + a little slack
-
-/** Owner of the admin tier — sees IP hashes on other guests' profiles. */
-const ADMIN_NORMALIZED_NAME = 'jeff'
 
 /** Bucket boundary: a guest visited within this window without being
  *  "online right now" is shown as 🟡 active today. */
@@ -263,28 +261,21 @@ export const getPublicProfile = onCall<
   // ever signed in to the target account here. activeSessionId is
   // re-minted on every castleEnter, so older devices and stale tabs
   // automatically lose 'self' tier the moment a fresh sign-in happens
-  // elsewhere.
+  // elsewhere. The admin tier (IP hashes) is the `admin` custom claim
+  // on the caller's token, not a name.
   let viewerTier: 'public' | 'self' | 'admin' = 'public'
   const selfNormalizedName = String(req.data?.selfNormalizedName ?? '').trim().toLowerCase()
   const selfSessionId = String(req.data?.selfSessionId ?? '').trim()
-  if (selfNormalizedName && selfSessionId) {
-    const selfRef =
-      selfNormalizedName === normalized
-        ? guestSnap
-        : await db.doc(`guests/${selfNormalizedName}`).get()
-    const selfDoc = selfRef.data() as GuestDoc | undefined
+  if (isAdmin(req.auth)) {
+    viewerTier = 'admin'
+  } else if (selfNormalizedName === normalized && selfSessionId) {
+    const selfDoc = guestSnap.data() as GuestDoc | undefined
     const verified =
       !!selfDoc
       && Array.isArray(selfDoc.uids)
       && selfDoc.uids.includes(req.auth.uid)
       && selfDoc.activeSessionId === selfSessionId
-    if (verified) {
-      if (selfNormalizedName === normalized) {
-        viewerTier = 'self'
-      } else if (selfNormalizedName === ADMIN_NORMALIZED_NAME) {
-        viewerTier = 'admin'
-      }
-    }
+    if (verified) viewerTier = 'self'
   }
 
   // ── Online bucket — coarser than the precise lastSeenAt that owner/

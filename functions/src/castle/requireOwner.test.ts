@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Firestore, Transaction } from 'firebase-admin/firestore'
 import { HttpsError } from 'firebase-functions/v2/https'
-import { requireOwnedGuest } from './requireOwner'
+import { findOwnedGuest, requireOwnedGuest } from './requireOwner'
 
 function fakeDb(docs: Record<string, Record<string, unknown> | undefined>) {
   const reads: string[] = []
@@ -78,5 +78,69 @@ describe('requireOwnedGuest', () => {
   it('treats a doc with a malformed uids field as not owned', async () => {
     const { db } = fakeDb({ 'guests/odd': { displayName: 'Odd', uids: 'uid-odd' } })
     expect(await codeOf(requireOwnedGuest(db, 'uid-odd', 'odd'))).toBe('permission-denied')
+  })
+
+  describe('sessionId option (single-active-session policy)', () => {
+    const adaOnTablet = { ...ada, activeSessionId: 'sess-tablet' }
+
+    it('passes when the supplied sessionId matches activeSessionId', async () => {
+      const { db } = fakeDb({ 'guests/ada': adaOnTablet })
+      const r = await requireOwnedGuest(db, 'uid-ada', 'ada', undefined, { sessionId: 'sess-tablet' })
+      expect(r.guest.activeSessionId).toBe('sess-tablet')
+    })
+
+    it('rejects a stale or empty sessionId (failed-precondition)', async () => {
+      const { db } = fakeDb({ 'guests/ada': adaOnTablet })
+      expect(
+        await codeOf(requireOwnedGuest(db, 'uid-ada', 'ada', undefined, { sessionId: 'sess-old' })),
+      ).toBe('failed-precondition')
+      expect(
+        await codeOf(requireOwnedGuest(db, 'uid-ada', 'ada', undefined, { sessionId: '' })),
+      ).toBe('failed-precondition')
+    })
+
+    it('checks ownership before the session, so a stranger is still permission-denied', async () => {
+      const { db } = fakeDb({ 'guests/ada': adaOnTablet })
+      expect(
+        await codeOf(requireOwnedGuest(db, 'uid-eve', 'ada', undefined, { sessionId: 'sess-old' })),
+      ).toBe('permission-denied')
+    })
+
+    it('lets a pre-H.7 guest with no activeSessionId through with any sessionId', async () => {
+      const { db } = fakeDb({ 'guests/ada': ada })
+      const r = await requireOwnedGuest(db, 'uid-ada', 'ada', undefined, { sessionId: 'anything' })
+      expect(r.guest.displayName).toBe('Ada')
+    })
+
+    it('does not enforce the session when no option is given', async () => {
+      const { db, tx } = fakeDb({ 'guests/ada': adaOnTablet })
+      await expect(requireOwnedGuest(db, 'uid-ada', 'ada')).resolves.toBeTruthy()
+      await expect(requireOwnedGuest(db, 'uid-ada', 'ada', tx)).resolves.toBeTruthy()
+    })
+  })
+})
+
+describe('findOwnedGuest', () => {
+  const ada = { displayName: 'Ada', normalizedName: 'ada', uids: ['uid-ada'] }
+
+  it('returns the doc when owned, null otherwise, and never throws', async () => {
+    const { db } = fakeDb({ 'guests/ada': ada, 'guests/odd': { displayName: 'Odd', uids: 'x' } })
+    expect((await findOwnedGuest(db, 'uid-ada', 'ada'))?.guest.displayName).toBe('Ada')
+    expect(await findOwnedGuest(db, 'uid-eve', 'ada')).toBeNull()
+    expect(await findOwnedGuest(db, 'uid-ada', 'ghost')).toBeNull()
+    expect(await findOwnedGuest(db, 'x', 'odd')).toBeNull()
+  })
+
+  it('skips the read for an empty or path-shaped name', async () => {
+    const { db, reads } = fakeDb({ 'guests/ada': ada })
+    expect(await findOwnedGuest(db, 'uid-ada', '')).toBeNull()
+    expect(await findOwnedGuest(db, 'uid-ada', 'ada/private')).toBeNull()
+    expect(reads).toEqual([])
+  })
+
+  it('reads through the transaction when one is given', async () => {
+    const { db, tx, reads } = fakeDb({ 'guests/ada': ada })
+    await findOwnedGuest(db, 'uid-ada', 'ada', tx)
+    expect(reads).toEqual(['tx:guests/ada'])
   })
 })
