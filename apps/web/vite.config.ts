@@ -57,9 +57,6 @@ export default defineConfig({
           // Share-card image — only social crawlers fetch it.
           'og.png',
           // Phaser (Knight's Run) and three.js (3D board, Tower Defense)
-          // — 1.3 MB and 0.9 MB chunks named by codeSplitting below.
-          'assets/phaser-*.js',
-          'assets/three-*.js',
         ],
         // Make new deploys take effect on next visit instead of waiting
         // for every tab to close. Without these, iPhone Safari can keep
@@ -67,6 +64,11 @@ export default defineConfig({
         // skipWaiting: new SW activates the moment install finishes.
         // clientsClaim: that SW immediately controls open pages too.
         // cleanupOutdatedCaches: prune precache entries from prior builds.
+        // Anything bigger than this (the phaser chunk, 1.35 MB) is fetched on
+        // demand and runtime-cached by the assets rule below. The entry and
+        // the three.js chunk sit under it; if the entry ever crosses 1 MiB the
+        // build prints a "won't be precached" warning — treat that as a bug.
+        maximumFileSizeToCacheInBytes: 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
@@ -88,7 +90,7 @@ export default defineConfig({
             // Code that is too big to precache for everyone: Phaser and
             // three.js (see globIgnores). Content-hashed, so cache-first
             // is safe; a new build simply fetches a new URL.
-            urlPattern: /\/assets\/(phaser|three)-[^/]+\.js$/,
+            urlPattern: /\/assets\/[^/]+\.js$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-chunks-v1',
@@ -173,23 +175,6 @@ export default defineConfig({
     }),
   ],
   build: {
-    rolldownOptions: {
-      output: {
-        // Stable chunk names for the two big optional libraries so the
-        // PWA config above can keep them out of the precache and
-        // runtime-cache them by name. Dependencies stay out of the
-        // group on purpose: with the default (recursive) capture, R3F
-        // drags react/react-dom into the three chunk and the entry then
-        // preloads 1.2 MB of three.js.
-        codeSplitting: {
-          includeDependenciesRecursively: false,
-          groups: [
-            { name: 'phaser', test: /[\\/]node_modules[\\/]phaser[\\/]/ },
-            { name: 'three', test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/ },
-          ],
-        },
-      },
-    },
   },
   resolve: {
     alias: {
