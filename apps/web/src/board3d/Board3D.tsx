@@ -38,6 +38,8 @@ import { buildDuel, finishDuel, moveDuration, HOP_HEIGHT, LIFT, type DuelState }
 import { RingPulse, SparkBurst, Torch, rollSparks } from './fx'
 import { describeAction, describeSquare, stepCursor } from './kbCursor'
 import { usePrefersReducedMotion } from '../a11y/usePrefersReducedMotion'
+import { KEYS } from '../storage/keys'
+import { usePersistedState } from '../storage/usePersistedState'
 import './Board3D.css'
 
 export interface Board3DProps {
@@ -171,15 +173,10 @@ function pieceTint(color: Color, palette: Palette3d): THREE.ColorRepresentation 
   return color === 'w' ? palette.white : palette.black
 }
 
-const PALETTE_KEY = 'puc.board3d.palette'
-function readPalette(): Palette3dName {
-  try {
-    // 'classic' is a legacy key from the brief green-board version.
-    const v = localStorage.getItem(PALETTE_KEY)
-    return v === 'candy' || v === 'classic' ? 'candy' : 'wood'
-  } catch {
-    return 'wood'
-  }
+const paletteCodec = {
+  // 'classic' is a legacy value from the brief green-board version.
+  parse: (v: string): Palette3dName => (v === 'candy' || v === 'classic' ? 'candy' : 'wood'),
+  serialize: (v: Palette3dName) => v,
 }
 const TINT_SELECTED = '#f1c34c'
 const TINT_LEGAL = '#7cc28b'
@@ -996,15 +993,11 @@ export function Board3D({
   const hintId = useId()
   // The chosen 3D look (wood / candy). Persisted so Ada's pick sticks
   // across screens and sessions.
-  const [paletteName, setPaletteName] = useState<Palette3dName>(readPalette)
+  const [paletteName, setPaletteName] = usePersistedState<Palette3dName>(KEYS.board3dPalette, 'wood', paletteCodec)
   const palette = PALETTES[paletteName]
   const togglePalette = useCallback(() => {
-    setPaletteName((p) => {
-      const next: Palette3dName = p === 'candy' ? 'wood' : 'candy'
-      try { localStorage.setItem(PALETTE_KEY, next) } catch { /* private mode */ }
-      return next
-    })
-  }, [])
+    setPaletteName((p) => (p === 'candy' ? 'wood' : 'candy'))
+  }, [setPaletteName])
   // Stable per-piece identity + movedFrom/captured diffs — drives one
   // persistent animated mesh per piece.
   const { tracked, captured, bulkChange } = usePieceTracking(pieces)

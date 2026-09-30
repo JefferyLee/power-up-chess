@@ -18,6 +18,7 @@ import { HOSTS } from '../hosts/hosts'
 import type { EndReason } from '../rooms/types'
 import './HistoryScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'ready'; games: ArchivedGameSummary[] }
@@ -28,6 +29,7 @@ export function PlayerGamesScreen() {
   const { name } = useParams<{ name: string }>()
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [openingId, setOpeningId] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
 
   useEffect(() => {
     if (!name) {
@@ -39,7 +41,7 @@ export function PlayerGamesScreen() {
       .then((res) => { if (!cancelled) setState({ kind: 'ready', games: res.games }) })
       .catch((err) => {
         if (cancelled) return
-        setState({ kind: 'error', error: err instanceof Error ? err.message : String(err) })
+        setState({ kind: 'error', error: friendlyError(err, 'loading their games') })
       })
     return () => { cancelled = true }
   }, [name])
@@ -64,7 +66,8 @@ export function PlayerGamesScreen() {
           roomId,
         },
       })
-    } catch {
+    } catch (e) {
+      setNote(friendlyError(e, 'opening the game'))
       setOpeningId(null)
     }
   }
@@ -86,6 +89,7 @@ export function PlayerGamesScreen() {
       <main className="puc-history__main">
         {state.kind === 'loading' && <p className="puc-history__empty">Loading games…</p>}
         {state.kind === 'error' && <p className="puc-history__empty">Couldn&apos;t load games: {state.error}</p>}
+        {note && <p className="puc-history__empty" role="alert">{note}</p>}
         {state.kind === 'ready' && state.games.length === 0 && (
           <p className="puc-history__empty">No online games yet.</p>
         )}

@@ -85,6 +85,7 @@ import {
 import { LORE, findLore } from './lore'
 import { loadVisited } from './world'
 
+import { friendlyError } from '../../errors/friendlyError'
 export type CommandTier = 'basic' | 'advanced' | 'hidden'
 
 /** Snapshot of Hall state passed into every command handler. The
@@ -224,7 +225,7 @@ export async function dispatchCommand(
   try {
     await handler.handle(args, ctx)
   } catch (err) {
-    pushPrivate('reply', err instanceof Error ? err.message : String(err))
+    pushPrivate('reply', friendlyError(err, `running /${name}`))
   }
   return true
 }
@@ -555,9 +556,7 @@ async function applyToTeamByName(
     })
     return `Application sent to ${team.name}. Captain ${team.captainDisplayName} will see it in their inbox.`
   } catch (err) {
-    return err instanceof Error
-      ? err.message.replace(/^FirebaseError: /, '')
-      : 'Could not send the application.'
+    return friendlyError(err, 'sending the application')
   }
 }
 
@@ -582,7 +581,7 @@ async function showMyTeams(identity: CastleIdentity | null): Promise<string> {
     lines.push('Use /team <name> to see a roster.')
     return lines.join('\n')
   } catch (err) {
-    return err instanceof Error ? err.message : 'Could not load your teams.'
+    return friendlyError(err, 'loading your teams')
   }
 }
 
@@ -803,7 +802,7 @@ registerCommand({
       guests = res.guests
       total = res.total
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'Could not reach the castle directory.')
+      pushPrivate('reply', friendlyError(err, 'reaching the castle directory'))
       return
     }
     if (guests.length === 0) {
@@ -875,7 +874,7 @@ registerCommand({
       lines.push(`Invite them with /invite ${matches[0]!.displayName} — the invitation waits up to a minute for them to come back online.`)
       pushPrivate('reply', lines.join('\n'))
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'Could not search the directory.')
+      pushPrivate('reply', friendlyError(err, 'searching the directory'))
     }
   },
 })
@@ -929,7 +928,7 @@ registerCommand({
         }
         nameToFetch = matches[0]!.normalizedName
       } catch (err) {
-        pushPrivate('reply', err instanceof Error ? err.message : 'Could not look that name up.')
+        pushPrivate('reply', friendlyError(err, 'looking that name up'))
         return
       }
     }
@@ -938,7 +937,7 @@ registerCommand({
       const profile = await callGetPublicProfile({ normalizedName: nameToFetch })
       pushPrivate('reply', formatProfilePreview(profile))
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'Could not fetch that profile.')
+      pushPrivate('reply', friendlyError(err, 'fetching that profile'))
     }
   },
 })
@@ -1062,7 +1061,7 @@ registerCommand({
         }
         toNormalized = matches[0]!.normalizedName
       } catch (err) {
-        pushPrivate('reply', err instanceof Error ? err.message : 'Could not look that name up.')
+        pushPrivate('reply', friendlyError(err, 'looking that name up'))
         return
       }
     }
@@ -1080,10 +1079,7 @@ registerCommand({
         : ' (untimed)'
       pushPrivate('reply', `Invitation sent to ${name}${tcLabel} — 5 castle points spent. It will wait ${minutes} minute${minutes === 1 ? '' : 's'} for a reply.`)
     } catch (err) {
-      const msg = err instanceof Error
-        ? err.message.replace(/^FirebaseError: /, '')
-        : 'Could not send the invitation.'
-      pushPrivate('reply', msg)
+      pushPrivate('reply', friendlyError(err, 'sending the invitation'))
     }
   },
 })
@@ -1301,7 +1297,7 @@ registerCommand({
       await ctx.postPublic(text)
       pushPrivate('reply', `You ${action}.`)
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'The Hall is quiet — your shout did not carry.')
+      pushPrivate('reply', friendlyError(err, 'shouting to the Hall'))
     }
   },
 })
@@ -1327,7 +1323,7 @@ registerCommand({
       await ctx.postPublic(text.slice(0, 200))
       pushPrivate('reply', `Posted to the Hall: "${text.slice(0, 200)}"`)
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'The Hall did not hear you. Try again.')
+      pushPrivate('reply', friendlyError(err, 'posting to the Hall'))
     }
   },
 })
@@ -1453,7 +1449,7 @@ registerCommand({
           ? ` +${res.added} castle points (you now have ${res.castlePoints}).`
           : ' (The Castle had already noted your earlier solve today.)'
       } catch (err) {
-        pointsLine = err instanceof Error ? ` (${err.message})` : ''
+        pointsLine = ` (${friendlyError(err, 'banking your points')})`
       }
     } else {
       pointsLine = ' (Visitors don\'t earn points — sign in with a magic word to start banking them.)'
@@ -1837,7 +1833,7 @@ registerCommand({
             award: { source: 'puzzle', puzzleId: session.puzzleId, scorePoints: 10, isFirstSolve: false },
           })
           if (res.added > 0) awardLine = `  +${res.added} castle points.`
-        } catch { /* silent */ }
+        } catch (err) { awardLine = `  (${friendlyError(err, 'banking your points')})` }
       }
       clearPrivate()
       pushPrivate('reply', `You played ${kidMove.san}.  Solved!${awardLine}  /puzzle new for another.`)
@@ -2170,7 +2166,7 @@ registerCommand({
       }
       pushPrivate('reply', `${host === 'lucy' ? 'Lucy' : 'Luca'}: ${res.answer}`)
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'No reply came back.')
+      pushPrivate('reply', friendlyError(err, 'asking the host'))
     }
   },
 })
@@ -2224,7 +2220,7 @@ registerCommand({
       }
       pushPrivate('ascii', out.join('\n'))
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'The owl got lost in the stacks.')
+      pushPrivate('reply', friendlyError(err, 'asking the owl'))
     }
   },
 })
@@ -2245,7 +2241,7 @@ registerCommand({
       const res = await callBackfillGameArchive()
       pushPrivate('reply', `Archive backfill done: scanned ${res.scanned} rooms, archived ${res.archived} games.`)
     } catch (err) {
-      pushPrivate('reply', err instanceof Error ? err.message : 'Backfill failed.')
+      pushPrivate('reply', friendlyError(err, 'running the backfill'))
     }
   },
 })

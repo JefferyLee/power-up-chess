@@ -20,6 +20,7 @@ import { useOutgoingInviteContext } from './OutgoingInviteContext'
 import { INVITE_COST_CP, WIZARD_INVITE_COST_CP } from './types'
 import './InviteDialog.css'
 
+import { friendlyError } from '../errors/friendlyError'
 interface Props {
   toNormalizedName: string
   toDisplayName: string
@@ -73,7 +74,7 @@ export function InviteDialog({
       setInviteId(res.inviteId)
       onSent()
     } catch (e) {
-      setPhase({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+      setPhase({ kind: 'error', message: friendlyError(e, 'sending the invitation') })
     }
   }
 

@@ -6,21 +6,16 @@
 import { callForgetMe } from '../firebase/callables'
 import { clearIdentity } from './identity'
 import { clearAllGames } from '../history/api'
+import { listOurKeys } from '../storage/keys'
 
 /** Remove all app-owned local data (localStorage + IndexedDB). Best-effort. */
 export async function wipeLocalData(): Promise<void> {
   try { clearIdentity() } catch { /* ignore */ }
   try { await clearAllGames() } catch { /* ignore */ }
 
-  // Every key this app writes is namespaced "puc:" or "puc." — drop them all.
-  try {
-    const doomed: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (k && /^puc[:.]/i.test(k)) doomed.push(k)
-    }
-    doomed.forEach((k) => localStorage.removeItem(k))
-  } catch { /* ignore */ }
+  // Every key this app writes is registered in storage/keys.ts — drop them all.
+  for (const k of listOurKeys('local')) { try { localStorage.removeItem(k) } catch { /* ignore */ } }
+  for (const k of listOurKeys('session')) { try { sessionStorage.removeItem(k) } catch { /* ignore */ } }
 
   // Drop app-owned IndexedDB databases beyond the chess history already
   // cleared above (forest / knight's-run scores, etc.), where the browser

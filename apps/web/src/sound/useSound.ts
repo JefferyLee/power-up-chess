@@ -11,25 +11,14 @@ import {
   type AmbientName,
   type SoundName,
 } from './synth'
-
-const MUTE_KEY = 'puc:muted:v1'
+import { KEYS, readKey, writeKey } from '../storage/keys'
 
 function readInitialMuted(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    return window.localStorage.getItem(MUTE_KEY) === '1'
-  } catch {
-    return false
-  }
+  return readKey(KEYS.muted) === '1'
 }
 
 function persistMuted(muted: boolean): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(MUTE_KEY, muted ? '1' : '0')
-  } catch {
-    // Quota / privacy mode — ignore.
-  }
+  writeKey(KEYS.muted, muted ? '1' : '0')
 }
 
 /** Shared state across all hook callers — react via a poor-man's pub/sub. */

@@ -8,6 +8,7 @@ import { useCastle } from '../castle/useCastle'
 import { callSpendOnTakeback } from '../firebase/callables'
 import { takebackCost } from './takeback'
 
+import { friendlyError } from '../errors/friendlyError'
 export interface TakebackApi {
   /** Cost of the next takeback, or null once the limit is reached. */
   nextCost: number | null
@@ -15,6 +16,8 @@ export interface TakebackApi {
   /** The only thing in the way is castle points. */
   tooPoor: boolean
   takeback: () => Promise<void>
+  /** Why the last takeback didn't happen (charge refused). Cleared on the next try / reset. */
+  error: string | null
   /** New game → three takebacks again. */
   reset: () => void
 }
@@ -25,6 +28,7 @@ export function useTakeback(allowed: boolean, undo: () => void): TakebackApi {
   const { identity, setCastlePoints } = useCastle()
   const [used, setUsed] = useState(0)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const nextCost = takebackCost(used)
   const signedIn = !!identity && !identity.isBypass
   const tooPoor = signedIn && nextCost !== null && identity.castlePoints < nextCost
@@ -33,6 +37,7 @@ export function useTakeback(allowed: boolean, undo: () => void): TakebackApi {
   const takeback = useCallback(async () => {
     if (!canTakeback || !identity) return
     setBusy(true)
+    setError(null)
     try {
       const points = await callSpendOnTakeback(
         identity.normalizedName,
@@ -42,17 +47,18 @@ export function useTakeback(allowed: boolean, undo: () => void): TakebackApi {
       setCastlePoints(points)
       undo()
       setUsed((n) => n + 1)
-    } catch {
-      /* charge failed (balance / session) — leave the board as-is */
+    } catch (e) {
+      // Charge refused (balance / session) — the board stays as it is.
+      setError(friendlyError(e, 'paying for the takeback'))
     } finally {
       setBusy(false)
     }
   }, [canTakeback, identity, used, undo, setCastlePoints])
 
-  const reset = useCallback(() => setUsed(0), [])
+  const reset = useCallback(() => { setUsed(0); setError(null) }, [])
 
   return useMemo(
-    () => ({ nextCost, canTakeback, tooPoor, takeback, reset }),
-    [nextCost, canTakeback, tooPoor, takeback, reset],
+    () => ({ nextCost, canTakeback, tooPoor, takeback, error, reset }),
+    [nextCost, canTakeback, tooPoor, takeback, error, reset],
   )
 }

@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import type { HostId } from '../hosts/hosts'
 import type { ReviewState } from './PostGameAnalysisScreen'
 
+import { friendlyError } from '../errors/friendlyError'
 interface ClassicEntry {
   id: string
   white: string
@@ -123,12 +124,13 @@ export function MastersView() {
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(PAGE)
   const [opening, setOpening] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     loadIndex()
       .then(() => { if (!cancelled) setState({ kind: 'ready' }) })
-      .catch((err) => { if (!cancelled) setState({ kind: 'error', error: err instanceof Error ? err.message : String(err) }) })
+      .catch((err) => { if (!cancelled) setState({ kind: 'error', error: friendlyError(err, 'opening the masters archive') }) })
     return () => { cancelled = true }
   }, [])
 
@@ -153,7 +155,8 @@ export function MastersView() {
         ? { pgn: classic.pgn, hostId: classic.hostId, whiteName: classic.white, blackName: classic.black, award: false, intro: classic.blurb }
         : { pgn: await loadMasterPgn(g.id, indexCache.shardSize), hostId: hostForMaster(g.id), whiteName: g.white, blackName: g.black, award: false }
       navigate('/review', { state: payload })
-    } catch {
+    } catch (e) {
+      setNote(friendlyError(e, 'opening the game'))
       setOpening(null)
     }
   }
@@ -210,6 +213,7 @@ export function MastersView() {
 
       {state.kind === 'loading' && <p className="puc-history__empty">Opening the masters archive…</p>}
       {state.kind === 'error' && <p className="puc-history__empty">Couldn&apos;t load the archive: {state.error}</p>}
+      {note && <p className="puc-history__empty" role="alert">{note}</p>}
       {state.kind === 'ready' && filtered.length === 0 && (
         <p className="puc-history__empty">No games match “{query}”.</p>
       )}

@@ -1,7 +1,9 @@
 // Lightweight localStorage-backed profile. Used so a player joining a room via
 // a shared link doesn't have to retype their name every time.
 
-const KEY = 'puc:profile:v1'
+import { KEYS } from './keys'
+
+const KEY = KEYS.profile.key
 
 export interface Profile {
   displayName: string

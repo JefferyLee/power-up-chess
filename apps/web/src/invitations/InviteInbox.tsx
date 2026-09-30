@@ -17,6 +17,7 @@ import { NameLink } from './NameLink'
 import type { InvitationDoc } from './types'
 import './InviteInbox.css'
 
+import { friendlyError } from '../errors/friendlyError'
 export function InviteInbox() {
   const auth = useAuthUid()
   const uid = auth.status === 'ready' ? auth.uid : null
@@ -93,7 +94,7 @@ function IncomingInviteModal({ invite }: { invite: InvitationDoc }) {
       // Listener will drop the invite from the inbox now that status != pending,
       // unmounting this modal.
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'answering the invitation'))
       setPhase('error')
     }
   }

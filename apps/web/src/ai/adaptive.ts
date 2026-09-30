@@ -5,9 +5,10 @@
 // State is a single stored index into DIFFICULTY_PRESETS plus an on/off flag.
 
 import { DIFFICULTY_PRESETS } from './difficulty'
+import { KEYS } from '../storage/keys'
 
-const IDX_KEY = 'puc:ai-adaptive-idx'
-const ON_KEY = 'puc:ai-adaptive-on'
+const IDX_KEY = KEYS.aiAdaptiveIdx.key
+const ON_KEY = KEYS.aiAdaptiveOn.key
 const MAX = DIFFICULTY_PRESETS.length - 1
 
 const clamp = (i: number) => Math.max(0, Math.min(MAX, i))

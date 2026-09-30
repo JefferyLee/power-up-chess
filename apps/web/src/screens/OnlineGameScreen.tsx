@@ -35,6 +35,7 @@ import { useSaveGame, type FinishedGame } from '../gameShell/useSaveGame'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const MAX_SQUARE_SIZE = 72
 
 export function OnlineGameScreen() {
@@ -211,7 +212,7 @@ function JoinPanel({
       })
       onJoined()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'joining the room'))
     } finally {
       setBusy(false)
     }
@@ -354,7 +355,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       await callResignGame(roomId)
       setResignDialogOpen(false)
     } catch (e) {
-      setResignError(e instanceof Error ? e.message : String(e))
+      setResignError(friendlyError(e, 'resigning'))
     } finally {
       setResignBusy(false)
     }
@@ -379,22 +380,23 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     !identity.isBypass &&
     identity.castlePoints >= myTakebackCost
   const [takebackBusy, setTakebackBusy] = useState(false)
+  // One-line takeback status: how my offer went, or why a request was refused. Auto-dismisses.
+  const [takebackNote, setTakebackNote] = useState<string | null>(null)
   const onRequestTakeback = useCallback(async () => {
     setTakebackBusy(true)
-    try { await callRequestTakeback(roomId) } catch { /* surfaced by disabled state */ }
+    try { await callRequestTakeback(roomId) } catch (e) { setTakebackNote(friendlyError(e, 'asking for a takeback')) }
     finally { setTakebackBusy(false) }
   }, [roomId])
   const onRespondTakeback = useCallback(async (accept: boolean) => {
     setTakebackBusy(true)
-    try { await callRespondTakeback(roomId, accept) } catch { /* ignore */ }
+    try { await callRespondTakeback(roomId, accept) } catch (e) { setTakebackNote(friendlyError(e, 'answering the takeback')) }
     finally { setTakebackBusy(false) }
   }, [roomId])
 
   // When my own outgoing offer resolves, tell me how it went. Accepted
   // removes a move (room.moves shrinks below the offer's pinned count)
   // and charged me — refetch my balance. Declined leaves the move list
-  // intact and costs nothing. The note auto-dismisses.
-  const [takebackNote, setTakebackNote] = useState<string | null>(null)
+  // intact and costs nothing.
   const hadMyOffer = useRef(false)
   const myOfferLen = useRef<number | null>(null)
   useEffect(() => {
@@ -408,7 +410,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       if (accepted && identity && !identity.isBypass) {
         callGetPublicProfile({ normalizedName: identity.normalizedName })
           .then((p) => setCastlePoints(p.castlePoints))
-          .catch(() => {})
+          .catch(() => { /* balance refresh is best-effort */ })
       }
       setTakebackNote(
         accepted
@@ -481,13 +483,12 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         await submitMove(uci)
         setSubmitError(null)
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e)
         // The "Move index out of sync" error is a benign race — the
         // snapshot will reconcile the board within a tick. Hiding it
         // from the kid avoids a confusing flash for what is invisibly
         // self-healing.
-        if (/Move index out of sync/i.test(msg)) return
-        setSubmitError(msg)
+        if (e instanceof Error && /Move index out of sync/i.test(e.message)) return
+        setSubmitError(friendlyError(e, 'sending your move'))
       }
     },
     [submitMove],

@@ -15,6 +15,7 @@ import { TeamBadge as TeamBadgeView } from './TeamBadge'
 import { BadgeEditor } from './BadgeEditor'
 import './CreateTeamDialog.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const TEAM_CREATE_COST_CP = 100
 
 interface Props {
@@ -61,7 +62,7 @@ export function CreateTeamDialog({ onClose }: Props) {
       navigate(`/team/${res.teamId}`)
     } catch (err) {
       setPhase('error')
-      setError(err instanceof Error ? err.message : String(err))
+      setError(friendlyError(err, 'creating the team'))
     }
   }, [canSubmit, name, motto, badge, navigate, setCastlePoints])
 

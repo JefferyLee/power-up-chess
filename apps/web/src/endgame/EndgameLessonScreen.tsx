@@ -27,6 +27,7 @@ import { track } from '../firebase/analytics'
 import { getLesson, type Lesson } from './lessons'
 import './EndgameLessonScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const MAX_SQUARE_SIZE = 72
 const PLAYER_COLOR: Color = 'w'
 
@@ -100,7 +101,7 @@ export function EndgameLessonScreen() {
         if (cancelled) return
         setPhase({
           kind: 'error',
-          message: err instanceof Error ? err.message : String(err),
+          message: friendlyError(err, 'setting up the endgame'),
         })
       })
     return () => {
@@ -230,7 +231,7 @@ export function EndgameLessonScreen() {
       console.error('endgame: defender move failed', err)
       setPhase({
         kind: 'error',
-        message: err instanceof Error ? err.message : String(err),
+        message: friendlyError(err, 'making the defender’s move'),
       })
     }
   }, [defender, defenderPreset.settings, game, sound])

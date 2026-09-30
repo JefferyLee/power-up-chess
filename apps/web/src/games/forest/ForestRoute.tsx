@@ -11,6 +11,7 @@ import { saveForestRun } from './history'
 import { callSubmitForestScore } from '../../firebase/callables'
 import './ForestRoute.css'
 
+import { friendlyError } from '../../errors/friendlyError'
 export function ForestRoute() {
   const navigate = useNavigate()
   const { identity, setCastlePoints } = useCastle()
@@ -54,7 +55,7 @@ export function ForestRoute() {
             setPayoutToast({ id: Date.now(), pts: res.castlePointsAdded, capped: false })
           }
         } catch (err) {
-          setLastError(err instanceof Error ? err.message : String(err))
+          setLastError(friendlyError(err, 'banking your forest run'))
         }
       }
       // Bump the leaderboard refresh key so the panel re-fetches.

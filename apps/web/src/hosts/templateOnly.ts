@@ -5,15 +5,14 @@
 // chatter is a separate server-side social feature and is unaffected.)
 
 import { useSyncExternalStore } from 'react'
-
-const KEY = 'puc:template-only'
+import { KEYS, readKey, writeKey } from '../storage/keys'
 
 export function isTemplateOnly(): boolean {
-  try { return localStorage.getItem(KEY) === '1' } catch { return false }
+  return readKey(KEYS.templateOnly) === '1'
 }
 
 export function setTemplateOnly(on: boolean): void {
-  try { localStorage.setItem(KEY, on ? '1' : '0') } catch { /* private mode */ }
+  writeKey(KEYS.templateOnly, on ? '1' : '0')
   // Notify same-tab subscribers (the storage event only fires cross-tab).
   window.dispatchEvent(new Event('puc:template-only-changed'))
 }

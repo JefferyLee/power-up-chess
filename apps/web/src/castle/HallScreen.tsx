@@ -45,6 +45,7 @@ import { useSound } from '../sound/useSound'
 import { DOOR_ROUTES, PLAY_GATE_POINTS, WIZARD_GATE_DEFAULT, type DoorDef, type DoorSection } from '../routes'
 import './HallScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const DEFAULT_OPPONENT_NAME = 'Friend'
 const UNLOCK_THRESHOLD = PLAY_GATE_POINTS
 
@@ -166,7 +167,7 @@ export function HallScreen() {
       setTcTarget(null)
       navigate(`/r/${roomId}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'opening a room'))
     } finally {
       setCreating(false)
     }

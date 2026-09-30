@@ -147,7 +147,7 @@ export function ForestGame({ playerName, onExit, onRunComplete }: Props) {
     const handleRedMushroom = (go: GameObjects) => {
       go.goldenMushroomsInARow = 0
       go.redMushroomsInARow++
-      if (redSoundRef.current) { redSoundRef.current.currentTime = 0; void redSoundRef.current.play().catch(() => {}) }
+      if (redSoundRef.current) { redSoundRef.current.currentTime = 0; void redSoundRef.current.play().catch(() => { /* autoplay blocked */ }) }
       go.score--
       if (go.score < 0) { endGame(); return }
       if (go.redMushroomsInARow >= 3) go.ada.color = 'gray'
@@ -156,7 +156,7 @@ export function ForestGame({ playerName, onExit, onRunComplete }: Props) {
     const handleGoldenMushroom = (go: GameObjects) => {
       go.redMushroomsInARow = 0
       go.goldenMushroomsInARow++
-      if (goldSoundRef.current) { goldSoundRef.current.currentTime = 0; void goldSoundRef.current.play().catch(() => {}) }
+      if (goldSoundRef.current) { goldSoundRef.current.currentTime = 0; void goldSoundRef.current.play().catch(() => { /* autoplay blocked */ }) }
       go.score += 3
       go.ada.color = 'pink'
       if (go.goldenMushroomsInARow >= 2) { go.bombs++; go.score += 5 }
@@ -313,7 +313,7 @@ export function ForestGame({ playerName, onExit, onRunComplete }: Props) {
     runCompleteFiredRef.current = false
     gameActiveRef.current = true
     gameStartedRef.current = true
-    void bgMusicRef.current?.play().catch(() => {})
+    void bgMusicRef.current?.play().catch(() => { /* autoplay blocked */ })
     setGameState((prev) => ({ ...prev, gameStarted: true, gameOver: false, score: 0, totaltrees: 0, bombs: 0 }))
   }, [initGame])
 

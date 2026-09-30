@@ -35,6 +35,7 @@ import { useSaveGame, type FinishedGame } from '../gameShell/useSaveGame'
 import './LocalGameScreen.css'
 import './AiPracticeScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const MAX_SQUARE_SIZE = 72
 
 interface Props {
@@ -281,7 +282,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
       .catch((err: unknown) => {
         if (cancelled) return
         setAiThinking(false)
-        setEngineError(err instanceof Error ? err.message : String(err))
+        setEngineError(friendlyError(err, 'waking the engine'))
       })
     return () => {
       cancelled = true

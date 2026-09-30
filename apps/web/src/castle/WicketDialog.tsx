@@ -18,6 +18,7 @@ import {
 import { useAuthUid } from '../auth/useAuthUid'
 import './WicketDialog.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type Status =
   | { kind: 'idle' }
   | { kind: 'submitting' }
@@ -102,7 +103,7 @@ export function WicketDialog() {
         setStatus({ kind: 'error', message: res.reason })
       }
     } catch (err) {
-      setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
+      setStatus({ kind: 'error', message: friendlyError(err, 'welcoming you back') })
     }
   }, [remembered, auth.status, status.kind, applyEnterResponse])
 
@@ -143,7 +144,7 @@ export function WicketDialog() {
           setStatus({ kind: 'error', message: res.reason })
         }
       } catch (err) {
-        setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
+        setStatus({ kind: 'error', message: friendlyError(err, 'opening the gate') })
       }
     },
     [canSubmit, name, magicWord, applyEnterResponse],
@@ -219,7 +220,7 @@ export function WicketDialog() {
           <p className="puc-wicket__auth">
             {auth.status === 'loading' && 'Knocking the door…'}
             {auth.status === 'ready' && `Signed in · ${auth.uid.slice(0, 8)}`}
-            {auth.status === 'error' && `Auth error: ${auth.error.message}`}
+            {auth.status === 'error' && friendlyError(auth.error, 'knocking at the door')}
           </p>
         </div>
       </div>
@@ -305,7 +306,7 @@ export function WicketDialog() {
         <p className="puc-wicket__auth">
           {auth.status === 'loading' && 'Knocking the door…'}
           {auth.status === 'ready' && `Signed in · ${auth.uid.slice(0, 8)}`}
-          {auth.status === 'error' && `Auth error: ${auth.error.message}`}
+          {auth.status === 'error' && friendlyError(auth.error, 'knocking at the door')}
         </p>
       </form>
     </div>

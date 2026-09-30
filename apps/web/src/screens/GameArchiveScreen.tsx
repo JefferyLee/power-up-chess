@@ -23,6 +23,7 @@ import type { EndReason } from '../rooms/types'
 import { MastersView } from './MastersView'
 import './HistoryScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'ready'; games: GlobalGameSummary[]; cursor: number | null; more: boolean }
@@ -48,6 +49,8 @@ export function GameArchiveScreen() {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [openingId, setOpeningId] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
+  // One line for row actions that fail (feature / delete / load more / open).
+  const [note, setNote] = useState<string | null>(null)
   const seen = useRef<Set<string>>(new Set())
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export function GameArchiveScreen() {
       })
       .catch((err) => {
         if (cancelled) return
-        setState({ kind: 'error', error: err instanceof Error ? err.message : String(err) })
+        setState({ kind: 'error', error: friendlyError(err, 'opening the archive') })
       })
     return () => { cancelled = true }
   }, [sort, player])
@@ -84,13 +87,13 @@ export function GameArchiveScreen() {
       // In the Featured view, un-featuring removes the row.
       if (!featured && sort === 'featured' && !player) patchGame(roomId, null)
       else patchGame(roomId, { featured })
-    } catch { /* ignore — leave the row as-is */ }
+    } catch (e) { setNote(friendlyError(e, 'featuring the game')) }
   }, [sort, player, patchGame])
 
   const onDelete = useCallback(async (roomId: string) => {
     try {
       if (await callDeleteArchivedGame(roomId)) patchGame(roomId, null)
-    } catch { /* ignore */ }
+    } catch (e) { setNote(friendlyError(e, 'deleting the game')) }
   }, [patchGame])
 
   const loadMore = useCallback(async () => {
@@ -105,8 +108,8 @@ export function GameArchiveScreen() {
           ? { kind: 'ready', games: [...s.games, ...fresh], cursor: res.nextCursor, more: res.nextCursor !== null }
           : s,
       )
-    } catch {
-      /* leave the list as-is; the button stays for a retry */
+    } catch (e) {
+      setNote(friendlyError(e, 'loading more games'))
     } finally {
       setLoadingMore(false)
     }
@@ -134,7 +137,8 @@ export function GameArchiveScreen() {
           roomId, // lets the review upload its analysis to this game
         },
       })
-    } catch {
+    } catch (e) {
+      setNote(friendlyError(e, 'opening the game'))
       setOpeningId(null)
     }
   }
@@ -219,6 +223,7 @@ export function GameArchiveScreen() {
         {masters && <MastersView />}
         {!masters && state.kind === 'loading' && <p className="puc-history__empty">Opening the archive…</p>}
         {!masters && state.kind === 'error' && <p className="puc-history__empty">Couldn&apos;t load the archive: {state.error}</p>}
+        {!masters && note && <p className="puc-history__empty" role="alert">{note}</p>}
         {!masters && state.kind === 'ready' && state.games.length === 0 && (
           <p className="puc-history__empty">
             {player

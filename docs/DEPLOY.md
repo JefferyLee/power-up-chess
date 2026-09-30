@@ -97,6 +97,8 @@ Run from the repo root (`gh` picks up the repo):
 | variable | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID` | the public Firebase web config (`apps/web/.env.local`); the build fails fast if the API key is missing |
 | variable | `VITE_FIREBASE_MEASUREMENT_ID`, `VITE_APPCHECK_SITE_KEY`, `VITE_FUNCTIONS_REGION` | optional; region defaults to `us-central1` |
 
+The same `VITE_FIREBASE_*` variables also unlock CI's `preview-smoke` job (`e2e/preview-smoke.mjs` against the production bundle on `vite preview`); until they exist the job is skipped.
+
 ```bash
 gh secret set IP_HASH_SECRET --body "$(grep '^IP_HASH_SECRET=' functions/.env | cut -d= -f2-)"
 gh variable set APP_CHECK_ENFORCE --body 0

@@ -34,6 +34,7 @@ import type { Effect, SpellId } from './types'
 import type { WizardRoomDoc } from './useWizardRoom'
 import './WizardDuelScreen.css'
 
+import { friendlyError } from '../../errors/friendlyError'
 type CastFlow =
   | { stage: 'idle' }
   | { stage: 'awaiting-1st'; spellId: SpellId }
@@ -126,7 +127,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
         // below) so opponents + spectators hear it too, not just the mover.
         await callSubmitWizardMove({ roomId, from, to })
       } catch (e) {
-        setError(humanError(e))
+        setError(friendlyError(e, 'making your move'))
       } finally {
         setSubmitting(false)
       }
@@ -153,7 +154,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
           setSurgeToast({ id: Date.now(), spellId, pricing: res.pricing })
         }
       } catch (e) {
-        setError(humanError(e))
+        setError(friendlyError(e, 'casting the spell'))
         setCast({ stage: 'idle' })
       } finally {
         setSubmitting(false)
@@ -244,7 +245,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
         onExit()
       } else {
         resignAttemptedRef.current = true
-        setError(humanError(e))
+        setError(friendlyError(e, 'resigning'))
       }
     } finally {
       setResigning(false)
@@ -254,8 +255,8 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
   const copyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/wizard/${roomId}`)
-    } catch {
-      // ignore — fallback could be a manual prompt
+    } catch (e) {
+      setError(friendlyError(e, 'copying the link'))
     }
   }, [roomId])
 
@@ -303,7 +304,7 @@ export function WizardRoomScreen({ roomId, room, onExit }: Props) {
     const moverTimeMs = room.currentTurn === 'w' ? room.whiteTimeMs : room.blackTimeMs
     if (moverTimeMs == null) return
     const remaining = moverTimeMs - (Date.now() - room.lastTickServerTs)
-    const fire = () => { void callClaimWizardTimeWin(roomId).catch(() => {}) }
+    const fire = () => { void callClaimWizardTimeWin(roomId).catch(() => { /* server clock settles it */ }) }
     if (remaining <= 0) {
       fire()
       return
@@ -618,11 +619,6 @@ function PlayerRow({
       )}
     </div>
   )
-}
-
-function humanError(e: unknown): string {
-  if (e instanceof Error) return e.message.replace(/^FirebaseError: /, '')
-  return String(e)
 }
 
 function computeLastTouched(

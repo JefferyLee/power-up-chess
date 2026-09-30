@@ -17,6 +17,7 @@ import {
 import { SEEK_TOPIC_CHIPS } from './seekTopics'
 import './BookOwlPanel.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const OWL_SRC = '/sprites/hall/book-owl.png?v=1'
 
 type Phase =
@@ -41,6 +42,7 @@ export function BookOwlPanel({ lang }: { lang: 'en' | 'cn' }) {
   const audioCache = useRef(new Map<string, string>())
   const [speakingKey, setSpeakingKey] = useState<string | null>(null)
   const [loadingKey, setLoadingKey] = useState<string | null>(null)
+  const [speakError, setSpeakError] = useState<string | null>(null)
   const stopAudio = useCallback(() => {
     audioRef.current?.pause()
     audioRef.current = null
@@ -72,6 +74,7 @@ export function BookOwlPanel({ lang }: { lang: 'en' | 'cn' }) {
       setLoadingKey(null)
       return
     }
+    setSpeakError(null)
     stopAudio()
     const seq = ++speakSeq.current
     let url = audioCache.current.get(key)
@@ -85,8 +88,11 @@ export function BookOwlPanel({ lang }: { lang: 'en' | 'cn' }) {
         const bytes = Uint8Array.from(atob(res.audioBase64), (c) => c.charCodeAt(0))
         url = URL.createObjectURL(new Blob([bytes], { type: res.mimeType }))
         audioCache.current.set(key, url)
-      } catch {
-        if (speakSeq.current === seq) setLoadingKey(null)
+      } catch (e) {
+        if (speakSeq.current === seq) {
+          setLoadingKey(null)
+          setSpeakError(friendlyError(e, 'summoning the owl’s voice'))
+        }
         return
       }
       if (speakSeq.current !== seq) return
@@ -177,6 +183,8 @@ export function BookOwlPanel({ lang }: { lang: 'en' | 'cn' }) {
           ))}
         </div>
       )}
+
+      {speakError && <p className="puc-owl__status" role="alert">{speakError}</p>}
 
       {phase.kind === 'fetching' && (
         <p className="puc-owl__status">

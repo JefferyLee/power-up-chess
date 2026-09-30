@@ -1,9 +1,14 @@
 # CI — Path B Phase 0.1 (docs/AUDIT_AND_PLAN.md).
 #
-# Two jobs:
-#   checks      — typecheck + lint + unit tests + build across the monorepo.
-#   rules-test  — Firestore security-rules tests against the emulator
-#                 (kept separate: needs Java + emulator download).
+# Three jobs:
+#   checks        — typecheck + lint + unit tests + build across the monorepo.
+#   rules-test    — Firestore security-rules tests against the emulator
+#                   (kept separate: needs Java + emulator download).
+#   preview-smoke — the PRODUCTION web bundle served by `vite preview` and
+#                   driven by e2e/preview-smoke.mjs (chunk graph, service
+#                   worker, env inlining — things the dev server never
+#                   exercises). Skipped until the VITE_FIREBASE_* repository
+#                   variables exist (docs/DEPLOY.md §2).
 #
 # Node 22 everywhere, matching package.json engines and the Functions runtime.
 # pnpm version comes from the root packageManager field via pnpm/action-setup.
@@ -41,7 +46,7 @@ jobs:
             exit 1
           fi
       - run: pnpm typecheck
-      # apps/web lint is `eslint . --max-warnings 80` — the warning ratchet fails CI.
+      # apps/web lint runs with --max-warnings (the ratchet in apps/web/package.json) — new warnings fail CI.
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
@@ -63,3 +68,33 @@ jobs:
       # Root script wraps: firebase emulators:exec --only firestore
       #   "pnpm --filter @power-up-chess/functions test:rules"
       - run: pnpm test:rules
+
+  preview-smoke:
+    needs: checks
+    if: ${{ vars.VITE_FIREBASE_API_KEY != '' }}
+    runs-on: ubuntu-latest
+    env:
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ vars.VITE_FIREBASE_MEASUREMENT_ID }}
+      VITE_APPCHECK_SITE_KEY: ${{ vars.VITE_APPCHECK_SITE_KEY }}
+      VITE_FUNCTIONS_REGION: ${{ vars.VITE_FUNCTIONS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @power-up-chess/web build
+      - name: serve the production bundle and drive it
+        run: |
+          (pnpm --filter @power-up-chess/web exec vite preview --port 4173 --strictPort > preview.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 1; done
+          node e2e/preview-smoke.mjs http://localhost:4173

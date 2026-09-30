@@ -13,6 +13,7 @@ import { TeamBadge } from '../teams/TeamBadge'
 import { TerminalOverlay } from './terminal/TerminalOverlay'
 import './ChatPanel.css'
 
+import { friendlyError } from '../errors/friendlyError'
 export function ChatPanel({ canChat }: { canChat: boolean }) {
   const allMessages = useLobbyMessages()
   // /clear hides everything posted BEFORE the local timestamp. Server-
@@ -93,7 +94,7 @@ export function ChatPanel({ canChat }: { canChat: boolean }) {
         setText('')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(friendlyError(err, 'sending your message'))
     } finally {
       setSubmitting(false)
     }
@@ -310,7 +311,7 @@ function QuizBlock({ messageId, quiz }: { messageId: string; quiz: QuizState }) 
         setLocked(true)
       }
     } catch (err) {
-      setFeedback(err instanceof Error ? err.message.replace(/^FirebaseError: /, '') : String(err))
+      setFeedback(friendlyError(err, 'checking your answer'))
     } finally {
       setSubmitting(false)
     }

@@ -7,6 +7,7 @@ import { db } from '../../firebase/app'
 import './ForestLeaderboard.css'
 import { useAuthUid } from '../../auth/useAuthUid'
 
+import { friendlyError } from '../../errors/friendlyError'
 interface Row {
   normalizedName: string
   displayName: string
@@ -37,7 +38,7 @@ export function ForestLeaderboard({
         setErr(null)
       } catch (e) {
         if (cancelled) return
-        setErr(e instanceof Error ? e.message : String(e))
+        setErr(friendlyError(e, 'loading the leaderboard'))
       }
     }
     void load()

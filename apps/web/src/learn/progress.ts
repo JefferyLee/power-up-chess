@@ -5,7 +5,9 @@
 // (guests/{name}.learnedBasicsAt). This is only the per-lesson UX
 // hint — a kid clearing localStorage just loses the checkmarks.
 
-const STORAGE_KEY = 'puc:learn:done:v1'
+import { KEYS } from '../storage/keys'
+
+const STORAGE_KEY = KEYS.learnDone.key
 
 function readSet(): Set<string> {
   if (typeof window === 'undefined') return new Set()

@@ -14,6 +14,7 @@ import { SettingsPanel } from './SettingsPanel'
 import { DeleteAccountPanel } from './DeleteAccountPanel'
 import './AdventurerPlaqueScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type State =
   | { kind: 'loading' }
   | { kind: 'ready'; profile: GetPublicProfileResponse }
@@ -33,7 +34,7 @@ export function AdventurerPlaqueScreen() {
         // snapshot — only surface as an error if we have nothing.
         setState((prev) => prev.kind === 'ready'
           ? prev
-          : { kind: 'error', message: err instanceof Error ? err.message : String(err) },
+          : { kind: 'error', message: friendlyError(err, 'loading your plaque') },
         )
       })
   }, [])

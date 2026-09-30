@@ -81,3 +81,9 @@
   border-color: var(--puc-accent);
   color: var(--puc-accent);
 }
+
+/* Takeback refused (charge / session) — one line beside the button. */
+.puc-takeback__err {
+  font-size: 0.85rem;
+  color: #f6a4a4;
+}

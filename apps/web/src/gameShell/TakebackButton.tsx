@@ -1,8 +1,9 @@
 import type { TakebackApi } from './useTakeback'
 
 export function TakebackButton({ takeback, readyTitle }: { takeback: TakebackApi; readyTitle: string }) {
-  const { nextCost, canTakeback, tooPoor } = takeback
+  const { nextCost, canTakeback, tooPoor, error } = takeback
   return (
+    <>
     <button
       type="button"
       onClick={() => { void takeback.takeback() }}
@@ -17,5 +18,7 @@ export function TakebackButton({ takeback, readyTitle }: { takeback: TakebackApi
     >
       {nextCost === null ? 'Takeback ✗' : `↩ Takeback (−${nextCost}✦)`}
     </button>
+    {error && <span className="puc-takeback__err" role="alert">{error}</span>}
+    </>
   )
 }

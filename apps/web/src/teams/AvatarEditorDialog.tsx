@@ -10,6 +10,7 @@ import { TeamBadge as TeamBadgeView } from './TeamBadge'
 import { BadgeEditor } from './BadgeEditor'
 import './CreateTeamDialog.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const DEFAULT_AVATAR: TeamBadge = {
   shape: 'shield-heater',
   layout: 'solid',
@@ -46,7 +47,7 @@ export function AvatarEditorDialog({ current, onClose, onSaved }: Props) {
       onSaved?.(res.avatar)
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'saving your avatar'))
     } finally {
       setBusy(false)
     }

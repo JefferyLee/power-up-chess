@@ -2,9 +2,10 @@ import { useState } from 'react'
 import type { Color, GameStatus } from '../chess/types'
 import type { HostId } from '../hosts/hosts'
 import { BrilliantWinCeremony } from './BrilliantWinCeremony'
+import { KEYS } from '../storage/keys'
 import './GameEndOverlay.css'
 
-const FIRST_WIN_KEY = 'puc:first-win-done'
+const FIRST_WIN_KEY = KEYS.firstWinDone.key
 
 /** The grand crown ceremony is reserved for milestones, not every win.
  *  Returns true once — the very first win ever — then false forever. */

@@ -24,6 +24,7 @@ import { INVITE_COST_CP, WIZARD_INVITE_COST_CP } from './types'
 import { InviteDialog } from './InviteDialog'
 import './UserCard.css'
 
+import { friendlyError } from '../errors/friendlyError'
 interface Props {
   normalizedName: string
   /** Your own normalized name + balance — drives the "self" guard + the
@@ -51,7 +52,7 @@ export function UserCard({ normalizedName, selfNormalizedName, selfCastlePoints,
       })
       .catch((e) => {
         if (cancelled) return
-        setState({ kind: 'error', message: e instanceof Error ? e.message : String(e) })
+        setState({ kind: 'error', message: friendlyError(e, 'loading their card') })
       })
     return () => { cancelled = true }
   }, [normalizedName])

@@ -19,6 +19,7 @@ import sacrificeIcon from './assets/plot-icons/sacrifice.svg'
 import endgameIcon from './assets/plot-icons/endgame.svg'
 import defenseIcon from './assets/plot-icons/defense.svg'
 import { DailyStrip } from './DailyStrip'
+import { KEYS, readKey, writeKey } from '../storage/keys'
 import './PuzzleGardenScreen.css'
 
 interface PlotMeta {
@@ -89,7 +90,7 @@ export function PuzzleGardenScreen() {
   // Session-scoped dismissal so the banner doesn't keep nagging within
   // a single visit. A reload brings it back — by design, since it's a
   // genuinely useful onboarding step.
-  const dismissed = sessionStorage.getItem('puc-cal-dismissed') === '1'
+  const dismissed = readKey(KEYS.calibrationDismissed) === '1'
   const showCalibrationBanner = isCalibrationCandidate && !dismissed
 
   return (
@@ -142,7 +143,7 @@ export function PuzzleGardenScreen() {
                 type="button"
                 className="puc-garden__calibrate-btn"
                 onClick={() => {
-                  sessionStorage.setItem('puc-cal-dismissed', '1')
+                  writeKey(KEYS.calibrationDismissed, '1')
                   // Re-render with the dismissal noticed.
                   setState((s) => (s ? { ...s } : s))
                 }}

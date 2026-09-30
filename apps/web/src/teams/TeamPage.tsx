@@ -22,6 +22,7 @@ import { CaptainControls } from './CaptainControls'
 import { NameLink } from '../invitations/NameLink'
 import './TeamPage.css'
 
+import { friendlyError } from '../errors/friendlyError'
 export function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
@@ -59,7 +60,7 @@ export function TeamPage() {
       await callLeaveTeam({ teamId })
       navigate('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(friendlyError(err, 'leaving the team'))
     } finally {
       setBusy(false)
     }
@@ -77,7 +78,7 @@ export function TeamPage() {
       await callDisbandTeam({ teamId })
       navigate('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(friendlyError(err, 'disbanding the team'))
     } finally {
       setBusy(false)
     }
@@ -215,7 +216,7 @@ function CaptainInbox({ teamId }: { teamId: string }) {
     setActingId(id)
     setError(null)
     try { await callApproveApplication({ applicationId: id }) }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    catch (e) { setError(friendlyError(e, 'approving the application')) }
     finally { setActingId(null) }
   }
   const onDecline = async (id: string) => {
@@ -223,7 +224,7 @@ function CaptainInbox({ teamId }: { teamId: string }) {
     setActingId(id)
     setError(null)
     try { await callDeclineApplication({ applicationId: id }) }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    catch (e) { setError(friendlyError(e, 'declining the application')) }
     finally { setActingId(null) }
   }
 
@@ -309,7 +310,7 @@ function ApplyToTeamSection({ teamId, teamName }: { teamId: string; teamName: st
       await callApplyToTeam({ teamId, pitch: pitch.trim() || undefined })
       setPitch('')
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'applying to the team'))
     } finally {
       setBusy(false)
     }
@@ -319,7 +320,7 @@ function ApplyToTeamSection({ teamId, teamName }: { teamId: string; teamName: st
     setBusy(true)
     setError(null)
     try { await callCancelApplication({ applicationId: pending.applicationId }) }
-    catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+    catch (e) { setError(friendlyError(e, 'withdrawing the application')) }
     finally { setBusy(false) }
   }
 
@@ -377,7 +378,7 @@ function KickButton({
     if (!confirm(`Kick ${displayName} from the team?`)) return
     setBusy(true)
     try { await callKickMember({ teamId, normalizedName }) }
-    catch (e) { alert(e instanceof Error ? e.message : String(e)) }
+    catch (e) { alert(friendlyError(e, 'removing that member')) }
     finally { setBusy(false) }
   }
   return (

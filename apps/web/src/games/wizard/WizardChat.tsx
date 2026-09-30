@@ -11,6 +11,7 @@ import { callPostWizardMessage, callPostWizardVoice } from '../../firebase/calla
 import { useWizardChatMessages, type WizardChatMessage } from './useWizardChat'
 import './WizardChat.css'
 
+import { friendlyError } from '../../errors/friendlyError'
 const COSTS = {
   player: { text: 1, voice: 5 },
   spectator: { text: 2, voice: 20 },
@@ -78,7 +79,7 @@ export function WizardChat({ roomId, yourRole, isBypass, callerPoints, yourColor
       onPosted(res.castlePoints)
       setText('')
     } catch (err) {
-      setError(humanError(err))
+      setError(friendlyError(err, 'sending your message'))
     } finally {
       setSubmitting(false)
     }
@@ -99,7 +100,7 @@ export function WizardChat({ roomId, yourRole, isBypass, callerPoints, yourColor
         })
         onPosted(res.castlePoints)
       } catch (err) {
-        setError(humanError(err))
+        setError(friendlyError(err, 'sending your voice note'))
       } finally {
         setSubmitting(false)
       }
@@ -214,7 +215,7 @@ function VoiceBubble({ message }: { message: Extract<WizardChatMessage, { kind: 
       a.currentTime = 0
     } else {
       a.currentTime = 0
-      a.play().then(() => setPlaying(true)).catch(() => {})
+      a.play().then(() => setPlaying(true)).catch(() => { /* autoplay blocked */ })
     }
   }
 
@@ -375,9 +376,4 @@ function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error('FileReader error'))
     reader.readAsDataURL(blob)
   })
-}
-
-function humanError(e: unknown): string {
-  if (e instanceof Error) return e.message.replace(/^FirebaseError: /, '')
-  return String(e)
 }

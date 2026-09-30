@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useBoardView } from '../gameShell/useBoardView'
+import { KEYS } from '../storage/keys'
+import { flagCodec, usePersistedState } from '../storage/usePersistedState'
 import { BoardStage } from '../gameShell/BoardStage'
 import type { StageBoardProps } from '../gameShell/boardProps'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
@@ -21,6 +23,7 @@ import type { Classification } from '../engine/classify'
 import type { Square } from '../chess/types'
 import './PostGameAnalysisScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 const COMMENTARY_TIMEOUT_MS = 3000
 
 /** Tally each side's move classifications (brilliant overrides the raw
@@ -132,7 +135,7 @@ export function PostGameAnalysisScreen() {
         setSelectedIdx(analysis.moves.length > 0 ? analysis.moves.length - 1 : null)
       } catch (e) {
         if (ctrl.signal.aborted) return
-        setPhase({ kind: 'error', error: e instanceof Error ? e.message : String(e) })
+        setPhase({ kind: 'error', error: friendlyError(e, 'reviewing the game') })
       }
     })()
     return () => {
@@ -231,13 +234,7 @@ function ReviewView({
   const bv = useBoardView()
   // Engine-details fold (Phase 2.3) — collapsed for kids by default;
   // remembered so a parent/coach who opens it keeps it open.
-  const [engineOpen, setEngineOpen] = useState(() => {
-    try { return localStorage.getItem('puc:review-engine-open') === '1' } catch { return false }
-  })
-  const rememberEngineOpen = (open: boolean) => {
-    setEngineOpen(open)
-    try { localStorage.setItem('puc:review-engine-open', open ? '1' : '0') } catch { /* ok */ }
-  }
+  const [engineOpen, rememberEngineOpen] = usePersistedState(KEYS.reviewEngineOpen, false, flagCodec)
   const board3dRef = useRef<HTMLDivElement>(null)
   const toggleFullscreen = () => {
     const el = board3dRef.current

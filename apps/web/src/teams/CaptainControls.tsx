@@ -22,6 +22,7 @@ import { BadgeEditor } from './BadgeEditor'
 import './CreateTeamDialog.css'
 import './CaptainControls.css'
 
+import { friendlyError } from '../errors/friendlyError'
 interface Props {
   team: Team
 }
@@ -44,7 +45,7 @@ export function CaptainControls({ team }: Props) {
       setRecruitNote('Posted to the Hall.')
       setTimeout(() => setRecruitNote(null), 4000)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'posting to the Hall'))
     } finally {
       setReposting(false)
     }
@@ -124,7 +125,7 @@ function EditNameModal({ team, onClose }: { team: Team; onClose: () => void }) {
       })
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'renaming the team'))
     } finally {
       setBusy(false)
     }
@@ -211,7 +212,7 @@ function RebadgeModal({ team, onClose }: { team: Team; onClose: () => void }) {
       await callRebadgeTeam({ teamId: team.teamId, badge })
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'changing the badge'))
     } finally {
       setBusy(false)
     }
@@ -286,7 +287,7 @@ function TransferModal({ team, onClose }: { team: Team; onClose: () => void }) {
       await callTransferCaptain({ teamId: team.teamId, toNormalizedName: pick.normalizedName })
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(friendlyError(e, 'handing over the captaincy'))
     } finally {
       setBusy(false)
     }

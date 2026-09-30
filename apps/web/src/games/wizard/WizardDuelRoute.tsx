@@ -14,6 +14,7 @@ import { callCreateWizardRoom, callJoinWizardRoom } from '../../firebase/callabl
 import { useWizardRoom } from './useWizardRoom'
 import { WizardRoomScreen } from './WizardRoomScreen'
 
+import { friendlyError } from '../../errors/friendlyError'
 export function WizardDuelRoute() {
   const navigate = useNavigate()
   const { identity } = useCastle()
@@ -38,7 +39,7 @@ export function WizardDuelRoute() {
         // them again.
         navigate(`/wizard/${roomId}`, { replace: true, state: { wizardWarned: true } })
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(friendlyError(e, 'opening the duel'))
         creatingRef.current = false
       }
     })()
@@ -87,7 +88,7 @@ export function WizardRoomRoute() {
         })
         retry()
       } catch (e) {
-        setJoinError(e instanceof Error ? e.message : String(e))
+        setJoinError(friendlyError(e, 'joining the duel'))
         joinedRef.current = false
       }
     })()

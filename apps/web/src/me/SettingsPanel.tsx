@@ -7,28 +7,30 @@ import { Link } from 'react-router-dom'
 import { useTemplateOnly, setTemplateOnly } from '../hosts/templateOnly'
 import { callSetPrivacyPrefs } from '../firebase/callables'
 import { useCastle } from '../castle/useCastle'
+import { KEYS } from '../storage/keys'
+import { flagCodec, usePersistedState } from '../storage/usePersistedState'
+import { friendlyError } from '../errors/friendlyError'
 import './SettingsPanel.css'
-
-const HIDE_LB_KEY = 'puc:hide-leaderboards'
 
 export function SettingsPanel() {
   const templateOnly = useTemplateOnly()
   const { identity } = useCastle()
   // Server is the source of truth; localStorage just remembers the last
   // choice so the checkbox renders correctly without an extra fetch.
-  const [hideLb, setHideLb] = useState(() => {
-    try { return localStorage.getItem(HIDE_LB_KEY) === '1' } catch { return false }
-  })
+  const [hideLb, setHideLb] = usePersistedState(KEYS.hideLeaderboards, false, flagCodec)
   const [savingLb, setSavingLb] = useState(false)
+  const [lbError, setLbError] = useState<string | null>(null)
 
   const toggleHideLb = async (next: boolean) => {
     if (!identity || identity.isBypass) return
     setSavingLb(true)
+    setLbError(null)
     try {
       await callSetPrivacyPrefs(identity.normalizedName, next)
       setHideLb(next)
-      try { localStorage.setItem(HIDE_LB_KEY, next ? '1' : '0') } catch { /* ok */ }
-    } catch { /* leave as-is; user can retry */ } finally {
+    } catch (err) {
+      setLbError(friendlyError(err, 'saving your leaderboard choice'))
+    } finally {
       setSavingLb(false)
     }
   }
@@ -71,6 +73,7 @@ export function SettingsPanel() {
           />
         </label>
       )}
+      {lbError && <p className="puc-settings__hint" role="alert">{lbError}</p>}
       <p className="puc-settings__hint">
         <Link to="/privacy" className="puc-settings__link">How Power Up Chess handles your data →</Link>
       </p>

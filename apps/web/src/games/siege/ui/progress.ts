@@ -6,8 +6,9 @@
 // yours once that map has at least one star.
 
 import type { MapDef, SpellId } from '../sim/types'
+import { KEYS, readJson, writeJson } from '../../../storage/keys'
 
-export const PROGRESS_KEY = 'puc.siege.progress'
+export const PROGRESS_KEY = KEYS.siegeProgress.key
 
 export type AchievementId =
   | 'first-blood'
@@ -86,21 +87,12 @@ export function parseProgress(raw: unknown): SiegeProgress {
 }
 
 export function loadProgress(): SiegeProgress {
-  try {
-    const raw = window.localStorage.getItem(PROGRESS_KEY)
-    if (!raw) return emptyProgress()
-    return parseProgress(JSON.parse(raw))
-  } catch {
-    return emptyProgress()
-  }
+  return parseProgress(readJson(KEYS.siegeProgress))
 }
 
+/** A refused write (quota / private mode) just means the run isn't remembered — it still played. */
 export function saveProgress(p: SiegeProgress): void {
-  try {
-    window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(p))
-  } catch {
-    // Quota / private mode — the run still played; nothing else to do.
-  }
+  writeJson(KEYS.siegeProgress, p)
 }
 
 // ── Pure updates (return a new object; never lower a best) ───────────

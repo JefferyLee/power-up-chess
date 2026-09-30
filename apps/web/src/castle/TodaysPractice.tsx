@@ -18,23 +18,17 @@ import { DailyStrip, type DailyStripState } from '../puzzles/DailyStrip'
 import { listGames } from '../history/api'
 import type { SavedGame } from '../history/db'
 import type { ReviewState } from '../screens/PostGameAnalysisScreen'
+import { KEYS } from '../storage/keys'
+import { flagCodec, usePersistedState } from '../storage/usePersistedState'
 import './TodaysPractice.css'
-
-const ONBOARD_SEEN_KEY = 'puc.onboardingSeen'
-
-function markOnboardingSeen() {
-  try { localStorage.setItem(ONBOARD_SEEN_KEY, '1') } catch { /* private mode — fine */ }
-}
 
 /** 1A — first-visit funnel. Renders nothing once dismissed or on return visits. */
 export function FirstVisitGuide({ isFirstVisit, hostName }: { isFirstVisit: boolean; hostName: string }) {
   const navigate = useNavigate()
-  const [seen, setSeen] = useState(() => {
-    try { return localStorage.getItem(ONBOARD_SEEN_KEY) === '1' } catch { return false }
-  })
+  const [seen, setSeen] = usePersistedState(KEYS.onboardingSeen, false, flagCodec)
   if (!isFirstVisit || seen) return null
 
-  const dismiss = () => { markOnboardingSeen(); setSeen(true) }
+  const dismiss = () => setSeen(true)
   const go = (to: string) => { dismiss(); navigate(to) }
 
   return (

@@ -8,6 +8,7 @@ import { HOSTS } from '../hosts/hosts'
 import type { EndReason } from '../rooms/types'
 import './HistoryScreen.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'ready'; games: SavedGame[] }
@@ -56,7 +57,7 @@ export function HistoryScreen() {
       })
       .catch((err) => {
         if (cancelled) return
-        setState({ kind: 'error', error: err instanceof Error ? err.message : String(err) })
+        setState({ kind: 'error', error: friendlyError(err, 'loading your games') })
       })
     return () => {
       cancelled = true

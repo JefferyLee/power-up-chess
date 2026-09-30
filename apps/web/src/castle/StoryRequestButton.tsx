@@ -9,6 +9,7 @@ import { callHostTellStory } from '../firebase/callables'
 import { useTemplateOnly } from '../hosts/templateOnly'
 import './StoryRequestButton.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type UiState =
   | { kind: 'idle' }
   | { kind: 'posting' }
@@ -66,7 +67,7 @@ export function StoryRequestButton({ hostId, hostName, enabled }: Props) {
     } catch (err) {
       setState({
         kind: 'error',
-        text: err instanceof Error ? err.message.replace(/^FirebaseError: /, '') : String(err),
+        text: friendlyError(err, 'fetching a story'),
       })
     }
   }

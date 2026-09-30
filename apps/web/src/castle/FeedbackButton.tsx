@@ -11,6 +11,7 @@ import { callSubmitFeedback } from '../firebase/callables'
 import { useCastle } from './useCastle'
 import './FeedbackButton.css'
 
+import { friendlyError } from '../errors/friendlyError'
 type Kind = 'bug' | 'suggestion'
 
 type SendState =
@@ -68,7 +69,7 @@ export function FeedbackButton() {
     } catch (e) {
       setState({
         kind: 'error',
-        message: e instanceof Error ? e.message : String(e),
+        message: friendlyError(e, 'sending your note'),
       })
     }
   }

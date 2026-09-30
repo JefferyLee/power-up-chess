@@ -8,7 +8,9 @@
 // localStorage, and the server-side sessionId still evicts older devices
 // when the account signs in elsewhere.
 
-const IDENTITY_KEY = 'puc:castle-identity:v2'
+import { KEYS } from '../storage/keys'
+
+const IDENTITY_KEY = KEYS.castleIdentity.key
 const TTL_MS = 5 * 24 * 60 * 60 * 1000  // 5 days
 
 interface StoredAccount {
