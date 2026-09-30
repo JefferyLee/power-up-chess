@@ -23,6 +23,8 @@ laptop. Laptop deploys remain possible (see the end).
 
 ## One-time setup (Jeff)
 
+> Done on 2026-09-30: `github-deploy` service account with the roles below, `GCP_SA_KEY` + `IP_HASH_SECRET` secrets, the `VITE_FIREBASE_*` / `APP_CHECK_ENFORCE` variables, the Artifact Registry cleanup policy, and `DEPLOY_ENABLED=true`. Kept here for rebuilding the setup.
+
 ### 1. Service account
 
 Create a deploy-only service account in `power-up-chess-dev` and grant it the
