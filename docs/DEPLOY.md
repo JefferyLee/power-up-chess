@@ -96,6 +96,7 @@ Run from the repo root (`gh` picks up the repo):
 | variable | `APP_CHECK_ENFORCE` | `0` or `1`; the App Check kill-switch (`functions/src/callableOptions.ts`). Unset = `0` |
 | variable | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID` | the public Firebase web config (`apps/web/.env.local`); the build fails fast if the API key is missing |
 | variable | `VITE_FIREBASE_MEASUREMENT_ID`, `VITE_APPCHECK_SITE_KEY`, `VITE_FUNCTIONS_REGION` | optional; region defaults to `us-central1` |
+| variable | `DEPLOY_ENABLED` | set to `true` LAST, once everything above exists: it turns on the automatic deploy after each green CI run. Until then the Deploy job is skipped (no failure e-mails). A manual *Run workflow* ignores it, so you can test the setup first. |
 
 The same `VITE_FIREBASE_*` variables also unlock CI's `preview-smoke` job (`e2e/preview-smoke.mjs` against the production bundle on `vite preview`); until they exist the job is skipped.
 

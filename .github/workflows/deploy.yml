@@ -45,10 +45,15 @@ permissions:
 
 jobs:
   deploy:
-    # workflow_run fires for every CI conclusion; only ship green pushes.
+    # workflow_run fires for every CI conclusion; only ship green pushes, and
+    # only once the repository variable DEPLOY_ENABLED is 'true' (set it after
+    # the secrets in docs/DEPLOY.md exist — until then the job is skipped
+    # instead of failing the preflight and mailing a failure per push).
+    # A manual workflow_dispatch always runs, so the setup can be tested.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+      (vars.DEPLOY_ENABLED == 'true' &&
+       github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 40
