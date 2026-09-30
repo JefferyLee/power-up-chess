@@ -15,6 +15,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import {
   AWARD_CAPS,
   UNLOCK_THRESHOLD,
@@ -79,7 +80,7 @@ function emptyEarn(dayKey: number): GuestDailyEarn {
   return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0, mystery: 0 }
 }
 
-export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>({ enforceAppCheck: false },
+export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>(APP_CHECK,
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before earning points.')

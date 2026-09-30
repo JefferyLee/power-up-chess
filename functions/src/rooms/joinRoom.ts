@@ -1,5 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import type { JoinRoomRequest, JoinRoomResponse, RoomDoc } from './types'
 import { sanitisePieceSetId } from '../cosmetics/registry'
 import { postGameStarted } from '../castle/postGameStarted'
@@ -14,7 +15,7 @@ import { postGameStarted } from '../castle/postGameStarted'
  * your own room is a no-op success so that returning to a waiting-room link
  * does not error.
  */
-export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>({ enforceAppCheck: false },async (req) => {
+export const joinRoom = onCall<JoinRoomRequest, Promise<JoinRoomResponse>>(APP_CHECK,async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in before joining a room.')
   }

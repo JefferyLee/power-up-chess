@@ -47,6 +47,9 @@ export interface ChatMessage {
   normalizedName: string
   isBypass: boolean
   kind: 'user' | 'host' | 'system'
+  /** Set on system cards that quote kid-authored text (a team name) —
+   *  they show the Report button like a user message. */
+  reportable?: boolean
   text: string
   ts: number
   hidden?: boolean

@@ -18,10 +18,25 @@ export function PrivacyScreen() {
 
         <h2>What we ask for</h2>
         <p>
-          A display name and a “magic word” — nothing else. No real name, no email, no phone number,
-          no birthday. The magic word is stored only as a one-way code (a hash), never the word itself.
-          Sign-in runs on anonymous authentication.
+          A display name and a “magic word” — no real name, no email, no phone number, no birthday.
+          The magic word is stored only as a one-way code (a hash), never the word itself.
+          Sign-in runs on anonymous authentication: to Google, the child is a random ID with no
+          personal details attached.
         </p>
+
+        <h2>What we keep on our servers</h2>
+        <ul>
+          <li>The display name, the hashed magic word, and the anonymous sign-in IDs of the devices used.</li>
+          <li>Castle points, cosmetics and unlock progress; finished-game records for the Hall of Games and
+            review; team and tournament entries.</li>
+          <li>Great Hall chat messages, and Wizard’s Duel room chat — text plus the short voice clips
+            themselves (up to 15 seconds), kept with the duel room.</li>
+          <li>A one-way hash of the device’s internet address, used only to spot abuse (for example one
+            person farming points across many accounts). The address itself is never stored, and we do not
+            look up a location from it. Accounts made before 29 September 2026 may still show a country or
+            city on their plaque from an older version of the app.</li>
+        </ul>
+        <p>Match history, puzzle attempts and preferences stay on the child’s own device.</p>
 
         <h2>Talking to other people</h2>
         <ul>
@@ -45,12 +60,17 @@ export function PrivacyScreen() {
         <ul>
           <li><b>Hide from leaderboards</b> — keep your name off all public boards (Plaque → Settings).</li>
           <li><b>Delete everything</b> — Plaque → “Delete my account &amp; data” irreversibly removes your
-            name, points, games, chat messages and progress from this device and our servers.</li>
+            name, points and their ledger, games, chat messages and voice notices, invitations, team entries,
+            progress and the anonymous sign-in IDs from this device and our servers. (Old game rooms you
+            played in still carry the display name for now.)</li>
         </ul>
 
         <p className="puc-privacy__foot">
           Analytics are basic product metrics with a hashed user ID — no advertising, no cross-site tracking.
-          Third parties: Google Firebase (hosting, database) and Google Gemini (host text, server-side only).
+          Third parties: Google Firebase (hosting, database, sign-in, analytics), Google Gemini (host text,
+          server-side only), Cloudflare (the network in front of app.powerupcastle.app — it sees connection
+          data the way any web host does) and Microsoft’s text-to-speech, which reads our own story text
+          aloud and never receives anything about the child. No location lookup service.
           Questions or a deletion request: contact Jeff (the operator).
         </p>
       </main>

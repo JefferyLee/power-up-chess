@@ -7,6 +7,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import type { GuestDoc } from './types'
 
 const ADMIN_NORMALIZED_NAME = 'jeff'
@@ -21,7 +22,7 @@ export interface SetUserBanResponse {
   uidsFlagged: number
 }
 
-export const setUserBan = onCall<SetUserBanRequest, Promise<SetUserBanResponse>>({ enforceAppCheck: false },async (req) => {
+export const setUserBan = onCall<SetUserBanRequest, Promise<SetUserBanResponse>>(APP_CHECK,async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const db = getFirestore()
 

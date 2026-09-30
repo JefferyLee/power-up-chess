@@ -12,6 +12,7 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import {
   AWARD_CAPS,
   type CastleEnterRequest,
@@ -24,7 +25,7 @@ import {
 } from './types'
 import { applyDecay } from './decay'
 import { scrubMessage } from './profanity'
-import { extractIp, hashIp, lookupGeo, type GeoResult } from './ipGeo'
+import { extractIp, hashIp } from './ipGeo'
 import { appendAudit } from './audit'
 
 const NAME_MIN = 1
@@ -47,7 +48,7 @@ export function sanitizeDisplayName(name: string): string {
   return stripped.slice(0, NAME_MAX)
 }
 
-export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterResponse>>({ enforceAppCheck: false },
+export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterResponse>>(APP_CHECK,
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before entering the castle.')
@@ -68,13 +69,11 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
     const db = getFirestore()
     const now = Date.now()
 
-    // Origin tracking — kick off the geo lookup in parallel with the
-    // rest of the work so the network call doesn't add to wall time.
-    // Both the hash and the geo result are nullable; a failed lookup
-    // just leaves the fields untouched on the guest doc.
+    // Origin tracking — only the HMAC of the client IP is ever written
+    // (guest doc + audit ledger). The raw address and the ip-api.com
+    // country/city lookup were dropped for privacy (see ipGeo.ts).
     const ip = extractIp(req)
     const ipHash = ip ? hashIp(ip) : null
-    const geoPromise: Promise<GeoResult | null> = ip ? lookupGeo(ip) : Promise.resolve(null)
 
     // Rate-limit check before any other work.
     const attemptsRef = db.doc(`castle_enter_attempts/${uid}`)
@@ -150,7 +149,6 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
       const starter = AWARD_CAPS.newAccountStarter
       const todayKey = Math.floor(now / DAY_MS)
       const sessionId = mintSessionId()
-      const geo = await geoPromise
       const doc: GuestDoc = {
         displayName,
         normalizedName,
@@ -163,9 +161,6 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
         streakDays: 1,
         lifetimeEarned: starter,
         activeSessionId: sessionId,
-        ...(geo?.country ? { firstCountry: geo.country, recentCountry: geo.country } : {}),
-        ...(geo?.city ? { firstCity: geo.city, recentCity: geo.city } : {}),
-        ...(ip ? { firstIp: ip, recentIp: ip } : {}),
         ...(ipHash ? { firstIpHash: ipHash, recentIpHash: ipHash } : {}),
       }
       await guestRef.create(doc)
@@ -220,20 +215,16 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
         const lifetimePrev = existing.lifetimeEarned ?? Math.max(0, existing.castlePoints)
         updates.lifetimeEarned = lifetimePrev + bonus.total
       }
-      // Origin tracking — refresh recent*, lazily backfill first* on
-      // accounts that pre-date this feature (createdAt is what it is,
-      // so the best signal we have for those is "wherever they were on
-      // the next visit after the feature shipped").
-      const geo = await geoPromise
-      if (geo?.country) updates.recentCountry = geo.country
-      if (geo?.city) updates.recentCity = geo.city
-      if (ip) updates.recentIp = ip
+      // Origin tracking — refresh recentIpHash, lazily backfill
+      // firstIpHash on accounts that pre-date it. Raw firstIp / recentIp
+      // written before 2026-09-29 are scrubbed on this visit; the old
+      // country / city fields are no longer written but left alone.
       if (ipHash) updates.recentIpHash = ipHash
-      if (!existing.firstCountry && geo?.country) updates.firstCountry = geo.country
-      if (!existing.firstCity && geo?.city) updates.firstCity = geo.city
-      if (!existing.firstIp && ip) updates.firstIp = ip
       if (!existing.firstIpHash && ipHash) updates.firstIpHash = ipHash
-      await guestRef.update(updates)
+      const scrub: Record<string, FieldValue> = {}
+      if (existing.firstIp !== undefined) scrub.firstIp = FieldValue.delete()
+      if (existing.recentIp !== undefined) scrub.recentIp = FieldValue.delete()
+      await guestRef.update({ ...updates, ...scrub })
       // Ledger entries for the returning-guest path. Decay and the
       // check-in / streak bonus are logged separately so the trail
       // reads cleanly: "lost 5 to decay, then earned 22 from check-in

@@ -22,6 +22,7 @@ import { generateTeamId, normalizeTeamName } from './teamId'
 import { sanitiseBadge } from './sanitiseBadge'
 import { appendAuditTx } from '../castle/audit'
 import { extractIp } from '../castle/ipGeo'
+import { assertCleanTeamText } from './teamText'
 
 const NAME_MIN = 2
 const NAME_MAX = 30
@@ -53,6 +54,9 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
     }
     const normalizedTeamName = normalizeTeamName(name)
     const motto = String(req.data?.motto ?? '').trim().slice(0, MOTTO_MAX) || undefined
+    // Both land on a public page + in the Hall — same scrub as chat.
+    assertCleanTeamText('name', name)
+    assertCleanTeamText('motto', motto ?? '')
     const badge = sanitiseBadge(req.data?.badge)
 
     const db = getFirestore()
@@ -155,14 +159,16 @@ export const createTeam = onCall<CreateTeamRequest, Promise<CreateTeamResponse>>
 
       // Auto-post a recruit card to the Hall chat so the Castle
       // immediately sees there's a new team looking for members.
-      // Written server-side so it bypasses the chat moderation
-      // pipeline (the text is mechanical, not user free-form).
+      // Written server-side (no postChat rate limit), but the team name
+      // is kid-authored text — it was scrubbed above and the card is
+      // flagged `reportable` so it can still be community-flagged.
       const recruitMessage: ChatMessageDoc = {
         name: 'Castle',
         uid: '',
         normalizedName: '',
         isBypass: false,
         kind: 'system',
+        reportable: true,
         text: `${idData.displayName} just founded a new team: ${name}.`,
         ts: now,
         hostId: hostOnDuty(),

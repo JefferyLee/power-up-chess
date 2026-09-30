@@ -10,6 +10,7 @@
 // doc, and only an aggregate `flags` count is written back to the message.
 
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { getFirestore } from 'firebase-admin/firestore'
 import { bumpAndCheck } from './chatRateLimit'
 
@@ -29,7 +30,7 @@ export interface ReportChatResponse {
   already?: boolean
 }
 
-export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatResponse>>({ enforceAppCheck: false },async (req) => {
+export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatResponse>>(APP_CHECK,async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in to report a message.')
   }
@@ -54,15 +55,17 @@ export const reportChatMessage = onCall<ReportChatRequest, Promise<ReportChatRes
       throw new HttpsError('not-found', 'That message is no longer here.')
     }
     const msg = msgSnap.data() as {
-      hidden?: boolean; flags?: number; kind?: string
+      hidden?: boolean; flags?: number; kind?: string; reportable?: boolean
       viaWizard?: string; wizardMessageId?: string
     }
     const flags0 = typeof msg.flags === 'number' ? msg.flags : 0
 
     if (msg.hidden) return { ok: true, hidden: true, flags: flags0 }
     if (flagSnap.exists) return { ok: true, hidden: false, flags: flags0, already: true }
-    // Only real user chatter is community-moderated; host/system lines are ours.
-    if (msg.kind !== 'user') {
+    // Only kid-authored text is community-moderated: user chatter, plus
+    // system cards flagged `reportable` (they quote a team name). Host
+    // lines and the rest of the system feed are ours.
+    if (msg.kind !== 'user' && msg.reportable !== true) {
       throw new HttpsError('failed-precondition', 'This message can’t be reported.')
     }
 

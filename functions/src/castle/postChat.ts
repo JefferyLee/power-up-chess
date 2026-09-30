@@ -9,6 +9,7 @@
 
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { CHAT_LIMITS, type ChatMessageDoc, type PostChatRequest, type PostChatResponse } from './chatTypes'
 import { bumpAndCheck } from './chatRateLimit'
 import { scrubMessage } from './profanity'
@@ -23,7 +24,7 @@ const HALL_CHAT_COST = 1
 const GENERIC_REPLY = 'I just listened in.'
 
 export const postChat = onCall<PostChatRequest, Promise<PostChatResponse>>(
-  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
+  { ...APP_CHECK, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in before chatting.')
     const uid = req.auth.uid

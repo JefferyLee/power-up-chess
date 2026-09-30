@@ -24,7 +24,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore'
+import { deleteDoc, doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const RULES_PATH = resolve(HERE, '../../firestore.rules')
@@ -242,5 +242,57 @@ describe('firestore rules: /tournaments/{weekKey}', () => {
     const ada = env.authenticatedContext('uid-ada')
     await assertSucceeds(getDoc(doc(ada.firestore(), 'tournaments/2026-W27')))
     await assertFails(setDoc(doc(ada.firestore(), 'tournaments/2026-W27'), { participants: [{ normalizedName: 'ada' }] }))
+  })
+})
+
+// ── Published leaderboards: signed-in read, never client-writable ──────
+// (display names only; the privacy opt-out is enforced by the writers)
+
+describe('firestore rules: /puzzle_leaderboards/{plot}', () => {
+  it('signed-in users can read a plot board (the client subscribes directly)', async () => {
+    await seed('puzzle_leaderboards/mate', { plot: 'mate', topAllTime: [], topClimbers: [], weekKey: '2026-W40', refreshedAt: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertSucceeds(getDoc(doc(ada.firestore(), 'puzzle_leaderboards/mate')))
+  })
+  it('anonymous clients cannot read a plot board', async () => {
+    await seed('puzzle_leaderboards/fork', { plot: 'fork', topAllTime: [], topClimbers: [], weekKey: '2026-W40', refreshedAt: 1 })
+    const anon = env.unauthenticatedContext()
+    await assertFails(getDoc(doc(anon.firestore(), 'puzzle_leaderboards/fork')))
+  })
+  it('clients cannot write a plot board (refreshPuzzleLeaderboards only)', async () => {
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'puzzle_leaderboards/mate'), { topAllTime: [{ displayName: 'Ada', rating: 9999 }] }))
+  })
+})
+
+describe('firestore rules: /siege_leaderboards/{doc}', () => {
+  it('signed-in users can read the global board; anonymous cannot', async () => {
+    await seed('siege_leaderboards/global', { topEndless: [], topCampaign: [], topDaily: [], refreshedAt: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertSucceeds(getDoc(doc(ada.firestore(), 'siege_leaderboards/global')))
+    const anon = env.unauthenticatedContext()
+    await assertFails(getDoc(doc(anon.firestore(), 'siege_leaderboards/global')))
+  })
+  it('clients cannot write the board or the per-guest siege_scores', async () => {
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'siege_leaderboards/global'), { topEndless: [{ displayName: 'Ada', score: 1 }] }))
+    await assertFails(setDoc(doc(ada.firestore(), 'siege_scores/ada'), { displayName: 'Ada', endlessBest: { score: 1 } }))
+    await assertFails(getDoc(doc(ada.firestore(), 'siege_scores/ada')))
+  })
+})
+
+describe('firestore rules: /forest_leaderboard/{normalizedName}', () => {
+  it('signed-in users can read any row; anonymous cannot', async () => {
+    await seed('forest_leaderboard/ada', { normalizedName: 'ada', displayName: 'Ada', best: 120, updatedAt: 1 })
+    const bob = env.authenticatedContext('uid-bob')
+    await assertSucceeds(getDoc(doc(bob.firestore(), 'forest_leaderboard/ada')))
+    const anon = env.unauthenticatedContext()
+    await assertFails(getDoc(doc(anon.firestore(), 'forest_leaderboard/ada')))
+  })
+  it('clients cannot write or delete rows — even their own', async () => {
+    await seed('forest_leaderboard/ada', { normalizedName: 'ada', displayName: 'Ada', best: 120, updatedAt: 1 })
+    const ada = env.authenticatedContext('uid-ada')
+    await assertFails(setDoc(doc(ada.firestore(), 'forest_leaderboard/ada'), { normalizedName: 'ada', displayName: 'Ada', best: 200, updatedAt: 2 }))
+    await assertFails(deleteDoc(doc(ada.firestore(), 'forest_leaderboard/ada')))
   })
 })

@@ -88,6 +88,10 @@ export interface ChatMessageDoc {
   /** True if author is a bypass guest. Renders with 👻 prefix. */
   isBypass: boolean
   kind: ChatMessageKind
+  /** Set on a 'system' line whose text carries kid-authored words (a
+   *  team name in a founded / recruiting card). Lets it be reported and
+   *  auto-hidden like a user message even though the Castle posted it. */
+  reportable?: boolean
   /** Sanitised text. */
   text: string
   /** Server timestamp (ms). */

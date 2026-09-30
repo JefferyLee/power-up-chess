@@ -390,6 +390,8 @@ export interface GuestDoc {
   /** City name at first registration (may be inaccurate behind VPN/NAT). */
   firstCity?: string
   /** Raw first-seen IP (v4 or v6). Admin-only on getPublicProfile. */
+  /** Legacy (pre 2026-09-29): raw IPs are no longer written and are
+   *  scrubbed on the next visit; only the salted hashes below remain. */
   firstIp?: string
   /** HMAC-SHA256 hex of the first-seen IP. */
   firstIpHash?: string

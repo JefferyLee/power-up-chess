@@ -156,9 +156,10 @@ function Bubble({ message, showQuiz }: { message: ChatMessage; showQuiz: boolean
   const isHost = message.kind === 'host'
   const isSystem = message.kind === 'system'
   // A kid can flag another guest's message; 3 distinct reports auto-hide it.
-  // Not your own, not host/system lines.
+  // Not your own, not host lines; system lines only when they carry a
+  // kid's own words (team founded / recruiting cards are `reportable`).
   const canReport =
-    message.kind === 'user' &&
+    (message.kind === 'user' || message.reportable === true) &&
     !(message.normalizedName && message.normalizedName === identity?.normalizedName)
   const [reportState, setReportState] = useState<'idle' | 'confirm' | 'sent'>('idle')
   const doReport = () => {

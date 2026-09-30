@@ -26,6 +26,7 @@ import { wizardGateMinPoints } from './wizardGate'
 import type { ChatMessageDoc } from '../../castle/chatTypes'
 import { appendAuditTx } from '../../castle/audit'
 import { extractIp } from '../../castle/ipGeo'
+import { requireOwnedGuest } from '../../castle/requireOwner'
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 const MAX_TRIES = 5
@@ -112,7 +113,6 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
     }
     const db = getFirestore()
     const now = Date.now()
-    const guestRef = db.doc(`guests/${slot.normalizedName}`)
     const cost = AWARD_CAPS.wizardRoomOpenCost
     const callerIp = extractIp(req)
 
@@ -143,13 +143,12 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
       const gateMin = await wizardGateMinPoints(db)
 
       // Returns false on room-id collision so the outer loop retries with a
-      // fresh id; throws HttpsError on real failures (no guest, low balance).
+      // fresh id; throws HttpsError on real failures (not your name, no
+      // guest, low balance).
       const committed = await db.runTransaction(async (tx) => {
-        const guestSnap = await tx.get(guestRef)
-        if (!guestSnap.exists) {
-          throw new HttpsError('failed-precondition', 'Guest record missing.')
-        }
-        const guest = guestSnap.data() as GuestDoc
+        // Ownership + balance from the snapshot we debit; the seat takes
+        // the guest doc's displayName, not whatever the request said.
+        const { ref: guestRef, guest } = await requireOwnedGuest(db, req.auth!.uid, slot.normalizedName, tx)
         if (guest.castlePoints < gateMin) {
           throw new HttpsError(
             'failed-precondition',
@@ -164,7 +163,7 @@ export const createWizardRoom = onCall<CreateRoomRequest, Promise<{ roomId: stri
         }
         const roomSnap = await tx.get(ref)
         if (roomSnap.exists) return false
-        tx.create(ref, doc)
+        tx.create(ref, { ...doc, white: { ...slot, displayName: guest.displayName } })
         tx.update(guestRef, { castlePoints: FieldValue.increment(-cost) })
         appendAuditTx(tx, {
           normalizedName: slot.normalizedName!,
@@ -210,17 +209,16 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
       )
     }
     const gateMin = await wizardGateMinPoints(db)
-    const joinerSnap = await db.doc(`guests/${slot.normalizedName}`).get()
-    const joiner = joinerSnap.data() as GuestDoc | undefined
-    if (!joiner) {
-      throw new HttpsError('failed-precondition', 'Guest record missing.')
-    }
+    // Prove the caller owns the name they're sitting down as, and seat
+    // them under the guest doc's displayName (server-bound).
+    const { guest: joiner } = await requireOwnedGuest(db, uid, slot.normalizedName)
     if (joiner.castlePoints < gateMin) {
       throw new HttpsError(
         'failed-precondition',
         `Wizard's Duel unlocks at ${gateMin} castle points; you have ${joiner.castlePoints}.`,
       )
     }
+    const seat: PlayerSlot = { ...slot, displayName: joiner.displayName }
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref)
@@ -244,12 +242,12 @@ export const joinWizardRoom = onCall<JoinRoomRequest, Promise<{ color: Color }>>
       const now = Date.now()
       // White's clock starts ticking now — that's the side-to-move when
       // the room flips to live.
-      tx.update(ref, { black: slot, status: 'live', updatedAt: now, lastTickServerTs: now })
+      tx.update(ref, { black: seat, status: 'live', updatedAt: now, lastTickServerTs: now })
       return {
         color: 'b' as const,
         justWentLive: true as const,
         whiteName: room.white.displayName,
-        blackName: slot.displayName,
+        blackName: seat.displayName,
       }
     })
 
@@ -365,10 +363,10 @@ export const submitWizardSpell = onCall<
         throw new HttpsError('permission-denied', 'Bypass guests cannot cast spells (no castle points to spend).')
       }
 
-      const guestRef = db.doc(`guests/${callerSlot.normalizedName}`)
-      const guestSnap = await tx.get(guestRef)
-      if (!guestSnap.exists) throw new HttpsError('failed-precondition', 'Guest record missing.')
-      const guest = guestSnap.data() as GuestDoc
+      // The seat's name was verified at create/join time, but rooms that
+      // predate that check are still live — re-prove ownership here
+      // before spending the guest's points.
+      const { ref: guestRef, guest } = await requireOwnedGuest(db, uid, callerSlot.normalizedName, tx)
 
       // Compute pricing + reserve quota/supply (also reads, then writes).
       // If anything later throws, all of these writes roll back with the tx.
@@ -685,6 +683,11 @@ function scheduleDuelAnnouncement(
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
+// Shapes the request into a seat. The displayName here is provisional:
+// createWizardRoom / joinWizardRoom replace it with the guest doc's
+// server-bound spelling once requireOwnedGuest has proven the name is
+// the caller's, so a modified client can't sit down under someone
+// else's nickname.
 function validatePlayer(uid: string, data: unknown): PlayerSlot {
   const d = (data ?? {}) as { displayName?: unknown; normalizedName?: unknown; isBypass?: unknown; pieceSetId?: unknown }
   const displayName = String(d.displayName ?? '').trim().slice(0, 40)

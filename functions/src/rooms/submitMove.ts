@@ -1,5 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { applyMove, type ApplyMoveOutcome, type RejectCode } from './applyMove'
 import { parseUci } from './parseUci'
 import type { RoomDoc, SubmitMoveRequest, SubmitMoveResponse } from './types'
@@ -12,7 +13,7 @@ import type { RoomDoc, SubmitMoveRequest, SubmitMoveResponse } from './types'
  * of turn. The validation itself lives in the pure `applyMove` (unit-tested);
  * this wrapper owns the transaction, the write, and the HttpsError mapping.
  */
-export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>({ enforceAppCheck: false },async (req) => {
+export const submitMove = onCall<SubmitMoveRequest, Promise<SubmitMoveResponse>>(APP_CHECK,async (req) => {
   if (!req.auth) {
     throw new HttpsError('unauthenticated', 'Sign in before submitting a move.')
   }

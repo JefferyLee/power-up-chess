@@ -1,5 +1,6 @@
 import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
 import { callGeminiWithTimeout } from './gemini'
 import { consumeDailyQuota } from '../llm/rateLimit'
@@ -44,7 +45,7 @@ export interface GameRecapResponse {
 }
 
 export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
-  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
+  { ...APP_CHECK, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before requesting a recap.')

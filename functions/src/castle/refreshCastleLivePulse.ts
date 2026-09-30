@@ -113,14 +113,21 @@ export const refreshCastleLivePulse = onSchedule(
 
     // ── Today's top puzzle solvers (LA day) ───────────────────────────
     // Guest docs only exist for non-bypass identities, so no extra
-    // bypass filter needed here.
+    // bypass filter needed here. This doc is readable without sign-in,
+    // so the Phase 3.7 opt-out keeps a guest's name out of both the
+    // solvers list and the in-Hall list (they still count as a visitor).
     const guestsSnap = await db.collection('guests').get()
     const todaysSolvers: PulseSolver[] = []
+    const hiddenNames = new Set<string>()
     let visitorsToday = 0
     for (const d of guestsSnap.docs) {
       const g = d.data() as GuestDoc
       if (typeof g.lastVisitAt === 'number' && g.lastVisitAt >= dayAgo) {
         visitorsToday++
+      }
+      if (g.hideFromLeaderboards) {
+        hiddenNames.add(d.id)
+        continue
       }
       const ps = g.puzzleSolvesToday
       if (ps && ps.dayKey === todayKey && ps.count > 0) {
@@ -141,6 +148,7 @@ export const refreshCastleLivePulse = onSchedule(
     for (const d of presenceSnap.docs) {
       const p = d.data() as PresenceDoc
       if (p.isBypass) continue
+      if (p.normalizedName && hiddenNames.has(p.normalizedName)) continue
       // 'hall' (explicit) or undefined (defaulted to hall) — exclude
       // rooms so the pulse really says "in the Hall".
       const loc = p.location?.kind

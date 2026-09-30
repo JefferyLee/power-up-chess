@@ -13,6 +13,7 @@
 //   • 4-second LLM timeout; fall back to a sorry-line on the client.
 
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { defineSecret } from 'firebase-functions/params'
 import { getFirestore } from 'firebase-admin/firestore'
 import { callGemini } from '../commentary/gemini'
@@ -57,7 +58,7 @@ export type AskHostResponse =
   | { status: 'blocked' }
 
 export const askHost = onCall<AskHostRequest, Promise<AskHostResponse>>(
-  { enforceAppCheck: false, secrets: [GEMINI_API_KEY], timeoutSeconds: 10 },
+  { ...APP_CHECK, secrets: [GEMINI_API_KEY], timeoutSeconds: 10 },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const uid = req.auth.uid

@@ -37,6 +37,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import type { Transaction } from 'firebase-admin/firestore'
+import { hashIp } from './ipGeo'
 
 export interface CpAuditEntry {
   /** Lower-cased guest name — same key shape as guests/{name}. */
@@ -72,24 +73,33 @@ export interface CpAuditEntry {
    *  Keep small (Firestore doc limit is 1 MiB; we expect ~1k entries
    *  per guest per year, so room is ample but don't dump objects). */
   metadata?: Record<string, string | number | boolean>
-  /** Raw client IP at write time. Captured for callable-originated
-   *  entries so admin investigations can correlate "who did what from
-   *  where". Absent for scheduled / server-initiated writes. */
-  ip?: string
+  /** HMAC-SHA256 of the client IP at write time (ipGeo.hashIp) so admin
+   *  investigations can still ask "same source as that other change?"
+   *  without a raw address ever landing in Firestore. Absent for
+   *  scheduled / server-initiated writes. */
+  ipHash?: string
   /** Server-side wall clock at write time (ms). */
   serverTs: number
+}
+
+/** What call sites hand us: the row minus the server-filled fields,
+ *  plus the RAW client IP from extractIp(). It is hashed here and never
+ *  written, so no call site has to know about hashing. */
+export type CpAuditInput = Omit<CpAuditEntry, 'serverTs' | 'ipHash'> & { ip?: string }
+
+/** Pure: the exact document that gets persisted for an input. */
+export function toAuditRecord(entry: CpAuditInput, now = Date.now()): CpAuditEntry {
+  const { ip, ...rest } = entry
+  return { ...rest, ...(ip ? { ipHash: hashIp(ip) } : {}), serverTs: now }
 }
 
 /** Append a CP-change row in the SAME transaction as the castlePoints
  *  write. Use this in every callable that runs inside `runTransaction`.
  *  The ledger entry succeeds iff the balance change succeeds — no
  *  drift between truth and trail. */
-export function appendAuditTx(
-  tx: Transaction,
-  entry: Omit<CpAuditEntry, 'serverTs'>,
-): void {
+export function appendAuditTx(tx: Transaction, entry: CpAuditInput): void {
   const ref = getFirestore().collection('castle_point_audit').doc()
-  tx.set(ref, { ...entry, serverTs: Date.now() })
+  tx.set(ref, toAuditRecord(entry))
 }
 
 /** Standalone variant — use ONLY when the CP write itself can't be
@@ -97,9 +107,6 @@ export function appendAuditTx(
  *  cost, for example). The audit happens after the fact so a crash
  *  between the two leaves a gap; prefer appendAuditTx whenever you
  *  can move the CP write into a tx. */
-export async function appendAudit(entry: Omit<CpAuditEntry, 'serverTs'>): Promise<void> {
-  await getFirestore().collection('castle_point_audit').add({
-    ...entry,
-    serverTs: Date.now(),
-  })
+export async function appendAudit(entry: CpAuditInput): Promise<void> {
+  await getFirestore().collection('castle_point_audit').add(toAuditRecord(entry))
 }

@@ -4,6 +4,7 @@
 // other guests in the live Hall.
 
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { bumpAndCheck } from './chatRateLimit'
 import type { CastleBypassResponse } from './types'
 
@@ -11,7 +12,7 @@ import type { CastleBypassResponse } from './types'
  *  minting hundreds is abuse (Phase 1.8). */
 const BYPASS_PER_DAY = 10
 
-export const castleBypass = onCall<void, Promise<CastleBypassResponse>>({ enforceAppCheck: false },
+export const castleBypass = onCall<void, Promise<CastleBypassResponse>>(APP_CHECK,
   async (req) => {
     if (!req.auth) {
       throw new HttpsError('unauthenticated', 'Sign in before bypassing.')

@@ -10,6 +10,7 @@ import type { ChatMessageDoc } from '../castle/chatTypes'
 import { hostOnDuty } from '../shared/hostOnDuty'
 import { type GuestDoc, type TeamBadge, type TeamDoc } from '../castle/types'
 import { sanitiseBadge } from './sanitiseBadge'
+import { assertCleanTeamText } from './teamText'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const NAME_MIN = 2
@@ -147,6 +148,8 @@ export const renameTeam = onCall<RenameTeamRequest, Promise<RenameTeamResponse>>
     }
     const newNormalized = normalizeTeamName(newName)
     const motto = String(req.data?.motto ?? '').trim().slice(0, MOTTO_MAX)
+    assertCleanTeamText('name', newName)
+    assertCleanTeamText('motto', motto)
 
     const db = getFirestore()
     const teamRef = db.doc(`teams/${teamId}`)
@@ -261,6 +264,7 @@ export const postTeamRecruitment = onCall<PostTeamRecruitmentRequest, Promise<Po
         normalizedName: '',
         isBypass: false,
         kind: 'system',
+        reportable: true,  // carries the kid-authored team name
         text: `${team.captainDisplayName}'s team "${team.name}" is recruiting.`,
         ts: now,
         hostId: hostOnDuty(),

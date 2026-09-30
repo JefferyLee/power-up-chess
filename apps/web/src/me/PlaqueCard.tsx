@@ -38,7 +38,6 @@ export function PlaqueCard({ profile }: { profile: GetPublicProfileResponse }) {
   // stable for back-and-forth nav within a session.
   const showcasePiece = useMemo<PieceSymbol>(
     () => PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)]!,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
   // Equipment brightness ramp — 50% when no Today's Five attempts yet,

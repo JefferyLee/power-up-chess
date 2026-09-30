@@ -1,9 +1,13 @@
-// IP capture + geolocation utility for castleEnter origin tracking.
+// IP capture utility for castleEnter + the castle_point_audit ledger.
 //
 // Raw IPs are never persisted — we HMAC-SHA256 them with a project
 // secret so "is this the same source as last time?" comparisons still
-// work without retaining PII. Country / city come from ip-api.com's
-// free tier (HTTP, no key, 45 req/min) — fine server-side.
+// work without retaining PII.
+//
+// The ip-api.com country/city lookup that used to live here was removed
+// on 2026-09-29: its free tier is plain HTTP (a child's IP in the clear
+// to a third party) and non-commercial only. Old guest docs may still
+// carry first*/recent* country + city; nothing writes them any more.
 
 import { createHmac } from 'node:crypto'
 
@@ -11,8 +15,6 @@ import { createHmac } from 'node:crypto'
  *  Jeff (admin tier), so this isn't load-bearing security; it just
  *  rules out trivial rainbow-table lookups on the stored hex. */
 const IP_HASH_SECRET = process.env.IP_HASH_SECRET ?? 'puc-ip-hash-v1'
-
-const GEO_TIMEOUT_MS = 2500
 
 export interface CallableLikeRequest {
   rawRequest: {
@@ -36,46 +38,4 @@ export function extractIp(req: CallableLikeRequest): string | null {
 
 export function hashIp(ip: string): string {
   return createHmac('sha256', IP_HASH_SECRET).update(ip).digest('hex')
-}
-
-export interface GeoResult {
-  /** ISO 3166-1 alpha-2, e.g. 'US'. */
-  country?: string
-  city?: string
-}
-
-/** Resolve an IP to country + city via ip-api.com. Returns null for
- *  private/loopback IPs and on any error or timeout — callers should
- *  treat null as "skip the geo write" and keep going. */
-export async function lookupGeo(ip: string): Promise<GeoResult | null> {
-  if (!ip || isPrivateIp(ip)) return null
-  try {
-    const url = `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,countryCode,city`
-    const res = await fetch(url, { signal: AbortSignal.timeout(GEO_TIMEOUT_MS) })
-    if (!res.ok) return null
-    const data = (await res.json()) as { status?: string; countryCode?: string; city?: string }
-    if (data.status !== 'success') return null
-    const out: GeoResult = {}
-    if (typeof data.countryCode === 'string' && data.countryCode.length === 2) {
-      out.country = data.countryCode.toUpperCase()
-    }
-    if (typeof data.city === 'string' && data.city.length > 0) {
-      out.city = data.city.slice(0, 64)
-    }
-    return out.country || out.city ? out : null
-  } catch {
-    return null
-  }
-}
-
-function isPrivateIp(ip: string): boolean {
-  return (
-    ip === '127.0.0.1' ||
-    ip === '::1' ||
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ||
-    ip.startsWith('fe80:') ||
-    /^f[cd][0-9a-f]{2}:/i.test(ip)
-  )
 }

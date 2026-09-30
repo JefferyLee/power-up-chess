@@ -7,6 +7,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import type { LocationTag, SetPresenceRequest, SetPresenceResponse, PresenceDoc } from './chatTypes'
 import { titleFor, type GuestDoc } from './types'
 import { hostOnDuty } from '../shared/hostOnDuty'
@@ -18,7 +19,7 @@ interface FullPresenceRequest extends SetPresenceRequest {
   isBypass: boolean
 }
 
-export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceResponse>>({ enforceAppCheck: false },
+export const setPresence = onCall<FullPresenceRequest, Promise<SetPresenceResponse>>(APP_CHECK,
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in before joining the Hall.')
     const uid = req.auth.uid

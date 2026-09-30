@@ -9,6 +9,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { bumpAndCheck } from '../castle/chatRateLimit'
 import type { GuestDoc } from '../castle/types'
 import type { ArchivedGame } from './playerGames'
@@ -39,7 +40,7 @@ export interface SyncDeviceGameResponse {
   ok: boolean
 }
 
-export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGameResponse>>({ enforceAppCheck: false },async (req) => {
+export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGameResponse>>(APP_CHECK,async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
   const uid = req.auth.uid
   const d = req.data ?? ({} as SyncDeviceGameRequest)

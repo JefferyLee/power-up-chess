@@ -1,7 +1,7 @@
 # Power Up Chess — Privacy (parent-facing draft)
 
-**Status: DRAFT for parent review — not legal advice.** Written 2026-07-01 to
-reflect what the app actually does today. Jeff owns the final wording and any
+**Status: DRAFT for parent review — not legal advice.** Written 2026-07-01,
+updated 2026-09-29, to reflect what the app actually does today. Jeff owns the final wording and any
 legal/COPPA sign-off before the app is shared beyond family testing.
 
 Power Up Chess is a chess learning game for children (first user: an 8–10 year
@@ -16,16 +16,28 @@ old). We designed it to collect as little as possible about a child.
   check, not real security** — there's no password recovery and it isn't meant
   to protect sensitive data (we don't collect any).
 - Sign-in runs on Firebase **Anonymous Authentication** — the child is a random
-  anonymous ID to Google; we attach only the chosen display name.
+  anonymous ID to Google; we attach only the chosen display name. Each device
+  gets its own anonymous ID, and we keep the list of IDs that belong to a name
+  so progress follows the child between devices.
 
 ## What's stored, and where
 
 - **On the child's device (default):** match history, puzzle attempts, lesson
   progress, preferences. Cleared any time via the delete control (below) or the
   browser.
-- **On our servers (Google Firebase / Firestore):** the display name, castle
-  points and cosmetics, finished-game records (for the Hall of Games and
-  review), Great Hall chat messages, and team/tournament participation.
+- **On our servers (Google Firebase / Firestore):** the display name and the
+  hashed magic word, the anonymous sign-in IDs, castle points, cosmetics and
+  unlock progress (plus a ledger of every points change, for abuse tracing),
+  finished-game records (for the Hall of Games and review), Great Hall chat
+  messages, Wizard's Duel room chat including the short voice clips themselves
+  (≤15 s, kept with the duel room), and team/tournament participation.
+- **A one-way hash of the device's internet address** (HMAC-SHA256 with a
+  server-side secret) is stored with the account and the points ledger, so we
+  can tell "same source as last time?" when investigating point farming. The
+  address itself is never stored, and since 2026-09-29 we no longer look up a
+  country or city from it (the earlier lookup used a third-party service over
+  plain HTTP and was removed). Accounts created before that date may still
+  carry a country/city from the older version until deleted.
 
 ## Talking to other people
 
@@ -67,12 +79,21 @@ old). We designed it to collect as little as possible about a child.
 ## Deleting everything
 
 - **Plaque (`/me`) → "Delete my account & data."** This irreversibly removes the
-  child's name, points, games, puzzles, chat messages, team/tournament entries
-  and progress — on the device and on our servers.
+  child's name, points and their ledger, games, puzzles, chat messages and voice
+  notices, invitations, team/tournament entries, progress and the anonymous
+  sign-in IDs — on the device and on our servers. **Not yet covered:** the
+  records of past game rooms (chess and Wizard's Duel, including any voice
+  clips sent there) still carry the display name; anonymising those is planned.
 
 ## Third parties
 
 - **Google Firebase** (hosting, database, auth, functions, analytics) and
-  **Google Gemini** (host text, server-side only). No other processors.
+  **Google Gemini** (host text, server-side only).
+- **Cloudflare** sits in front of `app.powerupcastle.app` as the network layer
+  and sees connection data (IP address, pages requested) the way any web host
+  does; it does not receive account data.
+- **Microsoft text-to-speech** (Edge TTS) reads our own story text aloud for
+  the Library. Nothing about the child is sent to it.
+- No location lookup service. No other processors.
 
 Questions or a deletion request: contact Jeff (the operator).

@@ -9,6 +9,7 @@
 
 import { defineSecret } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { APP_CHECK } from '../callableOptions'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from '../commentary/cache'
 import { callGeminiWithTimeout } from '../commentary/gemini'
 import { consumeDailyQuota } from '../llm/rateLimit'
@@ -29,7 +30,7 @@ export interface ExplainPuzzleResponse {
 }
 
 export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleResponse>>(
-  { enforceAppCheck: false, secrets: [GEMINI_API_KEY] },
+  { ...APP_CHECK, secrets: [GEMINI_API_KEY] },
   async (req) => {
     if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in first.')
     const data = req.data

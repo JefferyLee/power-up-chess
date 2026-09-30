@@ -120,7 +120,11 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
         displayName: guest.displayName,
       } satisfies ForestRunDoc)
 
-      if (improved) {
+      if (guest.hideFromLeaderboards) {
+        // Privacy opt-out (Phase 3.7): never publish this guest on the
+        // board, and clear any row left from before they opted out.
+        if (lbSnap.exists) tx.delete(lbRef)
+      } else if (improved) {
         tx.set(lbRef, {
           normalizedName,
           displayName: guest.displayName,
