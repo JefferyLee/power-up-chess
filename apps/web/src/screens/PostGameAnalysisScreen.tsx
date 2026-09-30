@@ -1,13 +1,8 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Board } from '../board/Board'
-
-/* three.js lives in its own chunk — only fetched when a reviewer flips
- * the Hall of Games board into 3D. */
-const Board3D = lazy(() =>
-  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
-)
-import { useView3d } from '../board3d/useView3d'
+import { useBoardView } from '../gameShell/useBoardView'
+import { BoardStage } from '../gameShell/BoardStage'
+import type { StageBoardProps } from '../gameShell/boardProps'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { piecesFromFen } from '../chess/fen'
 import { isBrilliant } from '../engine/brilliant'
@@ -231,7 +226,9 @@ function ReviewView({
   }, [analysis, state, identity])
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   // Alternate 3D view of the board (read-only here, like the 2D one).
-  const [view3d, setView3d] = useView3d()
+  // Fullscreen is the browser's own (the move nav rides inside it), not
+  // the shell overlay.
+  const bv = useBoardView()
   // Engine-details fold (Phase 2.3) — collapsed for kids by default;
   // remembered so a parent/coach who opens it keeps it open.
   const [engineOpen, setEngineOpen] = useState(() => {
@@ -420,6 +417,16 @@ function ReviewView({
 
   const commentSource = selected ? commentaryByIdx.get(selected.index)?.source : undefined
 
+  const boardProps: StageBoardProps = {
+    pieces,
+    turn: selected ? (selected.color === 'w' ? 'b' : 'w') : 'w',
+    legalDestinationsFrom: () => [],
+    onMove: () => { /* read-only in review */ },
+    lastMove,
+    checkSquare: null,
+    arrows: replayArrows,
+  }
+
   // Story Review — fired once when analysis is ready.
   const [recap, setRecap] = useState<
     { status: 'loading' } | { status: 'ready'; text: string; source: 'llm' | 'cache' | 'fallback' } | { status: 'error' } | null
@@ -521,13 +528,13 @@ function ReviewView({
             <button
               type="button"
               className="puc-review__view-toggle"
-              onClick={() => setView3d((v) => !v)}
-              aria-pressed={view3d}
-              title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+              onClick={() => bv.setView3d((v) => !v)}
+              aria-pressed={bv.view3d}
+              title={bv.view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
             >
-              {view3d ? '🎲 2D' : '🎲 3D'}
+              {bv.view3d ? '🎲 2D' : '🎲 3D'}
             </button>
-            {view3d && (
+            {bv.view3d && (
               <button
                 type="button"
                 className="puc-review__view-toggle"
@@ -546,26 +553,16 @@ function ReviewView({
             selected={selected}
             selectedIsBrilliant={selected ? brilliantIdx.has(selected.index) : false}
           >
-            {view3d ? (
-              <div
-                ref={board3dRef}
-                className="puc-review__board3d"
-                style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
-              >
-                <Suspense
-                  fallback={<div className="puc-review__board3d-loading">Carving the 3D board…</div>}
-                >
-                  <Board3D
-                    pieces={pieces}
-                    turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
-                    legalDestinationsFrom={() => []}
-                    onMove={() => { /* read-only in review */ }}
-                    lastMove={lastMove}
-                    checkSquare={null}
-                  />
-                </Suspense>
-                {/* Overlay nav — the only move controls visible when the
-                 * board is fullscreen (the docked bar is outside it). */}
+            <BoardStage
+              ref={board3dRef}
+              view={bv}
+              squareSize={SQUARE_SIZE}
+              board={boardProps}
+              style={{ width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
+            >
+              {/* Overlay nav — the only move controls visible when the
+               * board is fullscreen (the docked bar is outside it). */}
+              {bv.view3d && (
                 <div className="puc-review__board3d-nav" role="group" aria-label="Move navigation">
                   <button type="button" onClick={goPrev} disabled={!canPrev} aria-label="Previous move">◀</button>
                   <span className="puc-review__board3d-move">
@@ -573,19 +570,8 @@ function ReviewView({
                   </span>
                   <button type="button" onClick={goNext} disabled={!canNext} aria-label="Next move">▶</button>
                 </div>
-              </div>
-            ) : (
-              <Board
-                pieces={pieces}
-                turn={selected ? (selected.color === 'w' ? 'b' : 'w') : 'w'}
-                legalDestinationsFrom={() => []}
-                onMove={() => { /* read-only in review */ }}
-                lastMove={lastMove}
-                checkSquare={null}
-                arrows={replayArrows}
-                squareSize={SQUARE_SIZE}
-              />
-            )}
+              )}
+            </BoardStage>
           </ReviewBoardSticky>
           <div className="puc-review__host-panel">
             <p className="puc-review__host-name">

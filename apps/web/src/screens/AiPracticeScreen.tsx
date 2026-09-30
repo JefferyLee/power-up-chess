@@ -1,36 +1,20 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Board } from '../board/Board'
-
-/* three.js chunk — fetched only on first 3D flip (shared with Local). */
-const Board3D = lazy(() =>
-  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
-)
-import { useView3d } from '../board3d/useView3d'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
-import { saveGame } from '../history/api'
-import { track } from '../firebase/analytics'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
-import { callSpendOnTakeback, callSyncDeviceGame } from '../firebase/callables'
-import { takebackCost } from '../games/takeback'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { HostByline } from '../hosts/HostByline'
 import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
 import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
-import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
-import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
-import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
-import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { useSound } from '../sound/useSound'
 import { AiOpponent } from '../ai/AiOpponent'
@@ -40,6 +24,14 @@ import { getAdaptiveIndex, recordAdaptiveResult, isAdaptiveOn, setAdaptiveOn } f
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
+import { useBoardView } from '../gameShell/useBoardView'
+import { BoardStage } from '../gameShell/BoardStage'
+import { Fullscreen3D, FsChip } from '../gameShell/Fullscreen3D'
+import type { StageBoardProps } from '../gameShell/boardProps'
+import { useCaptureCeremony } from '../gameShell/useCaptureCeremony'
+import { useTakeback } from '../gameShell/useTakeback'
+import { TakebackButton } from '../gameShell/TakebackButton'
+import { useSaveGame, type FinishedGame } from '../gameShell/useSaveGame'
 import './LocalGameScreen.css'
 import './AiPracticeScreen.css'
 
@@ -133,38 +125,25 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
   const blackName = `AI · ${preset.label}`
 
   // 3D view + fullscreen — same renderer swap as Local Chess.
-  const [view3d, setView3d] = useView3d()
-  const [fs3d, setFs3d] = useState(false)
-  useEffect(() => {
-    if (!fs3d) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [fs3d])
+  const bv = useBoardView()
 
   const [game, setGame] = useState(() => new ChessGame())
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
   const [picker] = useState(() => new TemplatePicker())
-  const [sparks, setSparks] = useState<CaptureSparkData[]>([])
-  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
-  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
   const [resignation, setResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newAiGameId())
-  const [savedThisGame, setSavedThisGame] = useState(false)
   const [aiThinking, setAiThinking] = useState(false)
   const [engineError, setEngineError] = useState<string | null>(null)
   const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl ?? null))
   const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
+  const { overlays: ceremonyOverlays, onMoveApplied, reset: resetCeremony } = useCaptureCeremony({
+    hostId, coHostId, picker, view3d: bv.view3d, squareSize: SQUARE_SIZE,
+  })
 
   // Boot one AiOpponent for the lifetime of the screen. We terminate it on
   // unmount; the post-game review screen spins up its own analysis engine.
-  const whisper = useHostWhisper(hostId)
+  const { line: whisperLine, observe } = useHostWhisper(hostId)
   const [opponent] = useState(() => new AiOpponent())
   useEffect(() => () => opponent.terminate(), [opponent])
 
@@ -232,15 +211,19 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
       setSnap(snapshot(game))
 
       const newStatus = game.status()
-      if (result.captured) sound.play('capture')
-      else sound.play('move')
-      if (newStatus.kind === 'in_progress' && newStatus.inCheck) sound.play('check')
+      const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
+      onMoveApplied({
+        result,
+        wasInCheck,
+        givesCheck,
+        capturesSoFar: game.history().filter((m) => m.captured).length,
+      })
       // Phase 2.6 — throttled host presence on notable non-capture moments.
-      whisper.observe({
+      observe({
         san: result.san,
         captured: !!result.captured,
         promotion: result.uci.length === 5,
-        givesCheck: newStatus.kind === 'in_progress' && newStatus.inCheck,
+        givesCheck,
       })
 
       // Advance the clock just like LocalGameScreen — applyMove runs for
@@ -262,41 +245,10 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           }
         })
       }
-
-      if (result.captured) {
-        const captureSquare: Square = result.flags.includes('e')
-          ? (`${result.to[0]}${result.from[1]}` as Square)
-          : result.to
-        const capturesSoFar = game.history().filter((m) => m.captured).length
-        const speakingHost = coHostId && capturesSoFar % 2 === 1 ? coHostId : hostId
-        const text = picker.pick(speakingHost, 'capture', { capturedPiece: result.captured })
-        setSparks((prev) => [...prev, {
-          id: performance.now(),
-          square: captureSquare,
-          capturedPiece: result.captured!,
-          capturedColor: result.color === 'w' ? 'b' : 'w',
-          text,
-        }])
-
-        const variant = pickPowerUpVariant()
-        setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
-
-        const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
-        if (PIECE_VALUE[result.captured] >= 3 && (wasInCheck || givesCheck)) {
-          setBlooms((prev) => [...prev, {
-            id: performance.now() + 0.5,
-            square: captureSquare,
-          }])
-        }
-      }
       return true
     },
-    [game, hostId, coHostId, picker, sound, timeControl],
+    [game, onMoveApplied, observe, timeControl],
   )
-
-  const handleBloomDone = useCallback((id: number) => {
-    setBlooms((prev) => prev.filter((b) => b.id !== id))
-  }, [])
 
   const handleUserMove = useCallback(
     (move: MoveInput) => {
@@ -364,23 +316,34 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     setClocks((c) => (c.lastTickAt === null && c.running === null ? c : { ...c, lastTickAt: null, running: null }))
   }, [effectiveStatus.kind])
 
+  // Takeback ("悔棋"): paid, 3 per game. Reverts the AI's reply AND your
+  // move so it's your turn again. Only allowed when it's your turn (the
+  // AI has replied and isn't mid-think) and at least one full pair of
+  // plies exists.
+  const undoPair = useCallback(() => {
+    game.undo() // AI's reply
+    game.undo() // your move
+    setSnap(snapshot(game))
+  }, [game])
+  const takeback = useTakeback(
+    !gameOver && !aiThinking && snap.turn === playerColor && snap.history.length >= 2,
+    undoPair,
+  )
+
   const handleRestart = useCallback(() => {
     const fresh = new ChessGame()
     setGame(fresh)
     setSnap(snapshot(fresh))
-    setSparks([])
-    setBlooms([])
-    setPowerUps([])
+    resetCeremony()
     setResignation(null)
     setGameId(newAiGameId())
-    setSavedThisGame(false)
     setEngineError(null)
     setClocks(initialClockState(timeControl ?? null))
     setTimeoutLoser(null)
     setHintsLeft(HINTS_PER_GAME)
     setHintArrow(null)
-    setTakebacksUsed(0)
-  }, [timeControl])
+    takeback.reset()
+  }, [timeControl, resetCeremony, takeback])
 
   const handlePickDifficulty = useCallback((id: DifficultyId) => {
     if (id === activeDifficultyId) return
@@ -392,58 +355,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     handleRestart()
   }, [activeDifficultyId, handleRestart])
 
-  // Takeback ("悔棋"): paid, 3 per game. Reverts the AI's reply AND your
-  // move so it's your turn again. Only allowed when it's your turn (the
-  // AI has replied and isn't mid-think) and at least one full pair of
-  // plies exists.
-  const [takebacksUsed, setTakebacksUsed] = useState(0)
-  const [takebackBusy, setTakebackBusy] = useState(false)
-  const takebackNextCost = takebackCost(takebacksUsed)
-  const canTakeback =
-    !gameOver &&
-    !aiThinking &&
-    snap.turn === playerColor &&
-    snap.history.length >= 2 &&
-    takebackNextCost !== null &&
-    !takebackBusy &&
-    !!identity &&
-    !identity.isBypass &&
-    identity.castlePoints >= takebackNextCost
-  const handleTakeback = useCallback(async () => {
-    if (!identity || identity.isBypass) return
-    const cost = takebackCost(takebacksUsed)
-    if (cost === null || identity.castlePoints < cost) return
-    if (gameOver || aiThinking || snap.turn !== playerColor || snap.history.length < 2) return
-    setTakebackBusy(true)
-    try {
-      const points = await callSpendOnTakeback(
-        identity.normalizedName,
-        identity.sessionId ?? '',
-        takebacksUsed + 1,
-      )
-      setCastlePoints(points)
-      game.undo() // AI's reply
-      game.undo() // your move
-      setSnap(snapshot(game))
-      setTakebacksUsed((n) => n + 1)
-    } catch {
-      /* charge failed — leave the board as-is */
-    } finally {
-      setTakebackBusy(false)
-    }
-  }, [identity, takebacksUsed, gameOver, aiThinking, snap.turn, snap.history.length, game, setCastlePoints])
-
   const handleResign = useCallback((resigner: Color) => {
     setResignation({ resigner })
     setResignDialogOpen(false)
-  }, [])
-
-  const handleSparkDone = useCallback((id: number) => {
-    setSparks((prev) => prev.filter((s) => s.id !== id))
-  }, [])
-
-  const handlePowerUpDone = useCallback((id: number) => {
-    setPowerUps((prev) => prev.filter((p) => p.id !== id))
   }, [])
 
   const endRecap = useMemo(() => {
@@ -461,56 +375,39 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveStatus.kind, hostId])
 
-  // Save once when terminal.
-  useEffect(() => {
-    if (savedThisGame) return
+  // Save once when terminal (history + account archive).
+  const finished = useMemo<FinishedGame | null>(() => {
     const parts = resultPartsFromStatus(effectiveStatus)
-    if (!parts) return
-    track('game_end', {
-      mode: 'ai',
-      result: parts.result,
-      end_reason: parts.endReason,
-      move_count: snap.history.length,
-      ai_difficulty: preset.id,
-    })
-    saveGame({
-      id: gameId,
-      playedAt: Date.now(),
-      mode: 'ai',
-      whiteName,
-      blackName,
-      hostId,
-      result: parts.result,
-      endReason: parts.endReason,
-      pgn: game.pgn(),
-      finalFen: snap.fen,
-      moveCount: snap.history.length,
-      aiDifficulty: preset.id,
-    }).catch((err) => {
-      console.warn('[history] failed to save ai game', err)
-    })
-    // Phase 3.4 — mirror to the account archive so "my games" follow the
-    // name + magic word to any device. Fire-and-forget; IndexedDB is the
-    // local source of truth either way.
-    if (identity && !identity.isBypass) {
-      void callSyncDeviceGame({
-        id: gameId, playedAt: Date.now(), mode: 'ai',
-        whiteName, blackName, hostId,
-        result: parts.result, endReason: parts.endReason,
-        pgn: game.pgn(), moveCount: snap.history.length,
+    if (!parts) return null
+    return {
+      record: {
+        id: gameId,
+        mode: 'ai',
+        whiteName,
+        blackName,
+        hostId,
+        result: parts.result,
+        endReason: parts.endReason,
+        pgn: game.pgn(),
+        finalFen: snap.fen,
+        moveCount: snap.history.length,
         aiDifficulty: preset.id,
-      }).catch(() => { /* offline is fine */ })
+      },
+      trackExtra: { ai_difficulty: preset.id },
+      sync: true,
     }
-    // Adaptive ladder: nudge the level by this game's result (Ada is white).
-    // Ref-guarded so StrictMode's dev double-fire can't double-step it.
-    if (adaptive && adaptiveRecordedRef.current !== gameId) {
-      adaptiveRecordedRef.current = gameId
-      const outcome = parts.result === 'white' ? 'win' : parts.result === 'black' ? 'loss' : 'draw'
-      setAdaptiveIdx(recordAdaptiveResult(outcome))
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSavedThisGame(true)
-  }, [effectiveStatus, savedThisGame, adaptive, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
+  }, [effectiveStatus, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
+  useSaveGame(finished)
+
+  // Adaptive ladder: nudge the level by this game's result (Ada is white).
+  // Ref-guarded so StrictMode's dev double-fire can't double-step it.
+  useEffect(() => {
+    if (!finished || !adaptive || adaptiveRecordedRef.current === gameId) return
+    adaptiveRecordedRef.current = gameId
+    const { result } = finished.record
+    const outcome = result === 'white' ? 'win' : result === 'black' ? 'loss' : 'draw'
+    setAdaptiveIdx(recordAdaptiveResult(outcome))
+  }, [finished, adaptive, gameId])
 
   useEffect(() => {
     if (effectiveStatus.kind === 'in_progress') return
@@ -549,6 +446,18 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     else lostByWhite.push(m.captured)
   }
 
+  const boardProps: StageBoardProps = {
+    pieces,
+    turn: snap.turn,
+    legalDestinationsFrom,
+    onMove: handleUserMove,
+    lastMove,
+    checkSquare,
+    orientation: playerColor,
+    arrows: hintArrow ? [hintArrow] : undefined,
+    initialSide: playerColor,
+  }
+
   return (
     <div className="puc-local">
       <header className="puc-local__header">
@@ -556,7 +465,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           ←
         </button>
         <HostByline name={hostsLabel(hostId, coHostId)} blurb={`practicing vs AI · ${preset.label}`} />
-        <HostWhisper hostId={hostId} line={whisper.line} />
+        <HostWhisper hostId={hostId} line={whisperLine} />
         <div className="puc-local__actions">
           <MuteButton />
           <div className="puc-local__difficulty" role="radiogroup" aria-label="AI strength">
@@ -587,15 +496,15 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <button
             type="button"
-            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
-            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
-            aria-pressed={view3d}
-            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+            className={'puc-local__face-toggle' + (bv.view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => bv.setView3d((v) => !v)}
+            aria-pressed={bv.view3d}
+            title={bv.view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
           >
-            {view3d ? '🎲 2D' : '🎲 3D'}
+            {bv.view3d ? '🎲 2D' : '🎲 3D'}
           </button>
-          {view3d && (
-            <button type="button" onClick={() => setFs3d(true)} title="Fullscreen 3D board">
+          {bv.view3d && (
+            <button type="button" onClick={bv.enterFs} title="Fullscreen 3D board">
               ⛶
             </button>
           )}
@@ -610,22 +519,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
           <button type="button" onClick={() => setResignDialogOpen(true)} disabled={gameOver}>
             Resign
           </button>
-          <button
-            type="button"
-            onClick={() => { void handleTakeback() }}
-            disabled={!canTakeback}
-            title={
-              takebackNextCost === null
-                ? 'No takebacks left this game (max 3)'
-                : identity && !identity.isBypass && identity.castlePoints < takebackNextCost
-                  ? `Need ${takebackNextCost}✦ to take back`
-                  : 'Take back your last move'
-            }
-          >
-            {takebackNextCost === null
-              ? 'Takeback ✗'
-              : `↩ Takeback (−${takebackNextCost}✦)`}
-          </button>
+          <TakebackButton takeback={takeback} readyTitle="Take back your last move" />
           <button type="button" onClick={handleRestart}>
             New game
           </button>
@@ -648,53 +542,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div
-            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
-            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
-          >
-            {view3d ? (
-              fs3d ? (
-                <div className="puc-local__board3d-loading">
-                  Playing fullscreen — press ESC or ✕ to return.
-                </div>
-              ) : (
-                <Suspense
-                  fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
-                >
-                  <Board3D
-                    pieces={pieces}
-                    turn={snap.turn}
-                    legalDestinationsFrom={legalDestinationsFrom}
-                    onMove={handleUserMove}
-                    lastMove={lastMove}
-                    checkSquare={checkSquare}
-                    initialSide={playerColor}
-                  />
-                </Suspense>
-              )
-            ) : (
-              <Board
-                pieces={pieces}
-                turn={snap.turn}
-                orientation={playerColor}
-                legalDestinationsFrom={legalDestinationsFrom}
-                onMove={handleUserMove}
-                lastMove={lastMove}
-                checkSquare={checkSquare}
-                arrows={hintArrow ? [hintArrow] : undefined}
-                squareSize={SQUARE_SIZE}
-              />
-            )}
-            {!view3d && sparks.map((s) => (
-              <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
-            ))}
-            {!view3d && blooms.map((b) => (
-              <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} orientation={playerColor} onDone={handleBloomDone} />
-            ))}
-            {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
-            ))}
-          </div>
+          <BoardStage view={bv} squareSize={SQUARE_SIZE} board={boardProps}>
+            {ceremonyOverlays}
+          </BoardStage>
           <StatusBanner
             status={effectiveStatus}
             activeName={activeName}
@@ -726,56 +576,18 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         </aside>
       </div>
 
-      {view3d && fs3d && (
-        <div className="puc-local__fs3d">
-          <Suspense
-            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
-          >
-            <Board3D
-              pieces={pieces}
-              turn={snap.turn}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleUserMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              initialSide={playerColor}
-            />
-          </Suspense>
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
-              (snap.turn === 'b' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span className="puc-player__dot puc-player__dot--b" aria-hidden="true" />
-            <span>{blackName}</span>
-            {timeControl && (
-              <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
-            )}
-          </div>
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
-              (snap.turn === 'w' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span className="puc-player__dot puc-player__dot--w" aria-hidden="true" />
-            <span>{whiteName}</span>
-            {timeControl && (
-              <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
-            )}
-          </div>
-          <button
-            type="button"
-            className="puc-local__fs3d-exit"
-            onClick={() => setFs3d(false)}
-            aria-label="Exit fullscreen"
-            title="Exit fullscreen (ESC)"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <Fullscreen3D view={bv} board={boardProps}>
+        <FsChip side="top" color="b" active={snap.turn === 'b' && !gameOver} name={blackName}>
+          {timeControl && (
+            <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
+          )}
+        </FsChip>
+        <FsChip side="bottom" color="w" active={snap.turn === 'w' && !gameOver} name={whiteName}>
+          {timeControl && (
+            <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
+          )}
+        </FsChip>
+      </Fullscreen3D>
 
       <GameEndOverlay
         status={effectiveStatus}

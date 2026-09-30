@@ -1,12 +1,5 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Board } from '../board/Board'
-
-/* three.js chunk — fetched only on first 3D flip (shared with Local). */
-const Board3D = lazy(() =>
-  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
-)
-import { useView3d } from '../board3d/useView3d'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { ChessGame } from '../chess/game'
@@ -17,18 +10,11 @@ import { HostByline } from '../hosts/HostByline'
 import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
 import { MuteButton } from '../sound/MuteButton'
 import { TemplatePicker } from '../hosts/templates'
-import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
-import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
-import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
-import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { callClaimTimeWin, callJoinRoom, callResignGame, callRequestTakeback, callRespondTakeback, callGetPublicProfile } from '../firebase/callables'
-import { takebackCost } from '../games/takeback'
-import { saveGame } from '../history/api'
-import { track } from '../firebase/analytics'
+import { takebackCost } from '../gameShell/takeback'
 import { useSound } from '../sound/useSound'
 import { Clock } from '../clock/Clock'
 import { ChampionCrown } from '../tournament/ChampionCrown'
@@ -40,6 +26,12 @@ import { useCastle } from '../castle/useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
 import { awardPoints } from '../castle/awardPoints'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
+import { useBoardView } from '../gameShell/useBoardView'
+import { BoardStage } from '../gameShell/BoardStage'
+import { Fullscreen3D, FsChip } from '../gameShell/Fullscreen3D'
+import type { StageBoardProps } from '../gameShell/boardProps'
+import { useCaptureCeremony, type AppliedMove } from '../gameShell/useCaptureCeremony'
+import { useSaveGame, type FinishedGame } from '../gameShell/useSaveGame'
 import './LocalGameScreen.css'
 import './OnlineGameScreen.css'
 
@@ -283,7 +275,7 @@ interface RoomViewProps {
 
 function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewProps) {
   const host = HOSTS[room.hostMode]
-  const whisper = useHostWhisper(room.hostMode)
+  const { line: whisperLine, observe } = useHostWhisper(room.hostMode)
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   const { identity, setCastlePoints } = useCastle()
@@ -352,19 +344,7 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   // 3D view + fullscreen — local to this client; the opponent's view
   // is unaffected. Same renderer swap as Local Chess.
-  const [view3d, setView3d] = useView3d()
-  const [fs3d, setFs3d] = useState(false)
-  useEffect(() => {
-    if (!fs3d) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [fs3d])
+  const bv = useBoardView()
   const [resignBusy, setResignBusy] = useState(false)
   const [resignError, setResignError] = useState<string | null>(null)
   const onConfirmResign = useCallback(async () => {
@@ -445,14 +425,16 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     return () => window.clearTimeout(t)
   }, [takebackNote])
 
-  // Capture sparks driven by new captures appearing in the move list. seenRef
-  // tracks how much of the move list we have already processed, so re-renders
-  // do not re-spawn old sparks. Initial value = current length so a player who
-  // joins mid-game doesn't see a backlog of sparks all at once.
+  // Capture ceremonies driven by new moves appearing in the move list.
+  // seenRef tracks how much of the move list we have already processed,
+  // so re-renders do not re-spawn old sparks. Initial value = current
+  // length so a player who joins mid-game doesn't see a backlog of
+  // sparks all at once.
   const [picker] = useState(() => new TemplatePicker())
-  const [sparks, setSparks] = useState<CaptureSparkData[]>([])
-  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
-  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
+  const orientation: Color = yourColor ?? 'w'
+  const { overlays: ceremonyOverlays, onMovesApplied } = useCaptureCeremony({
+    hostId: room.hostMode, picker, view3d: bv.view3d, squareSize: SQUARE_SIZE, orientation,
+  })
   const seenRef = useRef<number>(room.moves.length)
 
   useEffect(() => {
@@ -461,13 +443,8 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       seenRef.current = room.moves.length
       return
     }
-    const newSparks: CaptureSparkData[] = []
-    const newBlooms: TacticBloomData[] = []
-    const newPowerUps: PowerUpData[] = []
+    const fresh: AppliedMove[] = []
     const cursor = new ChessGame()
-    let sawCaptureInNew = false
-    let sawNonCaptureMoveInNew = false
-    let sawCheckInNew = false
     for (let i = 0; i < room.moves.length; i++) {
       const m = room.moves[i]!
       const preStatus = cursor.status()
@@ -479,67 +456,22 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       })
       const postStatus = cursor.status()
       const givesCheck = postStatus.kind === 'in_progress' && postStatus.inCheck
-      if (i < seen) continue
-      if (applied?.captured) {
-        sawCaptureInNew = true
-        const captureSquare: Square = applied.flags.includes('e')
-          ? (`${applied.to[0]}${applied.from[1]}` as Square)
-          : (applied.to as Square)
-        newSparks.push({
-          id: performance.now() + newSparks.length,
-          square: captureSquare,
-          capturedPiece: applied.captured,
-          capturedColor: applied.color === 'w' ? 'b' : 'w',
-          text: picker.pick(room.hostMode, 'capture', { capturedPiece: applied.captured }),
-        })
-        newPowerUps.push({
-          id: performance.now() + newPowerUps.length + 0.25,
-          variant: pickPowerUpVariant(),
-        })
-        if (PIECE_VALUE[applied.captured] >= 3 && (wasInCheck || givesCheck)) {
-          newBlooms.push({
-            id: performance.now() + newBlooms.length + 0.5,
-            square: captureSquare,
-          })
-        }
-      } else if (applied) {
+      if (i < seen || !applied) continue
+      fresh.push({ result: applied, wasInCheck, givesCheck })
+      if (!applied.captured) {
         // Phase 2.6 — throttled host presence on notable non-capture moments.
-        whisper.observe({
+        observe({
           san: applied.san,
           captured: false,
           promotion: m.uci.length === 5,
           givesCheck,
         })
-        sawNonCaptureMoveInNew = true
       }
-      if (givesCheck) sawCheckInNew = true
     }
     seenRef.current = room.moves.length
-
-    if (sawCaptureInNew) sound.play('capture')
-    else if (sawNonCaptureMoveInNew) sound.play('move')
-    if (sawCheckInNew) sound.play('check')
-    // Power Up ceremony sound per fresh capture (one sound per ceremony).
-
-    // This is a legitimate sync from an external system (Firestore snapshots)
-    // into UI state; the lint rule's general advice doesn't apply here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (newSparks.length) setSparks((prev) => [...prev, ...newSparks])
-    if (newBlooms.length) setBlooms((prev) => [...prev, ...newBlooms])
-    if (newPowerUps.length) setPowerUps((prev) => [...prev, ...newPowerUps])
-  }, [room.moves, room.hostMode, picker, sound])
-
-  const handleSparkDone = useCallback((id: number) => {
-    setSparks((prev) => prev.filter((s) => s.id !== id))
-  }, [])
-
-  const handlePowerUpDone = useCallback((id: number) => {
-    setPowerUps((prev) => prev.filter((p) => p.id !== id))
-  }, [])
-
-  const handleBloomDone = useCallback((id: number) => {
-    setBlooms((prev) => prev.filter((b) => b.id !== id))
-  }, [])
+    // One batch: one sound cue, however many moves the snapshot caught up on.
+    onMovesApplied(fresh)
+  }, [room.moves, onMovesApplied, observe])
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const handleMove = useCallback(
@@ -576,8 +508,6 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
     if (room.endReason === 'stalemate') return picker.pick(room.hostMode, 'stalemate')
     return picker.pick(room.hostMode, 'draw')
   }, [room.status, room.endReason, room.hostMode, room.result, room.white.displayName, room.black?.displayName, picker])
-
-  const orientation: Color = yourColor ?? 'w'
 
   // Auto-claim a time-out win when the opponent's clock should have flagged.
   // We are conservative: only fire if you're a player AND it's the opponent's
@@ -640,11 +570,8 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
   // Persist completed online games to local IndexedDB — but only for actual
   // players. Spectators don't fill their own history with random games.
   // Idempotent: id is online:ROOMID, and IDB's put() upserts on that key.
-  const [savedThisGame, setSavedThisGame] = useState(false)
-  useEffect(() => {
-    if (savedThisGame) return
-    if (room.status !== 'completed') return
-    if (!yourColor) return
+  const finished = useMemo<FinishedGame | null>(() => {
+    if (room.status !== 'completed' || !yourColor) return null
     const replay = new ChessGame()
     for (const m of room.moves) {
       replay.move({
@@ -653,31 +580,26 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         ...(m.uci.length === 5 ? { promotion: m.uci[4] as 'q' | 'r' | 'b' | 'n' } : {}),
       })
     }
-    track('game_end', {
-      mode: 'online',
-      result: room.result ?? 'draw',
-      end_reason: room.endReason ?? 'other',
-      move_count: room.moves.length,
-      time_control: room.timeControl ? `${room.timeControl.initialMs}+${room.timeControl.incrementMs}` : 'untimed',
-    })
-    saveGame({
-      id: `online:${roomId}`,
-      playedAt: room.updatedAt,
-      mode: 'online',
-      whiteName: room.white.displayName,
-      blackName: room.black?.displayName ?? '',
-      hostId: room.hostMode,
-      result: room.result ?? 'draw',
-      endReason: room.endReason ?? 'other',
-      pgn: replay.pgn(),
-      finalFen: room.currentFen,
-      moveCount: room.moves.length,
-    }).catch((err) => {
-      console.warn('[history] failed to save online game', err)
-    })
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSavedThisGame(true)
-  }, [room, roomId, savedThisGame, yourColor])
+    return {
+      record: {
+        id: `online:${roomId}`,
+        playedAt: room.updatedAt,
+        mode: 'online',
+        whiteName: room.white.displayName,
+        blackName: room.black?.displayName ?? '',
+        hostId: room.hostMode,
+        result: room.result ?? 'draw',
+        endReason: room.endReason ?? 'other',
+        pgn: replay.pgn(),
+        finalFen: room.currentFen,
+        moveCount: room.moves.length,
+      },
+      trackExtra: {
+        time_control: room.timeControl ? `${room.timeControl.initialMs}+${room.timeControl.incrementMs}` : 'untimed',
+      },
+    }
+  }, [room, roomId, yourColor])
+  useSaveGame(finished)
 
   const [copied, setCopied] = useState(false)
   const copyLink = async () => {
@@ -716,13 +638,26 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
 
   const statusForBanner: GameStatus = effectiveStatus
 
+  const boardProps: StageBoardProps = {
+    pieces,
+    turn,
+    legalDestinationsFrom,
+    onMove: handleMove,
+    lastMove,
+    checkSquare,
+    orientation,
+    whitePieceSetId: room.white.pieceSetId,
+    blackPieceSetId: room.black?.pieceSetId,
+    initialSide: orientation,
+  }
+
   return (
     <div className="puc-local">
       <header className="puc-local__header">
         <button type="button" className="puc-local__exit" onClick={onBack} aria-label="Back to menu">
           ←
         </button>
-        <HostWhisper hostId={room.hostMode} line={whisper.line} />
+        <HostWhisper hostId={room.hostMode} line={whisperLine} />
         <HostByline name={host.name} blurb="is your host today">
           {!yourColor && <span className="puc-online__spectator-chip">Spectating</span>}
         </HostByline>
@@ -731,15 +666,15 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
           {yourColor && <CrownBadge variant="inline" watch={room.status} />}
           <button
             type="button"
-            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
-            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
-            aria-pressed={view3d}
-            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+            className={'puc-local__face-toggle' + (bv.view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => bv.setView3d((v) => !v)}
+            aria-pressed={bv.view3d}
+            title={bv.view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
           >
-            {view3d ? '🎲 2D' : '🎲 3D'}
+            {bv.view3d ? '🎲 2D' : '🎲 3D'}
           </button>
-          {view3d && (
-            <button type="button" onClick={() => setFs3d(true)} title="Fullscreen 3D board">
+          {bv.view3d && (
+            <button type="button" onClick={bv.enterFs} title="Fullscreen 3D board">
               ⛶
             </button>
           )}
@@ -818,66 +753,9 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div
-            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
-            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
-          >
-            {view3d ? (
-              fs3d ? (
-                <div className="puc-local__board3d-loading">
-                  Playing fullscreen — press ESC or ✕ to return.
-                </div>
-              ) : (
-                <Suspense
-                  fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
-                >
-                  <Board3D
-                    pieces={pieces}
-                    turn={turn}
-                    legalDestinationsFrom={legalDestinationsFrom}
-                    onMove={handleMove}
-                    lastMove={lastMove}
-                    checkSquare={checkSquare}
-                    initialSide={orientation}
-                  />
-                </Suspense>
-              )
-            ) : (
-              <Board
-                pieces={pieces}
-                turn={isMyTurn ? turn : 'w' as Color /* turn doesn't matter; isMyTurn gates dragging via legalDestinations */}
-                orientation={orientation}
-                legalDestinationsFrom={legalDestinationsFrom}
-                onMove={handleMove}
-                lastMove={lastMove}
-                checkSquare={checkSquare}
-                squareSize={SQUARE_SIZE}
-                whitePieceSetId={room.white.pieceSetId}
-                blackPieceSetId={room.black?.pieceSetId}
-              />
-            )}
-            {!view3d && sparks.map((s) => (
-              <CaptureSpark
-                key={s.id}
-                data={s}
-                squareSize={SQUARE_SIZE}
-                orientation={orientation}
-                onDone={handleSparkDone}
-              />
-            ))}
-            {!view3d && blooms.map((b) => (
-              <TacticBloom
-                key={b.id}
-                data={b}
-                squareSize={SQUARE_SIZE}
-                orientation={orientation}
-                onDone={handleBloomDone}
-              />
-            ))}
-            {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
-            ))}
-          </div>
+          <BoardStage view={bv} squareSize={SQUARE_SIZE} board={boardProps}>
+            {ceremonyOverlays}
+          </BoardStage>
           <RoomStatusLine
             room={room}
             isMyTurn={isMyTurn}
@@ -912,79 +790,37 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
         </aside>
       </div>
 
-      {view3d && fs3d && (
-        <div className="puc-local__fs3d">
-          <Suspense
-            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
-          >
-            <Board3D
-              pieces={pieces}
-              turn={turn}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              initialSide={orientation}
+      <Fullscreen3D view={bv} board={boardProps}>
+        {/* Top chip = the far side from the viewer's orientation. */}
+        <FsChip
+          side="top"
+          color={orientation === 'w' ? 'b' : 'w'}
+          active={room.status === 'live' && turn !== orientation}
+          name={orientation === 'w' ? room.black?.displayName ?? 'Waiting…' : room.white.displayName}
+        >
+          {room.timeControl && (
+            <Clock
+              baseMs={orientation === 'w' ? room.blackTimeMs ?? 0 : room.whiteTimeMs ?? 0}
+              lastTickAt={room.lastTickServerTs}
+              running={room.status === 'live' && turn !== orientation}
             />
-          </Suspense>
-          {/* Top chip = the far side from the viewer's orientation. */}
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
-              (room.status === 'live' && turn !== orientation ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span
-              className={`puc-player__dot puc-player__dot--${orientation === 'w' ? 'b' : 'w'}`}
-              aria-hidden="true"
+          )}
+        </FsChip>
+        <FsChip
+          side="bottom"
+          color={orientation}
+          active={room.status === 'live' && turn === orientation}
+          name={orientation === 'w' ? room.white.displayName : room.black?.displayName ?? '—'}
+        >
+          {room.timeControl && (
+            <Clock
+              baseMs={orientation === 'w' ? room.whiteTimeMs ?? 0 : room.blackTimeMs ?? 0}
+              lastTickAt={room.lastTickServerTs}
+              running={room.status === 'live' && turn === orientation}
             />
-            <span>
-              {orientation === 'w'
-                ? room.black?.displayName ?? 'Waiting…'
-                : room.white.displayName}
-            </span>
-            {room.timeControl && (
-              <Clock
-                baseMs={orientation === 'w' ? room.blackTimeMs ?? 0 : room.whiteTimeMs ?? 0}
-                lastTickAt={room.lastTickServerTs}
-                running={room.status === 'live' && turn !== orientation}
-              />
-            )}
-          </div>
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
-              (room.status === 'live' && turn === orientation ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span
-              className={`puc-player__dot puc-player__dot--${orientation}`}
-              aria-hidden="true"
-            />
-            <span>
-              {orientation === 'w'
-                ? room.white.displayName
-                : room.black?.displayName ?? '—'}
-            </span>
-            {room.timeControl && (
-              <Clock
-                baseMs={orientation === 'w' ? room.whiteTimeMs ?? 0 : room.blackTimeMs ?? 0}
-                lastTickAt={room.lastTickServerTs}
-                running={room.status === 'live' && turn === orientation}
-              />
-            )}
-          </div>
-          <button
-            type="button"
-            className="puc-local__fs3d-exit"
-            onClick={() => setFs3d(false)}
-            aria-label="Exit fullscreen"
-            title="Exit fullscreen (ESC)"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+          )}
+        </FsChip>
+      </Fullscreen3D>
 
       <GameEndOverlay
         status={statusForBanner}

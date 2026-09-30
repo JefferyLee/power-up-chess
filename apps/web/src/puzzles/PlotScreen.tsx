@@ -6,16 +6,12 @@
 // shows the rating delta animation, then a "Next" CTA fetches another
 // one. Wrong moves don't penalise — Skip submits a failure.
 
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Board } from '../board/Board'
-
-/* three.js chunk — fetched only on first 3D flip (shared with the
- * game screens). */
-const Board3D = lazy(() =>
-  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
-)
-import { useView3d } from '../board3d/useView3d'
+import { useBoardView } from '../gameShell/useBoardView'
+import { BoardStage } from '../gameShell/BoardStage'
+import { Fullscreen3D } from '../gameShell/Fullscreen3D'
+import type { StageBoardProps } from '../gameShell/boardProps'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import type { MoveInput, Square } from '../chess/types'
@@ -68,19 +64,7 @@ export function PlotScreen() {
   const validPlot = isPlot(plot) ? plot : null
   // 3D view — same legality/judging flow, different renderer. The
   // hint arrow has no 3D equivalent, so "Show arrow" is 2D-only.
-  const [view3d, setView3d] = useView3d()
-  const [fs3d, setFs3d] = useState(false)
-  useEffect(() => {
-    if (!fs3d) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [fs3d])
+  const bv = useBoardView()
   const plotLabel = validPlot ? PLOT_LABELS[validPlot] : 'Puzzle Garden'
 
   const [puzzle, setPuzzle] = useState<ServerPuzzle | null>(null)
@@ -93,8 +77,8 @@ export function PlotScreen() {
   // Solved/failed UI lives in the sidebar — drop out of fullscreen so
   // the kid can see the result and the Next button.
   useEffect(() => {
-    if (phase.kind === 'solved' || phase.kind === 'failed' || phase.kind === 'empty') setFs3d(false)
-  }, [phase.kind])
+    if (phase.kind === 'solved' || phase.kind === 'failed' || phase.kind === 'empty') bv.exitFs()
+  }, [phase.kind, bv])
   const [shake, setShake] = useState(false)
   const [arrowOn, setArrowOn] = useState(false)
   const startedAtRef = useRef<number | null>(null)
@@ -319,6 +303,25 @@ export function PlotScreen() {
       ? phase.ratingAfter - phase.ratingBefore
       : 0
 
+  const boardProps: StageBoardProps = {
+    pieces,
+    turn: game.turn(),
+    legalDestinationsFrom,
+    onMove: handleMove,
+    lastMove,
+    checkSquare,
+    orientation: puzzle.sideToMove,
+    arrows: arrowOn
+      ? [
+          {
+            from: puzzle.solution[moveIndex]!.slice(0, 2) as Square,
+            to: puzzle.solution[moveIndex]!.slice(2, 4) as Square,
+          },
+        ]
+      : undefined,
+    initialSide: puzzle.sideToMove,
+  }
+
   return (
     <div className="puc-plot">
       <header className="puc-plot__header">
@@ -339,49 +342,8 @@ export function PlotScreen() {
       </header>
 
       <div className="puc-plot__main">
-        <div
-          className={
-            'puc-plot__board' +
-            (shake ? ' puc-plot__board--shake' : '') +
-            (view3d ? ' puc-plot__board--3d' : '')
-          }
-        >
-          {view3d ? (
-            <Suspense
-              fallback={<div className="puc-plot__board3d-loading">Carving the 3D board…</div>}
-            >
-              <Board3D
-                pieces={pieces}
-                turn={game.turn()}
-                legalDestinationsFrom={legalDestinationsFrom}
-                onMove={handleMove}
-                lastMove={lastMove}
-                checkSquare={checkSquare}
-                initialSide={puzzle.sideToMove}
-              />
-            </Suspense>
-          ) : (
-            <Board
-              pieces={pieces}
-              turn={game.turn()}
-              orientation={puzzle.sideToMove}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              arrows={
-                arrowOn
-                  ? [
-                      {
-                        from: puzzle.solution[moveIndex]!.slice(0, 2) as Square,
-                        to: puzzle.solution[moveIndex]!.slice(2, 4) as Square,
-                      },
-                    ]
-                  : undefined
-              }
-              squareSize={SQUARE_SIZE}
-            />
-          )}
+        <div className={'puc-plot__board' + (shake ? ' puc-plot__board--shake' : '')}>
+          <BoardStage view={bv} squareSize={SQUARE_SIZE} board={boardProps} />
         </div>
 
         <aside className="puc-plot__side">
@@ -410,18 +372,18 @@ export function PlotScreen() {
             <div className="puc-plot__actions">
               <button
                 type="button"
-                className={'puc-plot__btn puc-plot__btn--ghost' + (view3d ? ' puc-plot__btn--on' : '')}
-                onClick={() => { setView3d((v) => !v); setFs3d(false) }}
-                aria-pressed={view3d}
-                title={view3d ? 'Back to the flat board' : 'Solve on the 3D board'}
+                className={'puc-plot__btn puc-plot__btn--ghost' + (bv.view3d ? ' puc-plot__btn--on' : '')}
+                onClick={() => bv.setView3d((v) => !v)}
+                aria-pressed={bv.view3d}
+                title={bv.view3d ? 'Back to the flat board' : 'Solve on the 3D board'}
               >
-                {view3d ? '🎲 2D board' : '🎲 3D board'}
+                {bv.view3d ? '🎲 2D board' : '🎲 3D board'}
               </button>
-              {view3d && (
+              {bv.view3d && (
                 <button
                   type="button"
                   className="puc-plot__btn puc-plot__btn--ghost"
-                  onClick={() => setFs3d(true)}
+                  onClick={bv.enterFs}
                   title="Fullscreen 3D board"
                 >
                   ⛶ Fullscreen
@@ -431,8 +393,8 @@ export function PlotScreen() {
                 type="button"
                 className="puc-plot__btn puc-plot__btn--ghost"
                 onClick={onShowArrow}
-                disabled={(hintShown && !arrowOn) || view3d}
-                title={view3d ? 'The arrow only shows on the flat board' : undefined}
+                disabled={(hintShown && !arrowOn) || bv.view3d}
+                title={bv.view3d ? 'The arrow only shows on the flat board' : undefined}
               >
                 {hintShown ? 'Hint shown' : 'Show arrow'}
               </button>
@@ -518,32 +480,7 @@ export function PlotScreen() {
         </aside>
       </div>
 
-      {view3d && fs3d && (
-        <div className="puc-plot__fs3d">
-          <Suspense
-            fallback={<div className="puc-plot__board3d-loading">Carving the 3D board…</div>}
-          >
-            <Board3D
-              pieces={pieces}
-              turn={game.turn()}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-              initialSide={puzzle.sideToMove}
-            />
-          </Suspense>
-          <button
-            type="button"
-            className="puc-plot__fs3d-exit"
-            onClick={() => setFs3d(false)}
-            aria-label="Exit fullscreen"
-            title="Exit fullscreen (ESC)"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <Fullscreen3D view={bv} board={boardProps} />
     </div>
   )
 }

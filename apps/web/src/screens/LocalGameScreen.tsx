@@ -1,35 +1,18 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Board } from '../board/Board'
-
-/* three.js + react-three-fiber live in their own chunk — only fetched
- * the first time a kid flips a game into 3D view. */
-const Board3D = lazy(() =>
-  import('../board3d/Board3D').then((m) => ({ default: m.Board3D })),
-)
-import { useView3d } from '../board3d/useView3d'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { ChessGame } from '../chess/game'
 import { findKing, piecesFromFen } from '../chess/fen'
 import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
-import { saveGame } from '../history/api'
-import { track } from '../firebase/analytics'
-import { callSpendOnTakeback, callSyncDeviceGame } from '../firebase/callables'
-import { takebackCost } from '../games/takeback'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
-import { CaptureSpark, type CaptureSparkData } from '../powerups/CaptureSpark'
-import { DUEL_CEREMONY_DELAY_MS, PowerUpCeremony, type PowerUpData } from '../powerups/PowerUpCeremony'
-import { pickPowerUpVariant } from '../powerups/powerUpVariant'
 import { CrownBadge } from '../powerups/CrownBadge'
 import { GameEndOverlay } from '../powerups/GameEndOverlay'
-import { TacticBloom, type TacticBloomData } from '../powerups/TacticBloom'
-import { PIECE_VALUE } from '../powerups/pieceValues'
 import { ResignDialog } from '../powerups/ResignDialog'
 import { useSound } from '../sound/useSound'
 import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
@@ -37,6 +20,14 @@ import { MuteButton } from '../sound/MuteButton'
 import { Clock } from '../clock/Clock'
 import type { TimeControl } from '../clock/timeControl'
 import { ChampionCrown } from '../tournament/ChampionCrown'
+import { useBoardView } from '../gameShell/useBoardView'
+import { BoardStage } from '../gameShell/BoardStage'
+import { Fullscreen3D, FsChip } from '../gameShell/Fullscreen3D'
+import type { StageBoardProps } from '../gameShell/boardProps'
+import { useCaptureCeremony } from '../gameShell/useCaptureCeremony'
+import { useTakeback } from '../gameShell/useTakeback'
+import { TakebackButton } from '../gameShell/TakebackButton'
+import { useSaveGame, type FinishedGame } from '../gameShell/useSaveGame'
 import '../invitations/NameLink.css'
 import './LocalGameScreen.css'
 
@@ -112,15 +103,11 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // Pair it with a snapshot in state so React re-renders after each move.
   const [game, setGame] = useState(() => new ChessGame())
   const [snap, setSnap] = useState<GameSnapshot>(() => snapshot(game))
-  const whisper = useHostWhisper(hostId)
+  const { line: whisperLine, observe } = useHostWhisper(hostId)
   const [picker] = useState(() => new TemplatePicker())
-  const [sparks, setSparks] = useState<CaptureSparkData[]>([])
-  const [powerUps, setPowerUps] = useState<PowerUpData[]>([])
-  const [blooms, setBlooms] = useState<TacticBloomData[]>([])
   const [localResignation, setLocalResignation] = useState<{ resigner: Color } | null>(null)
   const [resignDialogOpen, setResignDialogOpen] = useState(false)
   const [gameId, setGameId] = useState(() => newLocalGameId())
-  const [savedThisGame, setSavedThisGame] = useState(false)
   const [clocks, setClocks] = useState<ClockState>(() => initialClockState(timeControl))
   const [timeoutLoser, setTimeoutLoser] = useState<Color | null>(null)
   // Face-to-face mode: rotate black's pieces 180° so the player sitting
@@ -130,25 +117,13 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // toggle in the header flips it off for a single player using both
   // sides themselves.
   const [faceToFace, setFaceToFace] = useState(true)
-  // 3D view — same game, alternate renderer. The Board3D chunk
-  // (three.js) is lazy-loaded on first flip.
-  const [view3d, setView3d] = useView3d()
-  // Fullscreen 3D — a fixed overlay fills the viewport; player names
-  // + clocks float as compact chips. ESC or ✕ exits.
-  const [fs3d, setFs3d] = useState(false)
-  useEffect(() => {
-    if (!fs3d) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs3d(false) }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [fs3d])
+  // 3D view + fullscreen — same game, alternate renderer.
+  const bv = useBoardView()
   const sound = useSound()
   const { identity, setCastlePoints } = useCastle()
+  const { overlays: ceremonyOverlays, onMoveApplied, reset: resetCeremony } = useCaptureCeremony({
+    hostId, coHostId, picker, view3d: bv.view3d, squareSize: SQUARE_SIZE,
+  })
 
   // Resignation isn't a chess.js concept — overlay it on top of the position-
   // derived status. Once resigned, the board freezes and the end overlay
@@ -188,22 +163,20 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
       if (!result) return
       setSnap(snapshot(game))
 
-      // Sound layering: a check ringing under a capture sounds right.
       const newStatus = game.status()
-      if (result.captured) {
-        sound.play('capture')
-      } else {
-        sound.play('move')
-      }
-      if (newStatus.kind === 'in_progress' && newStatus.inCheck) {
-        sound.play('check')
-      }
+      const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
+      onMoveApplied({
+        result,
+        wasInCheck,
+        givesCheck,
+        capturesSoFar: game.history().filter((m) => m.captured).length,
+      })
       // Phase 2.6 — throttled host presence on notable non-capture moments.
-      whisper.observe({
+      observe({
         san: result.san,
         captured: !!result.captured,
         promotion: result.uci.length === 5,
-        givesCheck: newStatus.kind === 'in_progress' && newStatus.inCheck,
+        givesCheck,
       })
 
       // Advance the clock: the moving side's elapsed comes off their clock,
@@ -225,111 +198,32 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           }
         })
       }
-
-      if (result.captured) {
-        // En passant: the captured pawn is on the destination file + source rank,
-        // not on the move's destination square.
-        const captureSquare: Square = result.flags.includes('e')
-          ? (`${result.to[0]}${result.from[1]}` as Square)
-          : result.to
-        // In Both mode, alternate which host's voice the capture line uses,
-        // based on how many captures have already happened in this game.
-        const capturesSoFar = game.history().filter((m) => m.captured).length
-        const speakingHost = coHostId && capturesSoFar % 2 === 1 ? coHostId : hostId
-        const text = picker.pick(speakingHost, 'capture', { capturedPiece: result.captured })
-        const spark: CaptureSparkData = {
-          id: performance.now(),
-          square: captureSquare,
-          capturedPiece: result.captured,
-          capturedColor: result.color === 'w' ? 'b' : 'w',
-          text,
-        }
-        setSparks((prev) => [...prev, spark])
-
-        // Power Up ceremony — random variant per capture.
-        const variant = pickPowerUpVariant()
-        setPowerUps((prev) => [...prev, { id: performance.now() + 0.25, variant }])
-
-        // Tactic Bloom: forcing capture of a piece worth ≥3 — either delivers
-        // check or was made in response to one.
-        const givesCheck = newStatus.kind === 'in_progress' && newStatus.inCheck
-        if (PIECE_VALUE[result.captured] >= 3 && (wasInCheck || givesCheck)) {
-          const bloom: TacticBloomData = {
-            id: performance.now() + 0.5,
-            square: captureSquare,
-          }
-          setBlooms((prev) => [...prev, bloom])
-        }
-      }
     },
-    [game, hostId, coHostId, picker, sound, timeControl],
+    [game, onMoveApplied, observe, timeControl],
   )
-
-  const handleBloomDone = useCallback((id: number) => {
-    setBlooms((prev) => prev.filter((b) => b.id !== id))
-  }, [])
 
   // Takeback ("悔棋"): a paid, 3-per-game undo. Local games revert the
   // last single ply; the signed-in account pays the escalating cost.
-  const [takebacksUsed, setTakebacksUsed] = useState(0)
-  const [takebackBusy, setTakebackBusy] = useState(false)
-  const takebackNextCost = takebackCost(takebacksUsed)
-  const canTakeback =
-    !gameOver &&
-    snap.history.length > 0 &&
-    takebackNextCost !== null &&
-    !takebackBusy &&
-    !!identity &&
-    !identity.isBypass &&
-    identity.castlePoints >= takebackNextCost
-  const handleTakeback = useCallback(async () => {
-    if (!identity || identity.isBypass) return
-    const cost = takebackCost(takebacksUsed)
-    if (cost === null || identity.castlePoints < cost) return
-    if (snap.history.length === 0 || gameOver) return
-    setTakebackBusy(true)
-    try {
-      const points = await callSpendOnTakeback(
-        identity.normalizedName,
-        identity.sessionId ?? '',
-        takebacksUsed + 1,
-      )
-      setCastlePoints(points)
-      if (game.undo()) setSnap(snapshot(game))
-      setTakebacksUsed((n) => n + 1)
-    } catch {
-      /* charge failed (balance / session) — leave the board as-is */
-    } finally {
-      setTakebackBusy(false)
-    }
-  }, [identity, takebacksUsed, snap.history.length, gameOver, game, setCastlePoints])
+  const undoPly = useCallback(() => {
+    if (game.undo()) setSnap(snapshot(game))
+  }, [game])
+  const takeback = useTakeback(!gameOver && snap.history.length > 0, undoPly)
 
   const handleRestart = useCallback(() => {
     const fresh = new ChessGame()
     setGame(fresh)
     setSnap(snapshot(fresh))
-    setSparks([])
-    setBlooms([])
-    setPowerUps([])
+    resetCeremony()
     setLocalResignation(null)
     setGameId(newLocalGameId())
-    setSavedThisGame(false)
     setClocks(initialClockState(timeControl))
     setTimeoutLoser(null)
-    setTakebacksUsed(0)
-  }, [timeControl])
+    takeback.reset()
+  }, [timeControl, resetCeremony, takeback])
 
   const handleResign = useCallback((resigner: Color) => {
     setLocalResignation({ resigner })
     setResignDialogOpen(false)
-  }, [])
-
-  const handleSparkDone = useCallback((id: number) => {
-    setSparks((prev) => prev.filter((s) => s.id !== id))
-  }, [])
-
-  const handlePowerUpDone = useCallback((id: number) => {
-    setPowerUps((prev) => prev.filter((p) => p.id !== id))
   }, [])
 
   // Build the game-end recap once the status is terminal. Memoised so the
@@ -404,57 +298,27 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveStatus.kind])
 
-  // Persist the game to IndexedDB once it ends. Idempotent per gameId via the
-  // savedThisGame flag (and IDB's put() is itself idempotent on the key).
-  useEffect(() => {
-    if (savedThisGame) return
+  // Persist the game once it ends (history + account archive).
+  const finished = useMemo<FinishedGame | null>(() => {
     const parts = resultPartsFromStatus(effectiveStatus)
-    if (!parts) return
-    track('game_end', {
-      mode: 'local',
-      result: parts.result,
-      end_reason: parts.endReason,
-      move_count: snap.history.length,
-    })
-    saveGame({
-      id: gameId,
-      playedAt: Date.now(),
-      mode: 'local',
-      whiteName,
-      blackName,
-      hostId,
-      result: parts.result,
-      endReason: parts.endReason,
-      pgn: game.pgn(),
-      finalFen: snap.fen,
-      moveCount: snap.history.length,
-    }).catch((err) => {
-      console.warn('[history] failed to save local game', err)
-    })
-    // Phase 3.4 — mirror to the account archive (see AiPracticeScreen).
-    if (identity && !identity.isBypass) {
-      void callSyncDeviceGame({
-        id: gameId, playedAt: Date.now(), mode: 'local',
-        whiteName, blackName, hostId,
-        result: parts.result, endReason: parts.endReason,
-        pgn: game.pgn(), moveCount: snap.history.length,
-      }).catch(() => { /* offline is fine */ })
+    if (!parts) return null
+    return {
+      record: {
+        id: gameId,
+        mode: 'local',
+        whiteName,
+        blackName,
+        hostId,
+        result: parts.result,
+        endReason: parts.endReason,
+        pgn: game.pgn(),
+        finalFen: snap.fen,
+        moveCount: snap.history.length,
+      },
+      sync: true,
     }
-    // savedThisGame is a one-shot guard; setting it here just blocks re-fires
-    // of this same effect, not a render cascade.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSavedThisGame(true)
-  }, [
-    effectiveStatus,
-    savedThisGame,
-    gameId,
-    whiteName,
-    blackName,
-    hostId,
-    game,
-    snap.fen,
-    snap.history.length,
-  ])
+  }, [effectiveStatus, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length])
+  useSaveGame(finished)
 
   const lastMove = snap.history.length
     ? { from: snap.history[snap.history.length - 1]!.from, to: snap.history[snap.history.length - 1]!.to }
@@ -474,9 +338,20 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     else lostByWhite.push(m.captured)
   }
 
+  const boardProps: StageBoardProps = {
+    pieces,
+    turn: snap.turn,
+    legalDestinationsFrom,
+    onMove: handleMove,
+    lastMove,
+    checkSquare,
+    flipBlackPieces: faceToFace,
+    facing: faceToFace ? snap.turn : undefined,
+  }
+
   return (
     <div className="puc-local">
-      <HostWhisper hostId={hostId} line={whisper.line} />
+      <HostWhisper hostId={hostId} line={whisperLine} />
       <header className="puc-local__header">
         <button type="button" className="puc-local__exit" onClick={onExit} aria-label="Back to menu">
           ←
@@ -492,23 +367,23 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           <CrownBadge variant="inline" watch={effectiveStatus.kind} />
           <button
             type="button"
-            className={'puc-local__face-toggle' + (view3d ? ' puc-local__face-toggle--on' : '')}
-            onClick={() => { setView3d((v) => !v); setFs3d(false) }}
-            aria-pressed={view3d}
-            title={view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
+            className={'puc-local__face-toggle' + (bv.view3d ? ' puc-local__face-toggle--on' : '')}
+            onClick={() => bv.setView3d((v) => !v)}
+            aria-pressed={bv.view3d}
+            title={bv.view3d ? 'Back to the flat board' : 'Switch to the 3D board'}
           >
-            {view3d ? '🎲 2D' : '🎲 3D'}
+            {bv.view3d ? '🎲 2D' : '🎲 3D'}
           </button>
-          {view3d && (
+          {bv.view3d && (
             <button
               type="button"
-              onClick={() => setFs3d(true)}
+              onClick={bv.enterFs}
               title="Fullscreen 3D board"
             >
               ⛶
             </button>
           )}
-          {!view3d && (
+          {!bv.view3d && (
             <button
               type="button"
               className={'puc-local__face-toggle' + (faceToFace ? ' puc-local__face-toggle--on' : '')}
@@ -530,22 +405,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
           >
             Resign
           </button>
-          <button
-            type="button"
-            onClick={() => { void handleTakeback() }}
-            disabled={!canTakeback}
-            title={
-              takebackNextCost === null
-                ? 'No takebacks left this game (max 3)'
-                : identity && !identity.isBypass && identity.castlePoints < takebackNextCost
-                  ? `Need ${takebackNextCost}✦ to take back`
-                  : 'Take back the last move'
-            }
-          >
-            {takebackNextCost === null
-              ? 'Takeback ✗'
-              : `↩ Takeback (−${takebackNextCost}✦)`}
-          </button>
+          <TakebackButton takeback={takeback} readyTitle="Take back the last move" />
           <button type="button" onClick={handleRestart}>
             New game
           </button>
@@ -568,61 +428,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         </aside>
 
         <div className="puc-local__board-wrap">
-          <div
-            className={'puc-local__board-stage' + (view3d ? ' puc-local__board-stage--3d' : '')}
-            /* 2D keeps the exact square-grid footprint; 3D sizes via
-             * CSS to use much more of the viewport. */
-            style={view3d ? undefined : { width: SQUARE_SIZE * 8, height: SQUARE_SIZE * 8 }}
-          >
-            {view3d ? (
-              fs3d ? (
-                <div className="puc-local__board3d-loading">
-                  Playing fullscreen — press ESC or ✕ to return.
-                </div>
-              ) : (
-              <Suspense
-                fallback={
-                  <div className="puc-local__board3d-loading">
-                    Carving the 3D board…
-                  </div>
-                }
-              >
-                <Board3D
-                  pieces={pieces}
-                  facing={faceToFace ? snap.turn : undefined}
-                  turn={snap.turn}
-                  legalDestinationsFrom={legalDestinationsFrom}
-                  onMove={handleMove}
-                  lastMove={lastMove}
-                  checkSquare={checkSquare}
-                />
-              </Suspense>
-              )
-            ) : (
-              <Board
-                pieces={pieces}
-                turn={snap.turn}
-                legalDestinationsFrom={legalDestinationsFrom}
-                onMove={handleMove}
-                lastMove={lastMove}
-                checkSquare={checkSquare}
-                squareSize={SQUARE_SIZE}
-                flipBlackPieces={faceToFace}
-              />
-            )}
-            {/* Square-anchored overlays are positioned in 2D pixel
-             *  space — skip them in 3D view. The full-screen power-up
-             *  ceremony still plays in both. */}
-            {!view3d && sparks.map((s) => (
-              <CaptureSpark key={s.id} data={s} squareSize={SQUARE_SIZE} onDone={handleSparkDone} />
-            ))}
-            {!view3d && blooms.map((b) => (
-              <TacticBloom key={b.id} data={b} squareSize={SQUARE_SIZE} onDone={handleBloomDone} />
-            ))}
-            {powerUps.map((p) => (
-              <PowerUpCeremony key={p.id} data={p} delayMs={view3d ? DUEL_CEREMONY_DELAY_MS : 0} onDone={handlePowerUpDone} />
-            ))}
-          </div>
+          <BoardStage view={bv} squareSize={SQUARE_SIZE} board={boardProps}>
+            {ceremonyOverlays}
+          </BoardStage>
           <StatusBanner status={effectiveStatus} activeName={activeName} whiteName={whiteName} blackName={blackName} />
         </div>
 
@@ -646,59 +454,18 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         </aside>
       </div>
 
-      {/* Fullscreen 3D — the canvas fills the viewport; names + clocks
-       *  float as compact chips. Sits BELOW the end-game / resign
-       *  overlays (z 50/60) so those still appear over the board. */}
-      {view3d && fs3d && (
-        <div className="puc-local__fs3d">
-          <Suspense
-            fallback={<div className="puc-local__board3d-loading">Carving the 3D board…</div>}
-          >
-            <Board3D
-              pieces={pieces}
-              facing={faceToFace ? snap.turn : undefined}
-              turn={snap.turn}
-              legalDestinationsFrom={legalDestinationsFrom}
-              onMove={handleMove}
-              lastMove={lastMove}
-              checkSquare={checkSquare}
-            />
-          </Suspense>
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--top' +
-              (snap.turn === 'b' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span className="puc-player__dot puc-player__dot--b" aria-hidden="true" />
-            <span>{blackName}</span>
-            {timeControl && (
-              <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
-            )}
-          </div>
-          <div
-            className={
-              'puc-local__fs3d-chip puc-local__fs3d-chip--bottom' +
-              (snap.turn === 'w' && !gameOver ? ' puc-local__fs3d-chip--active' : '')
-            }
-          >
-            <span className="puc-player__dot puc-player__dot--w" aria-hidden="true" />
-            <span>{whiteName}</span>
-            {timeControl && (
-              <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
-            )}
-          </div>
-          <button
-            type="button"
-            className="puc-local__fs3d-exit"
-            onClick={() => setFs3d(false)}
-            aria-label="Exit fullscreen"
-            title="Exit fullscreen (ESC)"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <Fullscreen3D view={bv} board={boardProps}>
+        <FsChip side="top" color="b" active={snap.turn === 'b' && !gameOver} name={blackName}>
+          {timeControl && (
+            <Clock baseMs={clocks.blackMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'b'} />
+          )}
+        </FsChip>
+        <FsChip side="bottom" color="w" active={snap.turn === 'w' && !gameOver} name={whiteName}>
+          {timeControl && (
+            <Clock baseMs={clocks.whiteMs} lastTickAt={clocks.lastTickAt} running={clocks.running === 'w'} />
+          )}
+        </FsChip>
+      </Fullscreen3D>
 
       <GameEndOverlay
         status={effectiveStatus}
