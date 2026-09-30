@@ -16,11 +16,11 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "chess.js": "^1.4.0",
-    "firebase-admin": "^13.0.0"
+    "firebase-admin": "^14.5.0"
   },
   "devDependencies": {
-    "@types/node": "^24.12.3",
-    "tsx": "^4.20.0",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2"
   }
 }

@@ -9,7 +9,10 @@ export default mergeConfig(
   defineConfig({
     test: {
       globals: true,
-      environment: 'jsdom',
+      // Node by default: only a handful of tests need a DOM, and jsdom setup
+      // was ~half the suite's wall time. Files that touch window/document opt
+      // in with a `// @vitest-environment jsdom` docblock on line 1.
+      environment: 'node',
       setupFiles: ['./src/test/setup.ts'],
     },
   }),

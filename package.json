@@ -24,7 +24,7 @@
     "functions:lockfile": "tmp=$(mktemp -d) && cp functions/package.json functions/pnpm-lock.yaml \"$tmp\" && pnpm --dir \"$tmp\" install --lockfile-only --no-frozen-lockfile --ignore-workspace && cp \"$tmp/pnpm-lock.yaml\" functions/pnpm-lock.yaml"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
-    "firebase-tools": "15.9.1"
+    "@playwright/test": "^1.63.0",
+    "firebase-tools": "^15.32.0"
   }
 }

@@ -17,7 +17,7 @@ laptop. Laptop deploys remain possible (see the end).
   is **deleted** in production on the next deploy (without `--force` the CLI
   aborts in CI). Indexes are deployed without `--force`, so indexes that exist
   only in the console are never deleted.
-- The CLI is the pinned `firebase-tools` from the root `package.json`, run via
+- The CLI is the `firebase-tools` version from the root `package.json`, run via
   `pnpm exec firebase`, with the `predeploy` hooks in `firebase.json` doing the
   web and functions builds.
 
