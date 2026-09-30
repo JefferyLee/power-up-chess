@@ -34,10 +34,10 @@ old). We designed it to collect as little as possible about a child.
 - **A one-way hash of the device's internet address** (HMAC-SHA256 with a
   server-side secret) is stored with the account and the points ledger, so we
   can tell "same source as last time?" when investigating point farming. The
-  address itself is never stored, and since 2026-09-29 we no longer look up a
-  country or city from it (the earlier lookup used a third-party service over
-  plain HTTP and was removed). Accounts created before that date may still
-  carry a country/city from the older version until deleted.
+  address itself is never stored (raw IPs written before 2026-09-29 were
+  scrubbed). We do look up an approximate origin from it once per sign-in — a
+  country code and city — and show that on the plaque; Jeff's decision
+  (2026-09-29) was to keep the origin and never the address.
 
 ## Talking to other people
 
@@ -94,6 +94,9 @@ old). We designed it to collect as little as possible about a child.
   does; it does not receive account data.
 - **Microsoft text-to-speech** (Edge TTS) reads our own story text aloud for
   the Library. Nothing about the child is sent to it.
-- No location lookup service. No other processors.
+- ip-api.com (free tier) receives the device's internet address for the
+  one-off country/city lookup at sign-in and returns only those two fields.
+  Its free endpoint is plain HTTP; moving to their keyed HTTPS endpoint is on
+  the review list. No other processors.
 
 Questions or a deletion request: contact Jeff (the operator).

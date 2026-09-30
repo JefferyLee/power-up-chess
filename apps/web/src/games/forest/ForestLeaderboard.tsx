@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore'
 import { db } from '../../firebase/app'
 import './ForestLeaderboard.css'
+import { useAuthUid } from '../../auth/useAuthUid'
 
 interface Row {
   normalizedName: string
@@ -22,7 +23,10 @@ export function ForestLeaderboard({
   const [rows, setRows] = useState<Row[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
+  // Wait for anonymous auth — a read before sign-in is denied by the rules.
+  const authReady = useAuthUid().status === 'ready'
   useEffect(() => {
+    if (!authReady) return
     let cancelled = false
     const load = async () => {
       try {
@@ -38,7 +42,7 @@ export function ForestLeaderboard({
     }
     void load()
     return () => { cancelled = true }
-  }, [refreshKey])
+  }, [refreshKey, authReady])
 
   return (
     <div className="puc-forestlb">

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../../firebase/app'
+import { useAuthUid } from '../../../auth/useAuthUid'
 
 interface ScoreEntry {
   displayName: string
@@ -30,14 +31,18 @@ interface Props {
 export function Leaderboard({ myName, onBack }: Props) {
   const [board, setBoard] = useState<SiegeLeaderboardDoc | null | undefined>(undefined)
 
+  // Wait for anonymous auth — a listener opened before sign-in is denied
+  // once and never retried (same fix as the puzzle board).
+  const authReady = useAuthUid().status === 'ready'
   useEffect(() => {
+    if (!authReady) return
     const unsub = onSnapshot(
       doc(db, 'siege_leaderboards', 'global'),
       (snap) => setBoard((snap.data() as SiegeLeaderboardDoc | undefined) ?? null),
       () => setBoard(null),
     )
     return unsub
-  }, [])
+  }, [authReady])
 
   return (
     <div className="puc-siege-menu puc-siege-board">

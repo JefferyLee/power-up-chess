@@ -13,6 +13,7 @@ import { db } from '../firebase/app'
 import { useCastle } from '../castle/useCastle'
 import type { Plot } from '../firebase/callables'
 import './LeaderboardScreen.css'
+import { useAuthUid } from '../auth/useAuthUid'
 
 interface LeaderboardEntry {
   displayName: string
@@ -50,8 +51,14 @@ export function LeaderboardScreen() {
   const [boards, setBoards] = useState<Partial<Record<Plot, LeaderboardDoc>>>({})
   const [activePlot, setActivePlot] = useState<Plot>('mate')
 
+  // Subscribe only once anonymous auth is ready: a listener opened
+  // before sign-in is evaluated without request.auth, is denied, and
+  // never retries — the board would sit on "warming up" for ever after
+  // a direct load or reload.
+  const authReady = useAuthUid().status === 'ready'
   // One snapshot listener per plot doc. Cheap: 6 small docs.
   useEffect(() => {
+    if (!authReady) return
     const unsubs = PLOT_ORDER.map((plot) =>
       onSnapshot(doc(db, 'puzzle_leaderboards', plot), (snap) => {
         const data = snap.data() as LeaderboardDoc | undefined
@@ -62,7 +69,7 @@ export function LeaderboardScreen() {
     return () => {
       for (const u of unsubs) u()
     }
-  }, [])
+  }, [authReady])
 
   const activeBoard = boards[activePlot]
   const myName = identity?.displayName ?? ''

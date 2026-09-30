@@ -9,7 +9,7 @@ that requires it.
 
 | Area | Requirement (paraphrased) | Where we stand | Path |
 | --- | --- | --- | --- |
-| Data minimization | Collect only what's needed | ✅ display name + sha256(magic word) + anonymous uids + HMAC(IP) for abuse tracing; no real name/email/phone/DOB. Raw IP writes and the ip-api.com geo lookup removed 2026-09-29 (old docs may still carry country/city) | B ✅ |
+| Data minimization | Collect only what's needed | ✅ display name + sha256(magic word) + anonymous uids + HMAC(IP) for abuse tracing; no real name/email/phone/DOB. Raw IP writes removed 2026-09-29; the ip-api.com country/city lookup stays (Jeff's call: keep the origin, never the address) | B ✅ |
 | No PII in free text | Kids can't leak contact info | ✅ email/phone scrub + two-tier profanity (severe → reject, evasion-normalised); unit-tested | B ✅ |
 | No private channels | No unsupervised 1:1 contact | ✅ standard games chat-free; Hall single moderated stream; Wizard chat mirrors to Hall; no-DM audit 2026-07-03 | B ✅ |
 | Reporting & moderation | Users can report; action follows | ✅ report → auto-hide at 3 flags (cascades to Wizard source); admin `setUserBan` | B ✅ |

@@ -32,9 +32,9 @@ export function PrivacyScreen() {
           <li>Great Hall chat messages, and Wizard’s Duel room chat — text plus the short voice clips
             themselves (up to 15 seconds), kept with the duel room.</li>
           <li>A one-way hash of the device’s internet address, used only to spot abuse (for example one
-            person farming points across many accounts). The address itself is never stored, and we do not
-            look up a location from it. Accounts made before 29 September 2026 may still show a country or
-            city on their plaque from an older version of the app.</li>
+            person farming points across many accounts), plus the approximate origin it points to — a
+            country and city, looked up once at sign-in and shown on the plaque. The address itself is
+            never stored.</li>
         </ul>
         <p>Match history, puzzle attempts and preferences stay on the child’s own device.</p>
 
@@ -70,7 +70,8 @@ export function PrivacyScreen() {
           Third parties: Google Firebase (hosting, database, sign-in, analytics), Google Gemini (host text,
           server-side only), Cloudflare (the network in front of app.powerupcastle.app — it sees connection
           data the way any web host does) and Microsoft’s text-to-speech, which reads our own story text
-          aloud and never receives anything about the child. No location lookup service.
+          aloud and never receives anything about the child. The country/city lookup uses ip-api.com,
+          which receives the device’s internet address for that one lookup and nothing else.
           Questions or a deletion request: contact Jeff (the operator).
         </p>
       </main>

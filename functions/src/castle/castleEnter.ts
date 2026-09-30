@@ -25,7 +25,7 @@ import {
 } from './types'
 import { applyDecay } from './decay'
 import { scrubMessage } from './profanity'
-import { extractIp, hashIp } from './ipGeo'
+import { extractIp, hashIp, lookupGeo, type GeoResult } from './ipGeo'
 import { appendAudit } from './audit'
 
 const NAME_MIN = 1
@@ -69,11 +69,12 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
     const db = getFirestore()
     const now = Date.now()
 
-    // Origin tracking — only the HMAC of the client IP is ever written
-    // (guest doc + audit ledger). The raw address and the ip-api.com
-    // country/city lookup were dropped for privacy (see ipGeo.ts).
+    // Origin tracking — the country/city lookup runs in parallel with the
+    // rest of the work; only the HMAC of the client IP is ever written
+    // (guest doc + audit ledger), never the raw address (see ipGeo.ts).
     const ip = extractIp(req)
     const ipHash = ip ? hashIp(ip) : null
+    const geoPromise: Promise<GeoResult | null> = ip ? lookupGeo(ip) : Promise.resolve(null)
 
     // Rate-limit check before any other work.
     const attemptsRef = db.doc(`castle_enter_attempts/${uid}`)
@@ -149,6 +150,7 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
       const starter = AWARD_CAPS.newAccountStarter
       const todayKey = Math.floor(now / DAY_MS)
       const sessionId = mintSessionId()
+      const geo = await geoPromise
       const doc: GuestDoc = {
         displayName,
         normalizedName,
@@ -162,6 +164,8 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
         lifetimeEarned: starter,
         activeSessionId: sessionId,
         ...(ipHash ? { firstIpHash: ipHash, recentIpHash: ipHash } : {}),
+        ...(geo?.country ? { firstCountry: geo.country, recentCountry: geo.country } : {}),
+        ...(geo?.city ? { firstCity: geo.city, recentCity: geo.city } : {}),
       }
       await guestRef.create(doc)
       // Ledger entry for the starter pack. New-account event is logged
@@ -215,11 +219,16 @@ export const castleEnter = onCall<CastleEnterRequest, Promise<CastleEnterRespons
         const lifetimePrev = existing.lifetimeEarned ?? Math.max(0, existing.castlePoints)
         updates.lifetimeEarned = lifetimePrev + bonus.total
       }
-      // Origin tracking — refresh recentIpHash, lazily backfill
-      // firstIpHash on accounts that pre-date it. Raw firstIp / recentIp
-      // written before 2026-09-29 are scrubbed on this visit; the old
-      // country / city fields are no longer written but left alone.
+      // Origin tracking — refresh recent* (IP hash, country, city), lazily
+      // backfill first* on accounts that pre-date the feature. Raw
+      // firstIp / recentIp written before 2026-09-29 are scrubbed on this
+      // visit; only hashes and the approximate origin remain.
       if (ipHash) updates.recentIpHash = ipHash
+      const geo = await geoPromise
+      if (geo?.country) updates.recentCountry = geo.country
+      if (geo?.city) updates.recentCity = geo.city
+      if (!existing.firstCountry && geo?.country) updates.firstCountry = geo.country
+      if (!existing.firstCity && geo?.city) updates.firstCity = geo.city
       if (!existing.firstIpHash && ipHash) updates.firstIpHash = ipHash
       const scrub: Record<string, FieldValue> = {}
       if (existing.firstIp !== undefined) scrub.firstIp = FieldValue.delete()
