@@ -70,3 +70,8 @@
   display: flex;
   gap: 10px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .puc-forest__btn { transition: none; }
+  .puc-forest__btn:hover { transform: none; }
+}

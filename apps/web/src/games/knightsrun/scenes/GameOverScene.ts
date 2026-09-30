@@ -6,6 +6,7 @@
 
 import Phaser from 'phaser'
 import { playSound } from '../../../sound/synth'
+import { prefersReducedMotion } from '../../../a11y/usePrefersReducedMotion'
 import { loadBestRun, saveKnightsRun } from '../history'
 import { WORLD_HEIGHT, WORLD_WIDTH } from '../config'
 
@@ -123,12 +124,14 @@ export class GameOverScene extends Phaser.Scene {
           color: '#ffd860',
         })
         .setOrigin(0.5)
-      this.tweens.add({
-        targets: this.newBestTag,
-        scale: { from: 0.6, to: 1.0 },
-        duration: 300,
-        ease: 'Back.Out',
-      })
+      if (!prefersReducedMotion()) {
+        this.tweens.add({
+          targets: this.newBestTag,
+          scale: { from: 0.6, to: 1.0 },
+          duration: 300,
+          ease: 'Back.Out',
+        })
+      }
       playSound('knight-newbest')
     }
   }

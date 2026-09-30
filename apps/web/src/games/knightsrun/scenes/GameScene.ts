@@ -18,6 +18,7 @@
 
 import Phaser from 'phaser'
 import { playSound } from '../../../sound/synth'
+import { prefersReducedMotion } from '../../../a11y/usePrefersReducedMotion'
 import {
   BOARD_X,
   COLLAPSE_RAMP_PER_S,
@@ -105,6 +106,9 @@ export class GameScene extends Phaser.Scene {
   private markers: Phaser.GameObjects.Image[] = []
   private sweeps: Sweep[] = []
   private nextSweepAt = SWEEP_FIRST_MS
+  /** prefers-reduced-motion: decorative tweens (pulses, pops, floats)
+   *  hold still. The leap, the collapse and the fall are the game. */
+  private reduceMotion = false
 
   private scoreText!: Phaser.GameObjects.Text
   private shieldText!: Phaser.GameObjects.Text
@@ -135,6 +139,7 @@ export class GameScene extends Phaser.Scene {
     this.markers = []
     this.sweeps = []
     this.nextSweepAt = SWEEP_FIRST_MS
+    this.reduceMotion = prefersReducedMotion()
 
     this.add.rectangle(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 0x171026).setOrigin(0, 0)
 
@@ -314,14 +319,16 @@ export class GameScene extends Phaser.Scene {
         .setDepth(5)
         .setInteractive({ useHandCursor: true })
       marker.on('pointerdown', () => this.hop(f, r))
-      this.tweens.add({
-        targets: marker,
-        scale: { from: 0.86, to: 1.04 },
-        duration: 520,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      })
+      if (!this.reduceMotion) {
+        this.tweens.add({
+          targets: marker,
+          scale: { from: 0.86, to: 1.04 },
+          duration: 520,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        })
+      }
       this.board.add(marker)
       this.markers.push(marker)
     }
@@ -471,16 +478,18 @@ export class GameScene extends Phaser.Scene {
     for (const key of cells) {
       const [f, r] = key.split(',').map(Number) as [number, number]
       const rect = this.add
-        .rectangle(this.cellX(f), this.worldY(r), SQ - 6, SQ - 6, 0xe05a4a, 0.26)
+        .rectangle(this.cellX(f), this.worldY(r), SQ - 6, SQ - 6, 0xe05a4a, this.reduceMotion ? 0.4 : 0.26)
         .setDepth(6)
       this.board.add(rect)
-      this.tweens.add({
-        targets: rect,
-        fillAlpha: 0.45,
-        duration: 300,
-        yoyo: true,
-        repeat: -1,
-      })
+      if (!this.reduceMotion) {
+        this.tweens.add({
+          targets: rect,
+          fillAlpha: 0.45,
+          duration: 300,
+          yoyo: true,
+          repeat: -1,
+        })
+      }
       rects.push(rect)
     }
     const icon = this.add
@@ -642,7 +651,7 @@ export class GameScene extends Phaser.Scene {
     this.board.add(t)
     this.tweens.add({
       targets: t,
-      y: t.y - 56,
+      y: this.reduceMotion ? t.y : t.y - 56,
       alpha: 0,
       duration: 850,
       ease: 'Quad.easeOut',
@@ -661,17 +670,19 @@ export class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(110)
-      .setScale(0.6)
-    this.tweens.add({
-      targets: b,
-      scale: 1,
-      duration: 220,
-      ease: 'Back.Out',
-    })
+      .setScale(this.reduceMotion ? 1 : 0.6)
+    if (!this.reduceMotion) {
+      this.tweens.add({
+        targets: b,
+        scale: 1,
+        duration: 220,
+        ease: 'Back.Out',
+      })
+    }
     this.tweens.add({
       targets: b,
       alpha: 0,
-      y: b.y - 30,
+      y: this.reduceMotion ? b.y : b.y - 30,
       delay: 700,
       duration: 400,
       onComplete: () => b.destroy(),

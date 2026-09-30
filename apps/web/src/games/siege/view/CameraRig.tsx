@@ -8,6 +8,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { BossId, Sim } from '../sim/types'
+import { usePrefersReducedMotion } from '../../../a11y/usePrefersReducedMotion'
 import { bossDef, ENEMY_SCALE, enemyScale, fitCamera, PIECE_TOP, posX, posZ, symbolFor } from './world'
 
 const CARD: CSSProperties = {
@@ -41,6 +42,7 @@ export function CameraRig({ sim }: { sim: Sim }) {
   const [banner, setBanner] = useState<BossId | null>(null)
   const bannerGroup = useRef<THREE.Group>(null)
   const card = useRef<HTMLDivElement>(null)
+  const reduced = usePrefersReducedMotion()
 
   useEffect(() => {
     const aspect = camera instanceof THREE.PerspectiveCamera ? camera.aspect : undefined
@@ -96,6 +98,8 @@ export function CameraRig({ sim }: { sim: Sim }) {
     } else {
       return
     }
+    // prefers-reduced-motion: the banner still plays, the camera stays put.
+    if (reduced) return
     const w = weight.current
     camera.position.lerpVectors(v.home, v.close, w)
     v.target.lerpVectors(v.homeTarget, v.boss, w)

@@ -886,3 +886,16 @@
     width: 248px;
   }
 }
+
+/* ── Reduced motion ──────────────────────────────────────────────────
+ * The banner and stars land in place; the toast simply shows until
+ * SiegeGame unmounts it (TOAST_MS matches the animation length). */
+@media (prefers-reduced-motion: reduce) {
+  .puc-siege-intro__banner { animation: none; }
+  .puc-siege-toast { animation: none; }
+  .puc-siege-stars--reveal .puc-siege-star {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

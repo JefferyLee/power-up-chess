@@ -133,3 +133,9 @@
   .puc-forest-route__player { font-size: 11px; }
   .puc-forest-route__main { gap: 14px; }
 }
+
+/* Reduced motion: the payout toast shows in place until the route's
+ * 5 s timer unmounts it. */
+@media (prefers-reduced-motion: reduce) {
+  .puc-forest-route__payout { animation: none; }
+}

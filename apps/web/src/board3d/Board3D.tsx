@@ -23,7 +23,7 @@
 // 'move'/'capture'/'check' at move time). The one sound here is the
 // duel clash, which exists nowhere else, panned by view-space x.
 
-import { createContext, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type RefObject } from 'react'
+import { createContext, Suspense, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, Html, OrbitControls, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
@@ -36,6 +36,9 @@ import { usePieceTracking, type CapturedPiece, type TrackedPiece } from './usePi
 import { easeInOutCubic, easeOutBack } from './timeline'
 import { buildDuel, finishDuel, moveDuration, HOP_HEIGHT, LIFT, type DuelState } from './duel'
 import { RingPulse, SparkBurst, Torch, rollSparks } from './fx'
+import { describeAction, describeSquare, stepCursor } from './kbCursor'
+import { usePrefersReducedMotion } from '../a11y/usePrefersReducedMotion'
+import './Board3D.css'
 
 export interface Board3DProps {
   pieces: Partial<Record<SquareName, PieceModel>>
@@ -298,10 +301,13 @@ function Squares({
   // always current).
   const mats = useRef(new Map<SquareName, THREE.MeshStandardMaterial>())
   const pulsing = firstPick ?? selected
+  // prefers-reduced-motion: the breathing squares hold a steady glow.
+  const reduced = usePrefersReducedMotion()
   useFrame(({ clock }) => {
     const t = clock.elapsedTime
     for (const [sq, mat] of mats.current) {
       if (!tints.has(sq)) mat.emissiveIntensity = 0
+      else if (reduced) mat.emissiveIntensity = sq === checkSquare ? 0.7 : 0.55
       else if (sq === checkSquare) mat.emissiveIntensity = 0.5 + 0.3 * Math.sin(6 * t)
       else if (sq === pulsing) mat.emissiveIntensity = 0.55 + 0.15 * Math.sin(3 * t)
       else mat.emissiveIntensity = 0.55
@@ -338,6 +344,35 @@ function Squares({
         )
       })}
     </group>
+  )
+}
+
+/** The keyboard cursor: a flat frame on the focused square in the
+ *  selection colour. Steady by design (it's a cursor, not a pulse), so
+ *  it needs no reduced-motion branch. */
+function CursorFrame({ sq }: { sq: SquareName }) {
+  const [x, z] = squareToWorld(sq)
+  const geometry = useMemo(() => {
+    const shape = new THREE.Shape()
+    shape.moveTo(-0.5, -0.5)
+    shape.lineTo(0.5, -0.5)
+    shape.lineTo(0.5, 0.5)
+    shape.lineTo(-0.5, 0.5)
+    shape.closePath()
+    const hole = new THREE.Path()
+    hole.moveTo(-0.42, -0.42)
+    hole.lineTo(0.42, -0.42)
+    hole.lineTo(0.42, 0.42)
+    hole.lineTo(-0.42, 0.42)
+    hole.closePath()
+    shape.holes.push(hole)
+    return new THREE.ShapeGeometry(shape)
+  }, [])
+  useEffect(() => () => geometry.dispose(), [geometry])
+  return (
+    <mesh geometry={geometry} position={[x, 0.012, z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <meshBasicMaterial color={TINT_SELECTED} toneMapped={false} transparent opacity={0.95} depthWrite={false} />
+    </mesh>
   )
 }
 
@@ -952,6 +987,13 @@ export function Board3D({
   badges,
 }: Board3DProps) {
   const [selected, setSelected] = useState<SquareName | null>(null)
+  // Keyboard cursor (a11y): arrows walk the squares, Enter/Space taps
+  // the cursor square through the same tap() as pointer input, Escape
+  // clears. Dropped on blur so no stale frame lingers on the board.
+  // `announce` feeds the visually-hidden live region.
+  const [kbCursor, setKbCursor] = useState<SquareName | null>(null)
+  const [announce, setAnnounce] = useState('')
+  const hintId = useId()
   // The chosen 3D look (wood / candy). Persisted so Ada's pick sticks
   // across screens and sessions.
   const [paletteName, setPaletteName] = useState<Palette3dName>(readPalette)
@@ -1113,6 +1155,35 @@ export function Board3D({
     [pieces, selected, legal, turn, onMove, spellPick, onSpellTarget],
   )
 
+  // Arrows walk the board from the player's side (facing for
+  // pass-and-play, else the side the camera opened behind).
+  const kbSide: Color = facing ?? initialSide
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      if (selected) setAnnounce('Selection cleared')
+      setSelected(null)
+      setKbCursor(null)
+      return
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (!kbCursor) return
+      e.preventDefault()
+      if (spellPick) {
+        setAnnounce(spellPick.validTargets.has(kbCursor) ? `${kbCursor} targeted` : `${kbCursor} is not a target`)
+      } else {
+        const selectedPiece = selected ? pieces[selected] ?? null : null
+        setAnnounce(describeAction(kbCursor, pieces[kbCursor] ?? null, selected, selectedPiece, legal, turn))
+      }
+      tap(kbCursor)
+      return
+    }
+    const next = stepCursor(kbCursor, e.key, kbSide)
+    if (!next) return
+    e.preventDefault()
+    setKbCursor(next)
+    setAnnounce(describeSquare(next, pieces[next] ?? null, legal, captureSquares))
+  }
+
   const chip: React.CSSProperties = {
     position: 'absolute',
     zIndex: 5,
@@ -1127,7 +1198,16 @@ export function Board3D({
 
   return (
     <div
+      className="puc-board3d"
       style={{ position: 'relative', width: '100%', height: '100%' }}
+      /* The scene is a canvas, so this wrapper IS the accessible board:
+       * focusable, keyboard-driven (handleKeyDown), named by the turn. */
+      role="application"
+      aria-label={`3D chess board, ${turn === 'w' ? 'White' : 'Black'} to move${checkSquare ? ', check' : ''}`}
+      aria-describedby={hintId}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onBlur={() => setKbCursor(null)}
       /* Any tap during a duel skips it — a kid mid-game shouldn't have
        * to find the button. */
       onPointerDownCapture={duelActive ? skipDuel : undefined}
@@ -1228,6 +1308,7 @@ export function Board3D({
           wood={wood}
           onTap={tap}
         />
+        {kbCursor && <CursorFrame sq={kbCursor} />}
 
         {/* Status-effect badges floating above affected squares. */}
         {badges &&
@@ -1288,6 +1369,8 @@ export function Board3D({
       </DuelContext.Provider>
       </PaletteContext.Provider>
     </Canvas>
+    <div className="puc-board3d__sr" role="status" aria-live="polite" aria-atomic="true">{announce}</div>
+    <span id={hintId} className="puc-board3d__sr">Arrow keys move the cursor, Enter selects or moves, Escape clears.</span>
     {/* Ada's look-picker — flips the 3D set between the realistic
       * wooden pieces and the colourful blue board. */}
     <button

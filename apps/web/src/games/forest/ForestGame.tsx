@@ -366,8 +366,8 @@ export function ForestGame({ playerName, onExit, onRunComplete }: Props) {
       {isPlaying && (
         <div className="puc-forest__touchbar">
           <div className="puc-forest__touchgroup">
-            <button onPointerDown={press('left')} onPointerUp={release('left')} onPointerLeave={release('left')} style={btnStyle}>◀</button>
-            <button onPointerDown={press('right')} onPointerUp={release('right')} onPointerLeave={release('right')} style={btnStyle}>▶</button>
+            <button onPointerDown={press('left')} onPointerUp={release('left')} onPointerLeave={release('left')} aria-label="Run left" style={btnStyle}>◀</button>
+            <button onPointerDown={press('right')} onPointerUp={release('right')} onPointerLeave={release('right')} aria-label="Run right" style={btnStyle}>▶</button>
           </div>
           <div className="puc-forest__touchgroup">
             <button onPointerDown={press('bomb')} onPointerUp={release('bomb')} onPointerLeave={release('bomb')} style={{ ...btnStyle, background: 'rgba(200,80,0,0.7)', minWidth: '70px' }}>💣 Bomb</button>

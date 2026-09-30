@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { usePrefersReducedMotion } from '../a11y/usePrefersReducedMotion'
 
 export const RING_DUR = 0.5
 export const TORCH_INTENSITY = 9
@@ -17,7 +18,14 @@ export const SPARK_LIFE = 0.55
 export function Torch({ x, z, phase }: { x: number; z: number; phase: number }) {
   const light = useRef<THREE.PointLight>(null)
   const flame = useRef<THREE.Mesh>(null)
+  // prefers-reduced-motion: the flame holds still at its mean size.
+  const reduced = usePrefersReducedMotion()
   useFrame(({ clock }) => {
+    if (reduced) {
+      if (light.current) light.current.intensity = TORCH_INTENSITY * 0.85
+      if (flame.current) flame.current.scale.set(0.85, 0.85 * 1.15, 0.85)
+      return
+    }
     const t = clock.elapsedTime
     const s = 0.85 + Math.sin(9 * t + phase) * 0.1 + Math.sin(23 * t + phase) * 0.05
     if (light.current) light.current.intensity = TORCH_INTENSITY * s

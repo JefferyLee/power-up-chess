@@ -1,0 +1,24 @@
+/* Board3D keyboard focus + screen-reader plumbing. The board itself
+ * is a canvas; the wrapper takes focus and the frame mesh in the scene
+ * is the visible cursor, so the wrapper only needs a ring when focus
+ * came from the keyboard. */
+.puc-board3d:focus {
+  outline: none;
+}
+.puc-board3d:focus-visible {
+  outline: 3px solid var(--puc-accent, #f1c34c);
+  outline-offset: -3px;
+}
+/* Visually hidden, still read by assistive tech. */
+.puc-board3d__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
