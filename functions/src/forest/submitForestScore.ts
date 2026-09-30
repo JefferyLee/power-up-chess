@@ -6,6 +6,10 @@
 // dailyEarn bucket) happen inside one transaction so partial failures
 // can't leave the leaderboard out of sync with the points record.
 //
+// A runId is paid once: the run doc is read in the same transaction and
+// a repeat (retry, double-fire, replay) returns the current state
+// without writing.
+//
 // Bypass guests don't reach this function (the client skips the call);
 // if one does, requireOwnedGuest rejects it (no guest doc).
 
@@ -89,12 +93,16 @@ export const submitForestScore = onCall<SubmitForestScoreRequest, Promise<Submit
 
     return db.runTransaction(async (tx) => {
       // ── Phase 1: reads ──────────────────────────────────────────────
-      const [{ ref: guestRef, guest }, lbSnap] = await Promise.all([
+      const [{ ref: guestRef, guest }, lbSnap, runSnap] = await Promise.all([
         requireOwnedGuest(db, uid, normalizedName, tx),
         tx.get(lbRef),
+        tx.get(runRef),
       ])
 
       const prior = lbSnap.exists ? (lbSnap.data() as ForestLeaderboardDoc).best : 0
+      if (runSnap.exists) {
+        return { ok: true as const, best: prior, improved: false, castlePointsAdded: 0, castlePoints: guest.castlePoints }
+      }
       const improved = score > prior
 
       // Daily-cap-aware castle-point payout.

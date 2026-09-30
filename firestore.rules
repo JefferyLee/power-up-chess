@@ -162,6 +162,11 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.token.admin == true;
       allow write: if false;
     }
+    // Idempotency markers for castle point awards ({name}_{source}_{gameId}),
+    // created in the award transaction. Function-only.
+    match /castle_point_awards/{key} {
+      allow read, write: if false;
+    }
     // Per-uid feedback rate-limit counters. Function-only.
     match /feedback_attempts/{uid} {
       allow read, write: if false;

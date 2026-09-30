@@ -1,6 +1,7 @@
 // submitForestScore — leaderboard + castle-point payout for a Forest
 // run. Covers ownership, the 0..200 clamp, best-only rows, the
-// hideFromLeaderboards opt-out, the forestDailyMax cap and the audit row.
+// hideFromLeaderboards opt-out, the forestDailyMax cap, the audit row
+// and the once-per-runId dedupe.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { callReq, codeOf, useFakeDb } from '../../test/fakeDb'
@@ -127,6 +128,21 @@ describe('castle points', () => {
     })
     expect(await run('uid-ada', 150)).toMatchObject({ castlePointsAdded: 30, castlePoints: 130 })
     expect(db.get('guests/ada')?.dailyEarn).toEqual({ dayKey: TODAY, puzzle: 0, chessWin: 0, chessReview: 0, forest: 30 })
+  })
+
+  it('pays a runId once: the repeat returns the current state and writes nothing', async () => {
+    const db = useFakeDb({ 'guests/ada': ada })
+    expect(await run('uid-ada', 150)).toMatchObject({ best: 150, improved: true, castlePointsAdded: 30, castlePoints: 130 })
+
+    const before = db.writes.length
+    expect(await run('uid-ada', 200)).toEqual({ ok: true, best: 150, improved: false, castlePointsAdded: 0, castlePoints: 130 })
+    expect(db.writes.length).toBe(before)
+    expect(db.get('forest_runs/uid-ada/runs/run-1')?.score).toBe(150)
+    expect(db.audits()).toHaveLength(1)
+
+    // A new run is a new event — recorded, but the day's cap is already spent.
+    expect(await run('uid-ada', 150, { runId: 'run-2' })).toMatchObject({ castlePointsAdded: 0, castlePoints: 130 })
+    expect(db.get('forest_runs/uid-ada/runs/run-2')).toBeDefined()
   })
 
   it('rolls the bucket over on a zero-payout run without touching the balance', async () => {
