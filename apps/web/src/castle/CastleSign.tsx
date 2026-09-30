@@ -8,12 +8,11 @@
 // link is always available as an explicit escape hatch.
 
 import { useEffect, useState } from 'react'
-import { downloadShareImage, generateShareImage } from './shareImage'
+import { downloadShareImage, generateShareImage, SHARE_URL } from './shareImage'
 import './CastleSign.css'
 
 const SHARE_TITLE = 'Power Up Castle'
 const SHARE_TEXT = 'A warm, safe home where kids learn chess by playing.'
-const SHARE_URL = 'https://power-up-chess-dev.web.app'
 
 // Verb-led parallel structure. Each line ≤ 15 words. The leading
 // word + em-dash render as a bold lede so the eye can skim.

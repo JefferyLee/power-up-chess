@@ -780,7 +780,6 @@ function GravePiece({
   const setRef = useCallback((m: THREE.Mesh | null) => {
     ref.current = m
     if (m && life.current === 0) m.scale.setScalar(0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useFrame((_, delta) => {
     const m = ref.current

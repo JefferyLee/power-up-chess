@@ -19,7 +19,7 @@ respond, takes a headless-Chrome screenshot, and cleans the server up.
 ## Prerequisites
 
 - macOS with Google Chrome at the standard path (`/Applications/Google Chrome.app/...`). On other platforms, edit the `CHROME` constant in `driver.mjs`.
-- Node 22 (`engines: { node: ">=20" }` in `package.json`).
+- Node 22 everywhere (`engines: { node: "22" }` in `package.json`; `functions/` deploys on the `nodejs22` runtime per `firebase.json`).
 - `pnpm` 10 (`packageManager` pin). `corepack enable && corepack prepare pnpm@10.32.0` works if missing.
 
 ## Setup (once)
@@ -83,10 +83,41 @@ options:
    has the latest deployed bundle and the real Firestore backend.
    `firebase deploy --only hosting` from the repo root pushes the current
    build. Then drive it manually in a desktop Chrome.
-2. **Add Playwright / Puppeteer** — neither is in deps yet, so this
-   means `pnpm --filter @power-up-chess/web add -D playwright` and
-   writing a script. Worth it if the change you're verifying needs
-   multi-step interaction.
+2. **Drive it with Playwright** — `@playwright/test` is installed at
+   the repo root (`pnpm e2e` runs `playwright test`; no config or specs
+   are committed, so probes are ad-hoc scripts run with `node`). If the
+   browser binary is missing, `npx playwright install chromium` once.
+
+   The castle gate reads its identity from localStorage, so a probe can
+   skip the name + magic-word form by seeding a bypass identity before
+   the app boots. This is how the Siege and Wizard's Duel probes were
+   driven:
+
+   ```js
+   import { chromium } from '@playwright/test'
+
+   const browser = await chromium.launch()
+   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
+   await page.addInitScript(() => {
+     window.localStorage.setItem('puc:castle-identity:v2', JSON.stringify({
+       savedAt: Date.now(),
+       identity: {
+         displayName: 'Probe',
+         normalizedName: 'probe',
+         castlePoints: 0,
+         isBypass: true,
+         isFirstVisit: false,
+       },
+     }))
+   })
+   await page.goto('http://localhost:5173/arcade/tower-defense')
+   await page.screenshot({ path: 'probe.png' })
+   await browser.close()
+   ```
+
+   Bypass identities earn no castle points and write nothing to
+   Firestore. Point-gated doors (Online / AI Practice at 200, Wizard at
+   1000) check `castlePoints`, so raise it in the seed to probe those.
 
 ## Test
 
@@ -118,10 +149,13 @@ deploys all of them and is slow.
   emulators — running `pnpm dev` against a fresh machine just works
   IF the device has internet. Castle points, wizard duels, chat — all
   hit prod. Mind what you write.
-- **First load is heavy.** The bundle is ~940 KB gzipped (~270 KB
-  gzipped including Stockfish WASM); Vite's first request can take
-  4-6 s while it transforms 175+ modules. The driver waits up to 30 s
-  for `/` to return 200.
+- **First load is moderate.** The entry bundle is ~380 KB gzipped JS
+  + ~44 KB gzipped CSS (1.3 MB / 276 KB raw); route chunks lazy-load
+  on top. Stockfish is a separate ~7 MB runtime `.wasm` under
+  `public/stockfish/`, fetched on demand for post-game analysis and
+  kept out of the shell precache. Vite's first request can take 4-6 s
+  while it transforms 175+ modules. The driver waits up to 30 s for
+  `/` to return 200.
 - **Headless Chrome flips off the Google fonts** (`PHONE_REGISTRATION_ERROR`
   noise in stderr is unrelated GCM chatter, ignore it). Screenshots
   use system fallbacks for Cinzel / IM Fell English — fine for layout
@@ -129,12 +163,8 @@ deploys all of them and is slow.
 - **Castle gate is the first paint.** Any deeper route (`/r/:id`,
   `/wizard/:id`, `/history`, `/puzzles`) requires the visitor to enter
   a name + magic word first, which the driver can't do. To screenshot
-  past it, deploy and drive the deployed site, or add a Playwright
-  step.
-- **`pnpm dev` from a Node 22 / pnpm 10 shell will print an "engines"
-  warning** for `functions/` (pinned to Node 20). Harmless for the
-  web app; only matters when you run `pnpm --filter @power-up-chess/functions build`
-  (Firebase Functions deploys still want Node 20 server-side).
+  past it, seed the bypass identity with Playwright (see "Beyond a
+  screenshot" above) or drive the deployed site.
 
 ## Troubleshooting
 
@@ -143,4 +173,4 @@ deploys all of them and is slow.
 | `Chrome not found at /Applications/...` | Edit the `CHROME` constant in `driver.mjs` — point at Chromium / Edge / your system browser, or install Chrome. |
 | `Server did not respond at http://localhost:5173 within 30000ms` | `pnpm install` hasn't been run, OR another process is on `:5173` returning 5xx. `lsof -i :5173` to find it. |
 | `Screenshot suspiciously small: <bytes>` | Chrome rendered a blank — check `/tmp/vite.log` (driver's stderr) for a Vite transform error. Usually a syntax error in something you just edited. |
-| `pnpm dev` warns about engine | Use Node 20 if you need to run anything under `functions/`; Node 22 is fine for the web app. |
+| `pnpm dev` warns about engine | The whole workspace, `functions/` included, is pinned to Node 22 — switch to Node 22 (`nvm use 22`). |

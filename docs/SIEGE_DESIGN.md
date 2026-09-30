@@ -3,7 +3,7 @@
 Status: **in build** (2026-09-25). Decisions by Jeff: chess theme, no castle
 points, global leaderboard with the puzzle-leaderboard rules, all three
 phases at once. Replaces the vendored Canvas-2D game under
-`apps/web/public/tower-defense/` (iframe) with an in-app React + three.js
+`apps/web/public/tower-defense/` (iframe; deleted 2026-09-29) with an in-app React + three.js
 game at the same Hall door and route (`/arcade/tower-defense`).
 
 Why chess-themed: towers are white pieces that attack the way they move,

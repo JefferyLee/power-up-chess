@@ -9,7 +9,8 @@ import QRCode from 'qrcode'
 
 const W = 1200
 const H = 630
-const SHARE_URL = 'https://power-up-chess-dev.web.app'
+// Public origin (custom domain in front of Firebase Hosting; see index.html og:url).
+export const SHARE_URL = 'https://app.powerupcastle.app'
 
 export async function generateShareImage(): Promise<Blob> {
   if (typeof document === 'undefined') {

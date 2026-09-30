@@ -94,7 +94,6 @@ export function EndgameLessonScreen() {
       .ready()
       .then(() => {
         if (cancelled) return
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPhase({ kind: 'playing' })
       })
       .catch((err: unknown) => {
@@ -192,11 +191,9 @@ export function EndgameLessonScreen() {
       }
     } else if (status.kind === 'stalemate') {
       sound.play('draw')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhase({ kind: 'failed', reason: 'stalemate', moves: moveCount })
     } else if (status.kind === 'draw') {
       sound.play('draw')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhase({ kind: 'failed', reason: 'draw', moves: moveCount })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

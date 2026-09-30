@@ -36,9 +36,7 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Knight's Run | `/knights-run` | break | — | no (auto-runner) |
 | Tower Defense ("The Siege") | `/arcade/tower-defense` | break | — (own leaderboard, puzzle-board rules) | yes — chess-themed 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; see `docs/SIEGE_DESIGN.md` |
 
-Other routes not fronted by a Hall door: `/review` (post-game analysis), `/history` + `/history/:name` (match history), `/puzzles/{calibration,daily,leaderboard,legends,master,plot/:plot}`, `/learn/:lessonId`, `/endgame/:id`, `/openings/:id`, `/me` (adventurer plaque), `/team/:teamId`, `/wizard/:roomId`, `/wizard/v2/:roomId`.
-
-**Ada's-eye rule of thumb:** *learn* doors teach chess, *play* doors are real games (some need points to unlock), *break* doors are for fun and never change your chess. The one to watch is **Wizard's Duel** — it looks like chess but is a spell game, deliberately not chess practice.
+Other routes not fronted by a Hall door: `/review` (post-game analysis), `/history` + `/history/:name` (match history), `/puzzles/{calibration,daily,leaderboard,legends,master,plot/:plot}`, `/learn/:lessonId`, `/endgame/:id`, `/openings/:id`, `/me` (adventurer plaque), `/team/:teamId`, `/wizard/:roomId`, *play* doors are real games (some need points to unlock), *break* doors are for fun and never change your chess. The one to watch is **Wizard's Duel** — it looks like chess but is a spell game, deliberately not chess practice.
 
 ---
 

@@ -265,7 +265,6 @@ export function checkTwentyFour(
   // can only see digits + operators + parens.
   let value: number
   try {
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     value = (new Function(`return (${expr})`))() as number
   } catch {
     return { ok: false, reason: 'That expression did not compute. Check your parentheses.' }

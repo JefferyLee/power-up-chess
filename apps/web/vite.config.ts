@@ -55,15 +55,7 @@ export default defineConfig({
           // 3D assets (model textures are .png — keep them out of the
           // precache; the runtime models3d cache picks them up).
           '**/models3d/**',
-          // Tower Defense is a standalone break-room game loaded in an
-          // iframe on demand — no need to bloat the core shell install
-          // with its sprites/scripts. Fetched from network when opened.
-          '**/tower-defense/**',
         ],
-        // …and make sure the SW's SPA navigation fallback never answers a
-        // /tower-defense/ request with index.html (that would replace the
-        // game with the app shell inside the iframe).
-        navigateFallbackDenylist: [/^\/tower-defense\//],
         // Lift the precache file-size cap so the biggest JS chunk fits.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Make new deploys take effect on next visit instead of waiting

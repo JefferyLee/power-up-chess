@@ -434,7 +434,6 @@ function ReviewView({
     }
     // Template-only mode: no LLM recap — show a warm templated summary.
     if (isTemplateOnly()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecap({ status: 'ready', text: templateRecap(deriveResult(analysis)), source: 'cache' })
       return
     }

@@ -265,7 +265,6 @@ export function KnightsHopRoute() {
       return
     }
     if (moves.length === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus({ kind: 'stuck', score })
     }
   }, [moves, score, status.kind, sound])
