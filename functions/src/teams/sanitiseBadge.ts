@@ -79,7 +79,7 @@ export function sanitiseBadge(raw: TeamBadge | undefined): TeamBadge {
     shape,
     layout,
     bg: colour(raw.bg) ?? defaults.bg,
-    bg2: colour(raw.bg2),
+    ...(colour(raw.bg2) ? { bg2: colour(raw.bg2) } : {}),
     border: colour(raw.border) ?? defaults.border,
     symbol,
     symbolColor: colour(raw.symbolColor) ?? defaults.symbolColor,

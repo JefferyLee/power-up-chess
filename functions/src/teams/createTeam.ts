@@ -39,7 +39,9 @@ export interface CreateTeamResponse {
 }
 
 function sanitiseName(raw: string): string {
-  return raw.replace(/[ -]/g, '').trim().slice(0, NAME_MAX)
+  // Strip control chars (same class as castleEnter's sanitizeDisplayName).
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, NAME_MAX)
 }
 
 

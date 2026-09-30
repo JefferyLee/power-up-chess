@@ -21,7 +21,9 @@ function normalizeTeamName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 function sanitiseName(raw: string): string {
-  return raw.replace(/[ -]/g, '').trim().slice(0, NAME_MAX)
+  // Strip control chars (same class as castleEnter's sanitizeDisplayName).
+  // eslint-disable-next-line no-control-regex
+  return raw.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, NAME_MAX)
 }
 
 // ─── transferCaptain ──────────────────────────────────────────────────
@@ -168,9 +170,9 @@ export const renameTeam = onCall<RenameTeamRequest, Promise<RenameTeamResponse>>
       }
 
       // Name lock — if the normalized name actually changed, swap locks.
-      const updates: Partial<TeamDoc> = {
+      const updates: Record<string, unknown> = {
         name: newName,
-        motto: motto || undefined,
+        motto: motto || FieldValue.delete(),
         lastRenamedAt: now,
       }
       if (newNormalized !== team.normalizedName) {
