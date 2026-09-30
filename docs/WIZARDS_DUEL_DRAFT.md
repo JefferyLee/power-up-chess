@@ -1,7 +1,7 @@
 # Wizard's Duel — Design Draft
 
 Last updated: 2026-06-01
-Status: **DRAFT — for discussion**
+Status: **shipped (see FEATURE_MAP)** — this is the original design draft; the built game may differ in details
 
 A chess-variant game living as the 6th Hall door, separate from "real"
 chess. Uses the same board, pieces, and Board UI; runs its own

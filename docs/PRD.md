@@ -240,6 +240,14 @@ Early versions should prefer:
 - No user-generated images.
 - No public leaderboards.
 
+> **Superseded (2026-09-29).** Three of the lines above no longer describe the
+> shipped app and are kept here as history: the Great Hall has one open,
+> moderated shared chat (`DECISIONS.md` #27); leaderboards of display names
+> exist (gate top-5, Puzzle Garden, Forest, Siege — `DECISIONS.md` #28, #30,
+> #52) with an opt-out (`hideFromLeaderboards`, Settings); and every guest has
+> a viewable Adventurer's Plaque (`/me`, display name + country only). Current
+> truth: `DECISIONS.md` and `FEATURE_MAP.md`.
+
 If the product becomes available to many children, child privacy requirements must be reviewed before public launch. FTC COPPA guidance should be consulted for any service directed to children under 13 in the United States.
 
 Reference:

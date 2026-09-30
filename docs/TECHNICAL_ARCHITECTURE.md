@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Last reviewed: 2026-05-31
+Last reviewed: 2026-09-29 (data model regenerated from code; LLM timeout/cache corrected)
 
 ## Locked Stack For MVP0
 
@@ -80,7 +80,7 @@ This pattern keeps chess.js as the single source of truth for legal moves and me
 
 - Stockfish WASM is loaded lazily, only on the **post-game analysis screen**.
 - A web worker hosts the engine to avoid blocking the UI thread.
-- For each move, we ask Stockfish for: `eval(fenBefore, depth=18)`, `bestmove`, `eval(fenAfter, depth=18)`.
+- For each move, we ask Stockfish for: `eval(fenBefore)`, `bestmove`, `eval(fenAfter)` at **depth 14** (the review screen's setting in `screens/PostGameAnalysisScreen.tsx`; `engine/analyzeGame.ts` defaults to 16 when no depth is passed).
 - Centipawn loss = `eval_best(fenBefore) - eval_actual(fenAfter)` from the moving side's perspective. Mate scores convert to ±10000 cp.
 - Analysis runs sequentially per move; UI shows per-move progress.
 
@@ -153,7 +153,7 @@ Server-side Cloud Function (so the API key stays off the client):
 }
 ```
 
-Persona blocks live in `src/hosts/personas.ts` and are derived from `docs/HOST_PERSONAS.md` truthfulness and tone rules.
+Persona blocks live in `functions/src/shared/personas.ts` (single source of truth, snapshot-tested; the web imports it via the `@shared` alias) and are derived from `docs/HOST_PERSONAS.md` truthfulness and tone rules.
 
 ### Terminal `/ask` callable
 
@@ -161,91 +161,94 @@ Post-MVP2, the Castle Terminal adds a `/ask Lucy|Luca <question>` command backed
 
 ### Caching
 
-Key by `(host, classification, fenBefore, moveUci, playerName)`. Cache hits are fine because the same position+move+host should produce equivalent praise.
+Firestore collection `commentary/{hash}` (`functions/src/commentary/cache.ts`): the hash is a SHA-256 of the deterministic input — host, classification, FENs, move, player name — truncated to 24 base64url chars; the doc stores `{ text, model, createdAt }`. Same input → same hash → the identical comment. Read/written only by functions (`hostCommentary`, `gameRecap`); rules allow signed-in reads, deny writes.
 
 ### Failure mode
 
-If the LLM call fails or times out (>3s), fall back to a static template for that classification. Never block the UI on the LLM.
+Every Gemini call is raced against a hard **8 s** timeout (`callGeminiWithTimeout` in `functions/src/commentary/gemini.ts`, Phase 3.3). On timeout or error the callable returns an honest template for that classification with `source: 'fallback'` — never a naked 500. Never block the UI on the LLM. (Earlier drafts said 3 s; the code is 8 s.)
 
 ### Privacy note
 
 The LLM receives FEN, move, and player display name. No other personal data. For MVP0 family/private testing this is acceptable. Before any public child-facing release: COPPA review, parental consent flow, and an "offline mode" toggle that disables all LLM calls in favour of templates.
 
-## Data Model
+## Data Model (Firestore inventory, generated from code 2026-09-29)
 
-### Player
+Every write goes through Cloud Functions (admin SDK); `firestore.rules` is default-deny and only grants **reads**. "Written by" names files under `functions/src/` (callables, triggers, scheduled jobs). "Read by" names the client hooks/screens that subscribe directly; otherwise reads are function-side only. Collections with no explicit rule fall under the default deny. Client-side match history stays in IndexedDB (`apps/web/src/history/db.ts`) and is mirrored into the account archive by `syncDeviceGame`. Rows marked *in progress* reflect uncommitted REVIEW_2026-09 Phase 1 work in the tree on 2026-09-29.
 
-- id (Firebase Auth uid)
-- displayName
-- createdAt
-- preferredTheme
-- preferredHost
-- isAdaSpecialMode (derived from displayName.toLowerCase() === "ada" in MVP0)
-- settings
+### Chess & games
 
-### Game
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `rooms/{roomId}` | Live online chess room: seats, inline `moves[]`, clocks, takeback state | `rooms/createRoom`, `joinRoom`, `submitMove`, `resignGame`, `claimTimeWin`, `takeback`, `tournament/createTournamentRoom`, `invitations/respondInvite`; trigger `rooms/onRoomFinished`; job `cleanup/cleanupRooms` | client `rooms/useRoom`; `lobby/heraldWaitingRooms` (the Hall's waiting list reads the `castle_public/waitingRooms` feed, not this collection) | `get` any signed-in user; `list` closed (*in progress*); write deny |
+| `games/{roomId}` + `guests/{name}/games/{roomId}` | Finished-game records: global doc + per-guest archive (device games arrive via `syncDeviceGame`) | `rooms/playerGames` (from `onRoomFinished`), `rooms/syncDeviceGame` | callables in `rooms/playerGames` (`/history`, terminal) | no rule → deny |
+| `commentary/{hash}` | LLM commentary cache (see Caching) | `commentary/cache` via `hostCommentary` / `gameRecap` | functions only (no client reference) | read signed-in; write deny |
+| `puzzles/{id}` | Puzzle bank (Lichess CC0 import) | offline `tools/puzzle-import/src/upload.ts` | `puzzles/getNextPuzzle`, `calibration`, `dailyFive`, `legends`, `masterAtrium`, `submitPuzzleAttempt` | no rule → deny |
+| `puzzle_leaderboards/{plot}` | Six per-plot boards (display names + ratings, weekly climbers) | job `puzzles/refreshPuzzleLeaderboards` (5 min; honours `hideFromLeaderboards`) | client `puzzles/LeaderboardScreen` | read signed-in; write deny |
+| `tournaments/{weekKey}` | Weekly tournament: registrations, pairings, rounds, results, champion | `tournament/registerForTournament`, `unregisterFromTournament`, `reportTournamentResult`, `disputeTournamentResult`, `overrideTournamentResult`, `startNextRound`, `closeTournament`, `createTournamentRoom`; `castle/forgetMe` | client `tournament/TournamentRoute`; `tournament/getCurrentTournament` | read signed-in; write deny |
 
-- id
-- players (white, black)
-- startTime, endTime
-- result
-- pgn
-- finalFen
-- theme
-- hostMode (lucy | luca | both | surprise — MVP0 only writes lucy or luca)
-- activeHostId
-- mode (online | local)
-- analysisStatus (pending | running | done | failed)
+### Castle identity, economy, moderation
 
-### MoveAnnotation
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `guests/{normalizedName}` | The account doc — field groups below | `castle/castleEnter`, `awardCastlePoints`, `awardTutorialComplete`, `setPrivacyPrefs`, `setUserBan`, `setPresence`, `castSkill`, `recentlyPlayed`, `forgetMe`; `cosmetics/purchaseCosmetic` + `equipCosmetic`; `puzzles/*`; `endgame/submitEndgameClear`; `openings/submitOpeningClear`; `tournament/*`; `teams/*`; `forest/submitForestScore`; `siege/submitSiegeScore`; `rooms/takeback`, `onRoomFinished`, `syncDeviceGame`; `invitations/*`; `games/wizard/*`; `library/markStoryRead`; job `cleanup/cleanupDormantGuests` | client own-doc subscriptions (`castle/CastleIdentityContext`, `HallScreen`, `puzzles/PuzzleGardenScreen`, `cosmetics/ShopScreen`, `me/AdventurerPlaqueScreen`, `teams/MyTeamsList`, endgame/openings routes); every callable, via `castle/requireOwner` | read only your own doc (`uids` contains caller uid); write deny |
+| `chat_identity/{uid}` | uid → server-bound display name shadow | `castle/setPresence` (set), `forgetMe` (delete) | `castle/postChat`, `askHost`, `getRecentlyPlayed`, `rooms/joinRoom`, `syncDeviceGame`, `teams/*`, `library/*`, `games/wizard/wizardChat` | deny |
+| `castle_enter_attempts/{uid}`, `castle_enter_attempts_byname/{name}`, `castle_enter_attempts_daily/{key}` | Sign-in throttles + 3-strike counters | `castle/castleEnter` | same | deny (`_byname` has no rule → default deny) |
+| `castle_point_audit/{entryId}` | Castle-point ledger, one row per balance change; salted IP hash, never the raw IP | `castle/audit` (in-transaction from every CP change), `forgetMe` (purge) | functions only | deny |
+| `banned_uids/{uid}` | Ban mirror for fast checks | `castle/setUserBan` | `castle/postChat` | no rule → deny |
+| `castle_public/{stats,waitingRooms}` | Gate stats (guest count, top-5, wizard gate) + the sanitised waiting-rooms feed (display name, clock, age only) | jobs `castle/refreshCastlePublicStats` (30 s), `lobby/heraldWaitingRooms` (1 min, feed *in progress*); `games/wizard/wizardGate` | client `castle/usePublicStats` (pre-sign-in), `castle/useWaitingRooms` | public read; write deny |
+| `castle_live/{doc}` | Gate "live pulse": duel count, recent results, last story, champion | job `castle/refreshCastleLivePulse` (2 min); `castle/pickAndPostStory`, `tournament/closeTournament` | client `castle/useCastleLivePulse`, `tournament/useCurrentChampion`, `castle/CurrentStoryPanel`, terminal | public read; write deny |
+| `feedback/{id}`, `feedback_attempts/{uid}` | In-app feedback + send throttle | `feedback/feedback` (submitFeedback); `forgetMe` | client `castle/FeedbackInbox` (admin) | `feedback` read only if caller uid ∈ `guests/jeff.uids` (moving to the `admin` custom claim — `castle/requireAdmin`, *in progress*); attempts deny |
 
-- gameId
-- moveNumber
-- san, uci
-- fenBefore, fenAfter
-- classification
-- engineEvalBefore, engineEvalAfter
-- bestLine
-- isBrilliantCandidate (boolean — passed heuristic)
-- hostId
-- hostComment (string, may be empty for ordinary moves)
-- commentSource ("template" | "llm")
-- powerUpEvents
+### Hall chat & stories
 
-### Puzzle
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `lobby/messages/items/{id}` | The one shared Hall chat stream: guest lines, system lines, host stories, quizzes, Wizard-chat mirrors | `castle/postChat`, `hostAmbientStory` / `pickAndPostStory`, `hostStoryAnswer`, `postGameStarted`, `postTournamentRegistration`, `reportChatMessage` (hide), `castSkill`, `games/wizard/wizardChat` (mirror), `teams/createTeam` + `captainActions` (system lines), `lobby/heraldWaitingRooms`; job `cleanup/cleanupOldLobbyMessages`; `forgetMe` | client `castle/useLobbyChat` | read signed-in; write deny |
+| `lobby/presence/items/{sessionId}` | Who is in the Hall (20 s heartbeat) | `castle/setPresence`; job `castle/cleanupPresence`; `forgetMe` | client `castle/useLobbyChat` | read signed-in; write deny |
+| `chat_hidden/{messageId}` | Original text/voice of auto-hidden messages (the readable doc is blanked) — *in progress* | `castle/reportChatMessage`; `forgetMe` (purge) | functions only | deny |
+| `chat_flags/{messageId}__{uid}` | Report de-dup | `castle/reportChatMessage` | same | no rule → deny |
+| `chat_rate_limits/{doc}` | Per-uid chat / ask quotas | `castle/chatRateLimit` | same | deny |
+| `castle_ambient_state/{doc}` | Ambient story scheduler state | `castle/hostAmbientStory`, `pickAndPostStory` | same | deny |
+| `story_quiz_keys/{messageId}`, `story_quiz_cache/{storyId}`, `story_quiz_attempts/{messageId}[/uids/{uid}]` | Story-quiz answer keys, generated quizzes, attempt counters | `castle/pickAndPostStory`, `storyQuiz`, `hostStoryAnswer`; job `cleanup/cleanupOldLobbyMessages` | functions only | deny |
+| `invitations/{inviteId}`, `invite_attempts/{uid}` | Play / duel invites (60 s TTL) + send throttle | `invitations/sendInvite`, `respondInvite`, `cancelInvite`; `forgetMe` | client `invitations/useIncomingInvites`, `useOutgoingInvite` (list queries) | invitations read signed-in (list-query trade-off, see the rules comment); attempts deny |
 
-- id
-- fen
-- sideToMove
-- solution
-- motifs
-- difficulty
-- sourceId
-- rightsStatus
-- explanation
-- hostVoiceVariants
+### Teams
 
-### Host
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `teams/{teamId}` | Team doc: members, captain, badge, motto | `teams/createTeam`, `applyToTeam`, `approveApplication`, `leaveTeam`, `captainActions`, `disbandTeam` / `disbandHelpers`; job `teams/sweepTeams`; `forgetMe` | client `teams/useTeam`, `me/PlaqueCard`, terminal; `castle/getPublicProfile` | read signed-in; write deny |
+| `team_names/{name}` | Name uniqueness lock | `createTeam`, `captainActions`, `disbandHelpers` | same | deny |
+| `team_applications/{id}` | Join requests (7-day TTL) | `applyToTeam`, `approveApplication`; `forgetMe` | client `teams/TeamPage` | read signed-in; write deny |
 
-- id (lucy | luca)
-- name
-- style
-- availabilityState
-- voiceSettings
-- avatarState
+### Side games
 
-### PuzzleAttempt
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `wizard_rooms/{roomId}` (+ `/messages/{id}`, `/rate_limits/{uid}`) | Wizard's Duel rooms, duel chat, chat throttle | `games/wizard/wizardRoom` (create / join / move / spell), `wizardChat`, `castle/reportChatMessage` (cascade hide), `invitations/respondInvite`; job `cleanup/cleanupRooms` | client `games/wizard/useWizardRoom`, `useWizardChat`; `heraldWaitingRooms`, `refreshCastleLivePulse` | room `get` signed-in, `list` closed (*in progress*); messages read signed-in; rate_limits deny; all writes deny |
+| `castle_spell_supply/{spellId}`, `wizard_spell_quota/{key}` | Spell pricing: shared daily pool + per-uid surge | `games/wizard/wizardSpellPricing` | same | deny |
+| `forest_leaderboard/{normalizedName}` | Forest Adventure best per guest | `forest/submitForestScore`; `castle/setPrivacyPrefs` (opt-out), `forgetMe` | client `games/forest/ForestLeaderboard` | read signed-in; write deny |
+| `forest_runs/{uid}/runs/{runId}` | Forest run history | `forest/submitForestScore` | functions only | deny |
+| `siege_scores/{normalizedName}` | Per-guest Siege bests | `siege/submitSiegeScore`; `forgetMe` | `siege/refreshSiegeLeaderboards` | deny |
+| `siege_leaderboards/global` | Published Siege board (display names only; no castle points involved) | job `siege/refreshSiegeLeaderboards` (5 min; honours `hideFromLeaderboards`) | client `games/siege/ui/Leaderboard` | read signed-in; write deny |
 
-- playerId, puzzleId
-- startedAt, completedAt
-- attempts, hintsUsed
-- result
+### Library
 
-### ReferenceSource
+| Collection | Purpose | Written by | Read by | Rule |
+| --- | --- | --- | --- | --- |
+| `library_stats/{bookKey}` | Book read-heat counters | `library/markStoryRead` | `library/getLibraryShelves` | public read; write deny |
+| `library_seek/{topicId}` | Book Owl (book-seek) response cache | `library/seekBooks` | same | no rule → deny |
 
-- id, title, filePath
-- format, rightsStatus
-- recommendedUse, extractionStatus
+### `guests/{normalizedName}` field groups
+
+`GuestDoc` in `functions/src/castle/types.ts` has ~60 optional fields; grouped by owner:
+
+- **Identity / session** — `displayName`, `normalizedName`, `magicWordHash`, `uids[]`, `createdAt`, `lastVisitAt`, `activeSessionId` (single active session), `banned`, `hideFromLeaderboards`.
+- **Economy** — `castlePoints`, `lifetimeEarned` (title ladder), `dailyEarn` (per-source daily caps), `lastCheckInDayKey`, `streakDays`, `cosmetics` (`GuestCosmetics`: `pieceSet`, `ownedPieceSets`, duel-winner halo and win-streak crown expiries).
+- **Puzzles** — `puzzleRatings` (per plot), `puzzleCalibrated`, `puzzleSeen`, `puzzleStats`, `puzzleWeekStarts`, `puzzleDaily` (Today's Five), `puzzleLegendsBadges`, `puzzleSolvesThisWeek`, `puzzleSolvesToday`.
+- **Trainers** — `endgameProgress`, `openingProgress`, `learnedBasicsAt`.
+- **Adventurer's Plaque (MVP3-P1)** — `chessRating`, `chessRatingDelta`, `chessGames`, `booksRead`, `booksReadIds`, `recentlyPlayedWith` (cap 12), `teamIds`. Declared but with **no write side yet** (types.ts TODOs): `matchesAi`, `matchesLocal`, `tournamentsEntered`, `tournamentsBestPlacement`, `quizCorrect`, `quizAttempted`.
+- **Origin** — `firstCountry`, `firstCity`, `recentCountry`, `recentCity`, `firstIpHash`, `recentIpHash`. `firstIp` / `recentIp` are legacy: not written since 2026-09-29 and scrubbed on the next visit (DECISIONS #53). The public plaque shows country only; the owner sees city.
+- **Subcollection** `games/{roomId}` — the per-guest game archive.
 
 ## Privacy And Safety
 

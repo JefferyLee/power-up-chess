@@ -229,7 +229,7 @@ Ada Special Mode should include:
 Ada Special Mode should not include:
 
 - False claims.
-- Public comparison.
+- Comparing the child with other players. Leaderboards exist (gate top-5, Puzzle Garden, Forest, Siege) as boards of display names a child chooses to look at, with an opt-out (`hideFromLeaderboards`, Settings) — but hosts never rank, compare or cite another child's results in commentary. (Checked 2026-09-29: no line in `apps/web/src/hosts/templates.ts` or `functions/src/shared/personas.ts` mentions another player, a rank or a leaderboard.)
 - Excessive flattery after poor moves.
 - Anything that would embarrass Ada in front of another player.
 

@@ -1,6 +1,6 @@
 # Feature Map & Status (living)
 
-Last updated: 2026-07-03 (Path B Phase 4 doc sprint)
+Last updated: 2026-09-29 (REVIEW_2026-09 Phase 1 docs sweep)
 
 This is the **one-page source of truth** for "what exists, where it lives, and how done it is." When docs and the running app disagree, trust this file (and the code). Older planning docs (`MVP_ROADMAP.md`, `PRD.md`, `OPEN_QUESTIONS.md`) describe intent; this describes reality.
 
@@ -34,7 +34,7 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Theme Shop | `/shop` | break | spends (cosmetics) | no |
 | The Library (Book Owl) | `/library` | break | — | no (reading) |
 | Knight's Run | `/knights-run` | break | — | no (auto-runner) |
-| Tower Defense ("The Siege") | `/arcade/tower-defense` | break | — (own leaderboard, puzzle-board rules) | yes — chess-themed 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; see `docs/SIEGE_DESIGN.md` |
+| Tower Defense ("The Siege") | `/arcade/tower-defense` | break | **no castle points**; own leaderboard (`siege_leaderboards/global`, puzzle-board rules, opt-out honoured) | **no** — chess-themed arcade (towers are white pieces attacking the way they move), not chess practice. 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; `apps/web/src/games/siege/`, `functions/src/siege/`, spec `docs/SIEGE_DESIGN.md` |
 
 Other routes not fronted by a Hall door: `/review` (post-game analysis), `/history` + `/history/:name` (match history), `/puzzles/{calibration,daily,leaderboard,legends,master,plot/:plot}`, `/learn/:lessonId`, `/endgame/:id`, `/openings/:id`, `/me` (adventurer plaque), `/team/:teamId`, `/wizard/:roomId`, *play* doors are real games (some need points to unlock), *break* doors are for fun and never change your chess. The one to watch is **Wizard's Duel** — it looks like chess but is a spell game, deliberately not chess practice.
 
@@ -76,7 +76,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Wizard chat → Hall mirror (Phase 1.1/1.2) | shipped | duel text mirrored verbatim, voice as metadata notice; report cascade hides room copy; NO private channels anywhere (audited 2026-07-03) |
 | Moderation ban (Phase 1.3) | shipped | `setUserBan` (admin): guest.banned + banned_uids; blocks Hall + presence + Wizard posting |
 | Gemini safetySettings (Phase 1.6) | shipped | BLOCK_LOW_AND_ABOVE on all 4 harm categories, single wrapper covers all 6 call sites |
-| App Check (Phase 1.7) | shipped | **ROLLED BACK to monitor** (2026-07-04): enforcement 401'd 100% of app.powerupcastle.app traffic — reCAPTCHA key domain allowlist lacks the custom domain. Jeff decided (2026-07-09) not to fix the reCAPTCHA domain list — App Check stays in **monitor mode permanently**; abuse protection rests on per-uid/per-name rate limits + daily quotas (Phase 1.8/3.5) |
+| App Check (Phase 1.7) | **switchable** | Monitor mode today. 2026-09-29: every callable shares `APP_CHECK` from `functions/src/callableOptions.ts`; `APP_CHECK_ENFORCE=1` in `functions/.env` enforces (DECISIONS #54, supersedes the 2026-07-09 "monitor permanently" call). Jeff allowlists the custom domain on the reCAPTCHA key, then flips. History: enforcement 401'd 100% of app.powerupcastle.app traffic on 2026-07-03 → rolled back 2026-07-04. Abuse protection meanwhile: per-uid/per-name rate limits + daily quotas (Phase 1.8/3.5) |
 | Infra hardening (Phase 1.8) | shipped | security headers, API-key referrer restriction, IP_HASH_SECRET, bypass rate-limit (10/day) |
 | Ada UX pass (Phase 2) | shipped | AI Hint ×3/game (engine arrow) · Hall 3-tier split · review kid-mode (engine numbers folded) · MuteButton mounted + reduced-motion celebrations · friendly unlock copy ("N Daily Fives") · in-game host whispers (check/castle/promote, throttled templates) · invite dialog focus-trap/Escape · board keyboard cursor + aria · honest Shop/Tournament copy |
 | Shared definitions (Phase 3.1) | shipped | one source of truth in `functions/src/shared/` (roomTypes, personas, wizard types+spells); web imports via `@shared` alias |
@@ -92,12 +92,14 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Invitations (play/duel invites) | shipped | sendInvite/respond/cancel + InviteInbox (focus-trapped dialog) |
 | Presence + Hearth ticker | shipped | 20s heartbeat, `chat_identity` shadow (server-bound names), online list + find player |
 | CI (GitHub Actions) | shipped | typecheck+lint+test+build + emulator rules-tests on every push/PR; weekly E2E smoke workflow |
-| Cosmetics / Theme Shop | **partial** | more sets "unlock soon" |
+| Cosmetics / Theme Shop | shipped | 8 piece sets (classic, outline, cburnett, fantasy, animated Glowing Crystal, stone, chibi, hd), every entry `locked: false` in `cosmetics/pieceSets.tsx` — nothing is "coming soon"; the 🔒 branch in `ShopScreen.tsx` is unreachable |
 | Library / Book Owl | shipped | proxies book-seek |
-| Side games (Forest, Wizard's Duel + v2, Knight's Hop, Knight's Run, Tower Defense) | shipped | |
+| Side games (Forest, Wizard's Duel, Knight's Hop, Knight's Run, The Siege) | shipped | `games/wizardv2` deleted 2026-09-29 (REVIEW Phase 0) |
 | Terminal / MUD easter-egg | shipped | |
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
+| Landing site + parent guides + OG cards | shipped | `apps/landing/` (static, Firebase Hosting target `landing`): structured data, robots + sitemap, `guides/` (how-to-teach-a-kid-chess, is-online-chess-safe-for-kids); OpenGraph + Twitter cards on the app (`apps/web/index.html`, `og.png`) and on the guides |
 | Mobile/iPad polish v2 (Phase 6) | shipped | safe-area insets on headers; `pointer:coarse` ≥44px tap targets; Plot/Daily/Leaderboard stack in iPad portrait |
+| 3D board (three.js) | shipped | `apps/web/src/board3d/`; 🎲 3D/2D toggle (`useView3d`, remembered across screens) on Local / AI / Online / Review / Daily Five / Plot / Wizard's Duel; keyboard cursor + ARIA are 2D-only (REVIEW Phase 2) |
 | LLM/TTS daily quota enforcement | shipped | `consumeDailyQuota`, chat rate-limit |
 | Billing budget alert (COST_GUARDRAILS Layer 3) | shipped | $25/mo budget, 50/90/100% email alerts (verified 2026-07-03) |
 | First-visit onboarding funnel | shipped | `FirstVisitGuide` — one-time, skippable (Phase 1A) |
@@ -121,4 +123,6 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 - Engine feedback: `apps/web/src/engine/{classify,brilliant,analyzeGame}.ts`
 - Host commentary / recap: `functions/src/commentary/`
 - Castle identity + points: `apps/web/src/castle/`, `functions/src/castle/`
+- 3D board: `apps/web/src/board3d/` · The Siege: `apps/web/src/games/siege/`, `functions/src/siege/`
+- Landing + guides: `apps/landing/`
 - Open product questions still unresolved: `docs/OPEN_QUESTIONS.md` (cross-check against §3 before assuming something is unbuilt)

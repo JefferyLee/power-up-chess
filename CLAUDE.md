@@ -9,6 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **What exists / how done it is:** `docs/FEATURE_MAP.md` (living source of truth — Hall doors → routes → points → status).
 - **Run it:** `pnpm install && pnpm dev` (starts the web app on Vite). See `README.md` → Quickstart.
 - **Stack & data model:** `docs/TECHNICAL_ARCHITECTURE.md`. **Still-open decisions:** `docs/OPEN_QUESTIONS.md`.
+- **3D board:** `apps/web/src/board3d/` (three.js). The 🎲 3D/2D toggle (`useView3d.ts`) is offered on Local / AI / Online / Review / Daily Five / Plot / Wizard's Duel; keyboard + ARIA exist on the 2D board only.
+- **The Siege (Tower Defense):** chess-themed 3D game at `/arcade/tower-defense` — client `apps/web/src/games/siege/`, server `functions/src/siege/`; no castle points. Spec: `docs/SIEGE_DESIGN.md`.
+- **Review checklist / refactor plan:** `docs/REVIEW_2026-09.md` — phased must-fix → hardening → front-end → upgrades list; tick items there as they land.
 
 ## Product Context (load before designing or coding)
 
@@ -42,7 +45,7 @@ When a request is ambiguous, prefer the most specific document:
 - Backend: **Firebase** — Hosting, Firestore (room state + realtime listeners), Cloud Functions (authoritative move validator), Anonymous Auth
 - Host commentary: **`gemini-3.5-flash`** called from Cloud Functions only (API key never on the client)
 - Storage: **IndexedDB** for MVP0 match history; Firestore for live room state
-- Devices: **desktop + tablet** in MVP0, no phone
+- Devices: **desktop + tablet** primary; phones supported but not a primary target (DECISIONS #22 superseded 2026-07-02)
 
 ## Commentary Policy (load before writing host code)
 
@@ -55,7 +58,7 @@ Per-move LLM calls are **selective**:
 | Capture Spark card body | Template |
 | Post-game Story Review | Single LLM call per game |
 
-Always cache by `(host, classification, fenBefore, moveUci, playerName)`. Always fall back to template on LLM timeout (>3s).
+Always cache by `(host, classification, fenBefore, moveUci, playerName)`. Always fall back to template on LLM timeout (8 s — `callGeminiWithTimeout` in `functions/src/commentary/gemini.ts`; the cache is Firestore `commentary/{hash}`).
 
 ## Move Classification Thresholds (locked for MVP0)
 
@@ -71,9 +74,9 @@ Brilliant is a separate heuristic (best/near-best + sacrifice + sacrifice not tr
 
 ## Working Style Notes Specific to This Project
 
-- Several technical items are still officially "open" in `docs/OPEN_QUESTIONS.md` (clocks, undo, training-mode hints, mistake-streak handling). Surface these before implementing.
+- Clocks, takeback/undo, AI-practice hints and mistake-streak handling are **decided** (`docs/DECISIONS.md` #34–#37, #20) — don't reopen them. What is genuinely open lives in `docs/OPEN_QUESTIONS.md` (two-player hint consent, name-address cadence, "what were you thinking" prompts, both-host mode, card gallery, per-book rights); surface those before implementing.
 - `docs/books_and_references/` contains ~440 MB of source PDFs/EPUBs and is **git-ignored**. Only its `README.md` is committed.
 - When introducing copy/UI text, match host voice rules: warm, specific, not babyish, no false praise, no unsourced chess history. Examples in `docs/HOST_PERSONAS.md`.
-- The `data/puzzles/*.json` paths referenced in `docs/PUZZLE_CONTENT_PIPELINE.md` are target schemas, not existing files yet.
+- `data/puzzles/lichess.json` is the shipped puzzle bank (Lichess CC0 import, 5,362 puzzles). The other `data/puzzles/*.json` paths in `docs/PUZZLE_CONTENT_PIPELINE.md` (`sources.json`, `puzzles.json`, `puzzle_attempt_schema.json`) are target schemas for future curated sets, not existing files.
 - For audits / MVP acceptance checks / multi-screen sweeps, fan out one agent per dimension and synthesize. Don't grep + read serially in the main loop — burn through context for no reason. See `docs/WORKFLOWS.md` for the project's common workflow shapes.
 - When generating content (riddles, lore, puzzles, stories, host lines): use LLM agents for *candidate generation* only — child-safety rules in `docs/DECISIONS.md` mean every shipped string passes through a human gate. Adversarial-verification can pre-filter (chess legality, age-appropriateness, host voice), but the keepers are picked by Jeff, not the model.
