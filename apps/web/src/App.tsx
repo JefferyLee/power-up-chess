@@ -1,42 +1,9 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { LocalGameRoute } from './screens/LocalGameRoute'
-import { OnlineGameScreen } from './screens/OnlineGameScreen'
-import { PostGameAnalysisScreen } from './screens/PostGameAnalysisScreen'
-import { HistoryScreen } from './screens/HistoryScreen'
-import { PlayerGamesScreen } from './screens/PlayerGamesScreen'
-import { GameArchiveScreen } from './screens/GameArchiveScreen'
-import { PuzzleGardenScreen } from './puzzles/PuzzleGardenScreen'
-import { PlotScreen } from './puzzles/PlotScreen'
-import { CalibrationScreen } from './puzzles/CalibrationScreen'
-import { LeaderboardScreen } from './puzzles/LeaderboardScreen'
-import { DailyFiveScreen } from './puzzles/DailyFiveScreen'
-import { LegendsHallScreen } from './puzzles/LegendsHallScreen'
-import { MasterAtriumScreen } from './puzzles/MasterAtriumScreen'
-import { LearnRoute } from './learn/LearnRoute'
-import { LessonScreen } from './learn/LessonScreen'
-import { AiPracticeRoute } from './screens/AiPracticeRoute'
+import { lazy, Suspense, useEffect } from 'react'
+import { BrowserRouter, matchRoutes, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CurrentChampionProvider } from './tournament/useCurrentChampion'
 import { CastleEntry } from './castle/CastleEntry'
-import { ForestRoute } from './games/forest/ForestRoute'
-import { WizardDuelRoute, WizardRoomRoute } from './games/wizard/WizardDuelRoute'
-import { WizardWarningGate } from './games/wizard/WizardWarningGate'
-import { ShopScreen } from './cosmetics/ShopScreen'
-import { LibraryRoute } from './library/LibraryRoute'
-import { KnightsHopRoute } from './games/knightshop/KnightsHopRoute'
-import { KnightsRunRoute } from './games/knightsrun/KnightsRunRoute'
-import { TowerDefenseScreen } from './screens/TowerDefenseScreen'
-import { PrivacyScreen } from './screens/PrivacyScreen'
-import { EndgameRoute } from './endgame/EndgameRoute'
-import { EndgameLessonScreen } from './endgame/EndgameLessonScreen'
-import { OpeningsRoute } from './openings/OpeningsRoute'
-import { OpeningLessonScreen } from './openings/OpeningLessonScreen'
-import { TournamentRoute } from './tournament/TournamentRoute'
-import { AdventurerPlaqueScreen } from './me/AdventurerPlaqueScreen'
-import { TeamPage } from './teams/TeamPage'
 import { FloatingBack } from './nav/FloatingBack'
-import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
 import { usePresenceHeartbeat } from './castle/usePresenceHeartbeat'
 import { useRouteLocation } from './castle/useRouteLocation'
 import { trackScreen } from './firebase/analytics'
@@ -44,6 +11,7 @@ import { InviteInbox } from './invitations/InviteInbox'
 import { OutgoingInviteProvider } from './invitations/OutgoingInviteContext'
 import { SentInviteToast } from './invitations/SentInviteToast'
 import { UserCardHost } from './invitations/UserCardHost'
+import { ROUTES } from './routes'
 
 /** Single source of truth for presence — runs at the App root so every
  *  authenticated route auto-publishes a location to lobby/presence
@@ -65,23 +33,29 @@ function GlobalScreenTracker() {
   return null
 }
 
-/** Strip dynamic ids out of the URL so /r/abc and /r/xyz both report as
- *  "chess_room" — keeps the GA event taxonomy small + privacy-friendly. */
+const ROUTE_PATTERNS = ROUTES.map((r) => ({ path: r.path }))
+const NAME_BY_PATH = new Map(ROUTES.map((r) => [r.path, r.name]))
+
+/** Resolve the URL to the registry's screen name so /r/abc and /r/xyz
+ *  both report as "chess_room" — keeps the GA event taxonomy small +
+ *  privacy-friendly (no room ids, player names or team ids). */
 function genericScreenName(pathname: string): string {
   if (pathname === '/') return 'castle_gate_or_hall'
-  if (pathname.startsWith('/r/')) return 'chess_room'
-  if (pathname.startsWith('/wizard/')) return 'wizard_room'
-  if (pathname.startsWith('/puzzles/plot/')) return 'puzzle_plot'
-  if (pathname.startsWith('/puzzles/') && pathname !== '/puzzles')
-    return pathname.replace(/\/[^/]+$/, '') + '/_'
-  if (pathname.startsWith('/learn/') && pathname !== '/learn')
-    return 'lesson'
-  if (pathname.startsWith('/openings/') && pathname !== '/openings')
-    return 'opening_lesson'
-  if (pathname.startsWith('/endgame/') && pathname !== '/endgame')
-    return 'endgame_lesson'
-  return pathname
+  const matched = matchRoutes(ROUTE_PATTERNS, pathname)?.[0]?.route.path
+  return (matched && NAME_BY_PATH.get(matched)) ?? pathname
 }
+
+/** Shown for the moment a door's code takes to arrive. Navigations run
+ *  as transitions, so on a warm cache this never paints at all. */
+function DoorOpening() {
+  return (
+    <p role="status" style={{ margin: '3rem auto', textAlign: 'center', opacity: 0.75 }}>
+      Opening the door…
+    </p>
+  )
+}
+
+const LAZY_ROUTES = ROUTES.map((r) => ({ path: r.path, Screen: lazy(r.load) }))
 
 export function App() {
   return (
@@ -95,42 +69,16 @@ export function App() {
         <InviteInbox />
         <SentInviteToast />
         <FloatingBack />
-        <Routes>
-          <Route path="/" element={<CastleEntry />} />
-          <Route path="/local" element={<LocalGameRoute />} />
-          <Route path="/ai" element={<AiPracticeRoute />} />
-          <Route path="/r/:roomId" element={<OnlineGameScreen />} />
-          <Route path="/review" element={<PostGameAnalysisScreen />} />
-          <Route path="/history" element={<HistoryScreen />} />
-          <Route path="/history/:name" element={<PlayerGamesScreen />} />
-          <Route path="/archive" element={<GameArchiveScreen />} />
-          <Route path="/learn" element={<LearnRoute />} />
-          <Route path="/learn/:lessonId" element={<LessonScreen />} />
-          <Route path="/puzzles" element={<PuzzleGardenScreen />} />
-          <Route path="/puzzles/calibration" element={<CalibrationScreen />} />
-          <Route path="/puzzles/leaderboard" element={<LeaderboardScreen />} />
-          <Route path="/puzzles/daily" element={<DailyFiveScreen />} />
-          <Route path="/puzzles/legends" element={<LegendsHallScreen />} />
-          <Route path="/puzzles/master" element={<MasterAtriumScreen />} />
-          <Route path="/puzzles/plot/:plot" element={<PlotScreen />} />
-          <Route path="/forest" element={<ForestRoute />} />
-          <Route path="/wizard" element={<WizardWarningGate><WizardDuelRoute /></WizardWarningGate>} />
-          <Route path="/wizard/:roomId" element={<WizardWarningGate><WizardRoomRoute /></WizardWarningGate>} />
-          <Route path="/shop" element={<ShopScreen />} />
-          <Route path="/library" element={<LibraryRoute />} />
-          <Route path="/knights-hop" element={<KnightsHopRoute />} />
-          <Route path="/knights-run" element={<KnightsRunRoute />} />
-          <Route path="/arcade/tower-defense" element={<TowerDefenseScreen />} />
-          <Route path="/privacy" element={<PrivacyScreen />} />
-          <Route path="/endgame" element={<EndgameRoute />} />
-          <Route path="/endgame/:id" element={<EndgameLessonScreen />} />
-          <Route path="/openings" element={<OpeningsRoute />} />
-          <Route path="/openings/:id" element={<OpeningLessonScreen />} />
-          <Route path="/tournament" element={<TournamentRoute />} />
-          <Route path="/me" element={<AdventurerPlaqueScreen />} />
-          <Route path="/team/:teamId" element={<TeamPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<DoorOpening />}>
+          <Routes>
+            {/* The castle gate is the first paint — eager on purpose. */}
+            <Route path="/" element={<CastleEntry />} />
+            {LAZY_ROUTES.map(({ path, Screen }) => (
+              <Route key={path} path={path} element={<Screen />} />
+            ))}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
         </UserCardHost>
         </OutgoingInviteProvider>
         </CurrentChampionProvider>

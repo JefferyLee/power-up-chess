@@ -5,7 +5,7 @@
 // (avatar + name + castle points) and the OnlineList. Below: a row of
 // arched-top door tiles for the chess rooms + puzzles + forest.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentProps } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/app'
@@ -42,10 +42,11 @@ import { FeedbackInbox } from './FeedbackInbox'
 import { useAuthUid } from '../auth/useAuthUid'
 import { usePublicStats } from './usePublicStats'
 import { useSound } from '../sound/useSound'
+import { DOOR_ROUTES, PLAY_GATE_POINTS, WIZARD_GATE_DEFAULT, type DoorDef, type DoorSection } from '../routes'
 import './HallScreen.css'
 
 const DEFAULT_OPPONENT_NAME = 'Friend'
-const UNLOCK_THRESHOLD = 200
+const UNLOCK_THRESHOLD = PLAY_GATE_POINTS
 
 export function HallScreen() {
   const navigate = useNavigate()
@@ -115,7 +116,7 @@ export function HallScreen() {
     publicStats.status === 'ready' &&
     typeof publicStats.stats.wizardGateMinPoints === 'number'
       ? publicStats.stats.wizardGateMinPoints
-      : 1000
+      : WIZARD_GATE_DEFAULT
   const isWizardUnlocked =
     !(identity?.isBypass ?? false) && castlePoints >= wizardGate
 
@@ -174,9 +175,6 @@ export function HallScreen() {
   const handleLocal = () => openTcDialog('local')
   const handlePractice = () => openTcDialog('practice')
 
-  const handlePuzzles = () => navigate('/puzzles')
-  const handleForest = () => navigate('/forest')
-
   // Door chooser: when the kid taps Online Chess or Wizard's Duel,
   // show the list of currently-open rooms first. They can join one,
   // or open a new room (which kicks off the original flow).
@@ -211,6 +209,72 @@ export function HallScreen() {
   const pointsToGo = Math.max(0, UNLOCK_THRESHOLD - castlePoints)
   const dailiesToGo = Math.max(1, Math.ceil(pointsToGo / 10))
   const lockedBlurb = `Locked — ${pointsToGo} points to go (about ${dailiesToGo} Daily Five${dailiesToGo === 1 ? '' : 's'}).`
+
+  // Door tiles come from the route registry (src/routes.tsx). The four
+  // stateful doors — gates, dialogs, waiting-room badges — layer their
+  // live props on top of the registry copy.
+  const liveDoorProps = (door: DoorDef): Partial<ComponentProps<typeof RoomDoor>> => {
+    switch (door.iconKey) {
+      case 'online':
+        return {
+          label: creating ? 'Opening…' : door.label,
+          blurb: isUnlocked ? door.blurb : lockedBlurb,
+          locked: !isUnlocked,
+          loading: creating,
+          onClick: handleOnlineDoor,
+          disabled: creating || !isUnlocked,
+          title: !isUnlocked ? lockedTitle : undefined,
+          badge: waiting.chess.length > 0 ? formatRoomCount(waiting.chess.length) : undefined,
+          badgeTitle:
+            waiting.chess.length > 0
+              ? `${waiting.chess.length} chess room${waiting.chess.length === 1 ? '' : 's'} waiting`
+              : undefined,
+        }
+      case 'local':
+        return { onClick: handleLocal }
+      case 'practice-ai':
+        return {
+          label: door.label.replace('{host}', host.name),
+          blurb: isUnlocked ? door.blurb : lockedBlurb,
+          variant: hostId === 'lucy' ? 'mossy' : 'starry',
+          locked: !isUnlocked,
+          onClick: handlePractice,
+          disabled: !isUnlocked,
+          title: !isUnlocked ? lockedTitle : undefined,
+        }
+      case 'wizard':
+        return {
+          blurb: isWizardUnlocked ? door.blurb : `Locked — needs ${wizardGate} castle points.`,
+          locked: !isWizardUnlocked,
+          onClick: handleWizardDoor,
+          disabled: !isWizardUnlocked,
+          title: isWizardUnlocked
+            ? undefined
+            : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`,
+          badge: waiting.wizard.length > 0 ? formatRoomCount(waiting.wizard.length) : undefined,
+          badgeTitle:
+            waiting.wizard.length > 0
+              ? `${waiting.wizard.length} duel${waiting.wizard.length === 1 ? '' : 's'} waiting`
+              : undefined,
+        }
+      default:
+        return {}
+    }
+  }
+  const doorsIn = (section: DoorSection) =>
+    DOOR_ROUTES.filter((r) => r.door.section === section).map((r) => (
+      <RoomDoor
+        key={r.door.iconKey}
+        icon={r.door.icon}
+        iconKey={r.door.iconKey}
+        label={r.door.label}
+        blurb={r.door.blurb}
+        variant={r.door.variant}
+        companionImg={r.door.companionImg}
+        onClick={() => navigate(r.path)}
+        {...liveDoorProps(r.door)}
+      />
+    ))
 
   return (
     <div className="puc-hall">
@@ -337,46 +401,7 @@ export function HallScreen() {
       <section className="puc-hall__doors puc-hall__doors--learn">
         <h2 className="puc-hall__doors-title">Learn chess</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
-          <RoomDoor
-            icon="📖"
-            iconKey="learn"
-            label="Learn chess"
-            blurb="Five short lessons. Start here if you're new."
-            variant="mossy"
-            onClick={() => navigate('/learn')}
-          />
-          <RoomDoor
-            icon="🌱"
-            iconKey="puzzles"
-            label="Puzzle Garden"
-            blurb="Tactical puzzles, your own pace."
-            variant="mossy"
-            onClick={handlePuzzles}
-          />
-          <RoomDoor
-            icon="♞"
-            iconKey="knights-hop"
-            label="Knight's Hop"
-            blurb="Move like a real chess piece. Pawn + Knight levels."
-            variant="mossy"
-            onClick={() => navigate('/knights-hop')}
-          />
-          <RoomDoor
-            icon="♔"
-            iconKey="endgame"
-            label="Endgame Drills"
-            blurb="Classic checkmates against a stubborn defender."
-            variant="oak"
-            onClick={() => navigate('/endgame')}
-          />
-          <RoomDoor
-            icon="♕"
-            iconKey="opening"
-            label="Opening Trainer"
-            blurb="Italian, Spanish, Queen's Gambit — principled moves."
-            variant="starry"
-            onClick={() => navigate('/openings')}
-          />
+          {doorsIn('learn')}
         </div>
         {error && <p className="puc-hall__error">{error}</p>}
       </section>
@@ -385,59 +410,7 @@ export function HallScreen() {
       <section className="puc-hall__doors puc-hall__doors--play">
         <h2 className="puc-hall__doors-title">Play a game</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--learn">
-          <RoomDoor
-            icon="🏰"
-            iconKey="online"
-            label={creating ? 'Opening…' : 'Online Chess'}
-            blurb={isUnlocked ? 'Play a friend with a private link.' : lockedBlurb}
-            variant="oak"
-            locked={!isUnlocked}
-            loading={creating}
-            onClick={handleOnlineDoor}
-            disabled={creating || !isUnlocked}
-            title={!isUnlocked ? lockedTitle : undefined}
-            badge={waiting.chess.length > 0 ? formatRoomCount(waiting.chess.length) : undefined}
-            badgeTitle={
-              waiting.chess.length > 0
-                ? `${waiting.chess.length} chess room${waiting.chess.length === 1 ? '' : 's'} waiting`
-                : undefined
-            }
-          />
-          <RoomDoor
-            icon="👥"
-            iconKey="local"
-            label="Local Chess"
-            blurb="Pass-and-play at one device."
-            variant="oak"
-            onClick={handleLocal}
-          />
-          <RoomDoor
-            icon="♞"
-            iconKey="practice-ai"
-            label={`Practice with ${host.name}`}
-            blurb={isUnlocked ? 'Gentle AI sparring.' : lockedBlurb}
-            variant={hostId === 'lucy' ? 'mossy' : 'starry'}
-            locked={!isUnlocked}
-            onClick={handlePractice}
-            disabled={!isUnlocked}
-            title={!isUnlocked ? lockedTitle : undefined}
-          />
-          <RoomDoor
-            icon="🏆"
-            iconKey="tournament"
-            label="Weekly Tournament"
-            blurb="Weekly Swiss — sign up, get paired, play your rounds."
-            variant="oak"
-            onClick={() => navigate('/tournament')}
-          />
-          <RoomDoor
-            icon="📜"
-            iconKey="archive"
-            label="Hall of Games"
-            blurb="Every online game, replay and review. NEW."
-            variant="parchment"
-            onClick={() => navigate('/archive')}
-          />
+          {doorsIn('play')}
         </div>
       </section>
 
@@ -449,72 +422,7 @@ export function HallScreen() {
       <section className="puc-hall__doors puc-hall__doors--fun">
         <h2 className="puc-hall__doors-title">Take a break</h2>
         <div className="puc-hall__doors-grid puc-hall__doors-grid--fun">
-          <RoomDoor
-            icon="🌲"
-            iconKey="forest"
-            label="Forest Adventure"
-            blurb="Dodge red, collect gold, jump trees."
-            variant="forest"
-            onClick={handleForest}
-          />
-          <RoomDoor
-            icon="✨"
-            iconKey="wizard"
-            label="Wizard's Duel"
-            blurb={
-              isWizardUnlocked
-                ? 'Chess with magic spells — for fun, not for chess practice.'
-                : `Locked — needs ${wizardGate} castle points.`
-            }
-            variant="starry"
-            locked={!isWizardUnlocked}
-            onClick={handleWizardDoor}
-            disabled={!isWizardUnlocked}
-            title={
-              isWizardUnlocked
-                ? undefined
-                : `Earn ${wizardGate} castle points to unlock Wizard's Duel.`
-            }
-            badge={waiting.wizard.length > 0 ? formatRoomCount(waiting.wizard.length) : undefined}
-            badgeTitle={
-              waiting.wizard.length > 0
-                ? `${waiting.wizard.length} duel${waiting.wizard.length === 1 ? '' : 's'} waiting`
-                : undefined
-            }
-          />
-          <RoomDoor
-            icon="🎨"
-            iconKey="shop"
-            label="Theme Shop"
-            blurb="Pick the look of your chess pieces — 8 sets to collect."
-            variant="parchment"
-            onClick={() => navigate('/shop')}
-          />
-          <RoomDoor
-            icon="📚"
-            iconKey="library"
-            label="The Library"
-            blurb="Chess stories + the Book Owl's reading lists."
-            variant="parchment"
-            companionImg="/sprites/hall/book-owl.png?v=1"
-            onClick={() => navigate('/library')}
-          />
-          <RoomDoor
-            icon="🐎"
-            iconKey="knights-run"
-            label="Knight's Run"
-            blurb="Auto-runner — jump over pieces and rack up distance. NEW."
-            variant="starry"
-            onClick={() => navigate('/knights-run')}
-          />
-          <RoomDoor
-            icon="⚔️"
-            iconKey="tower-defense"
-            label="Tower Defense"
-            blurb="Your pieces defend the castle."
-            variant="oak"
-            onClick={() => navigate('/arcade/tower-defense')}
-          />
+          {doorsIn('fun')}
         </div>
       </section>
 

@@ -15,12 +15,10 @@ export default defineConfig({
       // autoUpdate: SW silently swaps in the new build on next nav.
       // Acceptable for a kids app — no annoying "Update?" toast.
       registerType: 'autoUpdate',
-      includeAssets: [
-        'favicon.svg',
-        'icons/apple-touch-icon.png',
-        'icons/icon-192.png',
-        'icons/icon-512.png',
-      ],
+      // No includeAssets / includeManifestIcons: the glob below already
+      // picks up favicon.svg and icons/*.png, and listing them again
+      // precached each icon twice.
+      includeManifestIcons: false,
       manifest: {
         name: 'Power Up Chess',
         short_name: 'Power Up',
@@ -43,21 +41,26 @@ export default defineConfig({
       workbox: {
         // Precache the Vite asset bundle so the shell is offline-ready.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // 25 MB of audio + the 96 KB stories bundle + the 14 Hall
-        // door PNGs (~110 KB each) are kept out of the SW precache.
-        // Fetch on demand and let the runtime cache pick them up.
+        // Big or optional things stay out of the SW precache and are
+        // fetched on demand; the runtime caches below pick them up.
         globIgnores: [
+          // 25 MB of TTS audio.
           '**/audio/**',
           '**/stories.bundle.json',
-          '**/sprites/doors/**',
-          '**/sprites/hosts/**',
-          '**/sprites/hall/**',
+          // Hall door / host / hall art + the cosmetic piece sets
+          // (hd, chibi, stone ≈ 2 MB; the default 'classic' set is SVG
+          // and bundled).
+          '**/sprites/**',
           // 3D assets (model textures are .png — keep them out of the
           // precache; the runtime models3d cache picks them up).
           '**/models3d/**',
+          // Share-card image — only social crawlers fetch it.
+          'og.png',
+          // Phaser (Knight's Run) and three.js (3D board, Tower Defense)
+          // — 1.3 MB and 0.9 MB chunks named by codeSplitting below.
+          'assets/phaser-*.js',
+          'assets/three-*.js',
         ],
-        // Lift the precache file-size cap so the biggest JS chunk fits.
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Make new deploys take effect on next visit instead of waiting
         // for every tab to close. Without these, iPhone Safari can keep
         // serving the previous shell indefinitely from the old SW.
@@ -69,27 +72,51 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            // Hall door art (full-door PNGs). Visited once when the
-            // kid opens the Hall, then static. Pattern is NOT end-
-            // anchored so it still matches the ?v=N cache-buster query
-            // the doors carry (see DOOR_ART_VERSION in RoomDoor.tsx).
-            urlPattern: /\/sprites\/(doors|hosts|hall)\/.*\.png(\?.*)?$/,
+            // Hall door / host / hall art + cosmetic piece-set PNGs.
+            // Visited once, then static. Pattern is NOT end-anchored so
+            // it still matches the ?v=N cache-buster query the doors
+            // carry (see DOOR_ART_VERSION in RoomDoor.tsx).
+            urlPattern: /\/sprites\/.*\.png(\?.*)?$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'puc-doors-v2',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheName: 'puc-sprites-v1',
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
-            // Pre-generated TTS mp3s + the Hall music bed. Cache-first
-            // so repeat plays are instant and survive offline use.
-            // Range-aware so seek works. Pattern tolerates a ?v= query
-            // (the Hall music uses one as a cache-buster). Cache name
-            // bumped v1→v2 to flush a poisoned entry: hall-hearth.mp3
-            // was requested before the file existed and the SPA rewrite
-            // cached index.html under the mp3 URL.
-            urlPattern: /\/audio\/.*\.mp3(\?.*)?$/,
+            // Code that is too big to precache for everyone: Phaser and
+            // three.js (see globIgnores). Content-hashed, so cache-first
+            // is safe; a new build simply fetches a new URL.
+            urlPattern: /\/assets\/(phaser|three)-[^/]+\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'puc-chunks-v1',
+              expiration: { maxEntries: 6, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Puzzle bank (data/puzzles/lichess.json, ~2.6 MB) — served
+            // as a hashed asset and fetched on first use (puzzles/loader.ts).
+            urlPattern: /\/assets\/lichess-[^/]+\.json$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'puc-puzzles-v1',
+              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Pre-generated TTS mp3s + the Hall music bed, plus the
+            // bundled mp3s under /assets/ (Forest music bed, gate sounds).
+            // Cache-first so repeat plays are instant and survive
+            // offline use. Range-aware so seek works. Pattern tolerates
+            // a ?v= query (the Hall music uses one as a cache-buster).
+            // Cache name bumped v1→v2 to flush a poisoned entry:
+            // hall-hearth.mp3 was requested before the file existed and
+            // the SPA rewrite cached index.html under the mp3 URL.
+            urlPattern: /\/(audio|assets)\/[^/]+\.mp3(\?.*)?$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'puc-audio-v2',
@@ -145,6 +172,25 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Stable chunk names for the two big optional libraries so the
+        // PWA config above can keep them out of the precache and
+        // runtime-cache them by name. Dependencies stay out of the
+        // group on purpose: with the default (recursive) capture, R3F
+        // drags react/react-dom into the three chunk and the entry then
+        // preloads 1.2 MB of three.js.
+        codeSplitting: {
+          includeDependenciesRecursively: false,
+          groups: [
+            { name: 'phaser', test: /[\\/]node_modules[\\/]phaser[\\/]/ },
+            { name: 'three', test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       // Lets the web app import puzzle data that lives at the repo root,

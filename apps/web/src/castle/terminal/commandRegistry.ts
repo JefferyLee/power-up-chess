@@ -1703,8 +1703,8 @@ registerCommand({
   tier: 'basic',
   description: 'Solve a tactical puzzle. /puzzle to start, /puzzle <move> to play, /puzzle skip to give up.',
   handle: async (args, ctx) => {
-    const { Chess } = await import('chess.js')
-    const { ALL_PUZZLES } = await import('../../puzzles/loader')
+    const { loadPuzzles } = await import('../../puzzles/loader')
+    const ALL_PUZZLES = await loadPuzzles()
 
     const arg = args.trim()
     let session = loadPuzzle()
