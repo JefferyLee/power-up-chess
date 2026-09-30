@@ -70,6 +70,8 @@ gh secret set GCP_SA_KEY < key.json && rm key.json
 | API Keys Viewer (`roles/serviceusage.apiKeysViewer`) | listed by the Firebase IAM docs as required to deploy via the CLI |
 | Service Usage Viewer (`roles/serviceusage.serviceUsageViewer`) | the CLI checks the required Google APIs are enabled before deploying |
 
+The CLI also tries to *enable* the APIs it needs (`cloudbilling.googleapis.com` among them) and the viewer role cannot do that, so enable them once from an owner account instead of widening the deploy account: the 2026-09-30 setup enabled Cloud Billing; the rest were already on.
+
 Not needed: **Cloud Build** roles (the Cloud Functions service runs the build
 with the project's own build service account, already working from laptop
 deploys) and **Artifact Registry Administrator** — unless you would rather let
