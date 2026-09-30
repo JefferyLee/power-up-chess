@@ -56,6 +56,9 @@ export default defineConfig({
           '**/models3d/**',
           // Share-card image — only social crawlers fetch it.
           'og.png',
+          // Phaser (Knight's Run, 1.35 MB): fetched on demand, runtime-cached
+          // by the /assets/*.js rule. The chunk is named after phaser.esm.js.
+          'assets/phaser*.js',
           // Phaser (Knight's Run) and three.js (3D board, Tower Defense)
         ],
         // Make new deploys take effect on next visit instead of waiting
@@ -64,11 +67,10 @@ export default defineConfig({
         // skipWaiting: new SW activates the moment install finishes.
         // clientsClaim: that SW immediately controls open pages too.
         // cleanupOutdatedCaches: prune precache entries from prior builds.
-        // Anything bigger than this (the phaser chunk, 1.35 MB) is fetched on
-        // demand and runtime-cached by the assets rule below. The entry and
-        // the three.js chunk sit under it; if the entry ever crosses 1 MiB the
-        // build prints a "won't be precached" warning — treat that as a bug.
-        maximumFileSizeToCacheInBytes: 1024 * 1024,
+        // vite-plugin-pwa FAILS the build for any precache candidate above
+        // this, which is the guard we want: the entry (≈0.95 MB) and the
+        // three chunk (≈0.9 MB) must stay under it; phaser is glob-ignored.
+        maximumFileSizeToCacheInBytes: 1536 * 1024,
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
