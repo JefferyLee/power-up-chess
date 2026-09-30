@@ -45,6 +45,9 @@ const firebaserc = JSON.parse(
 )
 const projectId = process.env.FIREBASE_PROJECT ?? firebaserc.projects.default
 
+// User ADC (gcloud auth application-default login) can call Identity
+// Toolkit only with a quota project; without this the Auth call 403s.
+process.env.GOOGLE_CLOUD_QUOTA_PROJECT ??= projectId
 initializeApp({ credential: applicationDefault(), projectId })
 const auth = getAuth()
 
