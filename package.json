@@ -17,7 +17,11 @@
     "typecheck": "pnpm -r typecheck",
     "emulators": "firebase emulators:start",
     "test:rules": "firebase emulators:exec --only firestore \"pnpm --filter @power-up-chess/functions test:rules\"",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "deploy:web": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
+    "functions:lockfile": "tmp=$(mktemp -d) && cp functions/package.json functions/pnpm-lock.yaml \"$tmp\" && pnpm --dir \"$tmp\" install --lockfile-only --no-frozen-lockfile --ignore-workspace && cp \"$tmp/pnpm-lock.yaml\" functions/pnpm-lock.yaml"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

@@ -1,0 +1,130 @@
+# Deploy — Phase 1 of docs/REVIEW_2026-09.md: ship from GitHub Actions, not a laptop.
+#
+# Triggers
+#   workflow_run      — after the "CI" workflow finishes on main. The job only runs
+#                       when that run was a green *push* build, and it checks out the
+#                       exact commit CI validated (head_sha), so nothing untested ships.
+#   workflow_dispatch — manual run with a target: all / hosting / functions / rules.
+#
+# A full deploy goes Firestore rules + indexes → functions → hosting, so a new
+# bundle never reaches players before the backend it depends on.
+#
+# Auth: google-github-actions/auth writes the GCP_SA_KEY service-account JSON to
+# disk and exports GOOGLE_APPLICATION_CREDENTIALS, which firebase-tools honours
+# (no FIREBASE_TOKEN, no FIREBASE_CLI_EXPERIMENTS needed). The project id comes
+# from .firebaserc. Runbook — secrets, variables, IAM roles: docs/DEPLOY.md.
+#
+# Node 22, matching ci.yml and the Functions runtime.
+
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: What to deploy
+        type: choice
+        default: all
+        options:
+          - all
+          - hosting
+          - functions
+          - rules
+
+# One deploy at a time, queued — never cancel one that is half-way through.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # workflow_run fires for every CI conclusion; only ship green pushes.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TARGETS: ${{ inputs.targets || 'all' }}
+      # Web build config — public Firebase SDK values (apps/web/.env.example),
+      # held as repository *variables*, not secrets. Vite reads VITE_* from
+      # the process env, so the firebase.json predeploy build picks them up.
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ vars.VITE_FIREBASE_MEASUREMENT_ID }}
+      VITE_APPCHECK_SITE_KEY: ${{ vars.VITE_APPCHECK_SITE_KEY }}
+      VITE_FUNCTIONS_REGION: ${{ vars.VITE_FUNCTIONS_REGION || 'us-central1' }}
+      VITE_USE_EMULATORS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The commit CI validated (workflow_run) or the dispatched ref.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Fail before anything is deployed if a required secret/variable is
+      # missing, and write functions/.env (gitignored) from them. Values are
+      # never echoed; GitHub masks the secret in logs anyway.
+      - name: Preflight — secrets, variables, functions/.env
+        env:
+          IP_HASH_SECRET: ${{ secrets.IP_HASH_SECRET }}
+          APP_CHECK_ENFORCE: ${{ vars.APP_CHECK_ENFORCE || '0' }}
+        run: |
+          case "$TARGETS" in
+            all|functions)
+              if [ -z "$IP_HASH_SECRET" ]; then
+                echo "::error::Secret IP_HASH_SECRET is not set; refusing to deploy functions with the default IP hash key. See docs/DEPLOY.md."
+                exit 1
+              fi
+              printf 'IP_HASH_SECRET=%s\nAPP_CHECK_ENFORCE=%s\n' "$IP_HASH_SECRET" "$APP_CHECK_ENFORCE" > functions/.env
+              ;;
+          esac
+          case "$TARGETS" in
+            all|hosting)
+              if [ -z "$VITE_FIREBASE_API_KEY" ]; then
+                echo "::error::Repository variable VITE_FIREBASE_API_KEY is not set; the web bundle would fail at startup. See docs/DEPLOY.md."
+                exit 1
+              fi
+              ;;
+          esac
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # No --force here: it would delete indexes that exist in the project but
+      # not in firestore.indexes.json. Without it the CLI only adds/updates.
+      - name: Firestore rules + indexes
+        if: env.TARGETS == 'all' || env.TARGETS == 'rules'
+        run: pnpm exec firebase deploy --only firestore:rules,firestore:indexes --non-interactive
+
+      # --force: in non-interactive mode the CLI otherwise aborts when a function
+      # was removed from source (with it, that function is deleted), and it needs
+      # --force to create the Artifact Registry cleanup policy if none exists.
+      # firebase.json predeploy builds functions/ first.
+      - name: Functions
+        if: env.TARGETS == 'all' || env.TARGETS == 'functions'
+        run: pnpm exec firebase deploy --only functions --force --non-interactive
+
+      # firebase.json predeploy runs the web build with the VITE_* env above;
+      # deploys both hosting targets (app + landing).
+      - name: Hosting
+        if: env.TARGETS == 'all' || env.TARGETS == 'hosting'
+        run: pnpm exec firebase deploy --only hosting --non-interactive

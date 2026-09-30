@@ -16,8 +16,13 @@ pnpm dev              # web app on Vite → http://localhost:5173
 Other scripts (run from repo root): `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm emulators` (Firebase). Cloud Functions and Firestore back the live app; most screens work against the deployed backend during local `dev`.
 
 - **Live app:** <https://power-up-chess-dev.web.app> (custom domain **app.powerupcastle.app**, via Cloudflare)
-- **Deploy checklist:** `functions/.env` must define `IP_HASH_SECRET` (random, non-default — gitignored); the Firebase browser API key is referrer-restricted to the app domains + localhost.
 - **What's built + all routes/doors:** [Feature Map & Status](docs/FEATURE_MAP.md) — start here to see current reality vs. the planning docs below.
+
+## Deploying
+
+Pushes to `main` that pass CI deploy automatically from GitHub Actions (`.github/workflows/deploy.yml`: Firestore rules + indexes, then functions, then hosting); the *Deploy* workflow can also be run by hand for a single target. Laptop deploys stay available as `pnpm deploy:web`, `pnpm deploy:functions`, `pnpm deploy:rules`.
+
+[docs/DEPLOY.md](docs/DEPLOY.md) has the runbook: the GitHub secrets/variables and the service-account roles to create, the `functions/pnpm-lock.yaml` rule (`pnpm functions:lockfile` after touching `functions/package.json`), and the Java 21 requirement for `pnpm test:rules`. `functions/.env` must define `IP_HASH_SECRET` (random, non-default — gitignored); the Firebase browser API key is referrer-restricted to the app domains + localhost.
 
 ## Product Documents
 

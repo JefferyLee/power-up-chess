@@ -30,7 +30,18 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # functions/pnpm-lock.yaml is a STANDALONE lockfile (Cloud Build installs
+      # functions/ with pnpm, outside the workspace). Regenerate it exactly the
+      # way the root script does and fail if the committed file changed.
+      - name: functions lockfile drift guard
+        run: |
+          pnpm functions:lockfile
+          if ! git diff --exit-code -- functions/pnpm-lock.yaml; then
+            echo "::error file=functions/pnpm-lock.yaml::functions/pnpm-lock.yaml does not match functions/package.json. Run 'pnpm functions:lockfile' at the repo root and commit the result."
+            exit 1
+          fi
       - run: pnpm typecheck
+      # apps/web lint is `eslint . --max-warnings 80` — the warning ratchet fails CI.
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
