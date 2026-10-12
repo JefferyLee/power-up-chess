@@ -15,6 +15,14 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
 const errors = []
 page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message.slice(0, 160)))
+// Against a deployed origin, an App Check failure or a rules denial is an
+// outage even though every screen still renders (2026-10-11: the hall drew
+// fine while every Firestore read was denied; the old checks passed).
+const firebaseErrors = []
+page.on('console', (m) => {
+  const t = m.text().replace(/\s+/g, ' ')
+  if (/@firebase\/app-check|appCheck\/|permission-denied|insufficient permissions/i.test(t)) firebaseErrors.push(t.slice(0, 160))
+})
 await page.addInitScript(() => {
   localStorage.setItem('puc:castle-identity:v2', JSON.stringify({
     savedAt: Date.now(),
@@ -59,5 +67,6 @@ await step("knight's run (phaser chunk) mounts", async () => {
 })
 await browser.close()
 if (errors.length) { failed++; console.log('page errors:\n' + errors.join('\n')) }
+if (base.startsWith('https://') && firebaseErrors.length) { failed++; console.log('firebase errors (App Check / rules):\n' + [...new Set(firebaseErrors)].slice(0, 8).join('\n')) }
 console.log(failed ? `${failed} failure(s)` : 'all good')
 process.exit(failed ? 1 : 0)
