@@ -4,9 +4,12 @@
 // and an action button:
 //   • Chess / Wizard room → "▸ Watch" navigates the visitor in as a
 //     spectator (Firestore room doc is shared, so they see live moves).
-//   • Solo activities (puzzle plot, Forest, Practice, …) → "→ Join"
-//     navigates to the same screen — won't see the other kid's session,
-//     but ends up in the same activity, which is the user's intent.
+//   • Shared activities (puzzle plots, Forest, …) → "→ Join" navigates to
+//     the same screen — won't see the other kid's session, but ends up in
+//     the same activity, which is the user's intent.
+//   • Practice vs AI / Local Chess → no button (2026-10-12): those games
+//     run on one device with no room to watch, and "Join" read as
+//     "spectate" to the person clicking it.
 //   • Hall (or you) → no button.
 //
 // Sort: you first, then by most-recent heartbeat.
@@ -91,17 +94,9 @@ function viewFor(loc: LocationTag | undefined): LocationView {
         action: { href: '/puzzles/leaderboard', label: '→ Join' },
       }
     case 'practice':
-      return {
-        label: 'Practice vs AI',
-        variant: 'practice',
-        action: { href: '/ai', label: '→ Join' },
-      }
+      return { label: 'Practice vs AI', variant: 'practice' }
     case 'local':
-      return {
-        label: 'Local Chess',
-        variant: 'local',
-        action: { href: '/local', label: '→ Join' },
-      }
+      return { label: 'Local Chess', variant: 'local' }
     case 'forest':
       return {
         label: 'Forest',
