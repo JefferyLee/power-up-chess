@@ -8,7 +8,6 @@ import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
-import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { TemplatePicker } from '../hosts/templates'
 import { CrownBadge } from '../powerups/CrownBadge'
@@ -120,7 +119,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
   // 3D view + fullscreen — same game, alternate renderer.
   const bv = useBoardView()
   const sound = useSound()
-  const { identity, setCastlePoints } = useCastle()
+  const { identity } = useCastle()
   const { overlays: ceremonyOverlays, onMoveApplied, reset: resetCeremony } = useCaptureCeremony({
     hostId, coHostId, picker, view3d: bv.view3d, squareSize: SQUARE_SIZE,
   })
@@ -287,10 +286,9 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
     if (effectiveStatus.kind === 'in_progress') return
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       sound.play('mate-win')
+      // Castle points for the win are settled by the server when
+      // useSaveGame uploads the game.
       addCrowns(1)
-      void awardPoints(identity, { source: 'chess-win', gameId }).then((res) => {
-        if (res) setCastlePoints(res.castlePoints)
-      })
     } else {
       sound.play('draw')
     }
@@ -478,7 +476,7 @@ export function LocalGameScreen({ hostId, coHostId, whiteName, blackName, timeCo
         onBackToMenu={onExit}
         onReview={() =>
           navigate('/review', {
-            state: { pgn: game.pgn(), hostId, whiteName, blackName },
+            state: { pgn: game.pgn(), hostId, whiteName, blackName, gameId },
           })
         }
       />

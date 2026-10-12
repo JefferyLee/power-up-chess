@@ -24,7 +24,6 @@ import type { RoomDoc } from '../rooms/types'
 import { loadProfile, addCrowns } from '../storage/profile'
 import { useCastle } from '../castle/useCastle'
 import { useCosmetics } from '../cosmetics/useCosmetics'
-import { awardPoints } from '../castle/awardPoints'
 import { useResponsiveSquareSize } from '../board/useResponsiveSquareSize'
 import { useBoardView } from '../gameShell/useBoardView'
 import { BoardStage } from '../gameShell/BoardStage'
@@ -553,12 +552,9 @@ function RoomView({ room, roomId, uid, submitMove, onBack, onReview }: RoomViewP
       const youWon = (room.result === 'white' && yourColor === 'w') ||
                      (room.result === 'black' && yourColor === 'b')
       sound.play(youWon ? 'mate-win' : 'mate-loss')
-      if (youWon) {
-        addCrowns(1)
-        void awardPoints(identity, { source: 'chess-win', gameId: roomId, opponent: 'human' }).then((res) => {
-          if (res) setCastlePoints(res.castlePoints)
-        })
-      }
+      // Castle points for the win are settled by the server
+      // (onRoomFinished); the live guest subscription shows the balance.
+      if (youWon) addCrowns(1)
     } else if (!yourColor && room.result && room.result !== 'draw') {
       // Spectator — gentle fanfare regardless of who won.
       sound.play('mate-win')

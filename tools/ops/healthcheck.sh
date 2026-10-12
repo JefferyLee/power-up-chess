@@ -17,7 +17,8 @@ bad() { echo "FAIL $1"; fail=1; }
 
 for o in "${ORIGINS[@]}"; do
   html=$(curl -sS --max-time 15 "$o/" 2>&1) || { bad "$o GET / ($html)"; continue; }
-  if grep -q '<div id="root"' <<<"$html"; then ok "$o index.html"; else bad "$o index.html has no #root"; fi
+  build=$(grep -oE 'name="build" content="[^"]+"' <<<"$html" | sed -E 's/.*content="([^"]+)"/\1/')
+  if grep -q '<div id="root"' <<<"$html"; then ok "$o index.html (build ${build:-unknown})"; else bad "$o index.html has no #root"; fi
   asset=$(grep -oE 'assets/index-[^"]+\.js' <<<"$html" | head -1)
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$o/$asset")
   if [ "$code" = 200 ]; then ok "$o $asset"; else bad "$o $asset -> HTTP $code"; fi

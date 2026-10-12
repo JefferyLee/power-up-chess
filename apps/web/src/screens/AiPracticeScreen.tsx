@@ -6,8 +6,6 @@ import { CapturedPieceGlyph } from '../cosmetics/CapturedPieceGlyph'
 import type { Color, GameStatus, MoveInput, PieceSymbol, Square } from '../chess/types'
 import { resultPartsFromStatus } from '../history/fromStatus'
 import { addCrowns, loadProfile, saveProfile } from '../storage/profile'
-import { useCastle } from '../castle/useCastle'
-import { awardPoints } from '../castle/awardPoints'
 import { hostsLabel, type HostId } from '../hosts/hosts'
 import { HostByline } from '../hosts/HostByline'
 import { useHostWhisper, HostWhisper } from '../hosts/HostWhisper'
@@ -104,7 +102,6 @@ function snapshot(g: ChessGame): GameSnapshot {
 
 export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, timeControl, onExit }: Props) {
   const navigate = useNavigate()
-  const { identity, setCastlePoints } = useCastle()
   const sound = useSound()
   const SQUARE_SIZE = useResponsiveSquareSize(MAX_SQUARE_SIZE)
   // Difficulty is local state so the player can switch mid-screen
@@ -396,6 +393,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
       },
       trackExtra: { ai_difficulty: preset.id },
       sync: true,
+      playerColor: playerColor === 'w' ? 'white' : 'black',
     }
   }, [effectiveStatus, gameId, whiteName, blackName, hostId, game, snap.fen, snap.history.length, preset.id])
   useSaveGame(finished)
@@ -415,18 +413,9 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
     if (effectiveStatus.kind === 'checkmate' || effectiveStatus.kind === 'resign') {
       const youWon = effectiveStatus.winner === playerColor
       sound.play(youWon ? 'mate-win' : 'mate-loss')
-      if (youWon) {
-        addCrowns(1)
-        // Tag the opponent tier so the award scales with AI strength
-        // (Beginner pays 5 pt … Expert 40 pt).
-        void awardPoints(identity, {
-          source: 'chess-win',
-          gameId,
-          opponent: `ai-${preset.id}` as const,
-        }).then((res) => {
-          if (res) setCastlePoints(res.castlePoints)
-        })
-      }
+      // Castle points for the win are settled by the server when
+      // useSaveGame uploads the game (scaled by the AI tier).
+      if (youWon) addCrowns(1)
     } else {
       sound.play('draw')
     }
@@ -601,7 +590,7 @@ export function AiPracticeScreen({ hostId, coHostId, playerName, difficultyId, t
         onBackToMenu={onExit}
         onReview={() =>
           navigate('/review', {
-            state: { pgn: game.pgn(), hostId, whiteName, blackName },
+            state: { pgn: game.pgn(), hostId, whiteName, blackName, gameId },
           })
         }
       />

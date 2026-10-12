@@ -3,14 +3,27 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import { execSync } from 'node:child_process'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(here, '../..')
+
+// `<meta name="build">` = commit + build time, so tools/ops/status.sh can tell
+// whether the live site is the last green deploy (GITHUB_SHA in Actions).
+function buildId(): string {
+  const sha = process.env.GITHUB_SHA?.slice(0, 7)
+    ?? (() => { try { return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() } catch { return 'dev' } })()
+  return `${sha} ${new Date().toISOString()}`
+}
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'puc-build-meta',
+      transformIndexHtml: (html) => html.replace('<title>', `<meta name="build" content="${buildId()}" />\n    <title>`),
+    },
     VitePWA({
       // autoUpdate: SW silently swaps in the new build on next nav.
       // Acceptable for a kids app — no annoying "Update?" toast.

@@ -12,7 +12,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from '../commentary/cache'
 import { callGeminiWithTimeout } from '../commentary/gemini'
-import { consumeDailyQuota } from '../llm/rateLimit'
+import { consumeDailyQuota, LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from '../commentary/personas'
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
@@ -45,6 +45,7 @@ export const explainPuzzle = onCall<ExplainPuzzleRequest, Promise<ExplainPuzzleR
     const cached = await readCachedCommentary(hash)
     if (cached) return { text: cached, source: 'cache' }
 
+    await consumeDailyQuota(LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA)
     await consumeDailyQuota(req.auth.uid, {
       collection: 'puzzle_explain_attempts',
       limit: DAILY_LIMIT,

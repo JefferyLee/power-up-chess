@@ -21,6 +21,11 @@ const award = (uid: string | null, a: AwardSource, name = 'ada') =>
 const puzzle = (scorePoints: number, isFirstSolve = false): AwardSource =>
   ({ source: 'puzzle', puzzleId: 'p1', scorePoints, isFirstSolve })
 const win = (gameId: string): AwardSource => ({ source: 'chess-win', gameId, opponent: 'human' })
+const review = (gameId: string, brilliant = 5, bestExcellent = 0): AwardSource =>
+  ({ source: 'chess-review', gameId, brilliant, bestExcellent })
+// A synced AI game of ada's and a finished room she sat in — what a review may name.
+const games = { 'guests/ada/games/ai:g1': { mode: 'ai' }, 'guests/ada/games/ai:g2': { mode: 'ai' }, 'guests/ada/games/ai:g3': { mode: 'ai' } }
+const roomR1 = { 'rooms/r1': { status: 'completed', result: 'white', white: { displayName: 'Ada' }, black: { displayName: 'Bob' } } }
 
 beforeEach(() => vi.useFakeTimers({ now: NOW, toFake: ['Date'] }))
 afterEach(() => vi.useRealTimers())
@@ -52,21 +57,31 @@ describe('per-award clamps', () => {
     expect((await award('uid-ada', puzzle(9_999, true))).added).toBe(AWARD_CAPS.puzzleMax + AWARD_CAPS.puzzleFirstSolveBonus)
   })
 
-  it('chess-win: pays the opponent tier, legacy flat rate when the tier is missing or unknown', async () => {
-    useFakeDb({ 'guests/ada': ada })
-    expect((await award('uid-ada', { source: 'chess-win', gameId: 'g1', opponent: 'ai-expert' })).added).toBe(40)
-    expect((await award('uid-ada', { source: 'chess-win', gameId: 'g2' })).added).toBe(AWARD_CAPS.chessWin)
-    expect((await award('uid-ada', { source: 'chess-win', gameId: 'g3', opponent: 'ai-godlike' as never })).added).toBe(AWARD_CAPS.chessWin)
+  it('chess-win is server-settled (syncDeviceGame / onRoomFinished): a client claim is refused without writing', async () => {
+    const db = useFakeDb({ 'guests/ada': ada, ...games })
+    expect(await codeOf(award('uid-ada', { source: 'chess-win', gameId: 'ai:g1', opponent: 'ai-expert' }))).toBe('failed-precondition')
+    expect(await codeOf(award('uid-ada', win('r1')))).toBe('failed-precondition')
+    expect(db.writes).toEqual([])
   })
 
   it('chess-review: 8/brilliant + 1/best-excellent, capped at chessReviewMax', async () => {
-    useFakeDb({ 'guests/ada': ada })
-    expect((await award('uid-ada', { source: 'chess-review', gameId: 'g1', brilliant: 3, bestExcellent: 10 })).added).toBe(34)
+    useFakeDb({ 'guests/ada': ada, ...games })
+    expect((await award('uid-ada', review('ai:g1', 3, 10))).added).toBe(34)
     // Second review the same day: 80 capped by the remaining daily headroom (100 - 34).
-    expect((await award('uid-ada', { source: 'chess-review', gameId: 'g2', brilliant: 999, bestExcellent: 999 })).added).toBe(AWARD_CAPS.chessReviewDailyMax - 34)
-    const fresh = useFakeDb({ 'guests/ada': ada })
-    expect((await award('uid-ada', { source: 'chess-review', gameId: 'g2', brilliant: 999, bestExcellent: 999 })).added).toBe(AWARD_CAPS.chessReviewMax)
+    expect((await award('uid-ada', review('ai:g2', 999, 999))).added).toBe(AWARD_CAPS.chessReviewDailyMax - 34)
+    const fresh = useFakeDb({ 'guests/ada': ada, ...games })
+    expect((await award('uid-ada', review('ai:g2', 999, 999))).added).toBe(AWARD_CAPS.chessReviewMax)
     expect(fresh.get('guests/ada')?.castlePoints).toBe(100 + AWARD_CAPS.chessReviewMax)
+  })
+
+  it('chess-review names a finished game of the caller: a synced game or a room they sat in; anything else is refused', async () => {
+    const db = useFakeDb({ 'guests/ada': ada, ...games, ...roomR1, 'rooms/r2': { status: 'completed', result: 'black', white: { displayName: 'Bob' }, black: { displayName: 'Eve' } }, 'rooms/r3': { status: 'in_progress', white: { displayName: 'Ada' }, black: { displayName: 'Bob' } } })
+    expect((await award('uid-ada', review('r1'))).added).toBe(40)
+    expect(await codeOf(award('uid-ada', review('r2')))).toBe('failed-precondition')  // not her room
+    expect(await codeOf(award('uid-ada', review('r3')))).toBe('failed-precondition')  // not finished
+    expect(await codeOf(award('uid-ada', review('ai:nope')))).toBe('failed-precondition')  // never synced
+    expect(await codeOf(award('uid-ada', review(`review-${NOW}`)))).toBe('failed-precondition')  // the old synthetic id
+    expect(db.audits()).toHaveLength(1)
   })
 
   it('a zero-value award still requires ownership, then returns the balance without writing', async () => {
@@ -99,9 +114,9 @@ describe('daily caps', () => {
   })
 
   it("a stale bucket from yesterday is replaced, so today's award is paid in full", async () => {
-    const db = useFakeDb({ 'guests/ada': { ...ada, dailyEarn: bucket({ chessWin: AWARD_CAPS.chessWinDailyMax }, TODAY - 1) } })
-    expect((await award('uid-ada', { source: 'chess-win', gameId: 'g1', opponent: 'human' })).added).toBe(40)
-    expect(db.get('guests/ada')?.dailyEarn).toEqual(bucket({ chessWin: 40 }))
+    const db = useFakeDb({ 'guests/ada': { ...ada, dailyEarn: bucket({ chessReview: AWARD_CAPS.chessReviewDailyMax }, TODAY - 1) }, ...games })
+    expect((await award('uid-ada', review('ai:g1'))).added).toBe(40)
+    expect(db.get('guests/ada')?.dailyEarn).toEqual(bucket({ chessReview: 40 }))
   })
 
   it('rolls the bucket over even when the award itself is capped to 0', async () => {
@@ -114,12 +129,12 @@ describe('daily caps', () => {
 
 describe('ledger', () => {
   it('updates balance + lifetimeEarned, flags the 200-point unlock and appends the audit row', async () => {
-    const db = useFakeDb({ 'guests/ada': { ...ada, castlePoints: 190 } })
-    expect(await award('uid-ada', { source: 'chess-win', gameId: 'g1', opponent: 'ai-medium' })).toEqual({ castlePoints: 205, added: 15, unlockedJustNow: true })
-    expect(db.get('guests/ada')).toMatchObject({ castlePoints: 205, lifetimeEarned: 205, dailyEarn: bucket({ chessWin: 15 }) })
+    const db = useFakeDb({ 'guests/ada': { ...ada, castlePoints: 190 }, ...games })
+    expect(await award('uid-ada', review('ai:g1', 1, 7))).toEqual({ castlePoints: 205, added: 15, unlockedJustNow: true })
+    expect(db.get('guests/ada')).toMatchObject({ castlePoints: 205, lifetimeEarned: 205, dailyEarn: bucket({ chessReview: 15 }) })
     expect(db.audits()).toEqual([{
       normalizedName: 'ada', uid: 'uid-ada', delta: 15, before: 190, after: 205,
-      source: 'award:chess-win:ai-medium', metadata: { gameId: 'g1' }, serverTs: NOW,
+      source: 'award:chess-review', metadata: { gameId: 'ai:g1' }, serverTs: NOW,
     }])
   })
 
@@ -127,31 +142,30 @@ describe('ledger', () => {
 
 describe('idempotency', () => {
   it('pays a gameId once: the repeat returns the balance with added 0 and writes nothing', async () => {
-    const db = useFakeDb({ 'guests/ada': ada })
-    expect(await award('uid-ada', win('g1'))).toEqual({ castlePoints: 140, added: 40, unlockedJustNow: false })
-    expect(db.get('castle_point_awards/ada_chess-win_g1')).toEqual({ normalizedName: 'ada', source: 'chess-win', delta: 40, serverTs: NOW })
+    const db = useFakeDb({ 'guests/ada': ada, ...games })
+    expect(await award('uid-ada', review('ai:g1'))).toEqual({ castlePoints: 140, added: 40, unlockedJustNow: false })
+    expect(db.get('castle_point_awards/ada_chess-review_ai:g1')).toEqual({ normalizedName: 'ada', source: 'chess-review', delta: 40, serverTs: NOW })
 
     const before = db.writes.length
-    expect(await award('uid-ada', win('g1'))).toEqual({ castlePoints: 140, added: 0, unlockedJustNow: false })
+    expect(await award('uid-ada', review('ai:g1'))).toEqual({ castlePoints: 140, added: 0, unlockedJustNow: false })
     expect(db.writes.length).toBe(before)
     expect(db.audits()).toHaveLength(1)
   })
 
   it('different games both pay, and the daily cap still clamps the third', async () => {
-    const db = useFakeDb({ 'guests/ada': ada })
-    expect((await award('uid-ada', win('g1'))).added).toBe(40)
-    expect((await award('uid-ada', win('g2'))).added).toBe(40)
-    expect((await award('uid-ada', win('g3'))).added).toBe(0)
-    expect(db.get('guests/ada')?.castlePoints).toBe(100 + AWARD_CAPS.chessWinDailyMax)
+    const db = useFakeDb({ 'guests/ada': ada, ...games })
+    expect((await award('uid-ada', review('ai:g1', 10))).added).toBe(80)
+    expect((await award('uid-ada', review('ai:g2', 10))).added).toBe(20)
+    expect((await award('uid-ada', review('ai:g3', 10))).added).toBe(0)
+    expect(db.get('guests/ada')?.castlePoints).toBe(100 + AWARD_CAPS.chessReviewDailyMax)
     // A capped-to-0 game is not marked paid, so nothing was written for it.
-    expect(db.get('castle_point_awards/ada_chess-win_g3')).toBeUndefined()
+    expect(db.get('castle_point_awards/ada_chess-review_ai:g3')).toBeUndefined()
   })
 
-  it('keys on (name, source, gameId): a review of the same game is a separate event', async () => {
-    const db = useFakeDb({ 'guests/ada': ada })
-    await award('uid-ada', win('g1'))
-    expect((await award('uid-ada', { source: 'chess-review', gameId: 'g1', brilliant: 1, bestExcellent: 0 })).added).toBe(AWARD_CAPS.chessBrilliantEach)
-    expect(db.get('castle_point_awards/ada_chess-review_g1')).toBeDefined()
+  it('keys on (name, source, gameId): a server-settled win and a review of the same room are separate events', async () => {
+    const db = useFakeDb({ 'guests/ada': ada, ...roomR1, 'castle_point_awards/ada_chess-win_r1': { normalizedName: 'ada', source: 'chess-win', delta: 40, serverTs: NOW } })
+    expect((await award('uid-ada', review('r1', 1))).added).toBe(AWARD_CAPS.chessBrilliantEach)
+    expect(db.get('castle_point_awards/ada_chess-review_r1')).toBeDefined()
   })
 
   it('puzzle and mystery are not event-keyed: the same puzzleId pays again, bounded by the cap', async () => {

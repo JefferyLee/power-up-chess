@@ -19,6 +19,7 @@ import {
   type GuestDoc,
 } from '../castle/types'
 import { appendRecentlyPlayedTx } from '../castle/recentlyPlayed'
+import { settleAwardTx } from '../castle/settleAward'
 import { archiveFinishedGame } from './playerGames'
 import type { RoomDoc } from './types'
 
@@ -66,6 +67,21 @@ export const onRoomFinished = onDocumentUpdated('rooms/{roomId}', async (event) 
     const whiteRef = db.collection('guests').doc(whiteName)
     const blackRef = db.collection('guests').doc(blackName)
     const [whiteSnap, blackSnap] = await Promise.all([tx.get(whiteRef), tx.get(blackRef)])
+
+    // The winner's chess-win points are settled here (2026-10-12), not
+    // claimed by the client: 40 for a human opponent, once per room,
+    // under the daily chessWin cap. Paid even when the loser is a bypass
+    // guest. settleAwardTx reads its marker, so it runs before any write.
+    const winnerName = after.result === 'white' ? whiteName : after.result === 'black' ? blackName : null
+    const winnerSnap = after.result === 'white' ? whiteSnap : blackSnap
+    if (winnerName && winnerSnap.exists) {
+      await settleAwardTx(
+        tx, db, winnerName, winnerSnap.data() as GuestDoc,
+        { source: 'chess-win', gameId: event.params.roomId, opponent: 'human' },
+        { uid: null },
+      )
+    }
+
     // Bypass guests have no doc — skip rating altogether if either side is anonymous.
     if (!whiteSnap.exists || !blackSnap.exists) return
 

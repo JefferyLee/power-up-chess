@@ -1,102 +1,49 @@
-// awardCastlePoints — server-authoritative point award.
-//
-// Client sends `{normalizedName, award}` where `award` is a tagged union
-// describing what happened (puzzle solve, chess win, post-game review).
-// Server clamps the amount per `AWARD_CAPS` so a malicious client can't
-// inflate their points. The caller's uid must appear in the target guest's
+// awardCastlePoints — server-authoritative point award for the sources a
+// client may still claim: puzzle solves, post-game reviews and the
+// mystery riddle. The caller's uid must appear in the target guest's
 // `uids[]` array (set during castleEnter), so you can only award yourself.
 //
-// Phase C: per-source daily caps. Each award is clamped against
-// `dailyEarn[source]` so e.g. 50 puzzles a day can't farm unlimited
-// points. The bucket auto-resets when the day rolls over.
+// Chess wins are NOT claimable here any more (2026-10-12): Local and AI
+// wins are settled by syncDeviceGame when the game is recorded, online
+// wins by onRoomFinished. A review must name a finished game of the
+// caller's (rooms/{id} with the caller in a seat, or the synced
+// guests/{name}/games/{id}) — so a review pays once per real game.
 //
-// Idempotency: chess-win / chess-review name the game they were earned
-// in, so each (guest, source, gameId) is paid once — a marker doc under
-// castle_point_awards/ is created in the same transaction as the payout
-// and a repeat returns the current balance with `added: 0`. Puzzle and
-// mystery have no per-event id (terminal re-solves pay by design, the
-// mystery riddle rotates) and lean on their daily caps alone.
+// Amounts, daily buckets, once-per-event markers and the audit row all
+// live in settleAward.ts and are shared with the server-settled paths.
 //
 // Bypass guests (no guests doc) never reach the award path: the client
 // skips the call for them and the ownership check rejects a doc-less name.
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, type Firestore, type Transaction } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
-import {
-  AWARD_CAPS,
-  UNLOCK_THRESHOLD,
-  type AwardCastlePointsRequest,
-  type AwardCastlePointsResponse,
-  type AwardSource,
-  type GuestDailyEarn,
-} from './types'
-import { appendAuditTx } from './audit'
+import type { AwardCastlePointsRequest, AwardCastlePointsResponse } from './types'
 import { extractIp } from './ipGeo'
 import { requireOwnedGuest } from './requireOwner'
+import { amountFor, eventIdFor, settleAwardTx } from './settleAward'
 
-const DAY_MS = 24 * 60 * 60 * 1000
+interface SeatLike { displayName?: string }
 
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, Math.floor(n)))
-}
-
-/** Resolve the source-tagged award to a final integer amount. */
-function amountFor(award: AwardSource): number {
-  switch (award.source) {
-    case 'puzzle': {
-      const base = clamp(award.scorePoints, AWARD_CAPS.puzzleMin, AWARD_CAPS.puzzleMax)
-      return base + (award.isFirstSolve ? AWARD_CAPS.puzzleFirstSolveBonus : 0)
-    }
-    case 'chess-win': {
-      // Newer clients send an opponent tier; older ones don't. Fall back
-      // to the legacy flat rate so old builds keep paying out.
-      const op = award.opponent
-      if (op && op in AWARD_CAPS.chessWinByOpponent) {
-        return AWARD_CAPS.chessWinByOpponent[op]
-      }
-      return AWARD_CAPS.chessWin
-    }
-    case 'chess-review': {
-      const brilliant = clamp(award.brilliant, 0, 20)
-      const bestExcellent = clamp(award.bestExcellent, 0, 200)
-      const total = brilliant * AWARD_CAPS.chessBrilliantEach + bestExcellent * AWARD_CAPS.chessBestExcellentEach
-      return Math.min(total, AWARD_CAPS.chessReviewMax)
-    }
-    case 'mystery':
-      return AWARD_CAPS.mysteryReward
+/** A review is paid for a finished game the caller played: an online
+ *  room they sat in, or a Local / AI game they synced. Reads only. */
+async function assertOwnFinishedGame(
+  tx: Transaction,
+  db: Firestore,
+  normalizedName: string,
+  gameId: string,
+): Promise<void> {
+  if (/^(local|ai):/.test(gameId)) {
+    const snap = await tx.get(db.doc(`guests/${normalizedName}/games/${gameId}`))
+    if (snap.exists) return
+  } else {
+    const snap = await tx.get(db.doc(`rooms/${gameId}`))
+    const room = snap.data() as { status?: string; white?: SeatLike; black?: SeatLike } | undefined
+    const mine = (seat?: SeatLike) =>
+      typeof seat?.displayName === 'string' && seat.displayName.trim().toLowerCase() === normalizedName
+    if (room?.status === 'completed' && (mine(room.white) || mine(room.black))) return
   }
-}
-
-/** Which dailyEarn bucket + daily cap apply to this award source.
- *  `forest` is intentionally not handled here — Forest pays out via
- *  submitForestScore directly. */
-function dailyCapFor(source: AwardSource['source']): {
-  key: 'puzzle' | 'chessWin' | 'chessReview' | 'mystery'
-  cap: number
-} {
-  switch (source) {
-    case 'puzzle':       return { key: 'puzzle',       cap: AWARD_CAPS.puzzleDailyMax }
-    case 'chess-win':    return { key: 'chessWin',     cap: AWARD_CAPS.chessWinDailyMax }
-    case 'chess-review': return { key: 'chessReview',  cap: AWARD_CAPS.chessReviewDailyMax }
-    case 'mystery':      return { key: 'mystery',      cap: AWARD_CAPS.mysteryDailyMax }
-  }
-}
-
-function emptyEarn(dayKey: number): GuestDailyEarn {
-  return { dayKey, puzzle: 0, chessWin: 0, chessReview: 0, mystery: 0 }
-}
-
-/** The event an award is paid for — the key it is deduped on. Null for
- *  sources without a per-event identity (see header). */
-function eventIdFor(award: AwardSource): string | null {
-  switch (award.source) {
-    case 'chess-win':
-    case 'chess-review':
-      return String(award.gameId ?? '').trim()
-    default:
-      return null
-  }
+  throw new HttpsError('failed-precondition', 'Review rewards need a finished game of yours.')
 }
 
 export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardCastlePointsResponse>>(APP_CHECK,
@@ -119,91 +66,24 @@ export const awardCastlePoints = onCall<AwardCastlePointsRequest, Promise<AwardC
     if (eventId !== null && (!eventId || eventId.length > 200 || eventId.includes('/'))) {
       throw new HttpsError('invalid-argument', 'gameId is required.')
     }
+    if (award.source === 'chess-win') {
+      throw new HttpsError('failed-precondition', 'Chess wins are settled by the server when the game is recorded.')
+    }
 
     const db = getFirestore()
-    const guestRef = db.doc(`guests/${normalizedName}`)
-    const baseAmount = amountFor(award)
-    if (baseAmount <= 0) {
+    if (amountFor(award) <= 0) {
       // Nothing to pay, but the balance is still only the owner's to read.
       const { guest } = await requireOwnedGuest(db, uid, normalizedName)
       return { castlePoints: guest.castlePoints, added: 0, unlockedJustNow: false }
     }
 
-    // Transactional read-modify-write: bucket may need to roll over to today
-    // AND the award gets clamped against the daily cap atomically. Keeps two
-    // concurrent puzzle solves from each blowing past the cap by 1.
-    const { key: bucketKey, cap } = dailyCapFor(award.source)
-    const todayKey = Math.floor(Date.now() / DAY_MS)
     const ip = extractIp(req)
-    const paidRef = eventId === null
-      ? null
-      : db.doc(`castle_point_awards/${normalizedName}_${award.source}_${eventId}`)
-
     return db.runTransaction(async (tx) => {
-      const [{ guest }, paidSnap] = await Promise.all([
-        requireOwnedGuest(db, uid, normalizedName, tx),
-        paidRef ? tx.get(paidRef) : null,
-      ])
-      if (paidSnap?.exists) {
-        // Same game claimed before (retry, double-fire, replay): paid once.
-        return { castlePoints: guest.castlePoints, added: 0, unlockedJustNow: false }
+      const { guest } = await requireOwnedGuest(db, uid, normalizedName, tx)
+      if (award.source === 'chess-review') {
+        await assertOwnFinishedGame(tx, db, normalizedName, eventId!)
       }
-
-      const earn = guest.dailyEarn && guest.dailyEarn.dayKey === todayKey
-        ? { ...guest.dailyEarn }
-        : emptyEarn(todayKey)
-
-      const headroom = Math.max(0, cap - (earn[bucketKey] ?? 0))
-      const grantedAmount = Math.min(baseAmount, headroom)
-      if (grantedAmount <= 0) {
-        // Cap hit for the day; persist any bucket roll-over but don't add points.
-        if (guest.dailyEarn?.dayKey !== todayKey) {
-          tx.update(guestRef, { dailyEarn: earn })
-        }
-        return { castlePoints: guest.castlePoints, added: 0, unlockedJustNow: false }
-      }
-
-      const before = guest.castlePoints
-      const after = before + grantedAmount
-      earn[bucketKey] = (earn[bucketKey] ?? 0) + grantedAmount
-      const unlockedJustNow = before < UNLOCK_THRESHOLD && after >= UNLOCK_THRESHOLD
-
-      // Lazy-migrate lifetimeEarned: if absent, seed from current balance
-      // so existing guests don't start their title ladder from 0.
-      const lifetimePrev = guest.lifetimeEarned ?? Math.max(0, before)
-      const lifetimeAfter = lifetimePrev + grantedAmount
-
-      tx.update(guestRef, {
-        castlePoints: after,
-        dailyEarn: earn,
-        lifetimeEarned: lifetimeAfter,
-      })
-      if (paidRef) {
-        tx.create(paidRef, { normalizedName, source: award.source, delta: grantedAmount, serverTs: Date.now() })
-      }
-      const sourceLabel = award.source === 'chess-win' && award.opponent
-        ? `award:chess-win:${award.opponent}`
-        : `award:${award.source}`
-      const metadata: Record<string, string | number | boolean> = {}
-      if (award.source === 'puzzle') {
-        metadata.puzzleId = award.puzzleId
-        metadata.isFirstSolve = award.isFirstSolve
-      } else if (award.source === 'chess-win' || award.source === 'chess-review') {
-        metadata.gameId = award.gameId
-      } else if (award.source === 'mystery') {
-        metadata.mysteryId = award.mysteryId
-      }
-      appendAuditTx(tx, {
-        normalizedName,
-        uid,
-        delta: grantedAmount,
-        before,
-        after,
-        source: sourceLabel,
-        metadata,
-        ...(ip ? { ip } : {}),
-      })
-      return { castlePoints: after, added: grantedAmount, unlockedJustNow }
+      return settleAwardTx(tx, db, normalizedName, guest, award, { uid, ...(ip ? { ip } : {}) })
     })
   },
 )

@@ -208,6 +208,7 @@ Every write goes through Cloud Functions (admin SDK); `firestore.rules` is defau
 | `chat_hidden/{messageId}` | Original text/voice of auto-hidden messages (the readable doc is blanked) — *in progress* | `castle/reportChatMessage`; `forgetMe` (purge) | functions only | deny |
 | `chat_flags/{messageId}__{uid}` | Report de-dup | `castle/reportChatMessage` | same | no rule → deny |
 | `chat_rate_limits/{doc}` | Per-uid chat / ask quotas | `castle/chatRateLimit` | same | deny |
+| `llm_global_quota/_global` | Site-wide daily LLM call counter, 3,000/day (DECISIONS #57) | `llm/rateLimit` from `hostCommentary`, `gameRecap`, `explainPuzzle` | same | deny |
 | `castle_ambient_state/{doc}` | Ambient story scheduler state | `castle/hostAmbientStory`, `pickAndPostStory` | same | deny |
 | `story_quiz_keys/{messageId}`, `story_quiz_cache/{storyId}`, `story_quiz_attempts/{messageId}[/uids/{uid}]` | Story-quiz answer keys, generated quizzes, attempt counters | `castle/pickAndPostStory`, `storyQuiz`, `hostStoryAnswer`; job `cleanup/cleanupOldLobbyMessages` | functions only | deny |
 | `invitations/{inviteId}`, `invite_attempts/{uid}` | Play / duel invites (60 s TTL) + send throttle | `invitations/sendInvite`, `respondInvite`, `cancelInvite`; `forgetMe` | client `invitations/useIncomingInvites`, `useOutgoingInvite` (list queries) | invitations read signed-in (list-query trade-off, see the rules comment); attempts deny |

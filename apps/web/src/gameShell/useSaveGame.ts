@@ -3,6 +3,10 @@
 // guest, the account archive so "my games" follow the name + magic
 // word to any device. Screens hand in a memoised record (null while
 // the game is still going); the hook stamps `playedAt`.
+//
+// The archive upload is also where a Local / AI win is paid (server-side
+// since 2026-10-12): the response carries the settlement and the hook
+// pushes the new balance into the castle identity.
 
 import { useEffect, useRef } from 'react'
 import { useCastle } from '../castle/useCastle'
@@ -18,15 +22,18 @@ export interface FinishedGame {
   /** Mirror to the account archive — Local and AI games only; online
    *  rooms are archived by the server. */
   sync?: boolean
+  /** Which side the guest played (AI games) — the server pays a win only
+   *  for this colour. */
+  playerColor?: 'white' | 'black'
 }
 
 export function useSaveGame(finished: FinishedGame | null): void {
-  const { identity } = useCastle()
+  const { identity, setCastlePoints } = useCastle()
   const savedIdRef = useRef<string | null>(null)
   useEffect(() => {
     if (!finished || savedIdRef.current === finished.record.id) return
     savedIdRef.current = finished.record.id
-    const { trackExtra, sync } = finished
+    const { trackExtra, sync, playerColor } = finished
     const record: SavedGame = { playedAt: Date.now(), ...finished.record }
     track('game_end', {
       mode: record.mode,
@@ -40,7 +47,9 @@ export function useSaveGame(finished: FinishedGame | null): void {
     })
     if (sync && record.mode !== 'online' && identity && !identity.isBypass) {
       const { finalFen: _finalFen, mode, ...rest } = record
-      void callSyncDeviceGame({ ...rest, mode }).catch(() => { /* offline is fine */ })
+      void callSyncDeviceGame({ ...rest, mode, ...(playerColor ? { playerColor } : {}) })
+        .then((res) => { if (res.award) setCastlePoints(res.award.castlePoints) })
+        .catch(() => { /* offline is fine */ })
     }
-  }, [finished, identity])
+  }, [finished, identity, setCastlePoints])
 }

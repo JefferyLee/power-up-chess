@@ -28,6 +28,17 @@ export interface RateLimitOptions {
   noun: string
 }
 
+/** Site-wide ceiling across every LLM callable (cost guard, 2026-10-12):
+ *  one shared counter row, consumed before the per-uid one. 3,000 calls a
+ *  day is ~15× the busiest day seen; a runaway client or a leaked key
+ *  cannot spend more than that. */
+export const LLM_GLOBAL_KEY = '_global'
+export const LLM_GLOBAL_QUOTA: RateLimitOptions = {
+  collection: 'llm_global_quota',
+  limit: 3000,
+  noun: 'site-wide LLM calls',
+}
+
 /** Throws HttpsError('resource-exhausted', ...) if `uid` has hit today's
  *  cap; otherwise increments the count and returns. Idempotent in the
  *  sense that the user gets a clean error and our database stays

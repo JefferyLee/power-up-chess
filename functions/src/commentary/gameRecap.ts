@@ -3,7 +3,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
 import { callGeminiWithTimeout } from './gemini'
-import { consumeDailyQuota } from '../llm/rateLimit'
+import { consumeDailyQuota, LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
@@ -73,6 +73,7 @@ export const gameRecap = onCall<GameRecapRequest, Promise<GameRecapResponse>>(
     }
 
     // Cache miss → real LLM call. Quota first.
+    await consumeDailyQuota(LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA)
     await consumeDailyQuota(req.auth.uid, {
       collection: 'recap_attempts',
       limit: DAILY_LIMIT,

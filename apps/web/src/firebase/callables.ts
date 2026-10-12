@@ -1496,15 +1496,20 @@ const syncDeviceGameFn = httpsCallable<
     whiteName: string; blackName: string; hostId: 'lucy' | 'luca'
     result: 'white' | 'black' | 'draw'; endReason: string
     pgn: string; moveCount: number; aiDifficulty?: string
+    playerColor?: 'white' | 'black'
   },
-  { ok: boolean }
+  { ok: boolean; award: AwardCastlePointsResponse | null }
 >(functions, 'syncDeviceGame')
-/** Upload a finished local/AI game to the account archive (Phase 3.4). */
+/** Upload a finished local/AI game to the account archive (Phase 3.4).
+ *  Since 2026-10-12 the server also settles the chess-win castle points
+ *  here (`award`), so a win is paid with the game it came from. */
 export async function callSyncDeviceGame(req: {
   id: string; playedAt: number; mode: 'local' | 'ai'
   whiteName: string; blackName: string; hostId: 'lucy' | 'luca'
   result: 'white' | 'black' | 'draw'; endReason: string
   pgn: string; moveCount: number; aiDifficulty?: string
+  /** Which side the guest played (AI games) — tells a win from a loss. */
+  playerColor?: 'white' | 'black'
 }) {
   const { data } = await syncDeviceGameFn(req)
   return data

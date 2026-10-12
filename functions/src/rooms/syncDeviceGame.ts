@@ -6,12 +6,22 @@
 // The synced doc lives at guests/{name}/games/{id} in the same ArchivedGame
 // shape getPlayerGames already returns, plus mode + pgn so any device can
 // review it directly. forgetMe deletes the whole subcollection already.
+//
+// Since 2026-10-12 this is also where a Local / AI win is PAID: the
+// record and the castle-point settlement land in one transaction, so a
+// win claim must come with the game itself. The PGN has to parse, and a
+// claimed checkmate has to be on the board; resign / timeout wins can't be
+// proven from the moves and ride on the daily chessWin cap instead.
 
+import { Chess } from 'chess.js'
 import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { bumpAndCheck } from '../castle/chatRateLimit'
+import { extractIp } from '../castle/ipGeo'
 import { requireOwnedGuest } from '../castle/requireOwner'
+import { settleAwardTx } from '../castle/settleAward'
+import { AWARD_CAPS, type AwardCastlePointsResponse, type AwardSource, type ChessOpponent } from '../castle/types'
 import type { ArchivedGame } from './playerGames'
 
 const MAX_PGN_CHARS = 20_000
@@ -35,9 +45,28 @@ export interface SyncDeviceGameRequest {
   pgn: string
   moveCount: number
   aiDifficulty?: string
+  /** Which side the guest played (AI games). Needed to tell a win from a loss. */
+  playerColor?: 'white' | 'black'
 }
 export interface SyncDeviceGameResponse {
   ok: boolean
+  /** The chess-win settlement for this game, null when it was not a
+   *  payable win (loss, draw, unsupported PGN) — `added` is 0 on a replay. */
+  award: AwardCastlePointsResponse | null
+}
+
+/** Does the PGN back a win for `winner`? It must parse to a real game,
+ *  and a claimed checkmate must be on the board with the loser to move. */
+export function pgnSupportsWin(pgn: string, winner: 'white' | 'black', endReason: string): boolean {
+  const chess = new Chess()
+  try {
+    chess.loadPgn(pgn)
+  } catch {
+    return false
+  }
+  if (chess.history().length < 2) return false
+  if (endReason !== 'checkmate') return true
+  return chess.isCheckmate() && chess.turn() === (winner === 'white' ? 'b' : 'w')
 }
 
 export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGameResponse>>(APP_CHECK,async (req) => {
@@ -77,7 +106,30 @@ export const syncDeviceGame = onCall<SyncDeviceGameRequest, Promise<SyncDeviceGa
     pgn,
     ...(d.aiDifficulty ? { aiDifficulty: String(d.aiDifficulty).slice(0, 20) } : {}),
   }
-  // Idempotent by id — replaying the sync after a retry is harmless.
-  await db.collection('guests').doc(idData.normalizedName).collection('games').doc(d.id).set(record)
-  return { ok: true }
+  // Local: any decisive result is "your" win (both players share the
+  // screen). AI: only the guest's own colour. The opponent tier scales the
+  // award; an unknown tier pays the legacy flat rate.
+  const winner = d.result === 'white' || d.result === 'black' ? d.result : null
+  const playerWon = winner !== null && (d.mode === 'local' || d.playerColor === winner)
+  let awardSource: AwardSource | null = null
+  if (winner && playerWon && pgnSupportsWin(pgn, winner, endReason)) {
+    const tier = `ai-${String(d.aiDifficulty ?? '')}`
+    awardSource = d.mode === 'ai' && tier in AWARD_CAPS.chessWinByOpponent
+      ? { source: 'chess-win', gameId: d.id, opponent: tier as ChessOpponent }
+      : { source: 'chess-win', gameId: d.id }
+  }
+
+  const name = idData.normalizedName
+  const ip = extractIp(req)
+  // Idempotent by id — replaying the sync after a retry rewrites the same
+  // record and settleAwardTx finds its marker (added 0).
+  const award = await db.runTransaction(async (tx) => {
+    const { guest } = await requireOwnedGuest(db, uid, name, tx)
+    const paid = awardSource
+      ? await settleAwardTx(tx, db, name, guest, awardSource, { uid, ...(ip ? { ip } : {}) })
+      : null
+    tx.set(db.doc(`guests/${name}/games/${d.id}`), record)
+    return paid
+  })
+  return { ok: true, award }
 })

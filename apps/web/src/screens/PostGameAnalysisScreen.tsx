@@ -57,6 +57,9 @@ export interface ReviewState {
   /** Online room id, when this game is in the Hall of Games. Set →
    *  the computed analysis is uploaded so the archive can rank it. */
   roomId?: string
+  /** Local / AI game id (`local:…` / `ai:…`) as synced to the archive.
+   *  The review award is keyed on it (or on roomId), once per game. */
+  gameId?: string
   /** Hand-written lead-in for a curated classic — shown immediately
    *  (even while the engine is still analysing) so the game opens with
    *  its "why it's famous" note, not a blank minute. */
@@ -117,14 +120,14 @@ export function PostGameAnalysisScreen() {
         // else's game (from their plaque) is read-only.
         const award = state.award !== false
         if (award && crowns > 0) addCrowns(crowns)
-        // Castle points for review-discovered move quality. We use a synthetic
-        // game-id from the PGN length + timestamp; future Phase C work can
-        // dedupe via a guests/reviewed-games subcollection.
+        // Castle points for review-discovered move quality, once per real
+        // game: the server checks the id names a finished game of ours.
         const brilliantCount = brilliantIdx.size
-        if (award && brilliantCount + bestExcellent > 0) {
+        const reviewedGameId = state.gameId ?? state.roomId
+        if (award && reviewedGameId && brilliantCount + bestExcellent > 0) {
           void awardPoints(identity, {
             source: 'chess-review',
-            gameId: `review-${Date.now()}`,
+            gameId: reviewedGameId,
             brilliant: brilliantCount,
             bestExcellent,
           }).then((res) => {

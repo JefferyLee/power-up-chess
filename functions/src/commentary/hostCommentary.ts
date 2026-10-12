@@ -3,7 +3,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { APP_CHECK } from '../callableOptions'
 import { commentaryHash, readCachedCommentary, writeCachedCommentary } from './cache'
 import { callGeminiWithTimeout } from './gemini'
-import { consumeDailyQuota } from '../llm/rateLimit'
+import { consumeDailyQuota, LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA } from '../llm/rateLimit'
 import { HOST_PERSONAS, type HostId } from './personas'
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
@@ -81,6 +81,7 @@ export const hostCommentary = onCall<HostCommentaryRequest, Promise<HostCommenta
     // Cache miss → real LLM call ahead. Charge the daily quota first; the
     // client already has the template fallback ready so a 'resource-
     // exhausted' bubble-up just shows the template line for that move.
+    await consumeDailyQuota(LLM_GLOBAL_KEY, LLM_GLOBAL_QUOTA)
     await consumeDailyQuota(req.auth.uid, {
       collection: 'commentary_attempts',
       limit: DAILY_LIMIT,
