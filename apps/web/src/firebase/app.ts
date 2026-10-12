@@ -31,15 +31,18 @@ const USE_EMULATORS = import.meta.env.VITE_USE_EMULATORS === '1'
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 
-// App Check (Phase 1.7) — activates only when a reCAPTCHA v3 site key is
-// configured (register the web app under Firebase console → App Check, then
-// set VITE_APPCHECK_SITE_KEY). Functions run in MONITOR mode until we flip
-// enforcement, so a missing key never blocks the app.
+// App Check — activates only when a reCAPTCHA Enterprise site key is
+// configured (VITE_APPCHECK_SITE_KEY: a score-based key created in this GCP
+// project and registered under Firebase console → App Check → the web app).
+// Firestore enforces App Check, so the provider here must match the one the
+// app is registered with: 2026-09-30 → 10-11 the app was registered with
+// Enterprise while the client exchanged classic v3 tokens ("App not
+// registered") and every Firestore read was denied.
 const APPCHECK_SITE_KEY = import.meta.env.VITE_APPCHECK_SITE_KEY as string | undefined
 if (APPCHECK_SITE_KEY) {
-  void import('firebase/app-check').then(({ initializeAppCheck, ReCaptchaV3Provider }) => {
+  void import('firebase/app-check').then(({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(APPCHECK_SITE_KEY),
+      provider: new ReCaptchaEnterpriseProvider(APPCHECK_SITE_KEY),
       isTokenAutoRefreshEnabled: true,
     })
   })

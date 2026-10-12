@@ -29,9 +29,11 @@ that requires it.
 ## Path B verdict (2026-07-03)
 
 Every Path-B row is ✅. Remaining human steps before inviting families:
-Jeff walks the report→hide and forget-me flows once on production, allowlists
-the custom domain on the reCAPTCHA key, and flips `APP_CHECK_ENFORCE=1` after a
-clean monitor window.
+Jeff walks the report→hide and forget-me flows once on production and flips
+`APP_CHECK_ENFORCE=1` after a clean monitor window (Firestore has enforced App
+Check since 2026-09-30; the web client exchanges reCAPTCHA Enterprise tokens
+since 2026-10-11 — the v3/Enterprise provider mismatch before that denied every
+Firestore read for 11 days).
 
 ## Before Path C (public release)
 
