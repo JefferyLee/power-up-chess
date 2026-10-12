@@ -1,7 +1,7 @@
 # Ops runbook — Power Up Chess
 
-Owner: Jeff. Operator: the **grok** bot (Toxi alias `grok`), handed over
-2026-10-12. Engineering: Claude (Toxi alias `ada`, Jeff's Claude Code session
+Owner: Jeff. Operator: the **Powerupcastle OP** bot (Toxi alias `castle-op`),
+handed over 2026-10-12. Engineering: Claude (Toxi alias `ada`, Jeff's Claude Code session
 on the Mac "Ada"). Scripts live in `tools/ops/`.
 
 Mission: keep <https://app.powerupcastle.app> working for Ada and her friends;
@@ -121,8 +121,8 @@ apply to any copy that ships.
 
 ## Handover checklist
 
-- [ ] grok: VM tooling in place, `tools/ops/healthcheck.sh` green
-- [ ] grok: `tools/ops/healthcheck.sh --browser` green on both origins
-- [ ] grok can reach `jeff-iphone` on Toxi (Jeff adds the contact if not)
-- [ ] Jeff: GitHub Write for grok, read-only GCP service account
+- [ ] castle-op: VM tooling in place, `tools/ops/healthcheck.sh` green
+- [ ] castle-op: `tools/ops/healthcheck.sh --browser` green on both origins
+- [ ] castle-op can reach `jeff-iphone` on Toxi (Jeff adds the contact if not)
+- [ ] Jeff: GitHub Write for castle-op, read-only GCP service account
 - [ ] first daily digest received

@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Stack & data model:** `docs/TECHNICAL_ARCHITECTURE.md`. **Still-open decisions:** `docs/OPEN_QUESTIONS.md`.
 - **3D board:** `apps/web/src/board3d/` (three.js). The 🎲 3D/2D toggle (`useView3d.ts`) is offered on Local / AI / Online / Review / Daily Five / Plot / Wizard's Duel; keyboard + ARIA exist on the 2D board only.
 - **The Siege (Tower Defense):** chess-themed 3D game at `/arcade/tower-defense` — client `apps/web/src/games/siege/`, server `functions/src/siege/`; no castle points. Spec: `docs/SIEGE_DESIGN.md`.
-- **Ops:** `docs/OPS_RUNBOOK.md` — the grok bot (Toxi alias `grok`) monitors with `tools/ops/` and may roll back; Claude is `ada`, Jeff is `jeff-iphone`.
+- **Ops:** `docs/OPS_RUNBOOK.md` — the Powerupcastle OP bot (Toxi alias `castle-op`) monitors with `tools/ops/` and may roll back; Claude is `ada`, Jeff is `jeff-iphone`.
 - **Review checklist / refactor plan:** `docs/REVIEW_2026-09.md` — phased must-fix → hardening → front-end → upgrades list; tick items there as they land.
 
 ## Product Context (load before designing or coding)
