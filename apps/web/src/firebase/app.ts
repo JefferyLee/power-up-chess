@@ -5,6 +5,7 @@
 // Firestore rules, and Cloud Functions.
 
 import { getApp, getApps, initializeApp, type FirebaseOptions } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions'
@@ -38,13 +39,15 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 // app is registered with: 2026-09-30 → 10-11 the app was registered with
 // Enterprise while the client exchanged classic v3 tokens ("App not
 // registered") and every Firestore read was denied.
+//
+// Initialised synchronously, before the first Firestore/Auth call: with the
+// earlier lazy `import('firebase/app-check')`, listeners that subscribed
+// during the first paint went out without a token and were denied once.
 const APPCHECK_SITE_KEY = import.meta.env.VITE_APPCHECK_SITE_KEY as string | undefined
 if (APPCHECK_SITE_KEY) {
-  void import('firebase/app-check').then(({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(APPCHECK_SITE_KEY),
-      isTokenAutoRefreshEnabled: true,
-    })
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(APPCHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
   })
 }
 
