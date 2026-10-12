@@ -23,12 +23,19 @@ page.on('console', (m) => {
   const t = m.text().replace(/\s+/g, ' ')
   if (/@firebase\/app-check|appCheck\/|permission-denied|insufficient permissions/i.test(t)) firebaseErrors.push(t.slice(0, 160))
 })
-await page.addInitScript(() => {
+// reCAPTCHA Enterprise scores a headless browser (and any datacenter IP) below
+// App Check's 0.5 threshold, so attestation is refused with a 403 even when
+// real users are fine. An App Check *debug token* (Firebase console → App
+// Check → Apps → web app → Manage debug tokens) lets this probe through:
+//   APPCHECK_DEBUG_TOKEN=<token> node e2e/preview-smoke.mjs https://…
+const debugToken = process.env.APPCHECK_DEBUG_TOKEN
+await page.addInitScript((token) => {
+  if (token) self.FIREBASE_APPCHECK_DEBUG_TOKEN = token
   localStorage.setItem('puc:castle-identity:v2', JSON.stringify({
     savedAt: Date.now(),
     identity: { displayName: 'Probe', normalizedName: 'probe', castlePoints: 0, isBypass: true, isFirstVisit: false },
   }))
-})
+}, debugToken)
 let failed = 0
 const step = async (name, fn) => {
   try { await fn(); console.log('OK  ', name) } catch (e) { failed++; console.log('FAIL', name, String(e.message).split('\n')[0].slice(0, 160)) }
@@ -67,6 +74,12 @@ await step("knight's run (phaser chunk) mounts", async () => {
 })
 await browser.close()
 if (errors.length) { failed++; console.log('page errors:\n' + errors.join('\n')) }
-if (base.startsWith('https://') && firebaseErrors.length) { failed++; console.log('firebase errors (App Check / rules):\n' + [...new Set(firebaseErrors)].slice(0, 8).join('\n')) }
+if (base.startsWith('https://') && firebaseErrors.length) {
+  const lines = [...new Set(firebaseErrors)].slice(0, 8).join('\n')
+  if (!debugToken && firebaseErrors.some((l) => /AppCheck: 403/.test(l))) {
+    // Attestation refused for THIS client; says nothing about real users.
+    console.log('WARN App Check refused this headless client (403 = low reCAPTCHA score); confirm from a real browser, or set APPCHECK_DEBUG_TOKEN:\n' + lines)
+  } else { failed++; console.log('firebase errors (App Check / rules):\n' + lines) }
+}
 console.log(failed ? `${failed} failure(s)` : 'all good')
 process.exit(failed ? 1 : 0)

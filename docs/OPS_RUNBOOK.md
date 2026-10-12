@@ -57,6 +57,7 @@ notice an outage within 10 minutes, fix or roll back fast, tell Jeff.
 | symptom | cause | fix |
 | --- | --- | --- |
 | Pages render but data is empty; console shows `permission-denied` or `@firebase/app-check … 400` | App Check: provider/key mismatch, key from another project, domain missing on the key, or enforcement flipped | Check Firebase console → App Check → Apps: the web app must be registered with reCAPTCHA Enterprise and the site key must equal the `VITE_APPCHECK_SITE_KEY` repo variable; the key must be in `power-up-chess-dev` with the three domains. Fixing it is Jeff's / Claude's call. **Never turn enforcement off yourself** (that mismatch cost 11 days, 2026-09-30 → 10-11). |
+| `healthcheck.sh --browser` prints `WARN App Check refused this headless client` (`AppCheck: 403`, 1-day throttle) while the curl checks pass | reCAPTCHA Enterprise scored the headless browser / datacenter IP below App Check's 0.5 threshold; real users are usually fine | Not an outage by itself: confirm from a real browser (Claude can, from Jeff's Chrome). For a trustworthy probe Jeff registers an **App Check debug token** (Firebase console → App Check → Apps → web app → ⋮ Manage debug tokens) and the operator exports `APPCHECK_DEBUG_TOKEN` before running the probe. A `400` from App Check is different: that is a misconfiguration → OUTAGE. |
 | Every page throws `Missing VITE_FIREBASE_API_KEY` | bundle built without the repo variables | `gh variable list` must show the `VITE_*` set; re-run Deploy for hosting |
 | 3D scenes blank only in production, `a is not a constructor` | manual chunk groups in `apps/web/vite.config.ts` | revert that change |
 | Deploy fails in the functions step with an npm error (`edgesOut`) | `functions/pnpm-lock.yaml` drifted from `functions/package.json` | `pnpm functions:lockfile`, commit, push |
@@ -118,6 +119,7 @@ apply to any copy that ships.
   the repo, `pnpm exec playwright install --with-deps chromium`, `gh`,
   `gcloud`, `curl`.
 - Toxi contacts: `jeff-iphone`, `ada`.
+- App Check debug token for the probe VM (see the catalog row on `AppCheck: 403`); keep it on the VM only, never in the repo or in chat.
 
 ## Handover checklist
 
