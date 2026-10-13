@@ -19,7 +19,8 @@ import { callPostChat } from '../../firebase/callables'
 import { dispatchCommand, type WorldSnapshot } from './commandRegistry'
 import { usePrivateStream, pushPrivate, type PrivateEntry } from './privateStream'
 import { playKeyClick } from './keyClick'
-import { loadCurrentRoom, markVisited, ROOMS, type RoomId } from './world'
+import { loadCurrentRoom, markVisited, roomDescription, ROOMS, type RoomId } from './world'
+import { isCellarOpen } from './items'
 import './TerminalOverlay.css'
 
 const PROMPT = 'PuC>'
@@ -130,7 +131,7 @@ export function TerminalOverlay({ onClose }: Props) {
     }
     didAutoLookRef.current = true
     const room = ROOMS[currentRoom]
-    const lines = [`── ${room.name} ──`, room.description]
+    const lines = [`── ${room.name} ──`, roomDescription(room, isCellarOpen())]
     if (room.occupant) lines.push(room.occupant)
     const isFirst = markVisited(currentRoom)
     if (isFirst && room.firstVisit) lines.push(room.firstVisit)
