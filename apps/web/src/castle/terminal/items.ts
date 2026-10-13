@@ -58,7 +58,7 @@ export const ITEMS: Record<ItemId, Item> = {
   compass: {
     id: 'compass',
     name: 'compass',
-    longName: 'a brass compass on the desk',
+    longName: 'a brass compass',
     description: 'The needle wavers — points to nothing in particular. Luca uses it to "find the mood."',
     startRoom: 'study',
     takeable: false,

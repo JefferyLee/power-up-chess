@@ -36,6 +36,9 @@ export interface Room {
   firstVisit?: string
 }
 
+const OAK_DOOR_LOCKED = 'A heavy oak door is set in the south wall, locked.'
+const OAK_DOOR_OPEN = 'The heavy oak door in the south wall stands open — a stone stair drops away into the dark.'
+
 export const ROOMS: Record<RoomId, Room> = {
   hall: {
     id: 'hall',
@@ -74,7 +77,7 @@ export const ROOMS: Record<RoomId, Room> = {
     id: 'tower-foot',
     name: 'the Tower Foot',
     description:
-      'The base of a stone spiral. Steps wind up into the dark. A small iron hook waits on the wall — empty. A heavy oak door is set in the south wall, locked.',
+      `The base of a stone spiral. Steps wind up into the dark. A small iron hook waits on the wall — empty. ${OAK_DOOR_LOCKED}`,
     exits: { n: 'hall', up: 'study' },
     firstVisit: 'You crane your neck. The stair seems to climb further than the Tower is tall.',
   },
@@ -178,4 +181,12 @@ export function describeExits(room: Room, cellarOpen = false): string {
     .map((d) => DIRECTION_LABEL[d])
   if (dirs.length === 0) return 'No obvious exits.'
   return dirs.join(', ')
+}
+
+/** Room text with state-gated wording: the Tower Foot's south door
+ *  reads as locked until the lantern has opened it (the exits list was
+ *  already live; the prose was not). */
+export function roomDescription(room: Room, cellarOpen: boolean): string {
+  if (room.id === 'tower-foot' && cellarOpen) return room.description.replace(OAK_DOOR_LOCKED, OAK_DOOR_OPEN)
+  return room.description
 }

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, matchRoutes, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, matchRoutes, Route, Routes, useLocation } from 'react-router-dom'
+import { NotFoundScreen } from './screens/NotFoundScreen'
 import { CastleIdentityProvider } from './castle/CastleIdentityContext'
 import { CurrentChampionProvider } from './tournament/useCurrentChampion'
 import { CastleEntry } from './castle/CastleEntry'
@@ -76,7 +77,7 @@ export function App() {
             {LAZY_ROUTES.map(({ path, Screen }) => (
               <Route key={path} path={path} element={<Screen />} />
             ))}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundScreen />} />
           </Routes>
         </Suspense>
         </UserCardHost>

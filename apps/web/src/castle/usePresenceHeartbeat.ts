@@ -18,9 +18,14 @@ export function usePresenceHeartbeat(location?: LocationTag) {
   // Keep latest location in a ref so the interval doesn't reset every
   // time the parent rerenders with the same logical location.
   const locationRef = useRef<LocationTag | undefined>(location)
+  const beatRef = useRef<(() => void) | null>(null)
   const locationKey = locationToKey(location)
   useEffect(() => {
     locationRef.current = location
+    // Beat at once so the Hall list drops the old room now, not up to
+    // HEARTBEAT_MS later (stale "Practice vs AI" rows, 2026-10-13). On
+    // mount beatRef is still null; the interval effect below beats.
+    beatRef.current?.()
     // locationKey is included so this effect runs when the logical
     // location changes; `location` itself is excluded because new
     // object identity each render would re-fire pointlessly.
@@ -58,9 +63,11 @@ export function usePresenceHeartbeat(location?: LocationTag) {
     }
 
     void beat()
+    beatRef.current = () => { void beat() }
     const id = window.setInterval(beat, HEARTBEAT_MS)
     return () => {
       cancelled = true
+      beatRef.current = null
       window.clearInterval(id)
     }
   }, [identity, hostId, signOut])

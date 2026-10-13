@@ -108,6 +108,16 @@ function lineCells(cell: Cell, orientation: 'row' | 'col' | 'both', cols: number
   return out
 }
 
+/** Why a tap didn't place a tower, in words a kid can act on. Keys are
+ *  sim.canBuild() reasons; the ban strings already read fine as they are. */
+const BUILD_BLOCKED: Record<string, string> = {
+  'not buildable': 'Not there — towers stand on the plots beside the road.',
+  occupied: 'Something already stands there.',
+  'tower limit': 'That is every tower this map allows.',
+  'blocked path': 'That would wall the road off — the enemies need a way through.',
+  'not enough gold': 'Not enough gold yet.',
+}
+
 function hintFor(ix: Interaction): string | null {
   switch (ix.kind) {
     case 'place':
@@ -304,7 +314,15 @@ export function SiegeGame({ run, campaign, progress, onProgress, identity, hasNe
           setIx({ kind: 'select', towerId: tower.id, cell: copyCell(tower.cell) })
           return
         }
-        if (sim.build(cell, ix.type)) setIx(IDLE)
+        const can = sim.canBuild(cell, ix.type)
+        if (can.ok) {
+          sim.build(cell, ix.type)
+          setIx(IDLE)
+        } else {
+          // A silent miss reads as "placement is broken" (playtest 2026-10-13).
+          toastSeqRef.current += 1
+          setToast({ id: toastSeqRef.current, text: BUILD_BLOCKED[can.reason ?? ''] ?? can.reason ?? 'Not there.' })
+        }
         return
       }
       case 'spell': {

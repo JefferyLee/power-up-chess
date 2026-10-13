@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import type { ChatMessageDoc, QuizState } from './chatTypes'
 import { findOwnedGuest } from './requireOwner'
-import { normalizeAnswer } from './storyQuiz'
+import { answerMatches, normalizeAnswer } from './quizAnswer'
 
 const MAX_ATTEMPTS = 3
 const ANSWER_AWARD = 1
@@ -106,7 +106,7 @@ export const hostStoryAnswer = onCall<Request, Promise<Response>>(
         return { status: 'no-attempts-left' as const, explanation: undefined }
       }
 
-      const correct = keyData.acceptedAnswers.some((a) => a === guess)
+      const correct = answerMatches(guess, keyData.acceptedAnswers)
       const nextAttempts = attempts + 1
 
       // ── Phase 2: all writes ─────────────────────────────────────────

@@ -1,0 +1,25 @@
+.puc-notfound {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--puc-bg-deep);
+  background-image: var(--puc-bg-glow);
+  color: var(--puc-text);
+  font-family: var(--puc-font-body);
+}
+.puc-notfound h1 {
+  margin: 0;
+  font-family: var(--puc-font-display);
+  font-size: 26px;
+  color: var(--puc-text-accent);
+}
+.puc-notfound p {
+  margin: 0;
+  max-width: 34ch;
+  opacity: 0.85;
+}

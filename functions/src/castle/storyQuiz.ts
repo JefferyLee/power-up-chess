@@ -8,6 +8,7 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { callGemini } from '../commentary/gemini'
 import { GEMINI_API_KEY } from './hostChatReply'
+import { normalizeAnswer } from './quizAnswer'
 import type { BundledStory } from './storyBank'
 
 export interface StoryQuizKey {
@@ -116,15 +117,6 @@ export async function getOrGenerateQuiz(story: BundledStory): Promise<StoryQuizK
   await cacheRef.set(quiz)
   console.log(`storyQuiz: cached new quiz for ${story.id} — q="${quiz.question.slice(0, 60)}..."`)
   return quiz
-}
-
-/** Lowercase, strip punctuation, collapse whitespace. */
-export function normalizeAnswer(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 }
 
 interface ParsedQuiz {

@@ -27,6 +27,7 @@ import {
   liveExits,
   markVisited,
   parseDirection,
+  roomDescription,
   saveCurrentRoom,
   type Direction,
   type RoomId,
@@ -271,7 +272,7 @@ registerCommand({
   description: 'Look around your current room.',
   handle: (_args, ctx) => {
     const room = ROOMS[ctx.world.currentRoom]
-    const lines = [`── ${room.name} ──`, room.description]
+    const lines = [`── ${room.name} ──`, roomDescription(room, isCellarOpen())]
     if (room.occupant) lines.push(room.occupant)
     // Hall-only flavour: who else is around + the live story.
     if (room.id === 'hall') {
@@ -315,7 +316,7 @@ function move(direction: Direction, ctx: CommandContext): void {
     pushPrivate('reply', next.firstVisit)
   }
   // Auto-look on arrival so the kid doesn't have to type /look every step.
-  const lines = [`── ${next.name} ──`, next.description]
+  const lines = [`── ${next.name} ──`, roomDescription(next, cellarOpen)]
   if (next.occupant) lines.push(next.occupant)
   const here = itemsInRoom(next.id)
   if (here.length > 0) {
@@ -1465,6 +1466,11 @@ registerCommand({
   },
 })
 
+/** "3 tries left" / "1 try left". */
+function triesLeft(n: number): string {
+  return `${n} ${n === 1 ? 'try' : 'tries'} left`
+}
+
 // ─── Basic: /guess — higher / lower 1-100 ────────────────────────
 
 registerCommand({
@@ -1482,11 +1488,13 @@ registerCommand({
       return
     }
     if (!game) {
-      pushPrivate('reply', `No game in progress. /guess to start (or just /guess <n> on a running one).`)
-      return
+      // `/guess 50` with nothing running: start a round and take the guess.
+      game = newGuessGame()
+      saveGuess(game)
+      pushPrivate('reply', `${hostName} picks a number 1-${GUESS_LIMITS.max}. You have ${game.triesLeft} guesses.`)
     }
     if (!arg) {
-      pushPrivate('reply', `Game in progress: ${game.triesLeft} tries left. /guess <n>.`)
+      pushPrivate('reply', `Game in progress: ${triesLeft(game.triesLeft)}. /guess <n>.`)
       return
     }
     const n = Number.parseInt(arg, 10)
@@ -1514,8 +1522,8 @@ registerCommand({
     }
     saveGuess(game)
     pushPrivate('reply', n < game.secret
-      ? `Higher. ${game.triesLeft} tries left.`
-      : `Lower. ${game.triesLeft} tries left.`,
+      ? `Higher. ${triesLeft(game.triesLeft)}.`
+      : `Lower. ${triesLeft(game.triesLeft)}.`,
     )
   },
 })
@@ -1719,7 +1727,6 @@ registerCommand({
         startedAt: Date.now(),
       }
       savePuzzle(session)
-      clearPrivate()
       pushPrivate('reply', [
         `── PUZZLE ──  ${p.id}  (≈ ${p.difficulty})`,
         `${game.turn() === 'w' ? 'White' : 'Black'} to move. Find the best move.`,
@@ -1746,7 +1753,6 @@ registerCommand({
     if (!arg) {
       const game = new Chess()
       game.loadPgn(session.pgn)
-      clearPrivate()
       pushPrivate('reply', `In progress: ${game.turn() === 'w' ? 'White' : 'Black'} to move.  ${session.wrong}/${PUZZLE_MAX_ATTEMPTS} wrong.`)
       pushPrivate('ascii', renderAsciiBoard(game))
       pushPrivate('reply', `/puzzle <move> to try.  /puzzle skip to reveal.`)
@@ -1796,7 +1802,7 @@ registerCommand({
         return
       }
       savePuzzle(session)
-      pushPrivate('reply', `Not the best move. ${PUZZLE_MAX_ATTEMPTS - session.wrong} tries left.`)
+      pushPrivate('reply', `Not the best move. ${triesLeft(PUZZLE_MAX_ATTEMPTS - session.wrong)}.`)
       return
     }
 
