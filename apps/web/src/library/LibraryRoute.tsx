@@ -374,6 +374,13 @@ export function LibraryRoute() {
             ))}
           </div>
         )}
+        <button
+          type="button"
+          className="puc-library__small-door"
+          onClick={() => navigate('/library/babel')}
+          aria-label="A small door"
+          title="A small door, barely knee-high."
+        />
       </main>
 
       {openBook && openBookShelf && (

@@ -33,6 +33,7 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Wizard's Duel | `/wizard` | break | **gated ≥1000** | **no** — "chess with magic spells, for fun, not practice" |
 | Theme Shop | `/shop` | break | spends (cosmetics) | no |
 | The Library (Book Owl) | `/library` | break | — | no (reading) |
+| The Library of Babel (small door at the foot of the Library's shelves — no Hall door) | `/library/babel` | break | — | no — Jeff's own site zhipeng.li shown in an iframe |
 | Knight's Run | `/knights-run` | break | — | no (auto-runner) |
 | Tower Defense ("The Siege") | `/arcade/tower-defense` | break | **no castle points**; own leaderboard (`siege_leaderboards/global`, puzzle-board rules, opt-out honoured) | **no** — chess-themed arcade (towers are white pieces attacking the way they move), not chess practice. 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; `apps/web/src/games/siege/`, `functions/src/siege/`, spec `docs/SIEGE_DESIGN.md` |
 
@@ -94,6 +95,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | CI (GitHub Actions) | shipped | typecheck+lint+test+build + emulator rules-tests on every push/PR; weekly E2E smoke workflow |
 | Cosmetics / Theme Shop | shipped | 8 piece sets (classic, outline, cburnett, fantasy, animated Glowing Crystal, stone, chibi, hd), every entry `locked: false` in `cosmetics/pieceSets.tsx` — nothing is "coming soon"; the 🔒 branch in `ShopScreen.tsx` is unreachable |
 | Library / Book Owl | shipped | proxies book-seek |
+| Library of Babel door | shipped 2026-10-22 | `library/BabelRoute.tsx` frames https://zhipeng.li |
 | Side games (Forest, Wizard's Duel, Knight's Hop, Knight's Run, The Siege) | shipped | `games/wizardv2` deleted 2026-09-29 (REVIEW Phase 0) |
 | Terminal / MUD easter-egg | shipped | |
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |

@@ -273,6 +273,63 @@
   .puc-spine__title { font-size: 11.5px; max-height: 116px; }
 }
 
+/* ── The small door ─────────────────────────────────────────────────
+ * Knee-high, at the foot of the last shelf, a warm light leaking under
+ * it. Leads to /library/babel. */
+.puc-library__small-door {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 66px;
+  margin: 10px 34px 0 auto;
+  padding: 0;
+  border: 2px solid #1d1106;
+  border-bottom-width: 3px;
+  border-radius: 22px 22px 3px 3px;
+  background:
+    repeating-linear-gradient(to right, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 9px, rgba(0, 0, 0, 0.35) 9px, rgba(0, 0, 0, 0.35) 10px),
+    linear-gradient(180deg, #4a2d12 0%, #2e1a09 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.12), 0 6px 14px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+.puc-library__small-door::before {
+  /* the light under the door */
+  content: '';
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: -5px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 196, 110, 0.75);
+  box-shadow: 0 0 12px 4px rgba(255, 180, 90, 0.45);
+  transition: box-shadow 200ms ease;
+}
+.puc-library__small-door::after {
+  /* brass knob */
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 36px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe28b, #b9851a 70%, #6a4818);
+}
+.puc-library__small-door:hover,
+.puc-library__small-door:focus-visible {
+  transform: translateY(-2px);
+  outline: none;
+}
+.puc-library__small-door:hover::before,
+.puc-library__small-door:focus-visible::before {
+  box-shadow: 0 0 18px 7px rgba(255, 190, 100, 0.7);
+}
+@media (max-width: 540px) {
+  .puc-library__small-door { margin-right: 18px; }
+}
+
 /* ── Drawer (when a book is tapped) ─────────────────────────────── */
 .puc-drawer-overlay {
   position: fixed;
