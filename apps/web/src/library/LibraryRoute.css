@@ -91,6 +91,7 @@
  * wood texture is built from a stacked linear-gradient so we don't
  * ship a bitmap; the planks separate visually by tonal step. */
 .puc-library__bookshelf {
+  position: relative; /* the small door is pinned to its bottom-right corner */
   max-width: 1100px;
   margin: 20px auto;
   padding: 0 16px;
@@ -102,7 +103,7 @@
   align-items: flex-end;
   justify-content: center;
   gap: 14px;
-  padding: 18px 18px 0;
+  padding: 18px 78px 0 18px; /* right: room for the small door */
   border-radius: 10px;
   background:
     /* Two thin horizontal "shelf boards" suggested by darker bands
@@ -251,7 +252,7 @@
 @media (max-width: 540px) {
   .puc-library__shelf {
     gap: 5px;
-    padding: 14px 12px 0;
+    padding: 14px 62px 0 12px;
     background:
       repeating-linear-gradient(
         to bottom,
@@ -274,14 +275,16 @@
 }
 
 /* ── The small door ─────────────────────────────────────────────────
- * Knee-high, at the foot of the last shelf, a warm light leaking under
- * it. Leads to /library/babel. */
+ * Knee-high, in the bottom-right corner of the bookcase, a warm light
+ * leaking under it. Leads to /library/babel. */
 .puc-library__small-door {
-  position: relative;
+  position: absolute;
+  right: 32px;  /* 16px bookshelf padding + 16px inside the bookcase edge */
+  bottom: 7px;  /* standing on the bottom board */
   display: block;
   width: 44px;
   height: 66px;
-  margin: 10px 34px 0 auto;
+  margin: 0;
   padding: 0;
   border: 2px solid #1d1106;
   border-bottom-width: 3px;
@@ -327,7 +330,7 @@
   box-shadow: 0 0 18px 7px rgba(255, 190, 100, 0.7);
 }
 @media (max-width: 540px) {
-  .puc-library__small-door { margin-right: 18px; }
+  .puc-library__small-door { right: 26px; }
 }
 
 /* ── Drawer (when a book is tapped) ─────────────────────────────── */
