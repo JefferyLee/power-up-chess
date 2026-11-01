@@ -8,6 +8,7 @@
 // hear it. Read stories carry a ✓ check next to their title.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { babelLibraryUrl } from '../nav/babel'
 import { useNavigate } from 'react-router-dom'
 import { useCastle } from '../castle/useCastle'
 import {
@@ -377,7 +378,7 @@ export function LibraryRoute() {
         <button
           type="button"
           className="puc-library__small-door"
-          onClick={() => navigate('/library/babel')}
+          onClick={() => window.location.assign(babelLibraryUrl())}
           aria-label="A small door"
           title="A small door, barely knee-high."
         />

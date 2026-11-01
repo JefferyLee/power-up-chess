@@ -275,8 +275,6 @@ export const ROUTES: ReadonlyArray<RouteDef> = [
       companionImg: '/sprites/hall/book-owl.png?v=1',
     },
   },
-  // Behind the small door at the foot of the Library's shelves — no Hall door.
-  { path: '/library/babel', name: '/library/babel', load: named(() => import('./library/BabelRoute'), 'BabelRoute') },
   {
     path: '/knights-run',
     name: '/knights-run',

@@ -43,6 +43,10 @@ export interface CastleLivePulse {
   /** Up to 3 non-bypass guests currently in the Hall (presence
    *  heartbeat in the last 90 s, location is hall or unset). */
   inHallNow: PulsePresence[]
+  /** Distinct non-bypass guests anywhere in the castle right now
+   *  (heartbeat ≤ 90 s). A count only — it lights the window beside the
+   *  castle's door in the Corner of Babel (see castlePulse). */
+  inCastleNow: number
   /** Up to 3 top puzzle solvers today (LA-day). Non-bypass only. */
   topSolversToday: PulseSolver[]
   /** Up to MAX_DUELS most recent duel-end system messages from the
@@ -147,26 +151,30 @@ export const refreshCastleLivePulse = onSchedule(
       .where('lastSeenAt', '>=', presenceCutoff)
       .get()
     const inHallSet = new Map<string, PulsePresence>()
+    const inCastle = new Set<string>()
     for (const d of presenceSnap.docs) {
       const p = d.data() as PresenceDoc
       if (p.isBypass) continue
+      const key = p.normalizedName || p.displayName
+      inCastle.add(key)
       if (p.normalizedName && hiddenNames.has(p.normalizedName)) continue
       // 'hall' (explicit) or undefined (defaulted to hall) — exclude
       // rooms so the pulse really says "in the Hall".
       const loc = p.location?.kind
       if (loc && loc !== 'hall') continue
-      const key = p.normalizedName || p.displayName
+      if (inHallSet.size >= MAX_PRESENCE) continue
       if (!inHallSet.has(key)) {
         inHallSet.set(key, { displayName: p.displayName })
       }
-      if (inHallSet.size >= MAX_PRESENCE) break
     }
     const inHallNow = Array.from(inHallSet.values())
+    const inCastleNow = inCastle.size
 
     const pulse: CastleLivePulse = {
       duelsInProgress,
       visitorsToday,
       inHallNow,
+      inCastleNow,
       topSolversToday,
       recentDuels,
       ...(lastStory ? { lastStory } : {}),
@@ -179,7 +187,7 @@ export const refreshCastleLivePulse = onSchedule(
     })
     console.log(
       `refreshCastleLivePulse: duels=${duelsInProgress} visitors=${visitorsToday} ` +
-      `hall=${inHallNow.length} solvers=${topSolversToday.length} ` +
+      `hall=${inHallNow.length} castle=${inCastleNow} solvers=${topSolversToday.length} ` +
       `recent=${recentDuels.length} story=${lastStory ? 'yes' : 'no'}`,
     )
   },

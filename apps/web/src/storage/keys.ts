@@ -59,6 +59,12 @@ export const KEYS = {
     scope: 'session',
     description: 'Puzzle Garden calibration banner dismissed for this visit (1).',
   },
+  babelDoor: {
+    key: 'puc:babel-door:v1',
+    version: 1,
+    scope: 'session',
+    description: "Corner of Babel door this visit came through (`<floor>.<stair>`, or '' for the entrance) — the way back.",
+  },
 
   // ── Retired (no longer written; still wiped by forget-me) ─────────
   retiredSessionHost: local('puc:session-host:v1', 'Retired: pre-MVP2 session host cache.', 1),

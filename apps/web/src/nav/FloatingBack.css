@@ -65,11 +65,29 @@
   outline-offset: 3px;
 }
 
+/* The way back to the Corner of Babel — same brass disc, stacked one
+ * disc above the castle button; alone at the bottom in the Hall, where
+ * the castle button hides. */
+.puc-fab-babel {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px + 56px + 10px);
+  text-decoration: none;
+  font-size: 24px;
+}
+.puc-fab-babel--alone {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+}
+
 /* Small viewports / phones — keep a thumb-friendly 56px target but
  * pull a touch closer to the corner so it doesn't crowd in-page CTAs. */
 @media (max-width: 540px) {
   .puc-fab-back {
     left: calc(env(safe-area-inset-left, 0px) + 12px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  }
+  .puc-fab-babel {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + 56px + 10px);
+  }
+  .puc-fab-babel--alone {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
   }
 }

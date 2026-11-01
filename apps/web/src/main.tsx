@@ -6,7 +6,11 @@ import './index.css'
 import './theme/magic-forest/tokens.css'
 import './theme/starry-universe/tokens.css'
 import { App } from './App'
+import { rememberBabelArrival } from './nav/babel'
 import { registerServiceWorker } from './pwa/registerServiceWorker'
+
+// Came in through the Corner of Babel's door? Keep the way back for this visit.
+rememberBabelArrival(window.location.search)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

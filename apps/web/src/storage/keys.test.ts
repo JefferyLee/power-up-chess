@@ -42,7 +42,7 @@ describe('storage key registry', () => {
 
   it('lists keys by scope', () => {
     expect(listOurKeys()).toHaveLength(entries.length)
-    expect(listOurKeys('session')).toEqual([KEYS.calibrationDismissed.key])
+    expect(listOurKeys('session')).toEqual([KEYS.calibrationDismissed.key, KEYS.babelDoor.key])
     expect(listOurKeys('local')).toContain(KEYS.castleIdentity.key)
     expect(listOurKeys('local')).not.toContain(KEYS.calibrationDismissed.key)
   })
