@@ -20,7 +20,7 @@ import { ChatSheet } from './ChatSheet'
 import { HearthTicker } from './HearthTicker'
 import { StoryRequestButton } from './StoryRequestButton'
 import { HOSTS } from '../hosts/hosts'
-import { loadProfile, pickRandomHost } from '../storage/profile'
+import { loadProfile } from '../storage/profile'
 import { callCreateRoom } from '../firebase/callables'
 import { ChatPanel } from './ChatPanel'
 import { OnlineList } from './OnlineList'
@@ -35,6 +35,7 @@ import { ChampionBanner } from '../tournament/ChampionBanner'
 import { useWaitingRooms, formatRoomCount } from './useWaitingRooms'
 import { RoomChooserDialog } from './RoomChooserDialog'
 import { TimeControlDialog } from '../screens/TimeControlDialog'
+import { aiPracticeState, localGameState } from '../screens/playSetup'
 import type { TimeControlPreset } from '../clock/timeControl'
 import { FeedbackButton } from './FeedbackButton'
 import { HostInviteButton } from '../invitations/HostInviteButton'
@@ -46,7 +47,6 @@ import { DOOR_ROUTES, PLAY_GATE_POINTS, WIZARD_GATE_DEFAULT, type DoorDef, type 
 import './HallScreen.css'
 
 import { friendlyError } from '../errors/friendlyError'
-const DEFAULT_OPPONENT_NAME = 'Friend'
 const UNLOCK_THRESHOLD = PLAY_GATE_POINTS
 
 export function HallScreen() {
@@ -131,26 +131,12 @@ export function HallScreen() {
     if (!identity || tcTarget === null) return
     if (tcTarget === 'local') {
       setTcTarget(null)
-      navigate('/local', {
-        state: {
-          hostId: pickRandomHost(),
-          whiteName: displayName,
-          blackName: DEFAULT_OPPONENT_NAME,
-          timeControl: preset.value,
-        },
-      })
+      navigate('/local', { state: localGameState(identity, preset) })
       return
     }
     if (tcTarget === 'practice') {
       setTcTarget(null)
-      navigate('/ai', {
-        state: {
-          hostId: pickRandomHost(),
-          playerName: displayName,
-          difficultyId: profile.aiDifficultyId,
-          timeControl: preset.value,
-        },
-      })
+      navigate('/ai', { state: aiPracticeState(identity, profile, preset) })
       return
     }
     // tcTarget === 'online'

@@ -96,6 +96,7 @@ Legend: **shipped** = live & working · **partial** = usable but incomplete/plan
 | Cosmetics / Theme Shop | shipped | 8 piece sets (classic, outline, cburnett, fantasy, animated Glowing Crystal, stone, chibi, hd), every entry `locked: false` in `cosmetics/pieceSets.tsx` — nothing is "coming soon"; the 🔒 branch in `ShopScreen.tsx` is unreachable |
 | Library / Book Owl | shipped | proxies book-seek |
 | Corner of Babel door | shipped 2026-10-22; re-pointed 2026-11-01 | small door on `/library` leaves for cornerofbabel.com; `nav/babel.ts` remembers a `?from=babel&door=F.S` arrival for the visit and FloatingBack adds a 📚 disc back to `…/zh/?pub=F.S`; `functions/src/castle/castlePulse.ts` serves counts-only pulse JSON (CORS: cornerofbabel.com + staging) for the library's door light |
+| Local Chess / Practice opened by address | shipped 2026-11-01 | `/local` and `/ai` without Hall state (a bookmark, the Corner of Babel's door) show the clock dialog in place and start the game as the Hall would — sign-in and the 200-point Practice gate still apply (`screens/playSetup.ts`); Online Chess still needs a room id, so outside links go to the Hall |
 | Side games (Forest, Wizard's Duel, Knight's Hop, Knight's Run, The Siege) | shipped | `games/wizardv2` deleted 2026-09-29 (REVIEW Phase 0) |
 | Terminal / MUD easter-egg | shipped | |
 | PWA / offline shell | shipped | Workbox precache, Cloudflare no-cache headers |
