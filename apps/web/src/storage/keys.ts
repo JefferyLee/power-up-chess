@@ -63,7 +63,7 @@ export const KEYS = {
     key: 'puc:babel-door:v1',
     version: 1,
     scope: 'session',
-    description: "Corner of Babel door this visit came through (`<floor>.<stair>`, or '' for the entrance) — the way back.",
+    description: 'Corner of Babel door this visit came through (`<floor>.<stair>`) — the way back.',
   },
 
   // ── Retired (no longer written; still wiped by forget-me) ─────────

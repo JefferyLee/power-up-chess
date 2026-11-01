@@ -30,9 +30,9 @@ describe('parseBabelArrival', () => {
     expect(parseBabelArrival('?from=babel&door=0.1')).toBe('0.1')
     expect(parseBabelArrival('?door=-2.0&from=babel')).toBe('-2.0')
   })
-  it('is empty for a Babel arrival without a usable door', () => {
-    expect(parseBabelArrival('?from=babel')).toBe('')
-    expect(parseBabelArrival('?from=babel&door=0.1/../x')).toBe('')
+  it("is the castle's own door for a Babel arrival without a usable one", () => {
+    expect(parseBabelArrival('?from=babel')).toBe('1.0')
+    expect(parseBabelArrival('?from=babel&door=0.1/../x')).toBe('1.0')
   })
   it('is null for any other arrival', () => {
     expect(parseBabelArrival('')).toBeNull()
@@ -45,16 +45,16 @@ describe('the way back', () => {
   it('is nothing unless the visit came from the library', () => {
     rememberBabelArrival('?utm=x')
     expect(babelReturnUrl()).toBeNull()
-    expect(babelLibraryUrl()).toBe('https://cornerofbabel.com/zh/')
+    expect(babelLibraryUrl()).toBe('https://cornerofbabel.com/zh/?pub=1.0')
   })
   it('lands in front of the door they came through', () => {
     rememberBabelArrival('?from=babel&door=3.-1')
     expect(babelReturnUrl()).toBe('https://cornerofbabel.com/zh/?pub=3.-1')
     expect(babelLibraryUrl()).toBe('https://cornerofbabel.com/zh/?pub=3.-1')
   })
-  it('falls back to the entrance when the library sent no door', () => {
+  it("falls back to the castle's door when the library sent none", () => {
     rememberBabelArrival('?from=babel')
-    expect(babelReturnUrl()).toBe('https://cornerofbabel.com/zh/')
+    expect(babelReturnUrl()).toBe('https://cornerofbabel.com/zh/?pub=1.0')
   })
   it('survives a visit without storage', () => {
     Object.defineProperty(window, 'sessionStorage', {

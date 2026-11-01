@@ -33,7 +33,7 @@ The Hall shows **three** visual sections matching the Tier column: "Learn chess"
 | Wizard's Duel | `/wizard` | break | **gated ≥1000** | **no** — "chess with magic spells, for fun, not practice" |
 | Theme Shop | `/shop` | break | spends (cosmetics) | no |
 | The Library (Book Owl) | `/library` | break | — | no (reading) |
-| Corner of Babel (small door at the foot of the Library's shelves — no Hall door) | leaves for https://cornerofbabel.com/zh/ | break | — | no — Jeff's library; its public-side door leads back here as `/?from=babel&door=<floor>.<stair>` |
+| Corner of Babel (small door at the foot of the Library's shelves — no Hall door) | leaves for https://cornerofbabel.com/zh/?pub=1.0 (the castle's door there: floor 1, stair 0) | break | — | no — Jeff's library; its public-side door leads back here as `/?from=babel&door=<floor>.<stair>` |
 | Knight's Run | `/knights-run` | break | — | no (auto-runner) |
 | Tower Defense ("The Siege") | `/arcade/tower-defense` | break | **no castle points**; own leaderboard (`siege_leaderboards/global`, puzzle-board rules, opt-out honoured) | **no** — chess-themed arcade (towers are white pieces attacking the way they move), not chess practice. 3D rebuild 2026-09-25: 12-map campaign, endless, daily, bosses; `apps/web/src/games/siege/`, `functions/src/siege/`, spec `docs/SIEGE_DESIGN.md` |
 
